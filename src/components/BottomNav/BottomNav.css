@@ -1,90 +1,67 @@
-/* ═══════════════════════════════════════════════
-   BottomNav — Fixed Bottom Navigation Bar
-   ═══════════════════════════════════════════════ */
-
 .bottom-nav {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 68px;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  height: var(--sv-nav-height);
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: space-around;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid var(--border-light);
-  z-index: var(--z-nav);
+  background: rgba(250, 247, 242, 0.94);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--sv-border);
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 50;
 }
 
-/* ── Tab ───────────────────────────────────── */
+/* Su desktop la navigazione passa nell'header */
+@media (min-width: 768px) {
+  .bottom-nav {
+    display: none;
+  }
+}
+
 .bottom-nav__tab {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  text-decoration: none;
-  color: var(--text-light);
-  padding: var(--space-xs) var(--space-sm);
-  border-radius: var(--radius-sm);
-  transition: all var(--transition-normal);
+  gap: 3px;
   flex: 1;
-  min-width: 0;
-  -webkit-tap-highlight-color: transparent;
+  color: var(--sv-faint);
+  transition: color var(--sv-transition);
 }
 
-/* ── Active Tab ────────────────────────────── */
 .bottom-nav__tab--active {
-  color: var(--primary-dark);
+  color: var(--sv-ink);
 }
 
-.bottom-nav__tab--active .bottom-nav__label {
+.bottom-nav__label {
+  font-size: 9px;
   font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
-/* ── Icon ──────────────────────────────────── */
 .bottom-nav__icon {
-  font-size: 22px;
-  line-height: 1;
-  transition: transform var(--transition-bounce);
+  display: inline-flex;
 }
 
-.bottom-nav__tab--active .bottom-nav__icon {
-  transform: scale(1.15);
-}
-
-/* ── Center (Add) Button ───────────────────── */
 .bottom-nav__icon--center {
-  width: 52px;
-  height: 52px;
-  display: flex;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: var(--sv-ink);
+  color: var(--sv-bg);
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: var(--primary-gradient);
-  color: #fff;
-  border-radius: var(--radius-full);
-  font-size: 26px;
-  font-weight: 300;
-  box-shadow: var(--shadow-md);
-  margin-top: -26px;
-  transition: all var(--transition-bounce);
+  margin-top: -14px;
+  box-shadow: var(--sv-shadow-soft);
+  transition: background var(--sv-transition);
 }
 
-.bottom-nav__tab--active .bottom-nav__icon--center {
-  box-shadow: var(--shadow-lg);
-  transform: scale(1.08);
-}
-
-.bottom-nav__icon--center:active {
-  transform: scale(0.95);
-}
-
-/* ── Label ─────────────────────────────────── */
-.bottom-nav__label {
-  font-size: 10px;
-  font-weight: 500;
-  white-space: nowrap;
+.bottom-nav__tab--center:hover .bottom-nav__icon--center,
+.bottom-nav__tab--center.bottom-nav__tab--active .bottom-nav__icon--center {
+  background: var(--sv-accent-ink);
 }

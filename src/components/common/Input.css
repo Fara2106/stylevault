@@ -1,120 +1,73 @@
-/* ═══════════════════════════════════════════════
-   Input — Luxury Floating Label Input Styles
-   ═══════════════════════════════════════════════ */
-
 .input-group {
   position: relative;
-  margin-bottom: var(--space-md);
+  margin-bottom: var(--sv-space-4);
 }
 
-/* ── Field ─────────────────────────────────── */
 .input-group__field {
   width: 100%;
-  padding: 16px;
-  padding-top: 24px;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface);
-  color: var(--text);
-  font-size: var(--text-base);
-  font-family: var(--font-body);
-  transition: all var(--transition-normal);
+  padding: 22px 14px 8px;
+  background: var(--sv-surface);
+  border: 1px solid var(--sv-border);
+  border-radius: var(--sv-radius-sm);
+  font-size: 15px;
+  color: var(--sv-ink);
+  transition: border-color var(--sv-transition);
   outline: none;
-  -webkit-appearance: none;
-  appearance: none;
+  resize: vertical;
 }
 
-.input-group__field:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(183, 142, 174, 0.12);
+.input-group__field--with-icon {
+  padding-left: 42px;
 }
 
-/* ── Floating Label ────────────────────────── */
+.input-group--focused .input-group__field {
+  border-color: var(--sv-accent);
+}
+
+.input-group--error .input-group__field {
+  border-color: var(--sv-danger);
+}
+
+.input-group--disabled .input-group__field {
+  background: var(--sv-surface-soft);
+  color: var(--sv-muted);
+}
+
 .input-group__label {
   position: absolute;
-  left: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-light);
-  font-size: var(--text-base);
-  transition: all var(--transition-normal);
+  left: 14px;
+  top: 15px;
+  font-size: 14px;
+  color: var(--sv-faint);
   pointer-events: none;
-  transform-origin: left center;
+  transition: all var(--sv-transition);
 }
 
-/* Label floats up when focused or filled */
+.input-group__label--with-icon {
+  left: 42px;
+}
+
 .input-group--focused .input-group__label,
 .input-group--filled .input-group__label {
-  top: 8px;
-  transform: translateY(0);
-  font-size: var(--text-xs);
-  color: var(--primary);
+  top: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: var(--sv-tracking-label);
+  text-transform: uppercase;
+  color: var(--sv-muted);
 }
 
-/* ── Error State ───────────────────────────── */
-.input-group--error .input-group__field {
-  border-color: var(--error);
-}
-
-.input-group--error .input-group__field:focus {
-  box-shadow: 0 0 0 3px rgba(229, 115, 115, 0.12);
-}
-
-.input-group--error .input-group__label {
-  color: var(--error);
+.input-group__icon {
+  position: absolute;
+  left: 14px;
+  top: 16px;
+  color: var(--sv-faint);
+  display: inline-flex;
 }
 
 .input-group__error {
   display: block;
-  font-size: var(--text-xs);
-  color: var(--error);
-  margin-top: var(--space-xs);
-  padding-left: 16px;
-}
-
-/* ── Icon ──────────────────────────────────── */
-.input-group__icon {
-  position: absolute;
-  left: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-light);
-  z-index: 1;
-  font-size: 18px;
-  display: flex;
-  align-items: center;
-  pointer-events: none;
-}
-
-.input-group__field--with-icon {
-  padding-left: 48px;
-}
-
-.input-group__label--with-icon {
-  left: 48px;
-}
-
-/* ── Disabled State ────────────────────────── */
-.input-group--disabled {
-  opacity: 0.5;
-  pointer-events: none;
-}
-
-/* ── Textarea ──────────────────────────────── */
-textarea.input-group__field {
-  resize: vertical;
-  padding-top: 24px;
-  min-height: 100px;
-}
-
-.input-group:has(textarea) .input-group__label {
-  top: 24px;
-  transform: translateY(0);
-}
-
-.input-group--focused:has(textarea) .input-group__label,
-.input-group--filled:has(textarea) .input-group__label {
-  top: 8px;
-  font-size: var(--text-xs);
-  color: var(--primary);
+  margin-top: var(--sv-space-1);
+  font-size: 12px;
+  color: var(--sv-danger);
 }

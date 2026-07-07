@@ -1,125 +1,82 @@
-/* ═══════════════════════════════════════════════
-   ClothingCard — Wardrobe Item Card
-   ═══════════════════════════════════════════════ */
-
 .clothing-card {
-  background: var(--surface);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
-  transition: all var(--transition-normal);
   cursor: pointer;
-  animation: fadeIn var(--transition-normal) both;
-  -webkit-tap-highlight-color: transparent;
 }
 
-.clothing-card:active {
-  transform: scale(0.97);
-}
-
-/* ── Image Wrapper ─────────────────────────── */
 .clothing-card__image-wrap {
   position: relative;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 3 / 4;
   overflow: hidden;
-  background: var(--bg-secondary);
+  border-radius: var(--sv-radius-md);
+  background: var(--sv-surface-soft);
+  border: 1px solid var(--sv-border);
 }
 
 .clothing-card__image {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform var(--transition-slow);
+  transition: transform 400ms ease;
 }
 
-.clothing-card:active .clothing-card__image {
+.clothing-card:hover .clothing-card__image {
   transform: scale(1.03);
 }
 
-/* ── Favorite Button ───────────────────────── */
 .clothing-card__fav {
   position: absolute;
-  top: var(--space-sm);
-  right: var(--space-sm);
+  top: var(--sv-space-2);
+  right: var(--sv-space-2);
   width: 32px;
   height: 32px;
-  border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  display: flex;
+  border-radius: 50%;
+  border: none;
+  background: rgba(250, 247, 242, 0.9);
+  color: var(--sv-ink);
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
-  border: none;
-  cursor: pointer;
-  transition: all var(--transition-bounce);
-  z-index: 2;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.clothing-card__fav:active {
-  transform: scale(0.85);
+  transition: all var(--sv-transition);
 }
 
 .clothing-card__fav--active {
-  animation: heartBeat 0.6s ease-in-out;
+  color: var(--sv-accent-ink);
 }
 
-/* ── Info Section ──────────────────────────── */
+.clothing-card__fav--active svg {
+  fill: currentColor;
+}
+
 .clothing-card__info {
-  padding: var(--space-sm) var(--space-md) var(--space-md);
+  padding: var(--sv-space-2) 2px 0;
 }
 
 .clothing-card__name {
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--text);
-  line-height: 1.3;
-  margin: 0 0 2px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  font-family: var(--sv-font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--sv-ink);
+  white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .clothing-card__brand {
-  font-size: var(--text-xs);
-  color: var(--text-secondary);
-  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sv-muted);
+  margin-top: 1px;
 }
 
-/* ── Color Dots ────────────────────────────── */
 .clothing-card__colors {
   display: flex;
   gap: 4px;
-  margin-top: var(--space-xs);
+  margin-top: var(--sv-space-2);
 }
 
 .clothing-card__color-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--border);
-  flex-shrink: 0;
-}
-
-/* ── Animations ────────────────────────────── */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes heartBeat {
-  0% { transform: scale(1); }
-  25% { transform: scale(1.3); }
-  50% { transform: scale(0.95); }
-  75% { transform: scale(1.15); }
-  100% { transform: scale(1); }
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid var(--sv-border-strong);
 }

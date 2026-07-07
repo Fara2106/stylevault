@@ -1,27 +1,13 @@
-/* ═══════════════════════════════════════════════
-   Header — Sticky Page Header
-   ═══════════════════════════════════════════════ */
-
 .page-header {
-  display: flex;
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
   align-items: center;
-  padding: var(--space-md) var(--space-lg);
-  padding-top: calc(var(--space-lg) + env(safe-area-inset-top, 0px));
-  background: rgba(253, 248, 244, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  position: sticky;
-  top: 0;
-  z-index: var(--z-sticky, 40);
-  min-height: 64px;
+  padding: var(--sv-space-4) 0 var(--sv-space-5);
 }
 
 .page-header__left,
 .page-header__right {
-  width: 44px;
-  flex-shrink: 0;
   display: flex;
-  align-items: center;
 }
 
 .page-header__right {
@@ -29,53 +15,35 @@
 }
 
 .page-header__center {
-  flex: 1;
   text-align: center;
-  min-width: 0;
 }
 
 .page-header__title {
-  font-family: var(--font-heading);
-  font-size: var(--text-xl);
-  font-weight: 600;
-  color: var(--text);
-  line-height: 1.2;
-  margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 26px;
+  letter-spacing: 0.01em;
 }
 
 .page-header__subtitle {
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
-  margin: 2px 0 0;
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: var(--sv-tracking-label);
+  text-transform: uppercase;
+  color: var(--sv-muted);
 }
 
 .page-header__back,
 .page-header__action {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-full);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--text-lg);
-  color: var(--text);
-  background: var(--surface);
-  box-shadow: var(--shadow-xs, 0 1px 3px rgba(0,0,0,0.06));
+  background: none;
   border: none;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  -webkit-tap-highlight-color: transparent;
+  color: var(--sv-ink);
+  padding: var(--sv-space-2);
+  display: inline-flex;
+  border-radius: var(--sv-radius-sm);
+  transition: background var(--sv-transition);
 }
 
 .page-header__back:hover,
 .page-header__action:hover {
-  box-shadow: var(--shadow-sm);
-}
-
-.page-header__back:active,
-.page-header__action:active {
-  transform: scale(0.93);
+  background: var(--sv-surface-soft);
 }
