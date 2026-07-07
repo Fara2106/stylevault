@@ -1,0 +1,212 @@
+/* ═══════════════════════════════════════════════
+   OutfitCard — Outfit Suggestion Card
+   ═══════════════════════════════════════════════ */
+
+.outfit-card {
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  padding: var(--space-lg);
+  box-shadow: var(--shadow-md);
+  min-width: 300px;
+  max-width: 340px;
+  flex-shrink: 0;
+  scroll-snap-align: center;
+  animation: scaleIn var(--transition-slow) both;
+}
+
+/* ── Score Bar ─────────────────────────────── */
+.outfit-card__score-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
+}
+
+.outfit-card__score {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: var(--text-lg);
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.score--great {
+  background: var(--success-dark, #388e3c);
+}
+
+.score--good {
+  background: var(--warning, #f9a825);
+}
+
+.score--low {
+  background: var(--error, #e57373);
+}
+
+/* ── Badges ────────────────────────────────── */
+.outfit-card__badges {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.outfit-card__badge {
+  font-size: var(--text-xs);
+  background: var(--bg);
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* ── Items List ────────────────────────────── */
+.outfit-card__items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.outfit-card__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  transition: background var(--transition-fast);
+}
+
+.outfit-card__thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.outfit-card__item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.outfit-card__item-label {
+  font-size: var(--text-xs);
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.outfit-card__item-name {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Accessories ───────────────────────────── */
+.outfit-card__accessories {
+  padding: var(--space-sm);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+}
+
+.outfit-card__acc-list {
+  display: flex;
+  gap: var(--space-xs);
+  margin-top: var(--space-xs);
+}
+
+.outfit-card__acc-thumb {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+/* ── Actions ───────────────────────────────── */
+.outfit-card__actions {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+  justify-content: center;
+  align-items: center;
+}
+
+.outfit-card__btn {
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  transition: all var(--transition-normal);
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.outfit-card__btn:active {
+  transform: scale(0.93);
+}
+
+.outfit-card__btn--wear {
+  flex: 1;
+  padding: 12px 24px;
+  background: var(--primary-gradient);
+  color: #fff;
+  font-size: var(--text-base);
+  box-shadow: var(--shadow-sm);
+}
+
+.outfit-card__btn--wear:hover {
+  box-shadow: var(--shadow-md);
+  filter: brightness(1.05);
+}
+
+.outfit-card__btn--approve {
+  width: 48px;
+  height: 48px;
+  background: var(--success, #66bb6a);
+  color: #fff;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.outfit-card__btn--approve:hover {
+  filter: brightness(1.1);
+  box-shadow: var(--shadow-sm);
+}
+
+.outfit-card__btn--reject {
+  width: 48px;
+  height: 48px;
+  background: var(--error, #e57373);
+  color: #fff;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.outfit-card__btn--reject:hover {
+  filter: brightness(1.1);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ── Animations ────────────────────────────── */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

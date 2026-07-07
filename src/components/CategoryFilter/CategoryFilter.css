@@ -1,0 +1,53 @@
+/* ═══════════════════════════════════════════════
+   CategoryFilter — Horizontal Scrollable Chips
+   ═══════════════════════════════════════════════ */
+
+.category-filter {
+  display: flex;
+  gap: var(--space-sm);
+  overflow-x: auto;
+  padding: var(--space-sm) var(--space-lg);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.category-filter::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Chip ──────────────────────────────────── */
+.category-filter__chip {
+  white-space: nowrap;
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  font-family: var(--font-body);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all var(--transition-normal);
+  cursor: pointer;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.category-filter__chip--active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.category-filter__chip:active {
+  transform: scale(0.95);
+}
+
+/* ── Icon ──────────────────────────────────── */
+.category-filter__icon {
+  font-size: 16px;
+  line-height: 1;
+}

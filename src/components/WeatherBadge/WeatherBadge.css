@@ -1,0 +1,78 @@
+/* ═══════════════════════════════════════════════
+   WeatherBadge — Dynamic Weather Display
+   ═══════════════════════════════════════════════ */
+
+.weather-badge {
+  border-radius: var(--radius-xl);
+  padding: var(--space-lg);
+  color: var(--text);
+  animation: scaleIn var(--transition-slow) both;
+}
+
+/* ── Main Row ──────────────────────────────── */
+.weather-badge__main {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.weather-badge__icon {
+  font-size: 40px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.weather-badge__temp {
+  font-family: var(--font-heading);
+  font-size: var(--text-3xl);
+  font-weight: 700;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.weather-badge__info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.weather-badge__city {
+  font-weight: 600;
+  font-size: var(--text-base);
+}
+
+.weather-badge__desc {
+  font-size: var(--text-sm);
+  opacity: 0.8;
+}
+
+/* ── Detail Chips ──────────────────────────── */
+.weather-badge__details {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.weather-badge__chip {
+  font-size: var(--text-xs);
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ── Animation ─────────────────────────────── */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
