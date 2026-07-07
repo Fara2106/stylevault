@@ -198,7 +198,20 @@ Generati dagli stessi punteggi, come frasi localizzate (it/en):
 - **Verifica manuale pre-lancio:** flussi foto/upload da mobile reale, editor avatar,
   resa del design system su iOS/Android/desktop.
 
-## 9. Fuori scope v1 (fase 2+)
+## 9. Fasatura dell'implementazione (decisione utente, 2026-07-07)
+
+**Fase A — Solo UI (da fare ora):** tutta l'interfaccia e i flussi delle 8 pagine,
+design system light editorial, avatar, motore outfit con le estensioni, meteo reale
+Open-Meteo. Persistenza su localStorage (i contexts esistenti già lo fanno): l'app è
+pienamente usabile in locale su un solo dispositivo. Login simulato (AuthContext
+locale), nessun account reale. La Edge Function per i link non esiste ancora: in
+questa fase l'estrazione dai link usa un servizio proxy pubblico se praticabile,
+altrimenti solo form manuale con link salvato.
+
+**Fase B — Backend (dopo la validazione della UI):** Supabase come da sezione 3;
+i contexts passano da localStorage alle query Supabase senza toccare le pagine.
+
+## 10. Fuori scope v1 (fase 2+)
 
 - AI di riconoscimento capi da foto; rimozione sfondo.
 - Try-on fotorealistico AI.
