@@ -1,0 +1,48 @@
+/*
+ * StyleVault — Design tokens "light editorial luxury".
+ * Fondo crema, inchiostro, un solo accento terra. Serif editoriale + sans sobrio.
+ */
+:root {
+  /* Palette */
+  --sv-bg: #faf7f2;
+  --sv-surface: #ffffff;
+  --sv-surface-soft: #f4efe8;
+  --sv-ink: #1a1a1a;
+  --sv-ink-soft: #45413c;
+  --sv-muted: #6b6560;
+  --sv-faint: #9b948c;
+  --sv-accent: #8b7355;
+  --sv-accent-ink: #6f5a41;
+  --sv-accent-soft: #efe7dc;
+  --sv-border: #e5dfd6;
+  --sv-border-strong: #cfc6b8;
+  --sv-danger: #9d4040;
+  --sv-danger-soft: #f4e4e4;
+  --sv-success: #5f7a5a;
+  --sv-success-soft: #e8efe6;
+
+  /* Tipografia */
+  --sv-font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --sv-font-body: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+  --sv-tracking-label: 0.14em;
+
+  /* Dimensioni */
+  --sv-radius-sm: 4px;
+  --sv-radius-md: 8px;
+  --sv-radius-lg: 14px;
+  --sv-space-1: 4px;
+  --sv-space-2: 8px;
+  --sv-space-3: 12px;
+  --sv-space-4: 16px;
+  --sv-space-5: 24px;
+  --sv-space-6: 32px;
+  --sv-space-7: 48px;
+  --sv-space-8: 64px;
+
+  /* Layout */
+  --sv-page-max: 1080px;
+  --sv-nav-height: 64px;
+  --sv-shadow-soft: 0 2px 16px rgba(26, 26, 26, 0.06);
+  --sv-shadow-lift: 0 8px 32px rgba(26, 26, 26, 0.1);
+  --sv-transition: 180ms ease;
+}

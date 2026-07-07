@@ -5,15 +5,22 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview"
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "devDependencies": {
-    "typescript": "~6.0.2",
-    "vite": "^8.1.1"
+    "@fontsource/inter": "^5.2.8",
+    "@fontsource/playfair-display": "^5.2.8",
+    "@vitejs/plugin-react": "^6.0.3",
+    "vite": "^8.1.1",
+    "vitest": "^4.1.10"
   },
   "dependencies": {
     "i18next": "^26.3.4",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
     "react-i18next": "^17.0.8",
     "react-router-dom": "^7.18.1"
   }

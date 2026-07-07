@@ -1,0 +1,131 @@
+@import './tokens.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--sv-bg);
+  color: var(--sv-ink);
+  font-family: var(--sv-font-body);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--sv-font-display);
+  font-weight: 500;
+  line-height: 1.2;
+  margin: 0;
+  color: var(--sv-ink);
+}
+
+p {
+  margin: 0;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+a {
+  color: var(--sv-accent-ink);
+  text-decoration: none;
+}
+
+::selection {
+  background: var(--sv-accent-soft);
+}
+
+/* ── Utility condivise ─────────────────────────────── */
+
+/* Etichetta maiuscoletto spaziato, firma dello stile editoriale */
+.sv-label {
+  font-family: var(--sv-font-body);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: var(--sv-tracking-label);
+  text-transform: uppercase;
+  color: var(--sv-muted);
+}
+
+.sv-page {
+  max-width: var(--sv-page-max);
+  margin: 0 auto;
+  padding: var(--sv-space-4) var(--sv-space-4)
+    calc(var(--sv-nav-height) + var(--sv-space-6));
+}
+
+@media (min-width: 768px) {
+  .sv-page {
+    padding: var(--sv-space-6) var(--sv-space-6) var(--sv-space-8);
+  }
+}
+
+.sv-card {
+  background: var(--sv-surface);
+  border: 1px solid var(--sv-border);
+  border-radius: var(--sv-radius-md);
+}
+
+.sv-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--sv-space-3);
+  color: var(--sv-faint);
+  margin: var(--sv-space-5) 0;
+}
+
+.sv-divider::before,
+.sv-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--sv-border);
+}
+
+.sv-empty {
+  text-align: center;
+  padding: var(--sv-space-8) var(--sv-space-5);
+  color: var(--sv-muted);
+}
+
+.sv-empty__title {
+  font-family: var(--sv-font-display);
+  font-size: 22px;
+  font-style: italic;
+  color: var(--sv-ink-soft);
+  margin-bottom: var(--sv-space-2);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
