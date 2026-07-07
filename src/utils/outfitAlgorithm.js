@@ -183,19 +183,58 @@ function calculateOutfitColorHarmony(outfit) {
 }
 
 /**
+ * Build a map itemId -> repetition penalty from recent wear logs.
+ * Items worn within the last 7 days (relative to referenceDate) get a
+ * penalty that decays with distance in days.
+ */
+function buildRecentPenaltyMap(recentWear, referenceDateStr) {
+  const ref = referenceDateStr ? new Date(referenceDateStr) : new Date();
+  const map = new Map();
+  for (const entry of recentWear || []) {
+    const days = Math.floor((ref - new Date(entry.date)) / 86400000);
+    if (days >= 0 && days <= 7) {
+      const penalty = Math.max(0, 12 - 1.5 * days);
+      map.set(entry.itemId, Math.max(map.get(entry.itemId) || 0, penalty));
+    }
+  }
+  return map;
+}
+
+/** Map locked items onto their outfit slot by category. */
+function buildLockedSlots(lockedItems) {
+  const slots = { top: null, bottom: null, shoes: null, outerwear: null };
+  for (const item of lockedItems || []) {
+    if (item.category === 'tops' || item.category === 'dresses') slots.top = item;
+    else if (item.category === 'bottoms') slots.bottom = item;
+    else if (item.category === 'shoes') slots.shoes = item;
+    else if (item.category === 'outerwear') slots.outerwear = item;
+  }
+  return slots;
+}
+
+/**
  * Generate outfit combinations.
  *
  * @param {object[]} items - All wardrobe items
- * @param {object} weather - Weather conditions from getMockWeather
+ * @param {object} weather - Weather conditions ({temperature, windSpeed, rain, uvIndex, date?})
  * @param {string} occasion - Occasion filter (or 'all')
  * @param {number} count - Number of outfits to generate (default 3)
+ * @param {object} options - { lockedItems?: object[], recentWear?: {itemId, date}[], referenceDate?: string }
  * @returns {object[]} Array of outfit objects
  */
-export function generateOutfits(items, weather, occasion = 'all', count = 3) {
+export function generateOutfits(items, weather, occasion = 'all', count = 3, options = {}) {
   if (!items || items.length === 0) return [];
 
-  const currentMonth = new Date().getMonth();
-  const currentSeason = getSeasonFromMonth(currentMonth);
+  const { lockedItems = [], recentWear = [], referenceDate } = options;
+  const locked = buildLockedSlots(lockedItems);
+  const recentPenaltyMap = buildRecentPenaltyMap(
+    recentWear,
+    referenceDate || weather.date
+  );
+
+  // La stagione segue il giorno per cui si genera, non quello odierno
+  const seasonDate = weather.date ? new Date(weather.date) : new Date();
+  const currentSeason = getSeasonFromMonth(seasonDate.getMonth());
   const targetWarmth = getWarmthTarget(weather.temperature, weather.windSpeed);
 
   // Filter items by season and occasion
@@ -232,24 +271,25 @@ export function generateOutfits(items, weather, occasion = 'all', count = 3) {
       colorHarmony: 0,
     };
 
-    // Decide: dress or top+bottom
-    const useDress = canUseDress && Math.random() > 0.5 && dresses.length > 0;
+    // Decide: dress or top+bottom (un abito bloccato forza il percorso abito,
+    // un top o bottom bloccato lo esclude)
+    const lockedDress = locked.top?.category === 'dresses' ? locked.top : null;
+    const useDress =
+      lockedDress != null ||
+      (canUseDress && !locked.bottom && !locked.top && Math.random() > 0.5 && dresses.length > 0);
 
     if (useDress) {
-      const dressOptions = pickBestByWarmth(dresses, targetWarmth);
-      const dress = pickRandom(dressOptions);
+      const dress = lockedDress || pickRandom(pickBestByWarmth(dresses, targetWarmth));
       if (!dress) continue;
       outfit.top = dress; // dress takes the top slot
       outfit.bottom = null; // no bottom needed with a dress
     } else {
       // Pick top
-      const topOptions = pickBestByWarmth(tops, targetWarmth);
-      const top = pickRandom(topOptions);
+      const top = locked.top || pickRandom(pickBestByWarmth(tops, targetWarmth));
       if (!top && !canUseDress) continue; // Must have a top
 
       // Pick bottom
-      const bottomOptions = pickBestByWarmth(bottoms, targetWarmth);
-      const bottom = pickRandom(bottomOptions);
+      const bottom = locked.bottom || pickRandom(pickBestByWarmth(bottoms, targetWarmth));
       if (!bottom && !canUseDress) continue; // Must have bottoms
 
       // If we couldn't find top or bottom and can't use dress, skip
@@ -260,21 +300,25 @@ export function generateOutfits(items, weather, occasion = 'all', count = 3) {
     }
 
     // Pick shoes (required)
-    const shoeOptions = pickBestByWarmth(shoes, targetWarmth);
-    const shoe = pickRandom(shoeOptions);
-    if (!shoe) {
-      // Try without warmth filter
-      const anyShoe = pickRandom(shoes.length > 0 ? shoes : filterByCategory(items, 'shoes'));
-      if (!anyShoe) continue;
-      outfit.shoes = anyShoe;
+    if (locked.shoes) {
+      outfit.shoes = locked.shoes;
     } else {
-      outfit.shoes = shoe;
+      const shoe = pickRandom(pickBestByWarmth(shoes, targetWarmth));
+      if (!shoe) {
+        // Try without warmth filter
+        const anyShoe = pickRandom(shoes.length > 0 ? shoes : filterByCategory(items, 'shoes'));
+        if (!anyShoe) continue;
+        outfit.shoes = anyShoe;
+      } else {
+        outfit.shoes = shoe;
+      }
     }
 
-    // Add outerwear if needed (temp < 18 or rain)
-    if (weather.temperature < 18 || weather.rain) {
-      const outerwearOptions = pickBestByWarmth(outerwear, targetWarmth);
-      const outerItem = pickRandom(outerwearOptions);
+    // Add outerwear if locked, or if needed (temp < 18 or rain)
+    if (locked.outerwear) {
+      outfit.outerwear = locked.outerwear;
+    } else if (weather.temperature < 18 || weather.rain) {
+      const outerItem = pickRandom(pickBestByWarmth(outerwear, targetWarmth));
       if (outerItem) {
         outfit.outerwear = outerItem;
       } else if (outerwear.length > 0) {
@@ -323,7 +367,22 @@ export function generateOutfits(items, weather, occasion = 'all', count = 3) {
     // Score the outfit
     outfit.weatherMatch = calculateWeatherMatch(outfit, targetWarmth, weather);
     outfit.colorHarmony = calculateOutfitColorHarmony(outfit);
-    outfit.score = Math.round(outfit.weatherMatch * 0.5 + outfit.colorHarmony * 0.5);
+    const baseScore = outfit.weatherMatch * 0.5 + outfit.colorHarmony * 0.5;
+
+    // Penalità per capi indossati negli ultimi 7 giorni
+    const outfitItems = [
+      outfit.top,
+      outfit.bottom,
+      outfit.shoes,
+      outfit.outerwear,
+      ...outfit.accessories,
+    ].filter(Boolean);
+    const repetitionPenalty = outfitItems.reduce(
+      (sum, item) => sum + (recentPenaltyMap.get(item.id) || 0),
+      0
+    );
+    outfit.repetitionPenalty = Math.round(repetitionPenalty);
+    outfit.score = Math.max(0, Math.round(baseScore - repetitionPenalty));
 
     // Check for duplicate outfits (same items)
     const outfitKey = [
