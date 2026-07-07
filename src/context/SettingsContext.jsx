@@ -35,7 +35,8 @@ function getDefaults() {
   return {
     language: getDefaultLanguage(),
     units: 'celsius',
-    defaultCity: 'Milano',
+    // Città come oggetto geografico (serve lat/lon per il meteo)
+    defaultCity: { name: 'Milano', latitude: 45.4642, longitude: 9.19, country: 'Italia' },
     theme: 'light',
   };
 }

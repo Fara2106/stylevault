@@ -1,0 +1,216 @@
+.profile-page {
+  max-width: 640px;
+}
+
+.profile-page__head {
+  display: flex;
+  align-items: center;
+  gap: var(--sv-space-4);
+  margin-bottom: var(--sv-space-5);
+}
+
+.profile-page__avatar {
+  background: var(--sv-surface);
+  border: 1px solid var(--sv-border);
+  border-radius: var(--sv-radius-lg);
+  padding: var(--sv-space-2) var(--sv-space-3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sv-space-1);
+  transition: border-color var(--sv-transition);
+}
+
+.profile-page__avatar:hover {
+  border-color: var(--sv-accent);
+}
+
+.profile-page__avatar-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--sv-muted);
+}
+
+.profile-page__name {
+  font-size: 26px;
+}
+
+.profile-page__email {
+  font-size: 13px;
+  color: var(--sv-muted);
+  margin-top: 2px;
+}
+
+.profile-page__counters {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sv-space-3);
+  margin-bottom: var(--sv-space-6);
+}
+
+.profile-page__counter {
+  padding: var(--sv-space-3);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.profile-page__counter strong {
+  font-family: var(--sv-font-display);
+  font-size: 28px;
+  font-weight: 500;
+}
+
+.profile-page__section {
+  margin-bottom: var(--sv-space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sv-space-3);
+}
+
+.profile-page__section > h2 {
+  border-bottom: 1px solid var(--sv-border);
+  padding-bottom: var(--sv-space-2);
+}
+
+.profile-page__setting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sv-space-4);
+  font-size: 14px;
+}
+
+.profile-page__setting-control {
+  flex: 1;
+  max-width: 260px;
+}
+
+.profile-page__no-stats {
+  font-style: italic;
+  font-size: 14px;
+  color: var(--sv-muted);
+}
+
+.profile-page__stat-block h3 {
+  font-size: 17px;
+  margin-bottom: var(--sv-space-2);
+}
+
+.profile-page__bar-row {
+  display: grid;
+  grid-template-columns: 90px 1fr 24px;
+  align-items: center;
+  gap: var(--sv-space-2);
+  margin-bottom: 6px;
+}
+
+.profile-page__bar-label {
+  font-size: 12px;
+  color: var(--sv-muted);
+}
+
+.profile-page__bar {
+  height: 8px;
+  background: var(--sv-surface-soft);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.profile-page__bar i {
+  display: block;
+  height: 100%;
+  background: var(--sv-accent);
+  border-radius: 999px;
+}
+
+.profile-page__bar-count {
+  font-size: 12px;
+  color: var(--sv-muted);
+  text-align: right;
+}
+
+.profile-page__color-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sv-space-2);
+}
+
+.profile-page__color-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--sv-muted);
+  border: 1px solid var(--sv-border);
+  border-radius: 999px;
+  padding: 4px 12px;
+}
+
+.profile-page__color-chip i {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 1px solid var(--sv-border-strong);
+}
+
+.profile-page__item-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sv-space-2);
+}
+
+.profile-page__item-list li {
+  display: flex;
+  align-items: center;
+  gap: var(--sv-space-3);
+  background: var(--sv-surface);
+  border: 1px solid var(--sv-border);
+  border-radius: var(--sv-radius-md);
+  padding: var(--sv-space-2) var(--sv-space-3);
+  cursor: pointer;
+  transition: border-color var(--sv-transition);
+}
+
+.profile-page__item-list li:hover {
+  border-color: var(--sv-accent);
+}
+
+.profile-page__item-list img {
+  width: 40px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: var(--sv-radius-sm);
+  background: var(--sv-surface-soft);
+}
+
+.profile-page__item-list span {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.profile-page__item-list em {
+  font-size: 12px;
+  font-style: normal;
+  color: var(--sv-muted);
+  white-space: nowrap;
+}
+
+.profile-page__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sv-space-4);
+  padding-top: var(--sv-space-4);
+  border-top: 1px solid var(--sv-border);
+}

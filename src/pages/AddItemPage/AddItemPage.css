@@ -1,0 +1,210 @@
+.add-item {
+  max-width: 640px;
+}
+
+.add-item__modes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sv-space-3);
+  margin-bottom: var(--sv-space-4);
+}
+
+.add-item__mode {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sv-space-2);
+  background: var(--sv-surface);
+  border: 1px solid var(--sv-border);
+  border-radius: var(--sv-radius-md);
+  padding: 14px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sv-muted);
+  transition: all var(--sv-transition);
+}
+
+.add-item__mode--active {
+  border-color: var(--sv-ink);
+  color: var(--sv-ink);
+  background: var(--sv-surface);
+}
+
+.add-item__source {
+  margin-bottom: var(--sv-space-5);
+}
+
+.add-item__dropzone {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sv-space-2);
+  background: var(--sv-surface);
+  border: 1px dashed var(--sv-border-strong);
+  border-radius: var(--sv-radius-md);
+  padding: var(--sv-space-7) var(--sv-space-4);
+  color: var(--sv-faint);
+}
+
+.add-item__dropzone strong {
+  font-size: 14px;
+  color: var(--sv-ink);
+  font-weight: 500;
+}
+
+.add-item__dropzone span {
+  font-size: 12px;
+  color: var(--sv-muted);
+}
+
+.add-item__preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sv-space-3);
+}
+
+.add-item__preview img {
+  width: 180px;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: var(--sv-radius-md);
+  border: 1px solid var(--sv-border);
+  background: var(--sv-surface-soft);
+}
+
+.add-item__link-row {
+  display: flex;
+  gap: var(--sv-space-2);
+}
+
+.add-item__link-field {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--sv-space-2);
+  background: var(--sv-surface);
+  border: 1px solid var(--sv-border);
+  border-radius: var(--sv-radius-sm);
+  padding: 0 14px;
+  color: var(--sv-faint);
+}
+
+.add-item__link-field input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+  color: var(--sv-ink);
+  padding: 12px 0;
+  min-width: 0;
+}
+
+.add-item__link-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: var(--sv-space-2) 0 var(--sv-space-3);
+  font-size: 13px;
+  color: var(--sv-muted);
+}
+
+.add-item__link-note--ok {
+  color: var(--sv-success);
+}
+
+.add-item__link-note--warn {
+  color: var(--sv-accent-ink);
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.add-item__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sv-space-4);
+}
+
+.add-item__group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sv-space-2);
+}
+
+.add-item__error {
+  color: var(--sv-danger);
+  font-style: normal;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.add-item__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sv-space-2);
+}
+
+.add-item__chip {
+  background: transparent;
+  border: 1px solid var(--sv-border-strong);
+  border-radius: 999px;
+  padding: 7px 16px;
+  font-size: 12px;
+  color: var(--sv-muted);
+  transition: all var(--sv-transition);
+}
+
+.add-item__chip--active {
+  background: var(--sv-ink);
+  border-color: var(--sv-ink);
+  color: var(--sv-bg);
+}
+
+.add-item__swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sv-space-2);
+}
+
+.add-item__swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--sv-border);
+  transition: all var(--sv-transition);
+}
+
+.add-item__swatch--active {
+  border-color: var(--sv-ink);
+  transform: scale(1.15);
+  box-shadow: 0 0 0 2px var(--sv-bg), 0 0 0 3px var(--sv-ink);
+}
+
+.add-item__warmth {
+  display: flex;
+  gap: var(--sv-space-2);
+}
+
+.add-item__warmth-dot {
+  width: 34px;
+  height: 10px;
+  border-radius: 999px;
+  border: 1px solid var(--sv-border-strong);
+  background: transparent;
+  transition: all var(--sv-transition);
+}
+
+.add-item__warmth-dot--active {
+  background: var(--sv-accent);
+  border-color: var(--sv-accent);
+}
+
+.add-item__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sv-space-3);
+}

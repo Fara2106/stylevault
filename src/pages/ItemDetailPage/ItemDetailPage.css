@@ -1,0 +1,125 @@
+.item-detail__layout {
+  display: grid;
+  gap: var(--sv-space-5);
+}
+
+@media (min-width: 768px) {
+  .item-detail__layout {
+    grid-template-columns: 5fr 7fr;
+    align-items: start;
+  }
+}
+
+.item-detail__photo-wrap {
+  position: relative;
+}
+
+.item-detail__photo {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: var(--sv-radius-lg);
+  border: 1px solid var(--sv-border);
+  background: var(--sv-surface-soft);
+}
+
+.item-detail__fav {
+  position: absolute;
+  top: var(--sv-space-3);
+  right: var(--sv-space-3);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(250, 247, 242, 0.92);
+  color: var(--sv-ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.item-detail__fav--active {
+  color: var(--sv-accent-ink);
+}
+
+.item-detail__fav--active svg {
+  fill: currentColor;
+}
+
+.item-detail__name {
+  font-size: 28px;
+}
+
+.item-detail__brand {
+  margin-top: 4px;
+}
+
+.item-detail__colors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sv-space-2);
+  margin-top: var(--sv-space-3);
+}
+
+.item-detail__color {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--sv-muted);
+  border: 1px solid var(--sv-border);
+  border-radius: 999px;
+  padding: 4px 12px;
+}
+
+.item-detail__color i {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid var(--sv-border-strong);
+}
+
+.item-detail__facts {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sv-space-3) var(--sv-space-4);
+  margin: var(--sv-space-5) 0;
+}
+
+.item-detail__fact dd {
+  margin: 2px 0 0;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.item-detail__usage {
+  padding: var(--sv-space-3) var(--sv-space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sv-space-2);
+}
+
+.item-detail__usage p {
+  display: flex;
+  align-items: center;
+  gap: var(--sv-space-2);
+  font-size: 13px;
+  color: var(--sv-muted);
+}
+
+.item-detail__shop {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sv-space-2);
+  margin-top: var(--sv-space-4);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.item-detail__actions {
+  display: flex;
+  gap: var(--sv-space-3);
+  margin-top: var(--sv-space-5);
+}

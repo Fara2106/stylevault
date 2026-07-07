@@ -1,0 +1,45 @@
+.onboarding {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: var(--sv-space-6) var(--sv-space-4) var(--sv-space-8);
+}
+
+.onboarding__head {
+  text-align: center;
+  margin-bottom: var(--sv-space-6);
+}
+
+.onboarding__title {
+  font-size: 30px;
+  margin-top: var(--sv-space-2);
+}
+
+.onboarding__intro {
+  margin-top: var(--sv-space-3);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--sv-muted);
+}
+
+.onboarding__city {
+  min-height: 180px;
+}
+
+.onboarding__city-current {
+  margin-top: var(--sv-space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sv-space-1);
+}
+
+.onboarding__city-current strong {
+  font-family: var(--sv-font-display);
+  font-size: 22px;
+  font-weight: 500;
+}
+
+.onboarding__actions {
+  display: flex;
+  gap: var(--sv-space-3);
+  margin-top: var(--sv-space-6);
+}

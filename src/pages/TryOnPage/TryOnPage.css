@@ -1,0 +1,68 @@
+.tryon-page {
+  max-width: 560px;
+}
+
+.tryon-page__wishlist-note {
+  text-align: center;
+  color: var(--sv-accent-ink);
+  margin-bottom: var(--sv-space-3);
+}
+
+.tryon-page__palette {
+  margin-top: var(--sv-space-5);
+  text-align: center;
+}
+
+.tryon-page__palette-row {
+  display: flex;
+  justify-content: center;
+  gap: var(--sv-space-2);
+  margin-top: var(--sv-space-2);
+}
+
+.tryon-page__palette-dot {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--sv-border-strong);
+}
+
+.tryon-page__list {
+  list-style: none;
+  margin: var(--sv-space-5) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sv-space-2);
+}
+
+.tryon-page__list li {
+  display: flex;
+  align-items: center;
+  gap: var(--sv-space-3);
+  background: var(--sv-surface);
+  border: 1px solid var(--sv-border);
+  border-radius: var(--sv-radius-md);
+  padding: var(--sv-space-2) var(--sv-space-3);
+}
+
+.tryon-page__list img {
+  width: 44px;
+  height: 54px;
+  object-fit: cover;
+  border-radius: var(--sv-radius-sm);
+  background: var(--sv-surface-soft);
+}
+
+.tryon-page__list strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.tryon-page__list span {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sv-muted);
+}

@@ -1,0 +1,169 @@
+.outfit-page {
+  max-width: 720px;
+}
+
+.outfit-page__head {
+  margin-bottom: var(--sv-space-4);
+}
+
+.outfit-page__title {
+  font-size: 28px;
+}
+
+.outfit-page__subtitle {
+  font-family: var(--sv-font-display);
+  font-style: italic;
+  font-size: 15px;
+  color: var(--sv-muted);
+  margin-top: 2px;
+}
+
+.outfit-page__controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sv-space-3);
+  margin-bottom: var(--sv-space-4);
+}
+
+.outfit-page__days,
+.outfit-page__occasions {
+  display: flex;
+  gap: var(--sv-space-2);
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+
+.outfit-page__days::-webkit-scrollbar,
+.outfit-page__occasions::-webkit-scrollbar {
+  display: none;
+}
+
+.outfit-page__day {
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid var(--sv-border-strong);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 12px;
+  color: var(--sv-muted);
+  transition: all var(--sv-transition);
+  text-transform: capitalize;
+}
+
+.outfit-page__day--active {
+  background: var(--sv-ink);
+  border-color: var(--sv-ink);
+  color: var(--sv-bg);
+}
+
+.outfit-page__manual {
+  padding: var(--sv-space-4);
+}
+
+.outfit-page__manual-title {
+  font-size: 13px;
+  font-style: italic;
+  color: var(--sv-accent-ink);
+  margin-bottom: var(--sv-space-3);
+}
+
+.outfit-page__manual-row {
+  display: flex;
+  gap: var(--sv-space-4);
+  align-items: flex-end;
+}
+
+.outfit-page__manual-row label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sv-space-1);
+}
+
+.outfit-page__manual-row input[type='number'] {
+  width: 110px;
+  padding: 9px 12px;
+  border: 1px solid var(--sv-border);
+  border-radius: var(--sv-radius-sm);
+  font-size: 14px;
+  background: var(--sv-bg);
+}
+
+.outfit-page__manual-rain {
+  flex-direction: row !important;
+  align-items: center;
+  gap: var(--sv-space-2) !important;
+  font-size: 13px;
+  color: var(--sv-ink-soft);
+  padding-bottom: 10px;
+}
+
+.outfit-page__loading {
+  text-align: center;
+  color: var(--sv-muted);
+  font-style: italic;
+  padding: var(--sv-space-5);
+}
+
+.outfit-page__generate {
+  margin: var(--sv-space-4) 0 var(--sv-space-5);
+}
+
+.outfit-page__lock-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: var(--sv-space-2);
+  font-size: 12px;
+  color: var(--sv-accent-ink);
+}
+
+.outfit-page__worn-msg {
+  margin-top: var(--sv-space-2);
+  text-align: center;
+  font-size: 13px;
+  color: var(--sv-success);
+}
+
+.outfit-page__results {
+  display: grid;
+  gap: var(--sv-space-5);
+}
+
+@media (min-width: 900px) {
+  .outfit-page {
+    max-width: var(--sv-page-max);
+  }
+
+  .outfit-page__results {
+    grid-template-columns: repeat(3, 1fr);
+    align-items: start;
+  }
+}
+
+.outfit-page__advice {
+  margin-top: var(--sv-space-2);
+  padding: var(--sv-space-3) var(--sv-space-4);
+  background: var(--sv-accent-soft);
+  border-radius: var(--sv-radius-md);
+}
+
+.outfit-page__advice ul {
+  margin: var(--sv-space-2) 0 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.outfit-page__advice li {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--sv-ink-soft);
+}
+
+.outfit-page__saved-count {
+  margin-top: var(--sv-space-5);
+  text-align: center;
+}

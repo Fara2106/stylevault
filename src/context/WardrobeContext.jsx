@@ -253,17 +253,24 @@ export function WardrobeProvider({ children }) {
     );
   }, []);
 
-  // ── Outfit History ──
+  // ── Outfit History (funge anche da calendario: worn=false → pianificato) ──
 
-  const logOutfit = useCallback((outfit, date) => {
+  const logOutfit = useCallback((outfit, date, { worn = true } = {}) => {
     const log = {
       id: `log_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       outfit,
       date: date || new Date().toISOString().split('T')[0],
+      worn,
       timestamp: Date.now(),
     };
     setOutfitHistory((prev) => [log, ...prev]);
     return log;
+  }, []);
+
+  const updateOutfitLog = useCallback((id, updates) => {
+    setOutfitHistory((prev) =>
+      prev.map((log) => (log.id === id ? { ...log, ...updates } : log))
+    );
   }, []);
 
   const removeOutfitLog = useCallback((id) => {
@@ -346,6 +353,7 @@ export function WardrobeProvider({ children }) {
 
     // Outfit history
     logOutfit,
+    updateOutfitLog,
     removeOutfitLog,
 
     // Saved outfits
