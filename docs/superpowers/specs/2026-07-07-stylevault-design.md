@@ -168,7 +168,8 @@ Generati dagli stessi punteggi, come frasi localizzate (it/en):
   generosa, transizioni 150–200ms. Variabili CSS in `src/styles/tokens.css`; i componenti
   esistenti (Button, Input, Modal, Header, card) vengono rivestiti con i token.
 - Mobile-first (breakpoint principali 480/768/1024); da desktop la griglia guardaroba
-  si allarga e la BottomNav diventa navigazione laterale o header.
+  si allarga e la BottomNav scompare a favore della navigazione nell'header (stile
+  testata di rivista).
 
 ## 7. Gestione errori
 
