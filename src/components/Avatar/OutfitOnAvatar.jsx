@@ -5,9 +5,10 @@ import { MAX_ACCESSORIES } from '../../utils/tryonComposer';
 import './Avatar.css';
 
 /**
- * Prova outfit "a collage": la silhouette dell'utente con le foto reali
- * dei capi disposte sugli slot (capospalla, top, bottom, scarpe, accessori).
- * Niente deformazioni: è uno styling board, non un try-on fotorealistico.
+ * Prova outfit sull'avatar: la silhouette dell'utente viene vestita con le
+ * foto reali dei capi, ritagliate nelle sagome degli indumenti (in AvatarSvg).
+ * Le card intorno alla figura sono i controlli degli slot (capospalla, top,
+ * bottom, scarpe, accessori) e mostrano etichetta e anteprima.
  *
  * Con `onSlotClick` diventa interattivo: gli slot vuoti mostrano un "+"
  * e ogni capo ha una ✕ per toglierlo (serve anche `onRemove`).
@@ -93,7 +94,7 @@ export default function OutfitOnAvatar({ outfit, avatarConfig, onSlotClick, onRe
     <div className="tryon">
       <div className="tryon__stage">
         <div className="tryon__figure">
-          <AvatarSvg config={avatarConfig} height={420} />
+          <AvatarSvg config={avatarConfig} outfit={outfit} height={420} />
         </div>
 
         {slots.map((slot) => (slot.item ? renderFilled(slot) : renderEmpty(slot)))}

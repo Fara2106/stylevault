@@ -138,7 +138,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0.9;
 }
 
 .tryon__slot {
@@ -169,33 +168,33 @@
 }
 
 .tryon__slot--outerwear {
-  left: 4%;
+  left: 3%;
   top: 10%;
-  width: 30%;
+  width: 22%;
   transform: rotate(-5deg);
   z-index: 3;
 }
 
 .tryon__slot--top {
-  right: 6%;
+  right: 3%;
   top: 7%;
-  width: 34%;
+  width: 24%;
   transform: rotate(3deg);
   z-index: 2;
 }
 
 .tryon__slot--bottom {
-  right: 8%;
+  right: 3%;
   top: 44%;
-  width: 32%;
+  width: 23%;
   transform: rotate(-2deg);
   z-index: 2;
 }
 
 .tryon__slot--shoes {
-  left: 8%;
+  left: 4%;
   bottom: 6%;
-  width: 26%;
+  width: 19%;
   transform: rotate(4deg);
   z-index: 2;
 }

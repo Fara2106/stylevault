@@ -71,6 +71,26 @@ export const applyItem = (outfit, slot, item) => {
   return next;
 };
 
+/**
+ * Layer di vestizione da disegnare sull'avatar, in ordine di pittura:
+ * bottom sotto, poi top/abito, capospalla sopra tutto, scarpe a parte.
+ * Gli accessori non hanno una sagoma sul corpo e restano fuori.
+ */
+export const garmentLayers = (outfit) => {
+  if (!outfit) return [];
+  const layers = [];
+  if (outfit.bottom) layers.push({ kind: 'bottom', item: outfit.bottom });
+  if (outfit.top) {
+    layers.push({
+      kind: outfit.top.category === 'dresses' ? 'dress' : 'top',
+      item: outfit.top,
+    });
+  }
+  if (outfit.outerwear) layers.push({ kind: 'outerwear', item: outfit.outerwear });
+  if (outfit.shoes) layers.push({ kind: 'shoes', item: outfit.shoes });
+  return layers;
+};
+
 export const removeFromSlot = (outfit, slot, itemId) => {
   if (slot === 'accessories') {
     return { ...outfit, accessories: outfit.accessories.filter((a) => a.id !== itemId) };

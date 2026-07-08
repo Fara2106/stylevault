@@ -6,6 +6,7 @@ import {
   applyItem,
   removeFromSlot,
   outfitHasItems,
+  garmentLayers,
   MAX_ACCESSORIES,
 } from './tryonComposer';
 
@@ -94,5 +95,41 @@ describe('tryonComposer', () => {
     const base = emptyOutfit();
     applyItem(base, 'top', item('t1', 'tops'));
     expect(base.top).toBeNull();
+  });
+
+  it('garmentLayers: outfit vuoto o assente → nessun layer', () => {
+    expect(garmentLayers(null)).toEqual([]);
+    expect(garmentLayers(emptyOutfit())).toEqual([]);
+  });
+
+  it('garmentLayers: top+bottom → il bottom si disegna prima del top', () => {
+    let o = applyItem(emptyOutfit(), 'top', item('t1', 'tops'));
+    o = applyItem(o, 'bottom', item('b1', 'bottoms'));
+    const kinds = garmentLayers(o).map((l) => l.kind);
+    expect(kinds.indexOf('bottom')).toBeLessThan(kinds.indexOf('top'));
+  });
+
+  it('garmentLayers: un abito produce il layer "dress", non "top"', () => {
+    const o = applyItem(emptyOutfit(), 'top', item('d1', 'dresses'));
+    const layers = garmentLayers(o);
+    expect(layers.map((l) => l.kind)).toEqual(['dress']);
+    expect(layers[0].item.id).toBe('d1');
+  });
+
+  it('garmentLayers: il capospalla si disegna sopra top e bottom', () => {
+    let o = applyItem(emptyOutfit(), 'top', item('t1', 'tops'));
+    o = applyItem(o, 'bottom', item('b1', 'bottoms'));
+    o = applyItem(o, 'outerwear', item('o1', 'outerwear'));
+    const kinds = garmentLayers(o).map((l) => l.kind);
+    expect(kinds.indexOf('outerwear')).toBeGreaterThan(kinds.indexOf('top'));
+    expect(kinds.indexOf('outerwear')).toBeGreaterThan(kinds.indexOf('bottom'));
+  });
+
+  it('garmentLayers: le scarpe compaiono, gli accessori no', () => {
+    let o = applyItem(emptyOutfit(), 'shoes', item('s1', 'shoes'));
+    o = applyItem(o, 'accessories', item('a1', 'accessories'));
+    const kinds = garmentLayers(o).map((l) => l.kind);
+    expect(kinds).toContain('shoes');
+    expect(kinds).not.toContain('accessories');
   });
 });

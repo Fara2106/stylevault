@@ -1,19 +1,107 @@
+import { useId } from 'react';
 import {
   getSkinHex,
   getHairHex,
   getBodyWidthFactor,
 } from '../../utils/avatarOptions';
+import { garmentLayers } from '../../utils/tryonComposer';
+
+/**
+ * Sagome degli indumenti nel sistema di coordinate del corpo (viewBox 200x400):
+ * ogni capo è una o più path che ricalcano la silhouette leggermente allargata,
+ * e un riquadro `box` in cui viene ritagliata la foto reale del capo.
+ */
+const GARMENT_SHAPES = {
+  top: {
+    paths: [
+      'M100 62 C82 62 66 69 64 80 C61 97 73 116 75 136 C75.5 145 80 150 100 150 C120 150 124.5 145 125 136 C127 116 139 97 136 80 C134 69 118 62 100 62 Z',
+      'M66 78 C58 88 56 102 55.5 114 C55.4 119 63 120 64 115 C65.5 104 68 92 71 86 Z',
+      'M134 78 C142 88 144 102 144.5 114 C144.6 119 137 120 136 115 C134.5 104 132 92 129 86 Z',
+    ],
+    box: { x: 50, y: 58, width: 100, height: 96 },
+  },
+  dress: {
+    paths: [
+      'M100 62 C82 62 66 69 64 80 C61 97 71 116 73 138 C74.5 168 66 226 60 288 C59.3 296 63 300 70 300 L130 300 C137 300 140.7 296 140 288 C134 226 125.5 168 127 138 C129 116 139 97 136 80 C134 69 118 62 100 62 Z',
+      'M66 78 C58 88 56 102 55.5 114 C55.4 119 63 120 64 115 C65.5 104 68 92 71 86 Z',
+      'M134 78 C142 88 144 102 144.5 114 C144.6 119 137 120 136 115 C134.5 104 132 92 129 86 Z',
+    ],
+    box: { x: 54, y: 58, width: 92, height: 246 },
+  },
+  bottom: {
+    paths: [
+      'M78 130 C76 150 72 168 70 186 C68.5 198 73 206 78 209 C82 246 86 288 88 322 C89 338 90 352 90.5 360 L98.5 360 L98.5 216 L101.5 216 L101.5 360 L109.5 360 C110 352 111 338 112 322 C114 288 118 246 122 209 C127 206 131.5 198 130 186 C128 168 124 150 122 130 Z',
+    ],
+    box: { x: 66, y: 126, width: 68, height: 238 },
+  },
+  shoes: {
+    paths: [
+      'M81 365 a11 9 0 1 0 22 0 a11 9 0 1 0 -22 0 Z',
+      'M97 365 a11 9 0 1 0 22 0 a11 9 0 1 0 -22 0 Z',
+    ],
+    box: { x: 78, y: 352, width: 44, height: 26 },
+  },
+  outerwear: {
+    paths: [
+      'M97 60 C80 59 63 66 60 78 C56 96 67 118 68 142 C69 166 63 186 62 196 C61.4 203 65 207 72 207 L97 207 Z',
+      'M103 60 C120 59 137 66 140 78 C144 96 133 118 132 142 C131 166 137 186 138 196 C138.6 203 135 207 128 207 L103 207 Z',
+      'M61 78 C53 90 51 114 50 138 C49.5 152 48 166 47 178 C46.6 186 55 187 56 181 C58 167 60 151 61.5 137 C63 119 65 99 68 88 Z',
+      'M139 78 C147 90 149 114 150 138 C150.5 152 152 166 153 178 C153.4 186 145 187 144 181 C142 167 140 151 138.5 137 C137 119 135 99 132 88 Z',
+    ],
+    box: { x: 42, y: 54, width: 116, height: 157 },
+  },
+};
 
 /**
  * Silhouette stilizzata da figurino di moda, parametrica.
  * Corporatura: scala orizzontale del corpo (la testa resta fissa).
  * viewBox 200x400, esportata con height richiesta.
+ * Con `outfit` la figura viene vestita: le foto dei capi riempiono
+ * le sagome degli indumenti (vedi garmentLayers in tryonComposer).
  */
-export default function AvatarSvg({ config, height = 320, className = '' }) {
+export default function AvatarSvg({ config, outfit, height = 320, className = '' }) {
   const skin = getSkinHex(config?.skinTone);
   const hair = getHairHex(config?.hairColor);
   const w = getBodyWidthFactor(config?.bodyShape);
   const style = config?.hairStyle || 'medium';
+  const uid = useId();
+  const layers = garmentLayers(outfit);
+
+  const renderGarment = ({ kind, item }) => {
+    const shape = GARMENT_SHAPES[kind];
+    if (!shape) return null;
+    const clipId = `${uid}-${kind}`;
+    return (
+      <g key={kind}>
+        <clipPath id={clipId}>
+          {shape.paths.map((d, i) => (
+            <path key={i} d={d} />
+          ))}
+        </clipPath>
+        {item.photo ? (
+          <image
+            href={item.photo}
+            {...shape.box}
+            preserveAspectRatio="xMidYMid slice"
+            clipPath={`url(#${clipId})`}
+          />
+        ) : (
+          <g clipPath={`url(#${clipId})`}>
+            <rect {...shape.box} fill="#cfc7bb" />
+          </g>
+        )}
+        {shape.paths.map((d, i) => (
+          <path
+            key={`o${i}`}
+            d={d}
+            fill="none"
+            stroke="rgba(26, 26, 26, 0.18)"
+            strokeWidth="1"
+          />
+        ))}
+      </g>
+    );
+  };
 
   return (
     <svg
@@ -68,6 +156,9 @@ export default function AvatarSvg({ config, height = 320, className = '' }) {
         {/* piedi */}
         <ellipse cx="92" cy="368" rx="9" ry="5" fill={skin} />
         <ellipse cx="108" cy="368" rx="9" ry="5" fill={skin} />
+
+        {/* Indumenti: dentro il gruppo scalato, così seguono la corporatura */}
+        {layers.map(renderGarment)}
       </g>
 
       {/* Testa (non scalata) */}

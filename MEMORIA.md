@@ -16,6 +16,19 @@
 - La demo gira in **modalità locale**: capi di esempio precaricati, ogni visitatore
   ha i propri dati nel proprio browser, login simulato senza email di conferma.
 
+**Novità 2026-07-08 (sera) — l'avatar ora è davvero vestito (fix bug):**
+- Bug segnalato da Lorenzo: scegliendo un capo, la foto compariva solo come card
+  *accanto* all'avatar ("avvicina l'abito ma non lo veste"). Causa: nessun layer
+  veniva disegnato sul corpo — le card polaroid erano l'unica resa.
+- Ora `AvatarSvg` accetta `outfit` e disegna sagome di indumenti (top, abito,
+  pantaloni, scarpe, capospalla aperto) sopra la silhouette, riempite con la
+  foto reale del capo via `clipPath`+`image`; scalano con la corporatura.
+- Ordine di pittura in `garmentLayers()` (tryonComposer, +5 test): bottom →
+  top/abito → capospalla → scarpe; accessori restano come card (nessuna sagoma).
+- Le card intorno alla figura restano come controlli (＋/✕), ridimensionate.
+- Verificato: 53 unit test, build, smoke browser (top/outfit completo/abito
+  con esclusione bottom, salvataggio outfit, 0 errori console, screenshot).
+
 **Novità 2026-07-08 — vestizione manuale dell'avatar:**
 - La pagina "Prova sull'Avatar" ora funziona anche da sola: gli slot
   (capospalla, top/abito, bottom, scarpe, accessori) sono cliccabili e aprono
@@ -97,8 +110,8 @@
 
 ## Verifiche fatte
 
-- **38 unit test Vitest** (motore outfit incluse estensioni, meteo, statistiche,
-  link metadata, armonia colori) — tutti verdi.
+- **53 unit test Vitest** (motore outfit incluse estensioni, meteo, statistiche,
+  link metadata, armonia colori, composizione tryon) — tutti verdi.
 - **Smoke test browser** (playwright-core + Chrome installato, `channel: 'chrome'`):
   registrazione → onboarding → guardaroba → dettaglio → outfit con meteo reale →
   prova avatar → indossa → calendario → profilo → desktop. 0 errori console.
