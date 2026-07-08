@@ -195,8 +195,9 @@ function saveToStorage(key, data) {
 export function WardrobeProvider({ children }) {
   const [items, setItems] = useState(() => {
     const stored = loadFromStorage(KEYS.items, null);
-    // If no stored items, use sample data (first-time load)
-    return stored !== null ? stored : SAMPLE_ITEMS;
+    if (stored !== null) return stored;
+    // Dati di esempio solo in sviluppo; in produzione si parte dal guardaroba vuoto
+    return import.meta.env.DEV ? SAMPLE_ITEMS : [];
   });
 
   const [outfitHistory, setOutfitHistory] = useState(() =>

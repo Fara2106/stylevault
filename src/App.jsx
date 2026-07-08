@@ -1,4 +1,5 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { useProfile } from './context/ProfileContext';
 import AppLayout from './components/AppLayout/AppLayout';
@@ -11,6 +12,15 @@ import OutfitPage from './pages/OutfitPage/OutfitPage';
 import TryOnPage from './pages/TryOnPage/TryOnPage';
 import CalendarPage from './pages/CalendarPage/CalendarPage';
 import ProfilePage from './pages/ProfilePage/ProfilePage';
+
+/** Riporta lo scroll in cima a ogni cambio pagina. */
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+}
 
 /** Richiede login; il primo accesso passa dall'onboarding. */
 function Protected({ children }) {
@@ -32,7 +42,9 @@ function AuthOnly({ children }) {
 
 export default function App() {
   return (
-    <Routes>
+    <>
+      <ScrollToTop />
+      <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route
         path="/onboarding"
@@ -57,7 +69,8 @@ export default function App() {
         <Route path="/calendar" element={<CalendarPage />} />
         <Route path="/profile" element={<ProfilePage />} />
       </Route>
-      <Route path="*" element={<Navigate to="/wardrobe" replace />} />
-    </Routes>
+        <Route path="*" element={<Navigate to="/wardrobe" replace />} />
+      </Routes>
+    </>
   );
 }

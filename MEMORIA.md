@@ -40,27 +40,25 @@
 
 ## Stato avanzamento (aggiornato 2026-07-08)
 
-Fatto e committato:
+**FASE A COMPLETATA.** Tutto fatto, committato e verificato:
 - [x] T1 Bootstrap React (template Vite rimosso, provider, build ok)
-- [x] T2 Design system + restyle di tutti i componenti + fix bug LanguageSwitch
-      (importava SettingsContext come named export) + OutfitCard con API definitiva
-      (lock capi, prova avatar) + WeatherBadge per dati Open-Meteo
-- [x] T3 i18n esteso it/en (onboarding, avatar, consigli, meteo, statistiche...)
-- [x] T4 `services/weather.js` con 11 test verdi
+- [x] T2 Design system + restyle componenti + fix bug LanguageSwitch + icone SVG
+- [x] T3 i18n esteso it/en
+- [x] T4 `services/weather.js` Open-Meteo (geocoding, forecast, cache offline)
+- [x] T5 Motore outfit: lock capi, penalità ripetizione 7gg, stagione dal giorno
+      scelto + `utils/outfitAdvice.js` (consigli rule-based, chiavi i18n)
+- [x] T6 `utils/imageUtils.js` + `services/linkMetadata.js` (microlink + fallback)
+- [x] T7 Avatar SVG parametrico + editor con foto riferimento + prova a collage
+- [x] T8 Shell: router protetto, AppLayout (header desktop/BottomNav mobile),
+      CitySearch, ScrollToTop
+- [x] T9 Tutte le 9 pagine (Login, Onboarding 2 step, Wardrobe+tab wishlist,
+      ItemDetail, AddItem foto+link, Outfit, TryOn, Calendar, Profile+statistiche)
+- [x] T10 SAMPLE_ITEMS solo in dev, favicon SV, README, **38 unit test verdi**,
+      smoke test browser completo (Playwright su Chrome, 10 screenshot, 0 errori
+      console): registrazione → onboarding → guardaroba → dettaglio → outfit con
+      meteo reale Firenze → prova avatar → indossa → calendario → profilo → desktop
 
-Da fare:
-- [ ] T5 Estensioni motore outfit: `generateOutfits(items, weather, occasion, count, options)`
-      con `options.lockedItems` e `options.recentWear` (penalità 7gg) + `utils/outfitAdvice.js`
-      (consigli come chiavi i18n con parametri) — TDD
-- [ ] T6 `utils/imageUtils.js` (resize foto → dataURL max 600px) +
-      `services/linkMetadata.js` (microlink.io con fallback manuale)
-- [ ] T7 Avatar: `components/Avatar/{AvatarSvg,AvatarEditor,OutfitOnAvatar}.jsx`
-      (opzioni già in `utils/avatarOptions.js`, stato in `context/ProfileContext.jsx`)
-- [ ] T8 Shell: `App.jsx` router + ProtectedRoute + layout (header desktop)
-- [ ] T9 Pagine (cartelle vuote in `src/pages/`): Login, Onboarding, Wardrobe(+tab wishlist),
-      ItemDetail, AddItem (foto+link), Outfit (città+giorno+occasione, genera/blocca/salva,
-      consigli, prova avatar), Calendar, Profile (avatar editor + statistiche)
-- [ ] T10 Rifinitura: SAMPLE_ITEMS solo in dev, favicon, README, verifica finale browser
+**Prossimi passi possibili:** feedback dell'utente sulla UI → poi Fase B (Supabase).
 
 ## Comandi
 
