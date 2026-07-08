@@ -9,26 +9,36 @@ import './LoginPage.css';
 export default function LoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { login, register, isLoading } = useAuth();
+  const { login, register, loginWithGoogle, isLoading, isCloud } = useAuth();
 
   const [mode, setMode] = useState('login'); // 'login' | 'register'
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [info, setInfo] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setInfo('');
     const result =
       mode === 'login'
         ? await login(email, password)
         : await register(name, email, password);
-    if (result.success) {
+    if (result.success && result.needsConfirmation) {
+      setInfo(t('auth.checkEmail'));
+    } else if (result.success) {
       navigate('/wardrobe', { replace: true });
     } else {
       setError(result.error);
     }
+  };
+
+  const handleGoogle = async () => {
+    setError('');
+    const result = await loginWithGoogle();
+    if (!result.success && result.error !== 'not-available') setError(result.error);
   };
 
   return (
@@ -78,12 +88,26 @@ export default function LoginPage() {
         />
 
         {error && <p className="login-page__error">{error}</p>}
+        {info && <p className="login-page__info">{info}</p>}
 
         <Button type="submit" fullWidth size="lg" loading={isLoading}>
           {mode === 'login' ? t('auth.login') : t('auth.register')}
         </Button>
 
-        <p className="login-page__google-note">{t('auth.googleSoon')}</p>
+        {isCloud ? (
+          <Button
+            type="button"
+            variant="secondary"
+            fullWidth
+            size="lg"
+            className="login-page__google"
+            onClick={handleGoogle}
+          >
+            {t('auth.google')}
+          </Button>
+        ) : (
+          <p className="login-page__google-note">{t('auth.googleSoon')}</p>
+        )}
 
         <div className="sv-divider">
           <span className="sv-label">{t('common.or')}</span>

@@ -1,31 +1,54 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { supabase, isSupabaseEnabled } from '../services/supabaseClient';
 
 const AuthContext = createContext(null);
 
 const AUTH_STORAGE_KEY = 'sv_auth_user';
 
-/**
- * Generate a simple unique ID for mock users.
- */
 function generateUserId() {
   return `user_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
 }
 
+/** Mappa l'utente Supabase nella forma usata dall'app. */
+function mapSupabaseUser(user) {
+  if (!user) return null;
+  return {
+    id: user.id,
+    email: user.email,
+    name:
+      user.user_metadata?.name ||
+      user.user_metadata?.full_name ||
+      user.email?.split('@')[0] ||
+      '',
+  };
+}
+
 /**
- * AuthProvider - manages user authentication state with localStorage persistence.
+ * AuthProvider — due modalità:
+ * - Supabase (variabili d'ambiente presenti): account veri, email+password e Google.
+ * - Locale (Fase A): auth simulata su localStorage, nessun server.
  */
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Restore session on mount
+  // ── Sessione iniziale ──
   useEffect(() => {
+    if (isSupabaseEnabled) {
+      supabase.auth.getSession().then(({ data }) => {
+        setUser(mapSupabaseUser(data.session?.user));
+        setIsLoading(false);
+      });
+      const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+        setUser(mapSupabaseUser(session?.user));
+      });
+      return () => sub.subscription.unsubscribe();
+    }
+
+    // Modalità locale
     try {
       const stored = localStorage.getItem(AUTH_STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        setUser(parsed);
-      }
+      if (stored) setUser(JSON.parse(stored));
     } catch (e) {
       console.warn('Failed to restore auth session:', e);
       localStorage.removeItem(AUTH_STORAGE_KEY);
@@ -34,24 +57,23 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  /**
-   * Mock login - simulates async authentication.
-   * @param {string} email
-   * @param {string} password
-   * @returns {Promise<{ success: boolean, error?: string }>}
-   */
+  // ── Login ──
   const login = useCallback(async (email, password) => {
-    setIsLoading(true);
-
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
     if (!email || !password) {
-      setIsLoading(false);
       return { success: false, error: 'Email e password sono obbligatori' };
     }
 
-    // Check if user exists in localStorage (from registration)
+    if (isSupabaseEnabled) {
+      setIsLoading(true);
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      setIsLoading(false);
+      if (error) return { success: false, error: error.message };
+      return { success: true };
+    }
+
+    // Modalità locale (mock)
+    setIsLoading(true);
+    await new Promise((resolve) => setTimeout(resolve, 400));
     const registeredUsers = JSON.parse(localStorage.getItem('sv_registered_users') || '[]');
     const existingUser = registeredUsers.find((u) => u.email === email);
 
@@ -64,7 +86,6 @@ export function AuthProvider({ children }) {
         id: existingUser.id,
         name: existingUser.name,
         email: existingUser.email,
-        avatar: existingUser.avatar || null,
       };
       setUser(userData);
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(userData));
@@ -72,124 +93,94 @@ export function AuthProvider({ children }) {
       return { success: true };
     }
 
-    // Auto-create mock user for any email/password combo
-    const mockUser = {
-      id: generateUserId(),
-      name: email.split('@')[0],
-      email,
-      avatar: null,
-    };
-
+    const mockUser = { id: generateUserId(), name: email.split('@')[0], email };
     setUser(mockUser);
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(mockUser));
     setIsLoading(false);
     return { success: true };
   }, []);
 
-  /**
-   * Mock registration - creates a new user.
-   * @param {string} name
-   * @param {string} email
-   * @param {string} password
-   * @returns {Promise<{ success: boolean, error?: string }>}
-   */
+  // ── Registrazione ──
   const register = useCallback(async (name, email, password) => {
-    setIsLoading(true);
-
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
     if (!name || !email || !password) {
-      setIsLoading(false);
       return { success: false, error: 'Tutti i campi sono obbligatori' };
     }
-
     if (password.length < 6) {
-      setIsLoading(false);
       return { success: false, error: 'La password deve avere almeno 6 caratteri' };
     }
 
-    // Check for existing user
+    if (isSupabaseEnabled) {
+      setIsLoading(true);
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { name } },
+      });
+      setIsLoading(false);
+      if (error) return { success: false, error: error.message };
+      // Con la conferma email attiva non c'è ancora una sessione
+      if (!data.session) return { success: true, needsConfirmation: true };
+      return { success: true };
+    }
+
+    // Modalità locale (mock)
+    setIsLoading(true);
+    await new Promise((resolve) => setTimeout(resolve, 400));
     const registeredUsers = JSON.parse(localStorage.getItem('sv_registered_users') || '[]');
     if (registeredUsers.some((u) => u.email === email)) {
       setIsLoading(false);
       return { success: false, error: 'Un account con questa email esiste già' };
     }
 
-    const newUser = {
-      id: generateUserId(),
-      name,
-      email,
-      password, // In a real app this would be hashed
-      avatar: null,
-    };
-
-    // Store in registered users list
+    const newUser = { id: generateUserId(), name, email, password };
     registeredUsers.push(newUser);
     localStorage.setItem('sv_registered_users', JSON.stringify(registeredUsers));
 
-    // Set as current user (without password)
-    const userData = {
-      id: newUser.id,
-      name: newUser.name,
-      email: newUser.email,
-      avatar: null,
-    };
-
+    const userData = { id: newUser.id, name, email };
     setUser(userData);
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(userData));
     setIsLoading(false);
     return { success: true };
   }, []);
 
-  /**
-   * Logout - clear session data.
-   */
-  const logout = useCallback(() => {
-    setUser(null);
-    localStorage.removeItem(AUTH_STORAGE_KEY);
+  // ── Google OAuth (solo con Supabase) ──
+  const loginWithGoogle = useCallback(async () => {
+    if (!isSupabaseEnabled) {
+      return { success: false, error: 'not-available' };
+    }
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin },
+    });
+    if (error) return { success: false, error: error.message };
+    return { success: true }; // il browser viene rediretto
   }, []);
 
-  /**
-   * Update user profile data (name, email, avatar).
-   * @param {object} data - Partial user data to update
-   * @returns {{ success: boolean }}
-   */
-  const updateProfile = useCallback((data) => {
-    setUser((prev) => {
-      if (!prev) return prev;
-      const updated = { ...prev, ...data };
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updated));
-
-      // Also update registered users list
-      const registeredUsers = JSON.parse(localStorage.getItem('sv_registered_users') || '[]');
-      const idx = registeredUsers.findIndex((u) => u.id === prev.id);
-      if (idx !== -1) {
-        registeredUsers[idx] = { ...registeredUsers[idx], ...data };
-        localStorage.setItem('sv_registered_users', JSON.stringify(registeredUsers));
-      }
-
-      return updated;
-    });
-    return { success: true };
+  // ── Logout ──
+  const logout = useCallback(async () => {
+    if (isSupabaseEnabled) {
+      await supabase.auth.signOut();
+      setUser(null);
+      return;
+    }
+    setUser(null);
+    localStorage.removeItem(AUTH_STORAGE_KEY);
   }, []);
 
   const value = {
     user,
     isAuthenticated: !!user,
     isLoading,
+    isCloud: isSupabaseEnabled,
     login,
     register,
+    loginWithGoogle,
     logout,
-    updateProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-/**
- * Hook to access auth context.
- */
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {

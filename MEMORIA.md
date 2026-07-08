@@ -58,7 +58,31 @@
       console): registrazione → onboarding → guardaroba → dettaglio → outfit con
       meteo reale Firenze → prova avatar → indossa → calendario → profilo → desktop
 
-**Prossimi passi possibili:** feedback dell'utente sulla UI → poi Fase B (Supabase).
+**FASE B COMPLETATA lato codice (2026-07-08).** Integrazione Supabase dual-mode:
+- `src/services/supabaseClient.js`: client attivo solo con `VITE_SUPABASE_URL` +
+  `VITE_SUPABASE_ANON_KEY` in `.env.local`; senza chiavi l'app resta in modalità
+  locale Fase A (verificata di nuovo con smoke test browser, 0 errori).
+- `supabase/migrations/001_init.sql`: tabelle (profiles, items, wishlist_items,
+  outfits, calendar_entries) con RLS, bucket privati wardrobe-photos/profile-photos
+  con policy per-utente, trigger profilo automatico alla registrazione.
+- `supabase/functions/fetch-link-metadata/`: Edge Function per i link shop
+  (client la usa con fallback automatico su microlink).
+- `src/services/db.js`: mappers app↔DB, CRUD, upload foto + URL firmate (6gg).
+- AuthContext: Supabase auth (email+password, Google OAuth, needsConfirmation)
+  o mock locale. LoginPage mostra "Continua con Google" solo in cloud.
+- ProfileContext: profilo su tabella profiles (avatar, foto riferimento su
+  Storage, onboarded, lingua+città sincronizzate); `profileLoading` evita il
+  rimbalzo verso l'onboarding; Protected in App.jsx lo aspetta.
+- WardrobeContext: caricamento iniziale dal cloud + cache offline di lettura
+  (`sv_cloud_cache_<uid>`), scritture ottimistiche write-through (fallimento →
+  console.warn, dati restano locali).
+- Deploy: `vercel.json` pronto; guida passo-passo in `docs/SETUP-CLOUD.md`.
+
+**COSA MANCA (solo azioni dell'utente, non codice):** creare il progetto su
+supabase.com, eseguire la migrazione SQL, mettere le chiavi in `.env.local`,
+(facoltativi) provider Google + deploy Edge Function + progetto Vercel.
+Il percorso cloud NON è stato provato live (servono le chiavi): alla prima
+attivazione va rifatto un giro di verifica.
 
 ## Comandi
 

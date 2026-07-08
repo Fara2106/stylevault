@@ -1,8 +1,11 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { useAuth } from './AuthContext';
+import { isSupabaseEnabled } from '../services/supabaseClient';
+import * as db from '../services/db';
 
 const WardrobeContext = createContext(null);
 
-// localStorage keys
+// localStorage keys (modalità locale / cache offline)
 const KEYS = {
   items: 'sv_items',
   outfitHistory: 'sv_outfit_history',
@@ -11,7 +14,9 @@ const KEYS = {
   customCategories: 'sv_custom_categories',
 };
 
-/** Sample wardrobe items loaded on first run */
+const cloudCacheKey = (userId) => `sv_cloud_cache_${userId}`;
+
+/** Sample wardrobe items loaded on first run (solo sviluppo, modalità locale) */
 const SAMPLE_ITEMS = [
   {
     id: '1',
@@ -165,9 +170,6 @@ const SAMPLE_ITEMS = [
   },
 ];
 
-/**
- * Load data from localStorage with a fallback default.
- */
 function loadFromStorage(key, fallback) {
   try {
     const stored = localStorage.getItem(key);
@@ -178,9 +180,6 @@ function loadFromStorage(key, fallback) {
   return fallback;
 }
 
-/**
- * Save data to localStorage.
- */
 function saveToStorage(key, data) {
   try {
     localStorage.setItem(key, JSON.stringify(data));
@@ -189,151 +188,308 @@ function saveToStorage(key, data) {
   }
 }
 
+const tempId = (prefix) =>
+  `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+
+/** Le scritture cloud non bloccano la UI: fallimento → warn (i dati restano locali). */
+function fireCloud(promise) {
+  promise?.catch((e) => console.warn('Cloud sync failed:', e));
+}
+
 /**
- * WardrobeProvider - manages wardrobe items, outfit history, wishlist, and saved outfits.
+ * WardrobeProvider — guardaroba, wishlist, outfit salvati, storico/calendario.
+ * Modalità locale: tutto in localStorage (Fase A).
+ * Modalità cloud: Supabase con aggiornamenti ottimistici e cache di lettura offline.
  */
 export function WardrobeProvider({ children }) {
+  const { user } = useAuth();
+  const userId = user?.id;
+
   const [items, setItems] = useState(() => {
+    if (isSupabaseEnabled) return [];
     const stored = loadFromStorage(KEYS.items, null);
     if (stored !== null) return stored;
     // Dati di esempio solo in sviluppo; in produzione si parte dal guardaroba vuoto
     return import.meta.env.DEV ? SAMPLE_ITEMS : [];
   });
-
   const [outfitHistory, setOutfitHistory] = useState(() =>
-    loadFromStorage(KEYS.outfitHistory, [])
+    isSupabaseEnabled ? [] : loadFromStorage(KEYS.outfitHistory, [])
   );
-
   const [wishlist, setWishlist] = useState(() =>
-    loadFromStorage(KEYS.wishlist, [])
+    isSupabaseEnabled ? [] : loadFromStorage(KEYS.wishlist, [])
   );
-
   const [savedOutfits, setSavedOutfits] = useState(() =>
-    loadFromStorage(KEYS.savedOutfits, [])
+    isSupabaseEnabled ? [] : loadFromStorage(KEYS.savedOutfits, [])
   );
-
   const [customCategories, setCustomCategories] = useState(() =>
     loadFromStorage(KEYS.customCategories, [])
   );
+  const [isSyncing, setIsSyncing] = useState(isSupabaseEnabled);
 
-  // Persist to localStorage whenever state changes
-  useEffect(() => { saveToStorage(KEYS.items, items); }, [items]);
-  useEffect(() => { saveToStorage(KEYS.outfitHistory, outfitHistory); }, [outfitHistory]);
-  useEffect(() => { saveToStorage(KEYS.wishlist, wishlist); }, [wishlist]);
-  useEffect(() => { saveToStorage(KEYS.savedOutfits, savedOutfits); }, [savedOutfits]);
-  useEffect(() => { saveToStorage(KEYS.customCategories, customCategories); }, [customCategories]);
+  // ── Caricamento iniziale dal cloud (con cache offline in lettura) ──
+  useEffect(() => {
+    if (!isSupabaseEnabled) return;
+    if (!userId) {
+      setItems([]);
+      setWishlist([]);
+      setSavedOutfits([]);
+      setOutfitHistory([]);
+      setIsSyncing(false);
+      return;
+    }
+    let alive = true;
+    setIsSyncing(true);
+    db.fetchAllData(userId)
+      .then((data) => {
+        if (!alive) return;
+        setItems(data.items);
+        setWishlist(data.wishlist);
+        setSavedOutfits(data.savedOutfits);
+        setOutfitHistory(data.outfitHistory);
+        saveToStorage(cloudCacheKey(userId), data);
+      })
+      .catch((e) => {
+        console.warn('Cloud load failed, using offline cache:', e);
+        if (!alive) return;
+        const cached = loadFromStorage(cloudCacheKey(userId), null);
+        if (cached) {
+          setItems(cached.items || []);
+          setWishlist(cached.wishlist || []);
+          setSavedOutfits(cached.savedOutfits || []);
+          setOutfitHistory(cached.outfitHistory || []);
+        }
+      })
+      .finally(() => alive && setIsSyncing(false));
+    return () => {
+      alive = false;
+    };
+  }, [userId]);
+
+  // ── Persistenza locale (Fase A) ──
+  useEffect(() => {
+    if (!isSupabaseEnabled) saveToStorage(KEYS.items, items);
+  }, [items]);
+  useEffect(() => {
+    if (!isSupabaseEnabled) saveToStorage(KEYS.outfitHistory, outfitHistory);
+  }, [outfitHistory]);
+  useEffect(() => {
+    if (!isSupabaseEnabled) saveToStorage(KEYS.wishlist, wishlist);
+  }, [wishlist]);
+  useEffect(() => {
+    if (!isSupabaseEnabled) saveToStorage(KEYS.savedOutfits, savedOutfits);
+  }, [savedOutfits]);
+  useEffect(() => {
+    saveToStorage(KEYS.customCategories, customCategories);
+  }, [customCategories]);
 
   // ── Item CRUD ──
 
-  const addItem = useCallback((item) => {
-    const newItem = {
-      ...item,
-      id: item.id || `item_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-      dateAdded: item.dateAdded || new Date().toISOString().split('T')[0],
-      favorite: item.favorite || false,
-    };
-    setItems((prev) => [...prev, newItem]);
-    return newItem;
-  }, []);
+  const addItem = useCallback(
+    (item) => {
+      const newItem = {
+        ...item,
+        id: item.id || tempId('item'),
+        dateAdded: item.dateAdded || new Date().toISOString().split('T')[0],
+        favorite: item.favorite || false,
+      };
+      setItems((prev) => [...prev, newItem]);
 
-  const removeItem = useCallback((id) => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
-  }, []);
+      if (isSupabaseEnabled && userId) {
+        fireCloud(
+          db.insertItem(newItem, userId).then((saved) => {
+            setItems((prev) => prev.map((i) => (i.id === newItem.id ? saved : i)));
+          })
+        );
+      }
+      return newItem;
+    },
+    [userId]
+  );
 
-  const updateItem = useCallback((id, updates) => {
-    setItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, ...updates } : item))
-    );
-  }, []);
+  const removeItem = useCallback(
+    (id) => {
+      setItems((prev) => {
+        const target = prev.find((i) => i.id === id);
+        if (isSupabaseEnabled && target) {
+          fireCloud(db.deleteItemRow(id, target.photoPath));
+        }
+        return prev.filter((item) => item.id !== id);
+      });
+    },
+    []
+  );
+
+  const updateItem = useCallback(
+    (id, updates) => {
+      setItems((prev) =>
+        prev.map((item) => (item.id === id ? { ...item, ...updates } : item))
+      );
+      if (isSupabaseEnabled && userId) {
+        fireCloud(
+          db.updateItemRow(id, updates, userId).then((signedPhoto) => {
+            if (signedPhoto) {
+              setItems((prev) =>
+                prev.map((i) => (i.id === id ? { ...i, photo: signedPhoto } : i))
+              );
+            }
+          })
+        );
+      }
+    },
+    [userId]
+  );
 
   const toggleFavorite = useCallback((id) => {
     setItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, favorite: !item.favorite } : item
-      )
+      prev.map((item) => {
+        if (item.id !== id) return item;
+        const favorite = !item.favorite;
+        if (isSupabaseEnabled) fireCloud(db.setFavorite(id, favorite));
+        return { ...item, favorite };
+      })
     );
   }, []);
 
-  // ── Outfit History (funge anche da calendario: worn=false → pianificato) ──
+  // ── Outfit History (calendario: worn=false → pianificato) ──
 
-  const logOutfit = useCallback((outfit, date, { worn = true } = {}) => {
-    const log = {
-      id: `log_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-      outfit,
-      date: date || new Date().toISOString().split('T')[0],
-      worn,
-      timestamp: Date.now(),
-    };
-    setOutfitHistory((prev) => [log, ...prev]);
-    return log;
-  }, []);
+  const logOutfit = useCallback(
+    (outfit, date, { worn = true } = {}) => {
+      const log = {
+        id: tempId('log'),
+        outfit,
+        date: date || new Date().toISOString().split('T')[0],
+        worn,
+        timestamp: Date.now(),
+      };
+      setOutfitHistory((prev) => [log, ...prev]);
+
+      if (isSupabaseEnabled && userId) {
+        fireCloud(
+          db.insertCalendarEntry(outfit, log.date, worn, userId).then((saved) => {
+            setOutfitHistory((prev) =>
+              prev.map((l) => (l.id === log.id ? { ...l, ...saved } : l))
+            );
+          })
+        );
+      }
+      return log;
+    },
+    [userId]
+  );
 
   const updateOutfitLog = useCallback((id, updates) => {
     setOutfitHistory((prev) =>
       prev.map((log) => (log.id === id ? { ...log, ...updates } : log))
     );
+    if (isSupabaseEnabled) fireCloud(db.updateCalendarEntry(id, updates));
   }, []);
 
   const removeOutfitLog = useCallback((id) => {
     setOutfitHistory((prev) => prev.filter((log) => log.id !== id));
+    if (isSupabaseEnabled) fireCloud(db.deleteCalendarEntry(id));
   }, []);
 
   // ── Saved Outfits ──
 
-  const saveOutfit = useCallback((outfit) => {
-    const saved = {
-      ...outfit,
-      id: outfit.id || `saved_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-      savedAt: Date.now(),
-    };
-    setSavedOutfits((prev) => [...prev, saved]);
-    return saved;
-  }, []);
+  const saveOutfit = useCallback(
+    (outfit) => {
+      const saved = {
+        ...outfit,
+        id: outfit.id || tempId('saved'),
+        savedAt: Date.now(),
+      };
+      setSavedOutfits((prev) => [...prev, saved]);
+
+      if (isSupabaseEnabled && userId) {
+        fireCloud(
+          db.insertOutfit(saved, userId).then((remote) => {
+            setSavedOutfits((prev) =>
+              prev.map((o) => (o.id === saved.id ? { ...o, id: remote.id } : o))
+            );
+          })
+        );
+      }
+      return saved;
+    },
+    [userId]
+  );
 
   const removeSavedOutfit = useCallback((id) => {
     setSavedOutfits((prev) => prev.filter((o) => o.id !== id));
+    if (isSupabaseEnabled) fireCloud(db.deleteOutfit(id));
   }, []);
 
   // ── Wishlist ──
 
-  const addToWishlist = useCallback((item) => {
-    const wishlistItem = {
-      ...item,
-      id: item.id || `wish_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-      addedAt: Date.now(),
-    };
-    setWishlist((prev) => [...prev, wishlistItem]);
-    return wishlistItem;
-  }, []);
+  const addToWishlist = useCallback(
+    (item) => {
+      const wishlistItem = {
+        ...item,
+        id: item.id || tempId('wish'),
+        addedAt: Date.now(),
+      };
+      setWishlist((prev) => [...prev, wishlistItem]);
+
+      if (isSupabaseEnabled && userId) {
+        fireCloud(
+          db.insertItem(wishlistItem, userId, 'wishlist_items').then((saved) => {
+            setWishlist((prev) =>
+              prev.map((w) => (w.id === wishlistItem.id ? { ...saved, addedAt: wishlistItem.addedAt } : w))
+            );
+          })
+        );
+      }
+      return wishlistItem;
+    },
+    [userId]
+  );
 
   const removeFromWishlist = useCallback((id) => {
-    setWishlist((prev) => prev.filter((item) => item.id !== id));
+    setWishlist((prev) => {
+      const target = prev.find((w) => w.id === id);
+      if (isSupabaseEnabled && target) {
+        fireCloud(db.deleteItemRow(id, target.photoPath, 'wishlist_items'));
+      }
+      return prev.filter((item) => item.id !== id);
+    });
   }, []);
 
-  const moveWishlistToWardrobe = useCallback((wishlistItemId) => {
-    setWishlist((prev) => {
-      const item = prev.find((w) => w.id === wishlistItemId);
-      if (item) {
-        // Add to wardrobe items (strip wishlist-specific fields)
-        const { addedAt, ...wardrobeItem } = item;
-        addItem({
-          ...wardrobeItem,
-          id: undefined, // Let addItem generate a new ID
-          dateAdded: new Date().toISOString().split('T')[0],
-        });
-      }
-      return prev.filter((w) => w.id !== wishlistItemId);
-    });
-  }, [addItem]);
+  const moveWishlistToWardrobe = useCallback(
+    (wishlistItemId) => {
+      setWishlist((prev) => {
+        const item = prev.find((w) => w.id === wishlistItemId);
+        if (item) {
+          const { addedAt, ...wardrobeItem } = item;
+          const newItem = {
+            ...wardrobeItem,
+            id: tempId('item'),
+            dateAdded: new Date().toISOString().split('T')[0],
+            favorite: false,
+          };
+          setItems((prevItems) => [...prevItems, newItem]);
 
-  // ── Custom Categories ──
+          if (isSupabaseEnabled && userId) {
+            // La foto su Storage viene riusata dal nuovo capo: si cancella solo la riga
+            fireCloud(
+              db.insertItem(newItem, userId).then((saved) => {
+                setItems((prevItems) =>
+                  prevItems.map((i) => (i.id === newItem.id ? saved : i))
+                );
+                return db.deleteItemRow(wishlistItemId, null, 'wishlist_items');
+              })
+            );
+          }
+        }
+        return prev.filter((w) => w.id !== wishlistItemId);
+      });
+    },
+    [userId]
+  );
+
+  // ── Custom Categories (solo locale, non in scope cloud v1) ──
 
   const addCustomCategory = useCallback((name, icon) => {
-    const category = {
-      id: `custom_${Date.now()}_${Math.random().toString(36).substring(2, 5)}`,
-      name,
-      icon: icon || '📁',
-    };
+    const category = { id: tempId('custom'), name, icon: icon || '📁' };
     setCustomCategories((prev) => [...prev, category]);
     return category;
   }, []);
@@ -345,6 +501,7 @@ export function WardrobeProvider({ children }) {
     wishlist,
     savedOutfits,
     customCategories,
+    isSyncing,
 
     // Item CRUD
     addItem,
@@ -375,9 +532,6 @@ export function WardrobeProvider({ children }) {
   );
 }
 
-/**
- * Hook to access wardrobe context.
- */
 export function useWardrobe() {
   const context = useContext(WardrobeContext);
   if (!context) {

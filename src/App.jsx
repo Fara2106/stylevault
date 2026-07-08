@@ -25,8 +25,8 @@ function ScrollToTop() {
 /** Richiede login; il primo accesso passa dall'onboarding. */
 function Protected({ children }) {
   const { isAuthenticated, isLoading } = useAuth();
-  const { onboarded } = useProfile();
-  if (isLoading) return null;
+  const { onboarded, profileLoading } = useProfile();
+  if (isLoading || profileLoading) return null;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (!onboarded) return <Navigate to="/onboarding" replace />;
   return children;

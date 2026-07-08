@@ -1,18 +1,14 @@
 /**
- * Estrazione metadati da un link di shop online (Fase A).
- * Usa l'API pubblica di microlink.io (CORS aperto, piano gratuito):
- * legge i metadati Open Graph della pagina prodotto.
- * In Fase B verrà sostituita da una Edge Function Supabase.
+ * Estrazione metadati da un link di shop online.
+ * Con Supabase configurato usa la Edge Function `fetch-link-metadata`
+ * (vedi supabase/functions/); altrimenti, o in caso di errore, ripiega
+ * sull'API pubblica di microlink.io (CORS aperto, piano gratuito).
  */
+import { supabase, isSupabaseEnabled } from './supabaseClient';
 
 const MICROLINK_URL = 'https://api.microlink.io/';
 
-/**
- * @param {string} url - Link alla pagina prodotto
- * @returns {Promise<{title: string, image: string, site: string}>}
- * @throws {Error} 'link-metadata-failed' se la pagina non è leggibile
- */
-export async function fetchLinkMetadata(url) {
+async function viaMicrolink(url) {
   let res;
   try {
     res = await fetch(`${MICROLINK_URL}?url=${encodeURIComponent(url)}`);
@@ -31,6 +27,30 @@ export async function fetchLinkMetadata(url) {
     image: data.data.image?.url || data.data.logo?.url || '',
     site: data.data.publisher || '',
   };
+}
+
+async function viaEdgeFunction(url) {
+  const { data, error } = await supabase.functions.invoke('fetch-link-metadata', {
+    body: { url },
+  });
+  if (error || !data || data.error) throw new Error('link-metadata-failed');
+  return { title: data.title || '', image: data.image || '', site: data.site || '' };
+}
+
+/**
+ * @param {string} url - Link alla pagina prodotto
+ * @returns {Promise<{title: string, image: string, site: string}>}
+ * @throws {Error} 'link-metadata-failed' se la pagina non è leggibile
+ */
+export async function fetchLinkMetadata(url) {
+  if (isSupabaseEnabled) {
+    try {
+      return await viaEdgeFunction(url);
+    } catch {
+      // Funzione non deployata o shop ostile: si tenta comunque con microlink
+    }
+  }
+  return viaMicrolink(url);
 }
 
 /** Validazione superficiale di un URL http(s). */

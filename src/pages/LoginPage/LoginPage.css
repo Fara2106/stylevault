@@ -62,6 +62,17 @@
   margin-bottom: var(--sv-space-3);
 }
 
+.login-page__info {
+  color: var(--sv-success);
+  font-size: 13px;
+  text-align: center;
+  margin-bottom: var(--sv-space-3);
+}
+
+.login-page__google {
+  margin-top: var(--sv-space-3);
+}
+
 .login-page__google-note {
   margin-top: var(--sv-space-3);
   font-size: 12px;
