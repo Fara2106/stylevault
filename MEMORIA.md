@@ -17,11 +17,14 @@
   ha i propri dati nel proprio browser, login simulato senza email di conferma.
 
 **Novità 2026-07-08 (sera) — try-on fotografico con Google Gemini:**
-- Nuova sezione "Prova con la tua foto" nella pagina Prova sull'Avatar: l'AI
-  di Google (`gemini-2.5-flash-image`, "Nano Banana") veste una foto reale
-  dell'utente con i capi scelti. Scelta di Lorenzo: niente backend — la
-  chiave API la fornisce l'utente e resta SOLO nel browser (localStorage
-  `sv_gemini_key`); chiamata diretta browser→Google, il sito resta statico.
+- La pagina Prova sull'Avatar ha ora **due schede** (scelta di Lorenzo):
+  "Sull'avatar" (default, gratis: capi nelle sagome SVG — pantaloni su gambe
+  ecc.) e "Sulla tua foto (AI)" con Gemini; l'outfit si compone nella scheda
+  avatar, la scheda foto avvisa se è vuoto.
+- Foto AI: l'AI di Google (`gemini-2.5-flash-image`, "Nano Banana") veste una
+  foto reale dell'utente con i capi scelti. Niente backend — la chiave API la
+  fornisce l'utente e resta SOLO nel browser (localStorage `sv_gemini_key`);
+  chiamata diretta browser→Google, il sito resta statico.
 - Chiave: sezione "Try-on fotografico (AI)" nel Profilo, con istruzioni
   passo-passo (pensate per chi non ha mai creato una chiave API) e link a
   aistudio.google.com/apikey.

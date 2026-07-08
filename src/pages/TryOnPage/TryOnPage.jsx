@@ -43,6 +43,9 @@ export default function TryOnPage() {
   const [pickerSlot, setPickerSlot] = useState(null);
   const [saved, setSaved] = useState(false);
 
+  // Due modalità di prova: sagome sull'avatar (gratis) o foto AI (Gemini)
+  const [mode, setMode] = useState('avatar');
+
   // Try-on fotografico (Gemini): chiave dell'utente, salvata solo nel browser
   const geminiKey = getGeminiKey();
   const [generating, setGenerating] = useState(false);
@@ -131,33 +134,60 @@ export default function TryOnPage() {
         <p className="tryon-page__wishlist-note sv-label">{t('tryon.withWishlist')}</p>
       )}
 
-      <OutfitOnAvatar
-        outfit={outfit}
-        avatarConfig={avatarConfig}
-        onSlotClick={setPickerSlot}
-        onRemove={handleRemove}
-      />
+      {/* Scelta della modalità di prova */}
+      <div className="tryon-page__modes" role="tablist">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mode === 'avatar'}
+          className={`tryon-page__mode ${mode === 'avatar' ? 'tryon-page__mode--active' : ''}`}
+          onClick={() => setMode('avatar')}
+        >
+          {t('tryon.modeAvatar')}
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mode === 'photo'}
+          className={`tryon-page__mode ${mode === 'photo' ? 'tryon-page__mode--active' : ''}`}
+          onClick={() => setMode('photo')}
+        >
+          {t('tryon.modePhoto')}
+        </button>
+      </div>
 
-      {outfitHasItems(outfit) && (
-        <div className="tryon-page__actions">
-          <Button
-            fullWidth
-            icon={<Icon name={saved ? 'check' : 'heart'} size={15} />}
-            onClick={handleSave}
-            disabled={saved}
-          >
-            {saved ? t('outfit.saved') : t('tryon.saveOutfit')}
-          </Button>
-        </div>
+      {mode === 'avatar' && (
+        <>
+          <OutfitOnAvatar
+            outfit={outfit}
+            avatarConfig={avatarConfig}
+            onSlotClick={setPickerSlot}
+            onRemove={handleRemove}
+          />
+
+          {outfitHasItems(outfit) && (
+            <div className="tryon-page__actions">
+              <Button
+                fullWidth
+                icon={<Icon name={saved ? 'check' : 'heart'} size={15} />}
+                onClick={handleSave}
+                disabled={saved}
+              >
+                {saved ? t('outfit.saved') : t('tryon.saveOutfit')}
+              </Button>
+            </div>
+          )}
+        </>
       )}
 
       {/* Try-on fotografico con Gemini */}
-      {outfitHasItems(outfit) && (
+      {mode === 'photo' && (
         <section className="tryon-page__photo">
-          <h2 className="sv-label">{t('tryon.photoTitle')}</h2>
           <p className="tryon-page__photo-intro">{t('tryon.photoIntro')}</p>
 
-          {!geminiKey ? (
+          {!outfitHasItems(outfit) ? (
+            <p className="tryon-page__photo-note">{t('tryon.photoNoOutfit')}</p>
+          ) : !geminiKey ? (
             <p className="tryon-page__photo-note">
               {t('tryon.photoNeedsKey')}{' '}
               <Link to="/profile">{t('tryon.photoSetKey')}</Link>

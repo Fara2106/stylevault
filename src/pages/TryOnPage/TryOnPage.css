@@ -143,9 +143,7 @@
 
 .tryon-page__photo {
   max-width: 340px;
-  margin: var(--sv-space-6) auto 0;
-  padding-top: var(--sv-space-4);
-  border-top: 1px solid var(--sv-border);
+  margin: 0 auto;
   text-align: center;
 }
 
@@ -212,4 +210,36 @@
 
 .tryon-page__photo-result figcaption {
   margin-top: var(--sv-space-2);
+}
+
+/* ── Selettore modalità (avatar / foto AI) ─────────── */
+
+.tryon-page__modes {
+  display: flex;
+  max-width: 340px;
+  margin: 0 auto var(--sv-space-4);
+  background: var(--sv-surface);
+  border: 1px solid var(--sv-border-strong);
+  border-radius: 999px;
+  padding: 3px;
+}
+
+.tryon-page__mode {
+  flex: 1;
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sv-muted);
+  background: transparent;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all var(--sv-transition);
+}
+
+.tryon-page__mode--active {
+  background: var(--sv-ink);
+  color: var(--sv-bg);
 }
