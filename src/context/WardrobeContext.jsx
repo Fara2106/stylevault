@@ -209,8 +209,9 @@ export function WardrobeProvider({ children }) {
     if (isSupabaseEnabled) return [];
     const stored = loadFromStorage(KEYS.items, null);
     if (stored !== null) return stored;
-    // Dati di esempio solo in sviluppo; in produzione si parte dal guardaroba vuoto
-    return import.meta.env.DEV ? SAMPLE_ITEMS : [];
+    // Modalità locale = demo: guardaroba di esempio precaricato.
+    // In modalità cloud (produzione vera) si parte dal guardaroba vuoto.
+    return SAMPLE_ITEMS;
   });
   const [outfitHistory, setOutfitHistory] = useState(() =>
     isSupabaseEnabled ? [] : loadFromStorage(KEYS.outfitHistory, [])
