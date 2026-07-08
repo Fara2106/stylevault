@@ -52,12 +52,19 @@ export function ProfileProvider({ children }) {
   const loadedRef = useRef(!isSupabaseEnabled);
   const applyingRemoteRef = useRef(false);
 
-  // ── Caricamento al cambio utente ──
+  // Modalità locale: il profilo dell'utente va caricato nello stesso render in
+  // cui compare lo userId (la sessione arriva da un effect), altrimenti
+  // Protected legge onboarded=false stantio e rimbalza sull'onboarding a ogni
+  // refresh di una pagina protetta.
+  const [profileUserId, setProfileUserId] = useState(userId);
+  if (!isSupabaseEnabled && profileUserId !== userId) {
+    setProfileUserId(userId);
+    setProfile(loadLocalProfile(userId));
+  }
+
+  // ── Caricamento al cambio utente (cloud) ──
   useEffect(() => {
-    if (!isSupabaseEnabled) {
-      setProfile(loadLocalProfile(userId));
-      return;
-    }
+    if (!isSupabaseEnabled) return;
     loadedRef.current = false;
     if (!userId) {
       setProfile(DEFAULT_PROFILE);

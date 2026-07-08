@@ -118,8 +118,16 @@
   text-transform: uppercase;
 }
 
+.item-detail__tryon {
+  margin-top: var(--sv-space-5);
+}
+
 .item-detail__actions {
   display: flex;
   gap: var(--sv-space-3);
   margin-top: var(--sv-space-5);
+}
+
+.item-detail__tryon + .item-detail__actions {
+  margin-top: var(--sv-space-3);
 }

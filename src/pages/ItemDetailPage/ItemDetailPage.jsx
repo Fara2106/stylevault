@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useWardrobe } from '../../context/WardrobeContext';
 import { Header, Button, Modal, Icon } from '../../components/common';
 import { CLOTHING_COLORS, CATEGORIES } from '../../utils/categories';
+import { slotForItem } from '../../utils/tryonComposer';
 import './ItemDetailPage.css';
 
 const outfitItemIds = (outfit) =>
@@ -129,6 +130,17 @@ export default function ItemDetailPage() {
               <Icon name="external" size={15} />
               {t('itemDetail.openShop')}
             </a>
+          )}
+
+          {slotForItem(item) && (
+            <Button
+              fullWidth
+              icon={<Icon name="user" size={15} />}
+              onClick={() => navigate('/tryon', { state: { item } })}
+              className="item-detail__tryon"
+            >
+              {t('itemDetail.tryOn')}
+            </Button>
           )}
 
           <div className="item-detail__actions">

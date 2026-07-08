@@ -2,10 +2,82 @@
   max-width: 560px;
 }
 
+.tryon-page__hint {
+  text-align: center;
+  color: var(--sv-muted);
+  margin-bottom: var(--sv-space-3);
+}
+
 .tryon-page__wishlist-note {
   text-align: center;
   color: var(--sv-accent-ink);
   margin-bottom: var(--sv-space-3);
+}
+
+.tryon-page__actions {
+  max-width: 340px;
+  margin: var(--sv-space-4) auto 0;
+}
+
+.tryon-page__picker {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sv-space-2);
+}
+
+.tryon-page__picker-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px;
+  background: var(--sv-surface);
+  border: 1px solid var(--sv-border);
+  border-radius: var(--sv-radius-md);
+  cursor: pointer;
+  text-align: center;
+}
+
+.tryon-page__picker-item--active {
+  border-color: var(--sv-ink);
+}
+
+.tryon-page__picker-item img {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: var(--sv-radius-sm);
+  background: var(--sv-surface-soft);
+}
+
+.tryon-page__picker-item span {
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tryon-page__picker-check {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--sv-ink);
+  color: var(--sv-bg);
+}
+
+.tryon-page__picker-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sv-space-3);
+  text-align: center;
+  padding: var(--sv-space-3) 0;
 }
 
 .tryon-page__palette {

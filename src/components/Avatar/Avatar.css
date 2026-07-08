@@ -223,3 +223,60 @@
 .tryon__slot--accessory img {
   aspect-ratio: 1;
 }
+
+/* ── Slot interattivi (composizione manuale) ───────── */
+
+.tryon__slot-pick {
+  display: block;
+  width: 100%;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.tryon__slot-remove {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--sv-ink);
+  color: var(--sv-bg);
+  border: none;
+  border-radius: 50%;
+  box-shadow: var(--sv-shadow-soft);
+  cursor: pointer;
+  z-index: 4;
+}
+
+.tryon__slot--empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  aspect-ratio: 3 / 4;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px dashed var(--sv-border-strong);
+  color: var(--sv-muted);
+  cursor: pointer;
+}
+
+.tryon__slot--empty span {
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.tryon__slot--shoes.tryon__slot--empty {
+  aspect-ratio: 1.4;
+}
+
+.tryon__slot--accessory.tryon__slot--empty {
+  aspect-ratio: 1;
+}

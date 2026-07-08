@@ -164,7 +164,10 @@
   "tryon": {
     "title": "Prova sull'Avatar",
     "palette": "Palette dell'outfit",
-    "empty": "Nessun outfit da provare",
+    "hint": "Tocca uno slot per aggiungere o cambiare un capo",
+    "choose": "Scegli un capo",
+    "noItems": "Nessun capo di questo tipo nel guardaroba",
+    "saveOutfit": "Salva outfit",
     "withWishlist": "Include capi della wishlist"
   },
   "avatar": {
@@ -215,7 +218,8 @@
     "lastWorn": "Ultima volta: {{date}}",
     "neverWorn": "Mai indossato",
     "openShop": "Apri nel negozio",
-    "deleteItem": "Elimina capo"
+    "deleteItem": "Elimina capo",
+    "tryOn": "Prova sull'avatar"
   },
   "calendar": {
     "title": "Calendario",
@@ -233,6 +237,7 @@
     "assignOutfit": "Assegna un outfit",
     "pickOutfit": "Scegli un outfit salvato",
     "noSavedOutfits": "Non hai ancora outfit salvati: generane uno dalla pagina Outfit",
+    "customOutfit": "Outfit personalizzato",
     "repeatWarning": "Attenzione: indossato anche il {{date}}",
     "removeEntry": "Rimuovi dal giorno",
     "weatherForecast": "Previsione"

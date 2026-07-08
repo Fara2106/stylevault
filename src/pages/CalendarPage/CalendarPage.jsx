@@ -254,10 +254,14 @@ export default function CalendarPage() {
                     ))}
                 </div>
                 <span className="sv-label">
-                  {t('outfit.outfitScore')} {outfit.score}
-                  {outfit.occasion && outfit.occasion !== 'all'
-                    ? ` · ${t(`occasions.${outfit.occasion}`)}`
-                    : ''}
+                  {[
+                    outfit.score != null ? `${t('outfit.outfitScore')} ${outfit.score}` : null,
+                    outfit.occasion && outfit.occasion !== 'all'
+                      ? t(`occasions.${outfit.occasion}`)
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ') || t('calendar.customOutfit')}
                 </span>
               </button>
             ))}

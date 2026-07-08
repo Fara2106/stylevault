@@ -16,6 +16,22 @@
 - La demo gira in **modalità locale**: capi di esempio precaricati, ogni visitatore
   ha i propri dati nel proprio browser, login simulato senza email di conferma.
 
+**Novità 2026-07-08 — vestizione manuale dell'avatar:**
+- La pagina "Prova sull'Avatar" ora funziona anche da sola: gli slot
+  (capospalla, top/abito, bottom, scarpe, accessori) sono cliccabili e aprono
+  il guardaroba filtrato per categoria; ✕ per togliere un capo; "Salva outfit".
+- Entry point: bottone "Prova sull'avatar" nel dettaglio capo (precompila lo
+  slot giusto) e visita diretta a /tryon; i flussi esistenti (Outfit/Calendario
+  → Prova) restano e ora sono editabili.
+- Logica in `src/utils/tryonComposer.js` (+10 unit test): abito e bottom si
+  escludono a vicenda, accessori multipli (max 3, toggle).
+- Nel picker del calendario gli outfit senza punteggio (composti a mano) sono
+  etichettati "Outfit personalizzato".
+- **Bugfix**: in modalità locale il refresh di una pagina protetta rimbalzava
+  sull'onboarding (profilo caricato in un effect, troppo tardi per Protected);
+  ora ProfileContext carica il profilo locale in modo sincrono durante il
+  render al cambio di userId.
+
 **Prossimi passi previsti:**
 1. Raccogliere il feedback di Mary/Lorenzo e ritoccare la UI.
 2. Attivare il cloud: Lorenzo crea il progetto su supabase.com, esegue

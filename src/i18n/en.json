@@ -164,7 +164,10 @@
   "tryon": {
     "title": "Try On Avatar",
     "palette": "Outfit palette",
-    "empty": "No outfit to try on",
+    "hint": "Tap a slot to add or change an item",
+    "choose": "Pick an item",
+    "noItems": "No items of this kind in your wardrobe",
+    "saveOutfit": "Save outfit",
     "withWishlist": "Includes wishlist items"
   },
   "avatar": {
@@ -215,7 +218,8 @@
     "lastWorn": "Last time: {{date}}",
     "neverWorn": "Never worn",
     "openShop": "Open in store",
-    "deleteItem": "Delete item"
+    "deleteItem": "Delete item",
+    "tryOn": "Try on avatar"
   },
   "calendar": {
     "title": "Calendar",
@@ -233,6 +237,7 @@
     "assignOutfit": "Assign an outfit",
     "pickOutfit": "Pick a saved outfit",
     "noSavedOutfits": "No saved outfits yet: generate one from the Outfit page",
+    "customOutfit": "Custom outfit",
     "repeatWarning": "Heads up: also worn on {{date}}",
     "removeEntry": "Remove from this day",
     "weatherForecast": "Forecast"
