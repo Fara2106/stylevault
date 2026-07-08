@@ -170,7 +170,7 @@
     "saveOutfit": "Salva outfit",
     "withWishlist": "Include capi della wishlist",
     "photoTitle": "Prova con la tua foto",
-    "photoIntro": "L'AI di Google veste una tua foto con i capi scelti. Serve una foto e la chiave API gratuita (si imposta nel Profilo).",
+    "photoIntro": "L'AI di Google veste una tua foto con i capi scelti. Serve una foto e la chiave API di Google (si imposta nel Profilo).",
     "photoUpload": "Carica una tua foto",
     "photoChange": "Cambia foto",
     "photoGenerate": "Genera foto con AI",
@@ -181,7 +181,7 @@
     "photoNeedsPhoto": "Carica una tua foto per iniziare (resta su questo dispositivo e viene inviata a Google solo per generare l'immagine).",
     "photoSkipped": "Capi esclusi (foto non leggibile): {{names}}",
     "photoErrorInvalidKey": "Chiave API non valida o senza permessi: controllala nel Profilo.",
-    "photoErrorQuota": "Limite giornaliero gratuito raggiunto: riprova domani.",
+    "photoErrorQuota": "Quota di Google esaurita — il piano gratuito non include la generazione di immagini: attiva la fatturazione su aistudio.google.com (pochi centesimi a foto) o riprova più tardi.",
     "photoErrorNetwork": "Errore di rete: controlla la connessione e riprova.",
     "photoErrorNoImage": "Il modello non ha restituito un'immagine: riprova.",
     "photoErrorPerson": "Non riesco a leggere la tua foto: caricala di nuovo.",
@@ -308,7 +308,7 @@
     "aiKeyStep2": "Premi il bottone \"Create API key\" (crea chiave API).",
     "aiKeyStep3": "Copia la chiave che compare: è un codice lungo che inizia con \"AIza\".",
     "aiKeyStep4": "Torna qui, incolla la chiave nel campo sotto e premi Salva.",
-    "aiKeyNote": "È gratuita (circa 500 foto al giorno), resta salvata solo in questo browser e puoi rimuoverla quando vuoi."
+    "aiKeyNote": "La chiave è gratuita da creare e resta salvata solo in questo browser (puoi rimuoverla quando vuoi). Nota: per generare immagini Google richiede la fatturazione attiva sul tuo account (\"Set up billing\" in AI Studio, pochi centesimi a foto)."
   },
   "categories": {
     "all": "Tutti",

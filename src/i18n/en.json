@@ -170,7 +170,7 @@
     "saveOutfit": "Save outfit",
     "withWishlist": "Includes wishlist items",
     "photoTitle": "Try on your photo",
-    "photoIntro": "Google's AI dresses a photo of you with the selected items. You need a photo and the free API key (set it in your Profile).",
+    "photoIntro": "Google's AI dresses a photo of you with the selected items. You need a photo and a Google API key (set it in your Profile).",
     "photoUpload": "Upload a photo of you",
     "photoChange": "Change photo",
     "photoGenerate": "Generate AI photo",
@@ -181,7 +181,7 @@
     "photoNeedsPhoto": "Upload a photo of you to start (it stays on this device and is sent to Google only to generate the image).",
     "photoSkipped": "Items excluded (photo unreadable): {{names}}",
     "photoErrorInvalidKey": "Invalid API key or missing permissions: check it in your Profile.",
-    "photoErrorQuota": "Free daily limit reached: try again tomorrow.",
+    "photoErrorQuota": "Google quota exhausted — the free plan doesn't include image generation: enable billing at aistudio.google.com (a few cents per photo) or try again later.",
     "photoErrorNetwork": "Network error: check your connection and retry.",
     "photoErrorNoImage": "The model didn't return an image: try again.",
     "photoErrorPerson": "Couldn't read your photo: upload it again.",
@@ -308,7 +308,7 @@
     "aiKeyStep2": "Press the \"Create API key\" button.",
     "aiKeyStep3": "Copy the key that appears: a long code starting with \"AIza\".",
     "aiKeyStep4": "Come back here, paste the key in the field below and press Save.",
-    "aiKeyNote": "It's free (about 500 photos per day), it stays only in this browser, and you can remove it anytime."
+    "aiKeyNote": "The key is free to create and stays only in this browser (you can remove it anytime). Note: Google requires active billing on your account to generate images (\"Set up billing\" in AI Studio, a few cents per photo)."
   },
   "categories": {
     "all": "All",

@@ -22,18 +22,26 @@
   dell'utente con i capi scelti. Scelta di Lorenzo: niente backend — la
   chiave API la fornisce l'utente e resta SOLO nel browser (localStorage
   `sv_gemini_key`); chiamata diretta browser→Google, il sito resta statico.
-- Chiave: sezione "Try-on fotografico (AI)" nel Profilo, con istruzioni passo-passo (pensate per chi non ha mai creato una chiave API) e
-  link a aistudio.google.com/apikey (gratuita, ~500 immagini/giorno; sul
-  tier gratuito Google può usare i contenuti per migliorare i prodotti).
+- Chiave: sezione "Try-on fotografico (AI)" nel Profilo, con istruzioni
+  passo-passo (pensate per chi non ha mai creato una chiave API) e link a
+  aistudio.google.com/apikey.
 - La foto della persona è la `referencePhoto` del profilo (riusata: è la
   stessa dell'editor avatar); upload con resize a 1024px.
 - Logica in `src/services/geminiTryon.js` (+5 test: parsing dataURL,
   costruzione richiesta, estrazione immagine); errori tipizzati con
   messaggi i18n (chiave non valida, quota, rete, capi non leggibili —
   le foto remote che bloccano CORS vengono escluse e segnalate).
-- **NON ancora provato con una chiave vera** (verificato con API simulata
-  nel browser: flusso completo ok, 0 errori console): alla prima prova
-  reale di Lorenzo controllare eventuali errori di modello/endpoint.
+- **Provato con la chiave vera di Lorenzo (2026-07-08 sera)**: chiave valida
+  (i modelli testo rispondono 200), `gemini-2.5-flash-image` esiste, MA tutti
+  i modelli immagine danno **429 con "limit: 0"**: il piano gratuito della
+  Gemini API oggi NON include la generazione di immagini (l'informazione
+  "~500 immagini/giorno gratis" era datata). Niente alternative gratuite:
+  anche OpenRouter non ha modelli immagine `:free`. Per usare la funzione va
+  attivata la fatturazione dell'account Google ("Set up billing" in AI
+  Studio, ~$0.04/foto). Testi in-app aggiornati per non promettere il
+  gratis; il 429 ora mostra un messaggio che spiega la fatturazione.
+  La chiamata end-to-end con 200 non è quindi ancora stata vista: al primo
+  uso con fatturazione attiva verificare che la risposta contenga l'immagine.
 
 **Novità 2026-07-08 (sera) — l'avatar ora è davvero vestito (fix bug):**
 - Bug segnalato da Lorenzo: scegliendo un capo, la foto compariva solo come card
