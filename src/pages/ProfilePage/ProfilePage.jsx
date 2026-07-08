@@ -118,17 +118,25 @@ export default function ProfilePage() {
       {/* Try-on fotografico: chiave API Gemini, solo su questo browser */}
       <section className="profile-page__section">
         <h2 className="sv-label">{t('profile.aiSection')}</h2>
-        <p className="profile-page__ai-help">
-          {t('profile.aiKeyHelp')}{' '}
-          <a
-            href="https://aistudio.google.com/apikey"
-            target="_blank"
-            rel="noreferrer"
-            className="profile-page__ai-link"
-          >
-            aistudio.google.com/apikey <Icon name="external" size={11} />
-          </a>
-        </p>
+        <p className="profile-page__ai-help">{t('profile.aiKeyIntro')}</p>
+        <ol className="profile-page__ai-steps">
+          <li>
+            {t('profile.aiKeyStep1')}{' '}
+            <a
+              href="https://aistudio.google.com/apikey"
+              target="_blank"
+              rel="noreferrer"
+              className="profile-page__ai-link"
+            >
+              aistudio.google.com/apikey <Icon name="external" size={11} />
+            </a>{' '}
+            {t('profile.aiKeyStep1b')}
+          </li>
+          <li>{t('profile.aiKeyStep2')}</li>
+          <li>{t('profile.aiKeyStep3')}</li>
+          <li>{t('profile.aiKeyStep4')}</li>
+        </ol>
+        <p className="profile-page__ai-help">{t('profile.aiKeyNote')}</p>
         {keySaved ? (
           <div className="profile-page__ai-row">
             <span className="profile-page__ai-saved">

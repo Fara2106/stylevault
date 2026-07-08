@@ -22,7 +22,7 @@
   dell'utente con i capi scelti. Scelta di Lorenzo: niente backend — la
   chiave API la fornisce l'utente e resta SOLO nel browser (localStorage
   `sv_gemini_key`); chiamata diretta browser→Google, il sito resta statico.
-- Chiave: sezione "Try-on fotografico (AI)" nel Profilo, con istruzioni e
+- Chiave: sezione "Try-on fotografico (AI)" nel Profilo, con istruzioni passo-passo (pensate per chi non ha mai creato una chiave API) e
   link a aistudio.google.com/apikey (gratuita, ~500 immagini/giorno; sul
   tier gratuito Google può usare i contenuti per migliorare i prodotti).
 - La foto della persona è la `referencePhoto` del profilo (riusata: è la

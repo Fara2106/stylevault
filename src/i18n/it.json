@@ -302,7 +302,13 @@
     "aiKeySave": "Salva",
     "aiKeyRemove": "Rimuovi",
     "aiKeySaved": "Chiave salvata su questo dispositivo",
-    "aiKeyHelp": "Crea una chiave gratuita su aistudio.google.com/apikey (accedi con un account Google e premi \"Create API key\"), poi incollala qui. Resta solo in questo browser e serve per generare le foto nella pagina Prova sull'Avatar. Tier gratuito: ~500 immagini al giorno."
+    "aiKeyIntro": "Per generare le foto nella pagina Prova sull'Avatar serve una chiave di Google. Si crea in un minuto, così:",
+    "aiKeyStep1": "Apri",
+    "aiKeyStep1b": "e accedi con il tuo account Google (va bene quello di Gmail).",
+    "aiKeyStep2": "Premi il bottone \"Create API key\" (crea chiave API).",
+    "aiKeyStep3": "Copia la chiave che compare: è un codice lungo che inizia con \"AIza\".",
+    "aiKeyStep4": "Torna qui, incolla la chiave nel campo sotto e premi Salva.",
+    "aiKeyNote": "È gratuita (circa 500 foto al giorno), resta salvata solo in questo browser e puoi rimuoverla quando vuoi."
   },
   "categories": {
     "all": "Tutti",

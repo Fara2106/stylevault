@@ -302,7 +302,13 @@
     "aiKeySave": "Save",
     "aiKeyRemove": "Remove",
     "aiKeySaved": "Key saved on this device",
-    "aiKeyHelp": "Create a free key at aistudio.google.com/apikey (sign in with a Google account and press \"Create API key\"), then paste it here. It stays in this browser only and powers the photo generation on the Try On Avatar page. Free tier: ~500 images per day."
+    "aiKeyIntro": "Generating photos on the Try On Avatar page requires a Google key. It takes a minute to create:",
+    "aiKeyStep1": "Open",
+    "aiKeyStep1b": "and sign in with your Google account (your Gmail one works).",
+    "aiKeyStep2": "Press the \"Create API key\" button.",
+    "aiKeyStep3": "Copy the key that appears: a long code starting with \"AIza\".",
+    "aiKeyStep4": "Come back here, paste the key in the field below and press Save.",
+    "aiKeyNote": "It's free (about 500 photos per day), it stays only in this browser, and you can remove it anytime."
   },
   "categories": {
     "all": "All",
