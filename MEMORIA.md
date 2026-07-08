@@ -84,6 +84,16 @@ supabase.com, eseguire la migrazione SQL, mettere le chiavi in `.env.local`,
 Il percorso cloud NON è stato provato live (servono le chiavi): alla prima
 attivazione va rifatto un giro di verifica.
 
+## Online (2026-07-08)
+
+- **App live (demo, modalità locale):** https://fara2106.github.io/stylevault/
+- **Repository:** https://github.com/Fara2106/stylevault (account GitHub: Fara2106)
+- Deploy automatico: ogni push su `main` fa test + build e pubblica su GitHub Pages
+  (workflow `.github/workflows/deploy.yml`, base path `/stylevault/`).
+- La demo gira in modalità locale: capi di esempio precaricati, ogni visitatore
+  ha i propri dati nel proprio browser. Con le chiavi Supabase su Vercel si passa
+  alla versione con account veri (guida `docs/SETUP-CLOUD.md`).
+
 ## Comandi
 
 - `npm run dev` — sviluppo
