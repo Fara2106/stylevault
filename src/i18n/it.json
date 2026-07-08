@@ -168,7 +168,24 @@
     "choose": "Scegli un capo",
     "noItems": "Nessun capo di questo tipo nel guardaroba",
     "saveOutfit": "Salva outfit",
-    "withWishlist": "Include capi della wishlist"
+    "withWishlist": "Include capi della wishlist",
+    "photoTitle": "Prova con la tua foto",
+    "photoIntro": "L'AI di Google veste una tua foto con i capi scelti. Serve una foto e la chiave API gratuita (si imposta nel Profilo).",
+    "photoUpload": "Carica una tua foto",
+    "photoChange": "Cambia foto",
+    "photoGenerate": "Genera foto con AI",
+    "photoGenerating": "Generazione in corso...",
+    "photoResult": "Risultato",
+    "photoNeedsKey": "Per generare la foto serve la chiave API di Google:",
+    "photoSetKey": "impostala nel Profilo",
+    "photoNeedsPhoto": "Carica una tua foto per iniziare (resta su questo dispositivo e viene inviata a Google solo per generare l'immagine).",
+    "photoSkipped": "Capi esclusi (foto non leggibile): {{names}}",
+    "photoErrorInvalidKey": "Chiave API non valida o senza permessi: controllala nel Profilo.",
+    "photoErrorQuota": "Limite giornaliero gratuito raggiunto: riprova domani.",
+    "photoErrorNetwork": "Errore di rete: controlla la connessione e riprova.",
+    "photoErrorNoImage": "Il modello non ha restituito un'immagine: riprova.",
+    "photoErrorPerson": "Non riesco a leggere la tua foto: caricala di nuovo.",
+    "photoErrorGarments": "Non riesco a leggere le foto dei capi scelti."
   },
   "avatar": {
     "title": "Il tuo avatar",
@@ -278,7 +295,14 @@
     "statsCostPerWear": "Costo per utilizzo",
     "statsWears": "{{count}} utilizzi",
     "statsNoData": "Le statistiche arrivano quando inizi a registrare gli outfit nel calendario",
-    "statsNever": "mai indossato"
+    "statsNever": "mai indossato",
+    "aiSection": "Try-on fotografico (AI)",
+    "aiKeyLabel": "Chiave API Google Gemini",
+    "aiKeyPlaceholder": "Incolla qui la chiave API...",
+    "aiKeySave": "Salva",
+    "aiKeyRemove": "Rimuovi",
+    "aiKeySaved": "Chiave salvata su questo dispositivo",
+    "aiKeyHelp": "Crea una chiave gratuita su aistudio.google.com/apikey (accedi con un account Google e premi \"Create API key\"), poi incollala qui. Resta solo in questo browser e serve per generare le foto nella pagina Prova sull'Avatar. Tier gratuito: ~500 immagini al giorno."
   },
   "categories": {
     "all": "Tutti",

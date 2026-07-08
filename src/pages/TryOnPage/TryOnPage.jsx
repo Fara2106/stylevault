@@ -1,11 +1,13 @@
-import { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useState, useRef } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useProfile } from '../../context/ProfileContext';
 import { useWardrobe } from '../../context/WardrobeContext';
 import OutfitOnAvatar from '../../components/Avatar/OutfitOnAvatar';
 import { Header, Button, Modal, Icon } from '../../components/common';
 import { CLOTHING_COLORS } from '../../utils/categories';
+import { resizeImageFile } from '../../utils/imageUtils';
+import { getGeminiKey, generateTryOnPhoto } from '../../services/geminiTryon';
 import {
   emptyOutfit,
   normalizeOutfit,
@@ -30,7 +32,7 @@ export default function TryOnPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { state } = useLocation();
-  const { avatarConfig } = useProfile();
+  const { avatarConfig, referencePhoto, setReferencePhoto } = useProfile();
   const { items: wardrobeItems, saveOutfit } = useWardrobe();
 
   const [outfit, setOutfit] = useState(() => {
@@ -40,6 +42,54 @@ export default function TryOnPage() {
   });
   const [pickerSlot, setPickerSlot] = useState(null);
   const [saved, setSaved] = useState(false);
+
+  // Try-on fotografico (Gemini): chiave dell'utente, salvata solo nel browser
+  const geminiKey = getGeminiKey();
+  const [generating, setGenerating] = useState(false);
+  const [photoResult, setPhotoResult] = useState(null);
+  const [photoError, setPhotoError] = useState(null);
+  const fileInputRef = useRef(null);
+
+  const PHOTO_ERRORS = {
+    'invalid-key': 'tryon.photoErrorInvalidKey',
+    quota: 'tryon.photoErrorQuota',
+    network: 'tryon.photoErrorNetwork',
+    'no-image': 'tryon.photoErrorNoImage',
+    'person-photo': 'tryon.photoErrorPerson',
+    'no-garments': 'tryon.photoErrorGarments',
+  };
+
+  const handlePhotoFile = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    try {
+      const dataUrl = await resizeImageFile(file, 1024, 0.85);
+      setReferencePhoto(dataUrl);
+      setPhotoResult(null);
+      setPhotoError(null);
+    } catch {
+      setPhotoError('person-photo');
+    }
+  };
+
+  const handleGenerate = async () => {
+    setGenerating(true);
+    setPhotoError(null);
+    setPhotoResult(null);
+    try {
+      const result = await generateTryOnPhoto({
+        apiKey: getGeminiKey(),
+        personPhoto: referencePhoto,
+        items: outfitItems(outfit),
+      });
+      setPhotoResult(result);
+    } catch (err) {
+      setPhotoError(err.code || 'network');
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const items = outfitItems(outfit);
   const paletteIds = [...new Set(items.flatMap((i) => i.colors || []))];
@@ -99,6 +149,99 @@ export default function TryOnPage() {
             {saved ? t('outfit.saved') : t('tryon.saveOutfit')}
           </Button>
         </div>
+      )}
+
+      {/* Try-on fotografico con Gemini */}
+      {outfitHasItems(outfit) && (
+        <section className="tryon-page__photo">
+          <h2 className="sv-label">{t('tryon.photoTitle')}</h2>
+          <p className="tryon-page__photo-intro">{t('tryon.photoIntro')}</p>
+
+          {!geminiKey ? (
+            <p className="tryon-page__photo-note">
+              {t('tryon.photoNeedsKey')}{' '}
+              <Link to="/profile">{t('tryon.photoSetKey')}</Link>
+            </p>
+          ) : (
+            <>
+              {referencePhoto ? (
+                <div className="tryon-page__photo-row">
+                  <img
+                    className="tryon-page__photo-person"
+                    src={referencePhoto}
+                    alt={t('tryon.photoTitle')}
+                  />
+                  <div className="tryon-page__photo-controls">
+                    <Button
+                      fullWidth
+                      icon={<Icon name="sparkle" size={15} />}
+                      onClick={handleGenerate}
+                      loading={generating}
+                      disabled={generating}
+                    >
+                      {generating
+                        ? t('tryon.photoGenerating')
+                        : t('tryon.photoGenerate')}
+                    </Button>
+                    <Button
+                      fullWidth
+                      variant="secondary"
+                      icon={<Icon name="camera" size={14} />}
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={generating}
+                    >
+                      {t('tryon.photoChange')}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <p className="tryon-page__photo-note">
+                    {t('tryon.photoNeedsPhoto')}
+                  </p>
+                  <Button
+                    fullWidth
+                    variant="secondary"
+                    icon={<Icon name="camera" size={15} />}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    {t('tryon.photoUpload')}
+                  </Button>
+                </>
+              )}
+
+              {photoError && (
+                <p className="tryon-page__photo-error">
+                  {t(PHOTO_ERRORS[photoError] || 'tryon.photoErrorNetwork')}
+                </p>
+              )}
+
+              {photoResult && (
+                <figure className="tryon-page__photo-result">
+                  <img src={photoResult.image} alt={t('tryon.photoResult')} />
+                  <figcaption className="sv-label">
+                    {t('tryon.photoResult')}
+                  </figcaption>
+                  {photoResult.skipped.length > 0 && (
+                    <p className="tryon-page__photo-note">
+                      {t('tryon.photoSkipped', {
+                        names: photoResult.skipped.join(', '),
+                      })}
+                    </p>
+                  )}
+                </figure>
+              )}
+            </>
+          )}
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={handlePhotoFile}
+          />
+        </section>
       )}
 
       {paletteIds.length > 0 && (

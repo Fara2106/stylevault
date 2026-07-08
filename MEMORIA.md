@@ -16,6 +16,25 @@
 - La demo gira in **modalità locale**: capi di esempio precaricati, ogni visitatore
   ha i propri dati nel proprio browser, login simulato senza email di conferma.
 
+**Novità 2026-07-08 (sera) — try-on fotografico con Google Gemini:**
+- Nuova sezione "Prova con la tua foto" nella pagina Prova sull'Avatar: l'AI
+  di Google (`gemini-2.5-flash-image`, "Nano Banana") veste una foto reale
+  dell'utente con i capi scelti. Scelta di Lorenzo: niente backend — la
+  chiave API la fornisce l'utente e resta SOLO nel browser (localStorage
+  `sv_gemini_key`); chiamata diretta browser→Google, il sito resta statico.
+- Chiave: sezione "Try-on fotografico (AI)" nel Profilo, con istruzioni e
+  link a aistudio.google.com/apikey (gratuita, ~500 immagini/giorno; sul
+  tier gratuito Google può usare i contenuti per migliorare i prodotti).
+- La foto della persona è la `referencePhoto` del profilo (riusata: è la
+  stessa dell'editor avatar); upload con resize a 1024px.
+- Logica in `src/services/geminiTryon.js` (+5 test: parsing dataURL,
+  costruzione richiesta, estrazione immagine); errori tipizzati con
+  messaggi i18n (chiave non valida, quota, rete, capi non leggibili —
+  le foto remote che bloccano CORS vengono escluse e segnalate).
+- **NON ancora provato con una chiave vera** (verificato con API simulata
+  nel browser: flusso completo ok, 0 errori console): alla prima prova
+  reale di Lorenzo controllare eventuali errori di modello/endpoint.
+
 **Novità 2026-07-08 (sera) — l'avatar ora è davvero vestito (fix bug):**
 - Bug segnalato da Lorenzo: scegliendo un capo, la foto compariva solo come card
   *accanto* all'avatar ("avvicina l'abito ma non lo veste"). Causa: nessun layer
@@ -110,7 +129,7 @@
 
 ## Verifiche fatte
 
-- **53 unit test Vitest** (motore outfit incluse estensioni, meteo, statistiche,
+- **58 unit test Vitest** (motore outfit incluse estensioni, meteo, statistiche,
   link metadata, armonia colori, composizione tryon) — tutti verdi.
 - **Smoke test browser** (playwright-core + Chrome installato, `channel: 'chrome'`):
   registrazione → onboarding → guardaroba → dettaglio → outfit con meteo reale →

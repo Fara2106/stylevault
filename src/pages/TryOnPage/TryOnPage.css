@@ -138,3 +138,78 @@
   text-transform: uppercase;
   color: var(--sv-muted);
 }
+
+/* ── Try-on fotografico (Gemini) ───────────────────── */
+
+.tryon-page__photo {
+  max-width: 340px;
+  margin: var(--sv-space-6) auto 0;
+  padding-top: var(--sv-space-4);
+  border-top: 1px solid var(--sv-border);
+  text-align: center;
+}
+
+.tryon-page__photo-intro {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--sv-muted);
+  margin: var(--sv-space-2) 0 var(--sv-space-3);
+}
+
+.tryon-page__photo-note {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--sv-muted);
+  margin-bottom: var(--sv-space-3);
+}
+
+.tryon-page__photo-note a {
+  color: var(--sv-accent-ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.tryon-page__photo-row {
+  display: flex;
+  gap: var(--sv-space-3);
+  align-items: stretch;
+  text-align: left;
+}
+
+.tryon-page__photo-person {
+  width: 96px;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: var(--sv-radius-md);
+  border: 1px solid var(--sv-border);
+  background: var(--sv-surface-soft);
+}
+
+.tryon-page__photo-controls {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--sv-space-2);
+}
+
+.tryon-page__photo-error {
+  font-size: 12px;
+  color: #a33;
+  margin-top: var(--sv-space-3);
+}
+
+.tryon-page__photo-result {
+  margin: var(--sv-space-4) 0 0;
+}
+
+.tryon-page__photo-result img {
+  width: 100%;
+  border-radius: var(--sv-radius-lg);
+  border: 1px solid var(--sv-border);
+  box-shadow: var(--sv-shadow-soft);
+}
+
+.tryon-page__photo-result figcaption {
+  margin-top: var(--sv-space-2);
+}

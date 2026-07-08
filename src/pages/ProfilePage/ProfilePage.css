@@ -214,3 +214,47 @@
   padding-top: var(--sv-space-4);
   border-top: 1px solid var(--sv-border);
 }
+
+/* ── Try-on fotografico (chiave API Gemini) ────────── */
+
+.profile-page__ai-help {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--sv-muted);
+  margin-bottom: var(--sv-space-3);
+}
+
+.profile-page__ai-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--sv-accent-ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.profile-page__ai-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sv-space-2);
+}
+
+.profile-page__ai-input {
+  flex: 1;
+  min-width: 0;
+  padding: 9px 12px;
+  font-size: 13px;
+  background: var(--sv-surface);
+  border: 1px solid var(--sv-border-strong);
+  border-radius: var(--sv-radius-sm);
+  color: var(--sv-ink);
+}
+
+.profile-page__ai-saved {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--sv-ink);
+}

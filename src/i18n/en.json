@@ -168,7 +168,24 @@
     "choose": "Pick an item",
     "noItems": "No items of this kind in your wardrobe",
     "saveOutfit": "Save outfit",
-    "withWishlist": "Includes wishlist items"
+    "withWishlist": "Includes wishlist items",
+    "photoTitle": "Try on your photo",
+    "photoIntro": "Google's AI dresses a photo of you with the selected items. You need a photo and the free API key (set it in your Profile).",
+    "photoUpload": "Upload a photo of you",
+    "photoChange": "Change photo",
+    "photoGenerate": "Generate AI photo",
+    "photoGenerating": "Generating...",
+    "photoResult": "Result",
+    "photoNeedsKey": "Generating the photo requires a Google API key:",
+    "photoSetKey": "set it in your Profile",
+    "photoNeedsPhoto": "Upload a photo of you to start (it stays on this device and is sent to Google only to generate the image).",
+    "photoSkipped": "Items excluded (photo unreadable): {{names}}",
+    "photoErrorInvalidKey": "Invalid API key or missing permissions: check it in your Profile.",
+    "photoErrorQuota": "Free daily limit reached: try again tomorrow.",
+    "photoErrorNetwork": "Network error: check your connection and retry.",
+    "photoErrorNoImage": "The model didn't return an image: try again.",
+    "photoErrorPerson": "Couldn't read your photo: upload it again.",
+    "photoErrorGarments": "Couldn't read the photos of the selected items."
   },
   "avatar": {
     "title": "Your avatar",
@@ -278,7 +295,14 @@
     "statsCostPerWear": "Cost per wear",
     "statsWears": "{{count}} wears",
     "statsNoData": "Statistics appear once you start logging outfits in the calendar",
-    "statsNever": "never worn"
+    "statsNever": "never worn",
+    "aiSection": "Photo try-on (AI)",
+    "aiKeyLabel": "Google Gemini API key",
+    "aiKeyPlaceholder": "Paste your API key...",
+    "aiKeySave": "Save",
+    "aiKeyRemove": "Remove",
+    "aiKeySaved": "Key saved on this device",
+    "aiKeyHelp": "Create a free key at aistudio.google.com/apikey (sign in with a Google account and press \"Create API key\"), then paste it here. It stays in this browser only and powers the photo generation on the Try On Avatar page. Free tier: ~500 images per day."
   },
   "categories": {
     "all": "All",

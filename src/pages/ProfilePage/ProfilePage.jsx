@@ -11,6 +11,7 @@ import CitySearch from '../../components/CitySearch/CitySearch';
 import LanguageSwitch from '../../components/LanguageSwitch/LanguageSwitch';
 import { Button, Modal, Icon } from '../../components/common';
 import { CLOTHING_COLORS } from '../../utils/categories';
+import { getGeminiKey, setGeminiKey } from '../../services/geminiTryon';
 import {
   getMostWorn,
   getLeastWorn,
@@ -34,6 +35,20 @@ export default function ProfilePage() {
   const { items, savedOutfits, outfitHistory } = useWardrobe();
 
   const [avatarOpen, setAvatarOpen] = useState(false);
+  const [keyInput, setKeyInput] = useState('');
+  const [keySaved, setKeySaved] = useState(() => Boolean(getGeminiKey()));
+
+  const saveKey = () => {
+    if (!keyInput.trim()) return;
+    setGeminiKey(keyInput);
+    setKeyInput('');
+    setKeySaved(true);
+  };
+
+  const removeKey = () => {
+    setGeminiKey('');
+    setKeySaved(false);
+  };
 
   const wornCount = outfitHistory.filter((l) => l.worn !== false).length;
   const favCount = items.filter((i) => i.favorite).length;
@@ -98,6 +113,46 @@ export default function ProfilePage() {
           <span>{t('profile.language')}</span>
           <LanguageSwitch />
         </div>
+      </section>
+
+      {/* Try-on fotografico: chiave API Gemini, solo su questo browser */}
+      <section className="profile-page__section">
+        <h2 className="sv-label">{t('profile.aiSection')}</h2>
+        <p className="profile-page__ai-help">
+          {t('profile.aiKeyHelp')}{' '}
+          <a
+            href="https://aistudio.google.com/apikey"
+            target="_blank"
+            rel="noreferrer"
+            className="profile-page__ai-link"
+          >
+            aistudio.google.com/apikey <Icon name="external" size={11} />
+          </a>
+        </p>
+        {keySaved ? (
+          <div className="profile-page__ai-row">
+            <span className="profile-page__ai-saved">
+              <Icon name="check" size={14} /> {t('profile.aiKeySaved')}
+            </span>
+            <Button variant="secondary" size="sm" onClick={removeKey}>
+              {t('profile.aiKeyRemove')}
+            </Button>
+          </div>
+        ) : (
+          <div className="profile-page__ai-row">
+            <input
+              type="password"
+              className="profile-page__ai-input"
+              placeholder={t('profile.aiKeyPlaceholder')}
+              aria-label={t('profile.aiKeyLabel')}
+              value={keyInput}
+              onChange={(e) => setKeyInput(e.target.value)}
+            />
+            <Button size="sm" onClick={saveKey} disabled={!keyInput.trim()}>
+              {t('profile.aiKeySave')}
+            </Button>
+          </div>
+        )}
       </section>
 
       {/* Statistiche */}
