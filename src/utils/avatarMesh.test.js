@@ -60,4 +60,28 @@ describe('bodyProfiles', () => {
     expect(() => bodyProfiles(undefined)).not.toThrow();
     expect(bodyProfiles(undefined).widthFactor).toBeCloseTo(1, 5);
   });
+
+  it('scala gli scostamenti laterali legOffsetX e armOffsetX con widthFactor', () => {
+    const slim = bodyProfiles(cfg('slim'));
+    const average = bodyProfiles(cfg('average'));
+    const plus = bodyProfiles(cfg('plus'));
+
+    // Verificare che slim abbia widthFactor ~0.88, average ~1, plus ~1.28
+    expect(slim.widthFactor).toBeCloseTo(0.88, 5);
+    expect(average.widthFactor).toBeCloseTo(1, 5);
+    expect(plus.widthFactor).toBeCloseTo(1.28, 5);
+
+    // Verificare che legOffsetX sia scalato: plus/average deve essere ~1.28
+    expect(plus.legOffsetX / average.legOffsetX).toBeCloseTo(1.28, 5);
+    expect(slim.legOffsetX / average.legOffsetX).toBeCloseTo(0.88, 5);
+
+    // Verificare che armOffsetX sia scalato: plus/average deve essere ~1.28
+    expect(plus.armOffsetX / average.armOffsetX).toBeCloseTo(1.28, 5);
+    expect(slim.armOffsetX / average.armOffsetX).toBeCloseTo(0.88, 5);
+
+    // Verificare il rapporto assoluto: armOffsetX è maggiore di legOffsetX in tutte le corporature
+    expect(average.armOffsetX).toBeGreaterThan(average.legOffsetX);
+    expect(plus.armOffsetX).toBeGreaterThan(plus.legOffsetX);
+    expect(slim.armOffsetX).toBeGreaterThan(slim.legOffsetX);
+  });
 });
