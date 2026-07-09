@@ -27,7 +27,13 @@ jobs:
           node-version: 22
       - run: npm ci
       - run: npm test
+      # Le chiavi Supabase attivano la modalità cloud nel build pubblicato.
+      # La anon/publishable key è pubblica per design: la sicurezza la fanno le
+      # policy RLS sul database, non la segretezza della chiave.
       - run: npx vite build --base=/stylevault/
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
       # Fallback SPA: i deep link (es. /stylevault/outfit) tornano all'app
       - run: cp dist/index.html dist/404.html
       - uses: actions/configure-pages@v5

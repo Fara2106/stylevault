@@ -5,13 +5,48 @@
 
 ## Situazione attuale (2026-07-09)
 
-**L'app è completa (Fase A + Fase B lato codice) e ONLINE come demo.**
+**L'app è ONLINE in MODALITÀ CLOUD: account veri, dati e foto su Supabase.**
 
 - **Feedback di Mary (2026-07-09): positivo** — "va bene", continuerà a provarla.
-  Nessuna modifica richiesta per ora; eventuali ritocchi arriveranno man mano
-  che la usa. Il nome resta "StyleVault" finché non se ne sceglie uno definitivo.
-- **App live:** https://fara2106.github.io/stylevault/
-- **Prossimo passo attivo: attivare il cloud (Supabase)** — vedi sotto.
+  Il nome resta "StyleVault" finché non se ne sceglie uno definitivo.
+- **App live:** https://fara2106.github.io/stylevault/ — dal 2026-07-09 il sito
+  pubblico è la versione cloud (registrazione vera; niente più capi demo).
+  Chi aveva dati nella vecchia demo locale li ha ancora nel proprio browser,
+  ma nel cloud si riparte da zero: Mary deve registrarsi.
+
+**Novità 2026-07-09 — cloud Supabase attivato e verificato (prima volta live):**
+- Progetto Supabase dell'account `lorefara97@gmail.com` (creato in automatico
+  alla registrazione, piano Free, database in Irlanda):
+  dashboard https://supabase.com/dashboard/project/frukvktbmxndyzgivwxq
+- Migrazione `001_init.sql` eseguita nel SQL Editor e verificata: 5 tabelle,
+  5 policy RLS pubbliche + 3 storage, 2 bucket foto, trigger profilo. ✔
+- Chiavi nel formato nuovo (`sb_publishable_…`, sostituisce la anon key JWT;
+  è pubblica per design, la sicurezza la fanno le policy RLS): in locale in
+  `.env.local` (gitignorato), per il deploy come **GitHub Secrets**
+  (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) iniettate nel build dal
+  workflow Pages — niente Vercel, stesso link di prima (scelta di Lorenzo:
+  "tutte le prove su GitHub, migrazione altrove più avanti, forse").
+- Config auth: **"Confirm email" DISATTIVATA** (scelta di Lorenzo: il free
+  tier manda 2-4 email/ora, le conferme rischiano di non arrivare; si può
+  riattivare in Authentication → Sign In / Providers). Site URL =
+  https://fara2106.github.io/stylevault/ + redirect `…/stylevault/**` e
+  `http://localhost:5173/**` (Authentication → URL Configuration).
+- **Verifica end-to-end su localhost (tutta in modalità cloud)**: registrazione
+  (utente test `lorefara97+svtest1@gmail.com`, pw `StyleVault.Test.2026` —
+  eliminabile dalla dashboard), onboarding, capo aggiunto con foto → upload
+  su Storage + URL firmata visibile, reload con sessione persistente, logout,
+  login. Lingua e città sincronizzate sul profilo cloud. 0 errori console.
+- **Bug trovato e corretto** (`ProfileContext.jsx`): al refresh di una pagina
+  protetta in cloud si rimbalzava sull'onboarding anche con `onboarded=true`
+  nel DB. Causa: `profileLoading` era uno stato acceso da un effect — nel
+  render in cui la sessione ricompare l'effect non è ancora partito, il flag
+  era `false` e Protected leggeva l'`onboarded=false` di default. Fix:
+  `profileLoading` è ora **derivato** (`loadedUserId !== userId`), vero dal
+  primo render con utente nuovo. (Il gemello locale era già stato fixato
+  con il caricamento sincrono; questo era il gemello cloud.)
+- Nota: le foto dallo Storage possono arrivare con qualche secondo di ritardo
+  la prima volta (quel giorno Supabase segnalava anche un incident); non è
+  un bug dell'app.
 - **Repository:** https://github.com/Fara2106/stylevault (account GitHub: Fara2106,
   repo pubblico — serve per GitHub Pages gratuito). Ogni push su `main` fa
   test + build e ripubblica da solo (`.github/workflows/deploy.yml`, base `/stylevault/`).
@@ -78,17 +113,14 @@
   render al cambio di userId.
 
 **Prossimi passi previsti:**
-1. ~~Raccogliere il feedback di Mary~~ ✅ ricevuto (positivo, nessun ritocco richiesto).
-2. Attivare il cloud: Lorenzo crea il progetto su supabase.com, esegue
-   `supabase/migrations/001_init.sql` nel SQL Editor, mette le chiavi in
-   `.env.local` (guida completa: `docs/SETUP-CLOUD.md`). Facoltativi: provider
-   Google, deploy Edge Function.
-   - Per l'hosting cloud si può probabilmente **restare su GitHub Pages**:
-     la anon key è pubblica per design (protetta da RLS), quindi basta
-     passarla al build nel workflow via GitHub Secrets — da valutare quando
-     le chiavi esistono, eviterebbe l'account Vercel.
-3. **Il percorso cloud NON è mai stato provato live** (mancano le chiavi):
-   alla prima attivazione fare un giro di verifica completo.
+1. ~~Raccogliere il feedback di Mary~~ ✅ ricevuto (positivo).
+2. ~~Attivare il cloud Supabase~~ ✅ fatto e verificato il 2026-07-09 (vedi sopra).
+3. Dire a Mary di **registrarsi sul sito** (il vecchio profilo demo non migra).
+4. Facoltativi rimasti: provider Google (Authentication → Providers → Google),
+   Edge Function `fetch-link-metadata` (oggi fallback microlink.io,
+   50 req/giorno), fatturazione Google per il try-on AI.
+5. Occhio del piano Free Supabase: dopo ~1 settimana senza traffico il
+   progetto va in pausa e si riattiva con un click dalla dashboard.
 
 ## Cos'è
 

@@ -46,8 +46,14 @@ export function ProfileProvider({ children }) {
   const [profile, setProfile] = useState(() =>
     isSupabaseEnabled ? DEFAULT_PROFILE : loadLocalProfile(userId)
   );
-  // In cloud il profilo arriva in ritardo: finché carica, i redirect aspettano
-  const [profileLoading, setProfileLoading] = useState(isSupabaseEnabled);
+  // In cloud il profilo arriva in ritardo: finché carica, i redirect aspettano.
+  // Derivato (non uno stato acceso da un effect): quando la sessione ricompare
+  // dopo un refresh, l'effect di caricamento parte solo DOPO il primo render
+  // con lo userId nuovo — uno stato resterebbe false per quel render e
+  // Protected leggerebbe onboarded=false di default, rimbalzando sull'onboarding.
+  const [loadedUserId, setLoadedUserId] = useState(null);
+  const profileLoading =
+    isSupabaseEnabled && Boolean(userId) && loadedUserId !== userId;
   // In cloud: true quando il profilo remoto è stato caricato (evita sync premature)
   const loadedRef = useRef(!isSupabaseEnabled);
   const applyingRemoteRef = useRef(false);
@@ -68,10 +74,9 @@ export function ProfileProvider({ children }) {
     loadedRef.current = false;
     if (!userId) {
       setProfile(DEFAULT_PROFILE);
-      setProfileLoading(false);
+      setLoadedUserId(null);
       return;
     }
-    setProfileLoading(true);
     let alive = true;
     fetchProfile(userId)
       .then((remote) => {
@@ -91,12 +96,12 @@ export function ProfileProvider({ children }) {
           });
         }
         loadedRef.current = true;
-        setProfileLoading(false);
+        setLoadedUserId(userId);
       })
       .catch((e) => {
         console.warn('Profile load failed:', e);
         loadedRef.current = true;
-        setProfileLoading(false);
+        setLoadedUserId(userId);
       });
     return () => {
       alive = false;
