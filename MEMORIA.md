@@ -138,15 +138,26 @@
   ora ProfileContext carica il profilo locale in modo sincrono durante il
   render al cambio di userId.
 
-**Prossimi passi previsti:**
-1. ~~Raccogliere il feedback di Mary~~ ✅ ricevuto (positivo).
-2. ~~Attivare il cloud Supabase~~ ✅ fatto e verificato il 2026-07-09 (vedi sopra).
-3. Dire a Mary di **registrarsi sul sito** (il vecchio profilo demo non migra).
-4. Facoltativi rimasti: provider Google (Authentication → Providers → Google),
-   Edge Function `fetch-link-metadata` (oggi fallback microlink.io,
-   50 req/giorno), fatturazione Google per il try-on AI.
-5. Occhio del piano Free Supabase: dopo ~1 settimana senza traffico il
-   progetto va in pausa e si riattiva con un click dalla dashboard.
+**Stato al 2026-07-09 sera: IN ATTESA del feedback di Mary sulla versione
+cloud.** Decisione esplicita di Lorenzo: nessun altro sviluppo finché Mary
+non l'ha provata — sarà l'uso reale a dire cosa serve.
+
+**Prossimi passi (congelati fino al feedback):**
+1. Lorenzo dice a Mary di **registrarsi sul sito** (il vecchio profilo demo
+   resta nel suo browser, non migra).
+2. **Bottone "Continua con Google" sul sito live: È UN PROBLEMA APERTO** —
+   il bottone compare (modalità cloud) ma il provider Google su Supabase NON
+   è attivato: cliccarlo dà errore. Lorenzo deve scegliere: attivare il
+   provider (credenziali OAuth su Google Cloud Console, ~15 min, gratuito)
+   oppure nascondere il bottone finché non è attivo. Da risolvere alla
+   prossima sessione.
+3. Facoltativi rimasti: Edge Function `fetch-link-metadata` (oggi fallback
+   microlink.io, 50 req/giorno), fatturazione Google per il try-on AI
+   (integrazione pronta, mai vista una chiamata 200: verificarla al primo
+   uso), eliminare l'utente di test `lorefara97+svtest1@gmail.com` dalla
+   dashboard (o tenerlo per prove), nome definitivo dell'app.
+4. La pausa del piano Free è già coperta (keep-alive + messaggi in-app,
+   vedi sopra): non serve fare nulla.
 
 ## Cos'è
 
