@@ -226,6 +226,9 @@ export function WardrobeProvider({ children }) {
     loadFromStorage(KEYS.customCategories, [])
   );
   const [isSyncing, setIsSyncing] = useState(isSupabaseEnabled);
+  // True quando il caricamento dal cloud è fallito (es. progetto Supabase in
+  // pausa dopo inattività): la UI mostra l'avviso "avvisa Lorenzo".
+  const [cloudOffline, setCloudOffline] = useState(false);
 
   // ── Caricamento iniziale dal cloud (con cache offline in lettura) ──
   useEffect(() => {
@@ -247,11 +250,13 @@ export function WardrobeProvider({ children }) {
         setWishlist(data.wishlist);
         setSavedOutfits(data.savedOutfits);
         setOutfitHistory(data.outfitHistory);
+        setCloudOffline(false);
         saveToStorage(cloudCacheKey(userId), data);
       })
       .catch((e) => {
         console.warn('Cloud load failed, using offline cache:', e);
         if (!alive) return;
+        setCloudOffline(true);
         const cached = loadFromStorage(cloudCacheKey(userId), null);
         if (cached) {
           setItems(cached.items || []);
@@ -503,6 +508,7 @@ export function WardrobeProvider({ children }) {
     savedOutfits,
     customCategories,
     isSyncing,
+    cloudOffline,
 
     // Item CRUD
     addItem,

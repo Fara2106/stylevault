@@ -47,6 +47,32 @@
 - Nota: le foto dallo Storage possono arrivare con qualche secondo di ritardo
   la prima volta (quel giorno Supabase segnalava anche un incident); non è
   un bug dell'app.
+
+**Novità 2026-07-09 (bis) — protezioni contro la pausa del piano Free:**
+- **Keep-alive**: `.github/workflows/keepalive.yml` fa una query minima al
+  database lunedì e giovedì (cron): il progetto non resta mai 7 giorni senza
+  attività. Se il ping fallisce **GitHub manda una email a Lorenzo** — quello
+  è il segnale di andare a riattivare/controllare il progetto in dashboard.
+  (Occhio: GitHub disattiva i cron dei repo fermi da 60 giorni, con preavviso
+  via email; si riattivano da Actions o con un push.)
+- **Messaggi comprensibili quando il cloud non risponde** (scelta di Lorenzo:
+  "mettere l'utente a conoscenza, dire di contattarmi"):
+  - login/registrazione: gli errori di rete diventano il marker
+    `service-unreachable` (AuthContext) e la LoginPage mostra
+    `auth.serviceUnreachable` ("…va in pausa… avvisa Lorenzo… i dati sono
+    al sicuro") invece di "Failed to fetch";
+  - guardaroba: `WardrobeContext` espone `cloudOffline` (true se il load
+    iniziale fallisce) e `StatusNotice` mostra il banner `app.cloudPausedNotice`;
+    i capi restano visibili dalla cache offline `sv_cloud_cache_<uid>`;
+  - modalità locale/demo: `StatusNotice` mostra un avviso chiudibile
+    (`app.localNotice`): dati solo nel browser, Safari li cancella dopo ~7
+    giorni di inutilizzo (flag di chiusura in
+    `localStorage['sv_local_notice_dismissed']`).
+  - Nessuna notifica push a Mary: impossibile su sito statico senza server
+    push; la copertura è ping + email di GitHub a Lorenzo + messaggi in-app.
+- Verificato in browser tutti e tre gli scenari (URL finto irraggiungibile per
+  il login; throw temporaneo in `fetchAllData` per il banner; env vuote per la
+  modalità locale). 58 test verdi.
 - **Repository:** https://github.com/Fara2106/stylevault (account GitHub: Fara2106,
   repo pubblico — serve per GitHub Pages gratuito). Ogni push su `main` fa
   test + build e ripubblica da solo (`.github/workflows/deploy.yml`, base `/stylevault/`).

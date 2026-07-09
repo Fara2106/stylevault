@@ -9,6 +9,19 @@ function generateUserId() {
   return `user_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
 }
 
+/**
+ * Errore di rete (Supabase irraggiungibile, es. progetto Free in pausa dopo
+ * inattività): diventa il marker 'service-unreachable' che la UI traduce in
+ * un messaggio comprensibile invece del "Failed to fetch" tecnico.
+ */
+function isUnreachable(error) {
+  return (
+    error.name === 'AuthRetryableFetchError' ||
+    error.status === 0 ||
+    /fetch/i.test(error.message || '')
+  );
+}
+
 /** Mappa l'utente Supabase nella forma usata dall'app. */
 function mapSupabaseUser(user) {
   if (!user) return null;
@@ -67,7 +80,12 @@ export function AuthProvider({ children }) {
       setIsLoading(true);
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       setIsLoading(false);
-      if (error) return { success: false, error: error.message };
+      if (error) {
+        return {
+          success: false,
+          error: isUnreachable(error) ? 'service-unreachable' : error.message,
+        };
+      }
       return { success: true };
     }
 
@@ -117,7 +135,12 @@ export function AuthProvider({ children }) {
         options: { data: { name } },
       });
       setIsLoading(false);
-      if (error) return { success: false, error: error.message };
+      if (error) {
+        return {
+          success: false,
+          error: isUnreachable(error) ? 'service-unreachable' : error.message,
+        };
+      }
       // Con la conferma email attiva non c'è ancora una sessione
       if (!data.session) return { success: true, needsConfirmation: true };
       return { success: true };
@@ -152,7 +175,12 @@ export function AuthProvider({ children }) {
       provider: 'google',
       options: { redirectTo: window.location.origin },
     });
-    if (error) return { success: false, error: error.message };
+    if (error) {
+      return {
+        success: false,
+        error: isUnreachable(error) ? 'service-unreachable' : error.message,
+      };
+    }
     return { success: true }; // il browser viene rediretto
   }, []);
 

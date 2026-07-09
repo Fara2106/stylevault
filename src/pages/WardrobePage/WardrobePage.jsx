@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useWardrobe } from '../../context/WardrobeContext';
 import ClothingCard from '../../components/ClothingCard/ClothingCard';
+import StatusNotice from '../../components/StatusNotice/StatusNotice';
 import CategoryFilter from '../../components/CategoryFilter/CategoryFilter';
 import Icon from '../../components/common/Icon';
 import { Button } from '../../components/common';
@@ -42,6 +43,7 @@ export default function WardrobePage() {
 
   return (
     <div className="sv-page wardrobe">
+      <StatusNotice />
       <header className="wardrobe__head">
         <div>
           <h1 className="wardrobe__title">

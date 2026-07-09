@@ -1,0 +1,25 @@
+# Il piano Free di Supabase mette in pausa il progetto dopo ~1 settimana senza
+# richieste. Questo ping (due volte a settimana) conta come attività e lo tiene
+# sveglio. Se fallisce, GitHub manda una email a Lorenzo: è il segnale che il
+# progetto è in pausa (o rotto) e va guardato dalla dashboard.
+# Nota: GitHub disattiva i cron nei repo fermi da 60 giorni (manda un avviso
+# email prima); basta un push o riattivarlo da Actions per farlo ripartire.
+name: Keep-alive Supabase
+
+on:
+  schedule:
+    - cron: '23 6 * * 1,4' # lunedì e giovedì mattina
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Query minima al database
+        run: |
+          curl --fail --silent --show-error \
+            -H "apikey: ${{ secrets.VITE_SUPABASE_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.VITE_SUPABASE_ANON_KEY }}" \
+            "${{ secrets.VITE_SUPABASE_URL }}/rest/v1/profiles?select=id&limit=1" \
+            > /dev/null
+          echo "Supabase risponde: progetto attivo."

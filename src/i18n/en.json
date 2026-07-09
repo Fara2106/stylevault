@@ -1,7 +1,9 @@
 {
   "app": {
     "name": "StyleVault",
-    "tagline": "Your wardrobe, always with you"
+    "tagline": "Your wardrobe, always with you",
+    "localNotice": "Demo version: your data lives only in this browser. If you don't open the app for about 7 days (or clear the cache), your device may delete it. In the online version with an account your data is safe in the cloud.",
+    "cloudPausedNotice": "The online service isn't responding: after a period of inactivity it goes to sleep. Your data is safe — let Lorenzo know and try again in a few minutes."
   },
   "nav": {
     "wardrobe": "Wardrobe",
@@ -50,7 +52,8 @@
     "hasAccount": "Already have an account?",
     "googleSoon": "Google sign-in arrives with the online version",
     "google": "Continue with Google",
-    "checkEmail": "Check your email: we sent you a confirmation link"
+    "checkEmail": "Check your email: we sent you a confirmation link",
+    "serviceUnreachable": "The online service isn't responding: after a period of inactivity it goes to sleep and needs a restart. Let Lorenzo know and try again in a few minutes — your data is safe."
   },
   "onboarding": {
     "welcome": "Welcome to StyleVault",
