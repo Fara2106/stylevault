@@ -64,3 +64,101 @@ export function backgroundMask({ data, width, height }, { tolerance = BG_TOLERAN
   for (let p = 0; p < mask.length; p++) mask[p] = isBackground[p] ? 0 : 1;
   return mask;
 }
+
+/** Rettangolo minimo che contiene i pixel del capo. */
+export function garmentBounds(mask, width, height) {
+  let minX = width;
+  let minY = height;
+  let maxX = -1;
+  let maxY = -1;
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (!mask[y * width + x]) continue;
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
+    }
+  }
+  if (maxX < 0) return null;
+  return { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
+}
+
+const toHex = (n) => Math.round(n).toString(16).padStart(2, '0');
+
+/**
+ * Colore dominante per istogramma quantizzato: si raggruppano i pixel in bucket
+ * da 4 bit per canale, si prende il bucket più popolato e si media sui suoi
+ * pixel reali. Deterministico — a differenza di un k-means con centroidi casuali.
+ */
+export function dominantColor({ data, width, height }, mask) {
+  const counts = new Map();
+  for (let p = 0; p < width * height; p++) {
+    if (mask && !mask[p]) continue;
+    const i = p * 4;
+    const key =
+      ((data[i] >> 4) << 8) | ((data[i + 1] >> 4) << 4) | (data[i + 2] >> 4);
+    counts.set(key, (counts.get(key) || 0) + 1);
+  }
+  if (counts.size === 0) return '#000000';
+
+  let best = null;
+  let bestCount = -1;
+  for (const [key, count] of counts) {
+    if (count > bestCount) {
+      best = key;
+      bestCount = count;
+    }
+  }
+
+  let r = 0;
+  let g = 0;
+  let b = 0;
+  let n = 0;
+  for (let p = 0; p < width * height; p++) {
+    if (mask && !mask[p]) continue;
+    const i = p * 4;
+    const key =
+      ((data[i] >> 4) << 8) | ((data[i + 1] >> 4) << 4) | (data[i + 2] >> 4);
+    if (key !== best) continue;
+    r += data[i];
+    g += data[i + 1];
+    b += data[i + 2];
+    n++;
+  }
+  return `#${toHex(r / n)}${toHex(g / n)}${toHex(b / n)}`;
+}
+
+/** Soglie oltre le quali non ci si fida della maschera. */
+const MAX_COVERAGE = 0.92;
+const MIN_COVERAGE = 0.02;
+
+/**
+ * Da foto a capo utilizzabile. `ok: false` significa: niente texture, vesti il
+ * capo di tinta unita col colore dominante. Brutto no, sbagliato mai.
+ */
+export function extractGarment(image, opts) {
+  const { width, height } = image;
+  const mask = backgroundMask(image, opts);
+  let garmentPixels = 0;
+  for (let p = 0; p < mask.length; p++) garmentPixels += mask[p];
+  const coverage = garmentPixels / (width * height);
+
+  if (coverage > MAX_COVERAGE || coverage < MIN_COVERAGE) {
+    return {
+      ok: false,
+      bounds: null,
+      dominantHex: dominantColor(image, null),
+      coverage,
+      mask,
+    };
+  }
+  return {
+    ok: true,
+    bounds: garmentBounds(mask, width, height),
+    dominantHex: dominantColor(image, mask),
+    coverage,
+    mask,
+  };
+}
