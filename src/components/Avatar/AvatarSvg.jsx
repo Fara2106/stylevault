@@ -53,13 +53,25 @@ const GARMENT_SHAPES = {
 };
 
 /**
+ * Riquadri di ancoraggio per gli indumenti scontornati (foto trasparente).
+ * Coordinate nel viewBox 200×400.
+ */
+const GARMENT_ANCHORS = {
+  top:       { x: 48, y: 60,  width: 104, height: 100 },
+  dress:     { x: 50, y: 60,  width: 100, height: 240 },
+  bottom:    { x: 62, y: 128, width: 76,  height: 232 },
+  outerwear: { x: 40, y: 56,  width: 120, height: 155 },
+  shoes:     { x: 74, y: 350, width: 52,  height: 30 },
+};
+
+/**
  * Silhouette stilizzata da figurino di moda, parametrica.
  * Corporatura: scala orizzontale del corpo (la testa resta fissa).
  * viewBox 200x400, esportata con height richiesta.
  * Con `outfit` la figura viene vestita: le foto dei capi riempiono
  * le sagome degli indumenti (vedi garmentLayers in tryonComposer).
  */
-export default function AvatarSvg({ config, outfit, height = 320, className = '' }) {
+export default function AvatarSvg({ config, outfit, textures, height = 320, className = '' }) {
   const skin = getSkinHex(config?.skinTone);
   const hair = getHairHex(config?.hairColor);
   const w = getBodyWidthFactor(config?.bodyShape);
@@ -70,7 +82,23 @@ export default function AvatarSvg({ config, outfit, height = 320, className = ''
   const renderGarment = ({ kind, item }) => {
     const shape = GARMENT_SHAPES[kind];
     if (!shape) return null;
+    const texture = textures?.[item.id];
+
+    // Capo scontornato: si appoggia sul corpo intero, senza ritagli.
+    if (texture?.textureUrl) {
+      return (
+        <image
+          key={kind}
+          href={texture.textureUrl}
+          {...GARMENT_ANCHORS[kind]}
+          preserveAspectRatio="xMidYMin meet"
+        />
+      );
+    }
+
+    // Ripiego: la sagoma dell'indumento in tinta unita.
     const clipId = `${uid}-${kind}`;
+    const fill = texture?.colorHex || '#cfc7bb';
     return (
       <g key={kind}>
         <clipPath id={clipId}>
@@ -78,26 +106,11 @@ export default function AvatarSvg({ config, outfit, height = 320, className = ''
             <path key={i} d={d} />
           ))}
         </clipPath>
-        {item.photo ? (
-          <image
-            href={item.photo}
-            {...shape.box}
-            preserveAspectRatio="xMidYMid slice"
-            clipPath={`url(#${clipId})`}
-          />
-        ) : (
-          <g clipPath={`url(#${clipId})`}>
-            <rect {...shape.box} fill="#cfc7bb" />
-          </g>
-        )}
+        <g clipPath={`url(#${clipId})`}>
+          <rect {...shape.box} fill={fill} />
+        </g>
         {shape.paths.map((d, i) => (
-          <path
-            key={`o${i}`}
-            d={d}
-            fill="none"
-            stroke="rgba(26, 26, 26, 0.18)"
-            strokeWidth="1"
-          />
+          <path key={`o${i}`} d={d} fill="none" stroke="rgba(26, 26, 26, 0.18)" strokeWidth="1" />
         ))}
       </g>
     );
