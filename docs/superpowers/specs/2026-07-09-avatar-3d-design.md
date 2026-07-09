@@ -96,6 +96,18 @@ e "Piatto" (leggero, istantaneo, non consuma batteria). La preferenza vive in
 `localStorage['sv_avatar_render']`, default "3D" dove WebGL c'è. È l'utente a
 decidere, come per le due schede avatar/foto già esistenti.
 
+**Ogni modalità dichiara cosa costa e cosa non sa fare** (richiesta esplicita di
+Lorenzo: "metti tutto a scelta, esponendo anche quanto costa e dando tutte le
+info"). Sotto ogni scelta compare una riga onesta:
+
+| Modalità | Testo mostrato |
+|---|---|
+| 3D | Gratis e illimitata. Ruoti la figura col dito. La forma del capo è generica: colore e fantasia sono i tuoi, il taglio no |
+| Piatto | Gratis e illimitata. Leggera, non consuma batteria. La figura non ruota |
+| Sulla tua foto (AI) | A pagamento: circa 4 centesimi a foto, a carico di chi possiede la chiave. È l'unica che mostra il tuo capo esatto addosso a te. L'immagine è ferma, non ruota |
+
+Nessun testo deve promettere gratuità dove non c'è, né realismo dove non c'è.
+
 - **`Avatar3D.jsx`** — scena three.js: camera, luci statiche, controllo di
   rotazione al trascinamento. È l'unico file che parla con three.js in modo
   imperativo. Riceve `config` e `outfit`, esattamente come `AvatarSvg` oggi.
@@ -127,10 +139,19 @@ Da una foto produce due valori: una texture scontornata e un colore dominante.
 2. **Rettangolo del capo.** Si calcola il bounding box dei pixel sopravvissuti e
    si scarta tutto il resto. **È esattamente il passo che manca oggi** e che fa
    entrare lo sfondo nelle gambe della silhouette.
-3. **Colore dominante.** k-means sui soli pixel del capo, mai sullo sfondo.
-4. **Applicazione.** Il ritaglio diventa la texture della faccia frontale della
-   mesh, con `preserveAspectRatio` equivalente a "contain": il capo si vede
-   **intero**, mai tagliato. Fianchi e retro prendono il colore dominante.
+3. **Colore dominante.** Istogramma quantizzato (bucket a 4 bit per canale, si
+   prende la moda, poi si media sui pixel reali di quel bucket) sui soli pixel
+   del capo, mai sullo sfondo. Deterministico, quindi testabile — a differenza di
+   un k-means con centroidi casuali.
+4. **Applicazione in 3D.** Il ritaglio, con sfondo trasparente, veste una
+   superficie curva applicata sul davanti del capo; la mesh sotto è colorata con
+   il colore dominante. Fianchi e retro restano in tinta.
+5. **Applicazione in piatto.** Il ritaglio viene disegnato **intero** sopra il
+   corpo, ancorato alla parte giusta (`xMidYMin meet`). Non c'è più nessuna
+   `clipPath`: avendo lo sfondo trasparente, il capo non ha bisogno di essere
+   infilato dentro una sagoma. Il difetto del §1 non viene aggiustato, viene
+   eliminato alla radice. Le sagome di `GARMENT_SHAPES` sopravvivono solo per il
+   caso degradato: quando la texture manca, si riempiono di tinta unita.
 
 **Degradazione.** Se lo scontorno non converge (sfondo troppo movimentato: più di
 una soglia di pixel classificati come capo, oppure bounding box che copre quasi
