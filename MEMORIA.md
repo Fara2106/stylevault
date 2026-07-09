@@ -3,13 +3,15 @@
 > File di ripartenza: se apri una nuova chat, leggi questo file per riprendere il lavoro
 > esattamente da dove eravamo. Va aggiornato a ogni avanzamento significativo.
 
-## Situazione attuale (2026-07-08)
+## Situazione attuale (2026-07-09)
 
 **L'app è completa (Fase A + Fase B lato codice) e ONLINE come demo.**
 
-- **App live:** https://fara2106.github.io/stylevault/ — condivisa con Mary,
-  **siamo in attesa del suo feedback** (in particolare su: avatar, consigli,
-  nome dell'app — "StyleVault" è un nome di lavoro).
+- **Feedback di Mary (2026-07-09): positivo** — "va bene", continuerà a provarla.
+  Nessuna modifica richiesta per ora; eventuali ritocchi arriveranno man mano
+  che la usa. Il nome resta "StyleVault" finché non se ne sceglie uno definitivo.
+- **App live:** https://fara2106.github.io/stylevault/
+- **Prossimo passo attivo: attivare il cloud (Supabase)** — vedi sotto.
 - **Repository:** https://github.com/Fara2106/stylevault (account GitHub: Fara2106,
   repo pubblico — serve per GitHub Pages gratuito). Ogni push su `main` fa
   test + build e ripubblica da solo (`.github/workflows/deploy.yml`, base `/stylevault/`).
@@ -76,11 +78,15 @@
   render al cambio di userId.
 
 **Prossimi passi previsti:**
-1. Raccogliere il feedback di Mary/Lorenzo e ritoccare la UI.
+1. ~~Raccogliere il feedback di Mary~~ ✅ ricevuto (positivo, nessun ritocco richiesto).
 2. Attivare il cloud: Lorenzo crea il progetto su supabase.com, esegue
    `supabase/migrations/001_init.sql` nel SQL Editor, mette le chiavi in
    `.env.local` (guida completa: `docs/SETUP-CLOUD.md`). Facoltativi: provider
-   Google, deploy Edge Function, hosting Vercel con env vars.
+   Google, deploy Edge Function.
+   - Per l'hosting cloud si può probabilmente **restare su GitHub Pages**:
+     la anon key è pubblica per design (protetta da RLS), quindi basta
+     passarla al build nel workflow via GitHub Secrets — da valutare quando
+     le chiavi esistono, eviterebbe l'account Vercel.
 3. **Il percorso cloud NON è mai stato provato live** (mancano le chiavi):
    alla prima attivazione fare un giro di verifica completo.
 
