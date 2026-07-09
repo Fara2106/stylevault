@@ -47,8 +47,10 @@ limite che fa percepire la figura come piatta.
 | Capi | Mesh 3D generiche (top, abito, bottom, capospalla, scarpe), osservabili a tutto tondo ruotando la figura |
 | Texture del capo | Ibrida: foto reale scontornata proiettata sul davanti, colore dominante campionato dalla foto su fianchi e retro |
 | Dove | Solo la pagina "Prova sull'Avatar" (`/tryon`), scheda "Sull'avatar". Caricamento lazy |
-| Fallback | Se WebGL non è disponibile, `AvatarSvg` **corretto** (approccio 2.5D): stessa pipeline di scontorno, capo intero dentro la sagoma invece del ritaglio `slice` di oggi |
-| Try-on AI | Invariato: la scheda "Sulla tua foto (AI)" con Gemini resta la modalità fotorealistica |
+| Scelta della resa | La decide l'utente, non noi: un selettore "3D" / "Piatto" dentro la scheda "Sull'avatar". Preferenza salvata in `localStorage['sv_avatar_render']` |
+| Modalità piatta | `AvatarSvg` **corretto** (approccio 2.5D): stessa pipeline di scontorno, capo intero dentro la sagoma invece del ritaglio `slice` di oggi |
+| Fallback automatico | Se WebGL non è disponibile si forza la modalità piatta e il selettore 3D si disabilita, spiegando perché |
+| Try-on AI | Invariato **in questa spec**: la scheda "Sulla tua foto (AI)" resta con la chiave dell'utente. Il proxy lato server è una spec separata (vedi §9) |
 | Onboarding, editor Profilo | Invariati, restano SVG 2D |
 
 **Perché mesh procedurali e non un GLB scaricato.** Un modello esterno pesa
@@ -74,19 +76,25 @@ con Vitest, i componenti React si limitano a montarla.
 
 ```
 TryOnPage
-  └── OutfitOnAvatar          sceglie 3D o SVG, monta le card ＋/✕ (invariate)
-        ├── Avatar3D          React.lazy, solo se WebGL c'è
+  └── OutfitOnAvatar          selettore 3D/Piatto, card ＋/✕ (invariate)
+        ├── Avatar3D          React.lazy, solo in modalità 3D
         │     ├── avatarMesh.js     corpo dai parametri di avatar_config
         │     ├── garmentMesh.js    le 5 mesh dei capi
         │     └── garmentTexture.js scontorno + colore dominante dalla foto
-        └── AvatarSvg         fallback, corretto con garmentTexture.js
+        └── AvatarSvg         modalità piatta, corretta con garmentTexture.js
 ```
 
-Il fallback non è l'`AvatarSvg` di oggi così com'è: quello contiene il difetto
-descritto al punto 1. Riceve la stessa texture scontornata prodotta da
+La modalità piatta non è l'`AvatarSvg` di oggi così com'è: quello contiene il
+difetto descritto al punto 1. Riceve la stessa texture scontornata prodotta da
 `garmentTexture.js` e la disegna **intera** dentro la sagoma (`meet`, non
-`slice`), centrata sul rettangolo del capo. Resta piatto — è un ripiego — ma
-mostra il capo giusto al posto giusto.
+`slice`), centrata sul rettangolo del capo. Resta piatta — costa poco e va
+sempre — ma mostra il capo giusto al posto giusto.
+
+**Il selettore.** Due modalità esposte all'utente, non una scelta nostra
+mascherata da fallback: "3D" (si ruota col dito, si vede il capo a tutto tondo)
+e "Piatto" (leggero, istantaneo, non consuma batteria). La preferenza vive in
+`localStorage['sv_avatar_render']`, default "3D" dove WebGL c'è. È l'utente a
+decidere, come per le due schede avatar/foto già esistenti.
 
 - **`Avatar3D.jsx`** — scena three.js: camera, luci statiche, controllo di
   rotazione al trascinamento. È l'unico file che parla con three.js in modo
@@ -151,7 +159,7 @@ Vincolo: Mary la usa dal telefono.
 
 | Caso | Comportamento |
 |---|---|
-| WebGL assente o context perso | Si monta `AvatarSvg` corretto: figura piatta, ma capo intero e ben posizionato |
+| WebGL assente o context perso | Si forza la modalità piatta, il selettore 3D si disabilita e spiega perché |
 | Foto del capo su dominio esterno (CORS) | Tinta unita dal campo `colors` del capo |
 | Scontorno fallito | Tinta unita dal colore dominante dell'intera foto |
 | Capo senza foto | Tinta unita dal campo `colors` |
@@ -179,3 +187,28 @@ Vincolo: Mary la usa dal telefono.
   capo esatto addosso usa la scheda "Sulla tua foto (AI)".
 - Pose e animazioni: la figura sta in piedi e ruota, nient'altro.
 - Avatar 3D in onboarding ed editor del Profilo.
+- Il proxy server per Gemini: spec separata, vedi §9.
+
+## 9. Il progetto gemello: Gemini senza chiave dell'utente
+
+**Non fa parte di questa spec.** Va scritto e implementato subito dopo, come
+progetto a sé, perché ha rischi e ciclo di vita completamente diversi.
+
+Il problema: oggi la scheda "Sulla tua foto (AI)" richiede che sia **l'utente** a
+creare una chiave su Google AI Studio e ad attivarsi la fatturazione
+(`localStorage['sv_gemini_key']`, vedi `src/services/geminiTryon.js`).
+Realisticamente Mary non lo farà mai, quindi la modalità fotorealistica per lei
+non esiste.
+
+La soluzione: una Edge Function Supabase che tiene la chiave di Lorenzo lato
+server e inoltra la richiesta a Google. Il progetto ne ha già una
+(`supabase/functions/fetch-link-metadata/`), quindi il terreno è noto.
+
+**Il rischio che rende obbligatoria la spec separata:** la chiave è di Lorenzo, il
+sito è pubblico e ogni immagine costa ~$0.04. Senza difese, chiunque si registri
+può spendere i suoi soldi. Vincoli non negoziabili per quel progetto:
+
+- la funzione accetta solo utenti autenticati (verifica del JWT);
+- quota per utente, contata su Postgres (ordine di grandezza: 20 generazioni al
+  mese), applicata **lato server**, mai nel browser;
+- l'utente resta libero di usare una propria chiave, che bypassa la quota.
