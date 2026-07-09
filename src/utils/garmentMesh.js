@@ -26,12 +26,12 @@ const SPANS = {
 const DOUBLED = new Set(['bottom', 'shoes']);
 
 /**
- * Raggio del profilo alla quota y, per interpolazione lineare.
- * Esportata: è ciò che permette al test di verificare, quota per quota, che il
- * capo stia fuori dalla pelle.
+ * Interpolazione lineare del raggio su un profilo già ordinato per quota
+ * crescente. Uso interno: chi ha già un profilo ordinato (es. il ciclo di
+ * garmentProfile, che altrimenti riordinerebbe lo stesso profilo 15 volte)
+ * evita di riordinare a ogni chiamata.
  */
-export const radiusAt = (profile, y) => {
-  const sorted = [...profile].sort((a, b) => a[1] - b[1]);
+const interpolate = (sorted, y) => {
   if (y <= sorted[0][1]) return sorted[0][0];
   if (y >= sorted[sorted.length - 1][1]) return sorted[sorted.length - 1][0];
   for (let i = 1; i < sorted.length; i++) {
@@ -45,6 +45,14 @@ export const radiusAt = (profile, y) => {
   return sorted[sorted.length - 1][0];
 };
 
+/**
+ * Raggio del profilo alla quota y, per interpolazione lineare.
+ * Esportata: è ciò che permette al test di verificare, quota per quota, che il
+ * capo stia fuori dalla pelle. Riordina il profilo a ogni chiamata, quindi
+ * accetta profili in qualsiasi ordine di quota.
+ */
+export const radiusAt = (profile, y) => interpolate([...profile].sort((a, b) => a[1] - b[1]), y);
+
 const STEPS = 14;
 
 export function garmentProfile(kind, config) {
@@ -53,14 +61,16 @@ export function garmentProfile(kind, config) {
 
   const body = bodyProfiles(config);
   const source = body[span.source];
+  const sortedSource = [...source].sort((a, b) => a[1] - b[1]);
   const profile = [];
 
   // Bordo inferiore chiuso, poi il guscio, poi bordo superiore chiuso:
-  // un solido, non una superficie aperta.
+  // un solido, non una superficie aperta. Il profilo sorgente è ordinato una
+  // sola volta qui, non a ogni passo del ciclo.
   profile.push([0.001, span.from]);
   for (let i = 0; i <= STEPS; i++) {
     const y = span.from + ((span.to - span.from) * i) / STEPS;
-    profile.push([radiusAt(source, y) + span.gap, y]);
+    profile.push([interpolate(sortedSource, y) + span.gap, y]);
   }
   profile.push([0.001, span.to]);
 
