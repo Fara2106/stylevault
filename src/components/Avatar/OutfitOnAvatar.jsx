@@ -1,6 +1,7 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import AvatarSvg from './AvatarSvg';
+import Avatar3DBoundary from './Avatar3DBoundary';
 import { Icon } from '../common';
 import { MAX_ACCESSORIES } from '../../utils/tryonComposer';
 import { loadGarmentTexture } from '../../utils/garmentImage';
@@ -39,6 +40,12 @@ export default function OutfitOnAvatar({ outfit, avatarConfig, onSlotClick, onRe
   const webgl = hasWebGL();
   const [renderMode, setRenderMode] = useState(readRenderMode);
   const [textures, setTextures] = useState({});
+  // Una volta caduti in piatto per un guasto del 3D (renderer non creabile o
+  // context perso a metà sessione), il bottone 3D resta disabilitato: è una
+  // via sola, niente retry automatici in loop. Solo stato di sessione: non va
+  // in localStorage, un refresh riparte da zero.
+  const [webglBroken, setWebglBroken] = useState(false);
+  const disabled3d = !webgl || webglBroken;
 
   const chooseMode = (mode) => {
     setRenderMode(mode);
@@ -49,7 +56,20 @@ export default function OutfitOnAvatar({ outfit, avatarConfig, onSlotClick, onRe
     }
   };
 
-  // Le texture si calcolano una volta per capo e si riusano finché l'outfit non cambia.
+  // Chiamato da Avatar3D (renderer non creabile, context perso) o
+  // dall'ErrorBoundary (qualunque altro throw a runtime nell'albero 3D):
+  // stessa rete, stesso ripiego. Non tocca localStorage di proposito, per non
+  // spacciare un guasto per una preferenza dell'utente.
+  const handleUnavailable = useCallback(() => {
+    setWebglBroken(true);
+    setRenderMode('flat');
+  }, []);
+
+  // Le texture si calcolano una volta per capo e si riusano finché l'outfit non
+  // cambia. Cache per id: ad ogni aggiunta/rimozione si ricalcola solo il capo
+  // nuovo, non l'intero outfit (ogni ricalcolo ridecodifica la foto ed è ~100-200ms
+  // di thread principale).
+  const textureCacheRef = useRef(new Map());
   const itemsKey = outfitItems(outfit || {})
     .map((i) => i.id)
     .join(',');
@@ -57,9 +77,15 @@ export default function OutfitOnAvatar({ outfit, avatarConfig, onSlotClick, onRe
   useEffect(() => {
     let cancelled = false;
     const items = outfitItems(outfit || {});
-    Promise.all(items.map((item) => loadGarmentTexture(item).then((t) => [item.id, t]))).then(
-      (entries) => {
-        if (!cancelled) setTextures(Object.fromEntries(entries));
+    const cache = textureCacheRef.current;
+    const pending = items.filter((item) => !cache.has(item.id));
+
+    Promise.all(pending.map((item) => loadGarmentTexture(item).then((t) => cache.set(item.id, t)))).then(
+      () => {
+        if (cancelled) return;
+        const next = {};
+        for (const item of items) next[item.id] = cache.get(item.id);
+        setTextures(next);
       }
     );
     return () => {
@@ -150,7 +176,7 @@ export default function OutfitOnAvatar({ outfit, avatarConfig, onSlotClick, onRe
             type="button"
             className={`tryon__render-tab ${renderMode === '3d' ? 'tryon__render-tab--active' : ''}`}
             onClick={() => chooseMode('3d')}
-            disabled={!webgl}
+            disabled={disabled3d}
             aria-pressed={renderMode === '3d'}
           >
             {t('avatar.render3d')}
@@ -165,7 +191,7 @@ export default function OutfitOnAvatar({ outfit, avatarConfig, onSlotClick, onRe
           </button>
         </div>
         <p className="tryon__render-hint sv-label">
-          {!webgl
+          {disabled3d
             ? t('avatar.renderNoWebgl')
             : renderMode === '3d'
               ? t('avatar.render3dHint')
@@ -174,15 +200,18 @@ export default function OutfitOnAvatar({ outfit, avatarConfig, onSlotClick, onRe
       </div>
       <div className="tryon__stage">
         <div className="tryon__figure">
-          {renderMode === '3d' && webgl ? (
-            <Suspense fallback={<p className="tryon__loading sv-label">{t('avatar.renderLoading')}</p>}>
-              <Avatar3D
-                config={avatarConfig}
-                outfit={outfit}
-                textures={textures}
-                height={420}
-              />
-            </Suspense>
+          {renderMode === '3d' && !disabled3d ? (
+            <Avatar3DBoundary onUnavailable={handleUnavailable}>
+              <Suspense fallback={<p className="tryon__loading sv-label">{t('avatar.renderLoading')}</p>}>
+                <Avatar3D
+                  config={avatarConfig}
+                  outfit={outfit}
+                  textures={textures}
+                  height={420}
+                  onUnavailable={handleUnavailable}
+                />
+              </Suspense>
+            </Avatar3DBoundary>
           ) : (
             <AvatarSvg
               config={avatarConfig}

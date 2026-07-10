@@ -92,9 +92,17 @@ const frontDecal = (profile, textureUrl, onReady, extraRadius = 0) => {
   return mesh;
 };
 
-export default function Avatar3D({ config, outfit, textures, height = 420 }) {
+export default function Avatar3D({ config, outfit, textures, height = 420, onUnavailable }) {
   const mountRef = useRef(null);
   const stateRef = useRef({});
+
+  // Chiamata sempre aggiornata dentro l'effect di mount (dipendenze vuote
+  // apposta, vedi sotto): una ref evita di dover ricreare la scena ogni volta
+  // che il genitore passa una nuova funzione onUnavailable.
+  const onUnavailableRef = useRef(onUnavailable);
+  useEffect(() => {
+    onUnavailableRef.current = onUnavailable;
+  }, [onUnavailable]);
 
   // La scena (renderer, camera, luci, gruppo figura) si crea una volta sola,
   // al mount. Un `height` che cambia non deve distruggerla: altrimenti corpo
@@ -104,12 +112,24 @@ export default function Avatar3D({ config, outfit, textures, height = 420 }) {
     const mount = mountRef.current;
     if (!mount) return undefined;
 
+    // La creazione del renderer può lanciare (memoria satura, troppi context
+    // GL vivi sul browser mobile...). Senza try/catch l'eccezione risale non
+    // gestita: React smonta l'intero albero e la pagina resta bianca, senza
+    // che nessuno spieghi perché. Qui si avvisa il genitore e si esce senza
+    // costruire nient'altro: niente da ripulire, non è mai stato agganciato.
+    let renderer;
+    try {
+      renderer = new WebGLRenderer({ antialias: true, alpha: true });
+    } catch (err) {
+      onUnavailableRef.current?.(err);
+      return undefined;
+    }
+
     const scene = new Scene();
     const camera = new PerspectiveCamera(32, 0.5, 0.1, 100);
     camera.position.set(0, 0.95, 5.2);
     camera.lookAt(0, 0.9, 0);
 
-    const renderer = new WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(height / 2, height);
     mount.appendChild(renderer.domElement);
@@ -160,12 +180,24 @@ export default function Avatar3D({ config, outfit, textures, height = 420 }) {
     renderer.domElement.style.touchAction = 'none';
     renderer.domElement.style.cursor = 'grab';
 
+    // Il context GL può sparire a metà sessione (memoria recuperata dal
+    // sistema, telefonata in arrivo su Android...) senza che il componente si
+    // smonti: la scena resta nera e ferma. `hasWebGL()` non se ne accorge
+    // perché è cache-ata alla prima chiamata. Qui si intercetta l'evento e si
+    // avvisa il genitore, che passa alla modalità piatta.
+    const onContextLost = (e) => {
+      e.preventDefault();
+      onUnavailableRef.current?.(e);
+    };
+    renderer.domElement.addEventListener('webglcontextlost', onContextLost);
+
     return () => {
       state.unmounted = true;
       renderer.domElement.removeEventListener('pointerdown', onDown);
       renderer.domElement.removeEventListener('pointermove', onMove);
       renderer.domElement.removeEventListener('pointerup', onUp);
       renderer.domElement.removeEventListener('pointercancel', onUp);
+      renderer.domElement.removeEventListener('webglcontextlost', onContextLost);
       // Libera geometrie, materiali e texture di corpo/capi/decal prima di
       // disporre il renderer: altrimenti restano risorse GPU orfane.
       clearFigure(figure);
