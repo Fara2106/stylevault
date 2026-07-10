@@ -184,6 +184,7 @@ export default function TryOnPage() {
       {mode === 'photo' && (
         <section className="tryon-page__photo">
           <p className="tryon-page__photo-intro">{t('tryon.photoIntro')}</p>
+          <p className="tryon-page__photo-cost sv-label">{t('tryon.photoCost')}</p>
 
           {!outfitHasItems(outfit) ? (
             <p className="tryon-page__photo-note">{t('tryon.photoNoOutfit')}</p>
