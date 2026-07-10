@@ -59,7 +59,11 @@ const GARMENT_SHAPES = {
 const GARMENT_ANCHORS = {
   top:       { x: 48, y: 60,  width: 104, height: 100 },
   dress:     { x: 50, y: 60,  width: 100, height: 240 },
-  bottom:    { x: 62, y: 128, width: 76,  height: 232 },
+  // Il capo si adatta senza essere tagliato (`meet`), quindi la scala la decide
+  // il lato più stretto. Con un riquadro largo 76 i pantaloni si fermavano a
+  // metà polpaccio: era la larghezza a strozzarli, non l'altezza. A 96 arrivano
+  // alla caviglia (i piedi stanno a y = 368).
+  bottom:    { x: 52, y: 128, width: 96,  height: 232 },
   outerwear: { x: 40, y: 56,  width: 120, height: 155 },
   shoes:     { x: 74, y: 350, width: 52,  height: 30 },
 };
