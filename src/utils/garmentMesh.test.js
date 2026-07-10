@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { garmentProfile, radiusAt, decalBounds, GARMENT_KINDS, GARMENT_GAP } from './garmentMesh';
+import {
+  garmentProfile,
+  garmentParts,
+  radiusAt,
+  decalBounds,
+  GARMENT_KINDS,
+  GARMENT_GAP,
+} from './garmentMesh';
 import { bodyProfiles } from './avatarMesh';
 
 const cfg = { bodyShape: 'average', skinTone: 'medium', hairColor: 'brown', hairStyle: 'medium' };
@@ -183,5 +190,41 @@ describe('decalBounds', () => {
     expect(bounds.bottom).toBe(-0.2);
     expect(bounds.radius).toBeCloseTo(0.084, 9);
     expect(bounds.centerY).toBeCloseTo(0.1, 9);
+  });
+});
+
+describe('garmentParts', () => {
+  it('il top ha il busto e due maniche', () => {
+    const parts = garmentParts('top', cfg);
+    expect(parts).toHaveLength(2); // busto + manica (mirror la raddoppia)
+    expect(parts[0].mirror).toBe(false);
+    expect(parts[1].mirror).toBe(true);
+    expect(parts[1].offsetX).toBeGreaterThan(0);
+  });
+
+  it('le maniche del capospalla arrivano più in basso di quelle del top', () => {
+    const lowestY = (part) => Math.min(...part.profile.map(([, y]) => y));
+    expect(lowestY(garmentParts('outerwear', cfg)[1])).toBeLessThan(
+      lowestY(garmentParts('top', cfg)[1])
+    );
+  });
+
+  it('i pantaloni sono due gambe rispecchiate, senza maniche', () => {
+    const parts = garmentParts('bottom', cfg);
+    expect(parts).toHaveLength(1);
+    expect(parts[0].mirror).toBe(true);
+    expect(parts[0].offsetX).toBeCloseTo(bodyProfiles(cfg).legOffsetX, 9);
+  });
+
+  it('le maniche stanno fuori dal braccio a ogni quota', () => {
+    const body = bodyProfiles(cfg);
+    const sleeve = garmentParts('top', cfg)[1];
+    for (const [r, y] of sleeve.profile.slice(1, -1)) {
+      expect(r).toBeGreaterThan(radiusAt(body.arm, y));
+    }
+  });
+
+  it('restituisce lista vuota per un tipo sconosciuto', () => {
+    expect(garmentParts('cappello', cfg)).toEqual([]);
   });
 });

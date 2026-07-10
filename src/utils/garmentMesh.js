@@ -27,9 +27,7 @@ const DOUBLED = new Set(['bottom', 'shoes']);
 
 /**
  * Interpolazione lineare del raggio su un profilo già ordinato per quota
- * crescente. Uso interno: chi ha già un profilo ordinato (es. il ciclo di
- * garmentProfile, che altrimenti riordinerebbe lo stesso profilo 15 volte)
- * evita di riordinare a ogni chiamata.
+ * crescente. Uso interno di `radiusAt`, che si occupa dell'ordinamento.
  */
 const interpolate = (sorted, y) => {
   if (y <= sorted[0][1]) return sorted[0][0];
@@ -55,6 +53,29 @@ export const radiusAt = (profile, y) => interpolate([...profile].sort((a, b) => 
 
 const STEPS = 14;
 
+/** Campate delle maniche, per tipo. Assenti dove il capo non ne ha. */
+const SLEEVES = {
+  top: { from: 1.24, to: 1.42 },
+  dress: { from: 1.24, to: 1.42 },
+  outerwear: { from: 0.98, to: 1.44 },
+};
+
+/**
+ * Costruisce il profilo di un guscio attorno a `source`, fra due quote:
+ * bordo inferiore chiuso, poi il guscio, poi bordo superiore chiuso (un
+ * solido, non una superficie aperta). Unica costruzione di guscio nel file:
+ * la usano sia `garmentProfile` sia `garmentParts`.
+ */
+const shell = (source, from, to, gap) => {
+  const profile = [[0.001, from]];
+  for (let i = 0; i <= STEPS; i++) {
+    const y = from + ((to - from) * i) / STEPS;
+    profile.push([radiusAt(source, y) + gap, y]);
+  }
+  profile.push([0.001, to]);
+  return profile;
+};
+
 /**
  * Estremi verticali e raggio del cilindro che ospita la fantasia frontale
  * (il "decal") di un capo. Pura, senza three.js: three.js non gira in
@@ -76,22 +97,38 @@ export function garmentProfile(kind, config) {
 
   const body = bodyProfiles(config);
   const source = body[span.source];
-  const sortedSource = [...source].sort((a, b) => a[1] - b[1]);
-  const profile = [];
-
-  // Bordo inferiore chiuso, poi il guscio, poi bordo superiore chiuso:
-  // un solido, non una superficie aperta. Il profilo sorgente è ordinato una
-  // sola volta qui, non a ogni passo del ciclo.
-  profile.push([0.001, span.from]);
-  for (let i = 0; i <= STEPS; i++) {
-    const y = span.from + ((span.to - span.from) * i) / STEPS;
-    profile.push([interpolate(sortedSource, y) + span.gap, y]);
-  }
-  profile.push([0.001, span.to]);
 
   return {
-    profile,
+    profile: shell(source, span.from, span.to, span.gap),
     offsetX: DOUBLED.has(kind) ? body.legOffsetX : 0,
     doubled: DOUBLED.has(kind),
   };
+}
+
+/**
+ * Le parti 3D di un capo. Ogni parte è un profilo da ruotare attorno
+ * all'asse, con lo scostamento laterale a cui va messa. `mirror: true`
+ * significa "istanzia anche a -offsetX" (le due maniche, le due gambe).
+ * Le maniche sono un guscio del braccio, separato da quello del busto:
+ * è ciò che distingue una canotta (top senza SLEEVES) da una maglietta.
+ */
+export function garmentParts(kind, config) {
+  const span = SPANS[kind];
+  if (!span) return [];
+
+  const body = bodyProfiles(config);
+  const parts = [];
+
+  const main = garmentProfile(kind, config);
+  parts.push({ profile: main.profile, offsetX: main.offsetX, mirror: main.doubled });
+
+  const sleeve = SLEEVES[kind];
+  if (sleeve) {
+    parts.push({
+      profile: shell(body.arm, sleeve.from, sleeve.to, span.gap),
+      offsetX: body.armOffsetX,
+      mirror: true,
+    });
+  }
+  return parts;
 }
