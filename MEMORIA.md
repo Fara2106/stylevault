@@ -7,9 +7,13 @@
 
 **L'app è ONLINE in MODALITÀ CLOUD: account veri, dati e foto su Supabase.**
 
-**Lavoro pronto ma NON ancora online: branch `avatar-3d`.** Aspetta il giudizio di
-Lorenzo prima di essere unito a `main` (il merge su main fa deploy sul sito che
-Mary sta usando). Vedi la sezione "Avatar 3D" più sotto.
+**Avatar 3D ONLINE dal 2026-07-10** (branch `avatar-3d` unito a `main`, approvato
+da Lorenzo: «per ora va bene»). **Ora si aspetta il feedback di Mary**: nessun
+altro sviluppo dell'avatar finché non l'ha provato. Vedi la sezione "Avatar 3D".
+
+**Prossimo lavoro già deciso, non ancora iniziato:** il proxy Gemini (§9 della
+spec) — oggi la scheda AI pretende che sia l'utente a crearsi chiave e
+fatturazione su Google, e Mary non lo farà mai.
 
 - **Feedback di Mary (2026-07-09): positivo** — "va bene", continuerà a provarla.
   Il nome resta "StyleVault" finché non se ne sceglie uno definitivo.
@@ -58,10 +62,52 @@ scelta, con le spunte, poi sta a lei decidere", "esponendo anche quanto costa"):
 - 96 test Vitest verdi. Verifica a schermo con Chrome: 3D vestito, rotazione,
   piatto, fallback senza WebGL, 0 errori in console.
 
-**Difetti noti, cosmetici** (dichiarati, non nascosti): il decal della fantasia è
-un cilindro a raggio costante e sporge di lato dove il busto si assottiglia; la
-testa non ha volto; in modalità piatta i jeans finiscono sopra la caviglia.
+### Secondo giro (2026-07-10): smettere di incollare la foto
 
+Feedback di Lorenzo sul 3D: «non è proprio bellissima l'immagine sull'avatar» e
+«il logo sarebbe carino vedere dove è posizionato nel capo, e mantenere quella
+coerenza». Era lo stesso errore del bug originale, in tre dimensioni: la foto
+veniva incollata su una superficie curva davanti al corpo, si vedeva il *disegno*
+della maglietta schiacciato su un torso che ha già la sua forma, e i pantaloni
+incollati su un'unica superficie che abbracciava le due gambe sembravano una gonna.
+
+Ora **la forma la fa la mesh, il tessuto la foto**:
+- i capi sono parti vere (`garmentParts`): busto **con le maniche**, due gambe
+  separate, due scarpe;
+- il materiale è una **piastrella di tessuto** ritagliata *dentro* il capo
+  (`fabricSwatch`, lontana dai bordi e dalla stampa) e ripetuta: righe e quadri
+  si vedono, il contorno disegnato del capo no;
+- la **stampa** viene riappoggiata nel punto in cui stava sul capo fotografato
+  (`printRegion` + `printPlacement` + `printAt`): un logo sul taschino resta sul
+  taschino. Sui capi sdoppiati va su una gamba sola, quella giusta;
+- ombra a terra, luci più contrastate, e via il decal cilindrico che sporgeva.
+
+**Quattro difetti che nessun test poteva vedere**, trovati a schermo e
+diagnosticati interrogando le funzioni pure nel browser sulle foto vere:
+1. la piastrella pescava il logo → ripetuto a pois su tutto il capo;
+2. le righe chiare sparivano: distavano dallo sfondo **esattamente** quanto
+   `BG_TOLERANCE` (32) e, toccando il bordo del capo, il riempimento se le
+   mangiava dai lati. Tolleranza portata a **24**;
+3. `printRegion` non trovava **mai** una stampa su una foto reale: l'anello di
+   pixel sfumati fra capo e sfondo (antialiasing) sembrava stampa e faceva
+   rinunciare. Ora si erode il bordo di 3 px (erosione separabile);
+4. sui jeans i pixel diversi dal tessuto erano **due macchie staccate** (la toppa
+   e una cucitura all'inguine): il rettangolo unione era vuoto all'81% e veniva
+   scartato. Ora si prende la **macchia connessa più grande**, e una stampa deve
+   riempire almeno il 25% del proprio rettangolo (un orlo è un anello vuoto).
+
+Modalità piatta: i pantaloni si fermavano a metà polpaccio perché a strozzarli
+era la **larghezza** del riquadro, non l'altezza (`meet` scala sul lato più
+stretto). Riquadro `bottom` da 76 a 96.
+
+Prove a schermo: `docs/verifiche/2026-07-10-avatar-bellezza/` — due magliette
+identiche col logo in punti diversi, e il logo si sposta di conseguenza.
+
+**Difetti cosmetici che restano**: la testa non ha volto; la forma del capo è
+generica (una maglietta è "una maglietta"). Il capo esatto addosso lo dà solo la
+scheda "Sulla tua foto (AI)".
+
+Piano del secondo giro: `docs/superpowers/plans/2026-07-10-avatar-3d-bellezza.md`
 Spec: `docs/superpowers/specs/2026-07-09-avatar-3d-design.md`
 Piano: `docs/superpowers/plans/2026-07-09-avatar-3d.md`
 
