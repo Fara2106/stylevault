@@ -86,7 +86,9 @@ const frontDecal = (profile, textureUrl, onReady, extraRadius = 0) => {
 
   const mesh = new Mesh(geometry, material);
   mesh.position.y = centerY;
-  mesh.rotation.y = Math.PI; // il fronte guarda la camera
+  // Nessuna rotazione. Il settore parte da -DECAL_ARC/2 ed è centrato su
+  // theta = 0, cioè su +Z, cioè già verso la camera. Ruotarlo di PI lo manda
+  // dietro la schiena: la fantasia sparisce dal davanti e spunta di lato.
   return mesh;
 };
 
