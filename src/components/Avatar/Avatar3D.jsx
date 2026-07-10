@@ -5,8 +5,10 @@ import {
   WebGLRenderer,
   LatheGeometry,
   CylinderGeometry,
+  CircleGeometry,
   SphereGeometry,
   MeshStandardMaterial,
+  MeshBasicMaterial,
   Mesh,
   Group,
   Vector2,
@@ -14,11 +16,12 @@ import {
   AmbientLight,
   DirectionalLight,
   TextureLoader,
+  RepeatWrapping,
   DoubleSide,
   SRGBColorSpace,
 } from 'three';
 import { bodyProfiles } from '../../utils/avatarMesh';
-import { garmentProfile, decalBounds } from '../../utils/garmentMesh';
+import { garmentParts, radiusAt } from '../../utils/garmentMesh';
 import { garmentLayers } from '../../utils/tryonComposer';
 
 const RADIAL_SEGMENTS = 32;
@@ -41,6 +44,9 @@ const lathe = (profile) =>
  * sia al cambio di outfit (le mesh precedenti vanno rifatte) sia allo
  * smontaggio del componente: senza, le risorse GPU si accumulano a ogni
  * ricostruzione o non vengono mai liberate quando il componente sparisce.
+ * Alcune mesh dello stesso capo condividono lo stesso materiale (la
+ * piastrella di tessuto vale per busto e maniche): disporre due volte lo
+ * stesso materiale/texture non è un problema, `dispose()` è idempotente.
  */
 const clearFigure = (figure) => {
   while (figure.children.length) {
@@ -52,43 +58,92 @@ const clearFigure = (figure) => {
 };
 
 /**
- * Superficie curva sul davanti del capo, dove si applica la fantasia vera.
- * Serve anche ai capi sdoppiati (pantaloni, scarpe): senza, uscirebbero in
- * tinta unita e la fantasia si vedrebbe solo sulla metà superiore del corpo.
+ * Materiale del capo: la piastrella di tessuto vera (foto) ripetuta come
+ * pattern, non il disegno intero del capo — quello aveva già collo, maniche
+ * e orli propri, che schiacciati su un corpo diverso producevano la "piastra
+ * sporgente" del vecchio decal cilindrico. Se non c'è una piastrella si
+ * ripiega sul colore dominante.
  */
-const frontDecal = (profile, textureUrl, onReady, extraRadius = 0) => {
-  const { top, bottom, radius, centerY } = decalBounds(profile, extraRadius);
+const garmentMaterial = (texture, onReady) => {
+  if (texture?.swatchUrl) {
+    const map = new TextureLoader().load(texture.swatchUrl, onReady);
+    map.wrapS = RepeatWrapping;
+    map.wrapT = RepeatWrapping;
+    map.repeat.set(3, 3);
+    map.colorSpace = SRGBColorSpace;
+    return new MeshStandardMaterial({ map, color: 0xffffff, roughness: 0.95 });
+  }
+  return new MeshStandardMaterial({ color: safeColor(texture?.colorHex), roughness: 0.95 });
+};
+
+/**
+ * La stampa del capo (logo, scritta...) rimessa esattamente dove stava sulla
+ * foto vera, sulla parte principale del capo. `printAt` è in frazioni del
+ * rettangolo del capo fotografato: cx/cy il centro, w/h la dimensione.
+ *
+ * Per i capi sdoppiati (mirror: true, es. pantaloni) `printAt.cx` è misurato
+ * sull'intera foto che contiene due gambe: va prima scelta la gamba (sinistra
+ * se cx < 0.5) e poi ricalcolata la frazione locale a quella sola gamba,
+ * altrimenti l'angolo attorno all'asse cadrebbe nel posto sbagliato. Se la
+ * stampa, ricalcolata, risulta più larga di mezzo capo (localW > 1) vuol dire
+ * che è una fantasia diffusa su entrambe le gambe, non un logo da tasca: se
+ * ne occupa già la piastrella di tessuto, qui si rinuncia.
+ */
+const printDecal = (mainPart, printUrl, printAt, onReady) => {
+  const ys = mainPart.profile.map(([, y]) => y);
+  const from = Math.min(...ys);
+  const to = Math.max(...ys);
+
+  let localCx = printAt.cx;
+  let localW = printAt.w;
+  let instanceX = 0;
+
+  if (mainPart.mirror) {
+    const onLeft = printAt.cx < 0.5;
+    instanceX = onLeft ? -mainPart.offsetX : mainPart.offsetX;
+    localCx = onLeft ? printAt.cx * 2 : (printAt.cx - 0.5) * 2;
+    localW = printAt.w * 2;
+    if (localW > 1) return null;
+  }
+
+  // `printAt.cy` è misurata dall'alto del capo, mentre y cresce verso l'alto.
+  const y = to - printAt.cy * (to - from);
+  const patchHeight = printAt.h * (to - from);
+
+  // `printAt.cx` = 0.5 è il centro del davanti. Lo scarto orizzontale diventa
+  // un angolo attorno all'asse: la stampa gira col corpo, resta incollata al
+  // tessuto.
+  const theta = (localCx - 0.5) * DECAL_ARC;
+  const arc = localW * DECAL_ARC;
+  const radius = radiusAt(mainPart.profile, y) + 0.004;
 
   const geometry = new CylinderGeometry(
     radius,
     radius,
-    top - bottom,
+    Math.max(patchHeight, 0.001),
     24,
     1,
     true,
-    -DECAL_ARC / 2,
-    DECAL_ARC
+    theta - arc / 2,
+    arc
   );
   const material = new MeshStandardMaterial({
     transparent: true,
     side: DoubleSide,
     roughness: 0.9,
-    // Il cilindro del decal sta a soli 0.004 unità dalla mesh sottostante:
+    // Il cilindro della stampa sta a soli 0.004 unità dalla mesh sottostante:
     // senza polygon offset le due superfici litigano per lo stesso pixel
     // (z-fighting) a seconda dell'angolo di vista.
     polygonOffset: true,
     polygonOffsetFactor: -1,
     polygonOffsetUnits: -1,
   });
-  const texture = new TextureLoader().load(textureUrl, onReady);
-  texture.colorSpace = SRGBColorSpace;
-  material.map = texture;
+  const map = new TextureLoader().load(printUrl, onReady);
+  map.colorSpace = SRGBColorSpace;
+  material.map = map;
 
   const mesh = new Mesh(geometry, material);
-  mesh.position.y = centerY;
-  // Nessuna rotazione. Il settore parte da -DECAL_ARC/2 ed è centrato su
-  // theta = 0, cioè su +Z, cioè già verso la camera. Ruotarlo di PI lo manda
-  // dietro la schiena: la fantasia sparisce dal davanti e spunta di lato.
+  mesh.position.set(instanceX, y, 0);
   return mesh;
 };
 
@@ -134,11 +189,14 @@ export default function Avatar3D({ config, outfit, textures, height = 420, onUna
     renderer.setSize(height / 2, height);
     mount.appendChild(renderer.domElement);
 
-    scene.add(new AmbientLight(0xffffff, 1.5));
-    const key = new DirectionalLight(0xffffff, 1.8);
+    // Luci più contrastate: senza ombre proiettate (costerebbero un
+    // renderer.shadowMap e un ciclo di aggiornamento in più), il contatto a
+    // terra lo dà solo il cerchio d'ombra sotto i piedi.
+    scene.add(new AmbientLight(0xffffff, 1.1));
+    const key = new DirectionalLight(0xffffff, 2.0);
     key.position.set(2, 4, 3);
     scene.add(key);
-    const rim = new DirectionalLight(0xffffff, 0.5);
+    const rim = new DirectionalLight(0xffffff, 0.7);
     rim.position.set(-3, 2, -2);
     scene.add(rim);
 
@@ -233,6 +291,18 @@ export default function Avatar3D({ config, outfit, textures, height = 420, onUna
     const skin = new MeshStandardMaterial({ color: new Color(body.skinHex), roughness: 0.85 });
     const hair = new MeshStandardMaterial({ color: new Color(body.hairHex), roughness: 0.95 });
 
+    // Ombra a terra: non è un'ombra vera (nessuna luce coinvolta, nessun
+    // ombra proiettata da calcolare), solo un cerchio scuro e trasparente
+    // sotto i piedi. Toglie l'effetto "figura che galleggia" a costo zero.
+    const shadowRadius = body.legOffsetX + Math.max(...body.leg.map(([r]) => r)) * 1.8;
+    const shadow = new Mesh(
+      new CircleGeometry(shadowRadius, 24),
+      new MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.18 })
+    );
+    shadow.rotation.x = -Math.PI / 2;
+    shadow.position.y = 0.002;
+    figure.add(shadow);
+
     figure.add(new Mesh(lathe(body.torso), skin));
     for (const sign of [-1, 1]) {
       const leg = new Mesh(lathe(body.leg), skin);
@@ -256,26 +326,28 @@ export default function Avatar3D({ config, outfit, textures, height = 420, onUna
     }
 
     for (const { kind, item } of garmentLayers(outfit)) {
-      const shape = garmentProfile(kind, config);
-      if (!shape) continue;
-      const texture = textures?.[item.id];
-      const color = safeColor(texture?.colorHex || FALLBACK_COLOR);
-      const material = new MeshStandardMaterial({ color, roughness: 0.92 });
+      const parts = garmentParts(kind, config);
+      if (!parts.length) continue;
 
-      const offsets = shape.doubled ? [-shape.offsetX, shape.offsetX] : [0];
-      for (const dx of offsets) {
-        const mesh = new Mesh(lathe(shape.profile), material);
-        mesh.position.x = dx;
-        figure.add(mesh);
+      const texture = textures?.[item.id];
+      // Un solo materiale per capo: busto e maniche sono lo stesso tessuto,
+      // non due foto diverse.
+      const material = garmentMaterial(texture, render);
+
+      for (const part of parts) {
+        const xs = part.mirror ? [-part.offsetX, part.offsetX] : [0];
+        for (const dx of xs) {
+          const mesh = new Mesh(lathe(part.profile), material);
+          mesh.position.x = dx;
+          figure.add(mesh);
+        }
       }
 
-      // Una sola superficie per la fantasia, anche sui capi sdoppiati: un paio
-      // di jeans è una foto sola che copre due gambe, non la stessa foto due
-      // volte. Per i capi sdoppiati la superficie si allarga fino ad abbracciarle.
-      if (texture?.textureUrl) {
-        figure.add(
-          frontDecal(shape.profile, texture.textureUrl, render, shape.offsetX)
-        );
+      // La stampa va sulla parte principale del capo (parts[0]), mai sulle
+      // maniche: un logo sul taschino resta sul taschino.
+      if (texture?.printUrl && texture?.printAt) {
+        const decal = printDecal(parts[0], texture.printUrl, texture.printAt, render);
+        if (decal) figure.add(decal);
       }
     }
 

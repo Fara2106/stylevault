@@ -76,21 +76,6 @@ const shell = (source, from, to, gap) => {
   return profile;
 };
 
-/**
- * Estremi verticali e raggio del cilindro che ospita la fantasia frontale
- * (il "decal") di un capo. Pura, senza three.js: three.js non gira in
- * ambiente `node`, quindi questa matematica vive negli utils, testabile.
- * `extraRadius` allarga il cilindro per i capi sdoppiati (pantaloni, scarpe),
- * dove una sola foto deve abbracciare entrambe le gambe.
- */
-export function decalBounds(profile, extraRadius = 0) {
-  const ys = profile.map(([, y]) => y);
-  const top = Math.max(...ys);
-  const bottom = Math.min(...ys);
-  const radius = Math.max(...profile.map(([r]) => r)) + extraRadius + 0.004;
-  return { top, bottom, radius, centerY: (top + bottom) / 2 };
-}
-
 export function garmentProfile(kind, config) {
   const span = SPANS[kind];
   if (!span) return null;
