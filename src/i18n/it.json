@@ -174,9 +174,10 @@
     "withWishlist": "Include capi della wishlist",
     "modeAvatar": "Sull'avatar",
     "modePhoto": "Sulla tua foto (AI)",
-    "modeAvatarHint": "Gratis: i capi si posizionano sulle sagome dell'avatar.",
+    "modeAvatarHint": "Gratis: l'avatar indossa i capi scelti, in 3D o in versione piatta.",
     "photoTitle": "Prova con la tua foto",
-    "photoIntro": "L'AI di Google veste una tua foto con i capi scelti. Serve una foto e la chiave API di Google (si imposta nel Profilo).",
+    "photoIntro": "L'AI di Google genera una fotografia di te che indossi i capi scelti. È l'unica modalità che mostra il tuo capo esatto, ma produce un'immagine ferma: non si ruota.",
+    "photoCost": "A pagamento: circa 4 centesimi a foto, addebitati sull'account Google di chi possiede la chiave. Serve la fatturazione attiva su aistudio.google.com.",
     "photoUpload": "Carica una tua foto",
     "photoChange": "Cambia foto",
     "photoGenerate": "Genera foto con AI",
@@ -218,7 +219,13 @@
     "referencePhoto": "Foto di riferimento",
     "uploadReference": "Carica una tua foto",
     "referenceHint": "Ti aiuta a regolare l'avatar finché ti somiglia. Resta solo sul tuo dispositivo.",
-    "removeReference": "Rimuovi foto"
+    "removeReference": "Rimuovi foto",
+    "render3d": "3D",
+    "renderFlat": "Piatto",
+    "render3dHint": "Gratis e illimitata. Ruota la figura col dito. La forma del capo è generica: colore e fantasia sono i tuoi, il taglio no.",
+    "renderFlatHint": "Gratis e illimitata. Leggera, non consuma batteria. La figura non ruota.",
+    "renderNoWebgl": "Questo dispositivo non supporta la grafica 3D: resta disponibile la modalità piatta.",
+    "renderLoading": "Preparo la scena 3D..."
   },
   "advice": {
     "colorsHarmonious": "I colori si armonizzano bene tra loro",

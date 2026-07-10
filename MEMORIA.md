@@ -3,9 +3,17 @@
 > File di ripartenza: se apri una nuova chat, leggi questo file per riprendere il lavoro
 > esattamente da dove eravamo. Va aggiornato a ogni avanzamento significativo.
 
-## Situazione attuale (2026-07-09)
+## Situazione attuale (2026-07-10)
 
 **L'app è ONLINE in MODALITÀ CLOUD: account veri, dati e foto su Supabase.**
+
+**Avatar 3D ONLINE dal 2026-07-10** (branch `avatar-3d` unito a `main`, approvato
+da Lorenzo: «per ora va bene»). **Ora si aspetta il feedback di Mary**: nessun
+altro sviluppo dell'avatar finché non l'ha provato. Vedi la sezione "Avatar 3D".
+
+**Prossimo lavoro già deciso, non ancora iniziato:** il proxy Gemini (§9 della
+spec) — oggi la scheda AI pretende che sia l'utente a crearsi chiave e
+fatturazione su Google, e Mary non lo farà mai.
 
 - **Feedback di Mary (2026-07-09): positivo** — "va bene", continuerà a provarla.
   Il nome resta "StyleVault" finché non se ne sceglie uno definitivo.
@@ -13,6 +21,104 @@
   pubblico è la versione cloud (registrazione vera; niente più capi demo).
   Chi aveva dati nella vecchia demo locale li ha ancora nel proprio browser,
   ma nel cloud si riparte da zero: Mary deve registrarsi.
+
+## Avatar 3D (branch `avatar-3d`, 2026-07-10) — da approvare
+
+Segnalazione di Lorenzo: «l'avatar non è 3D ma è piatto» e «i vestiti non si
+inseriscono correttamente».
+
+- **Il "piatto" non era un bug**: la spec del 2026-07-07 prescriveva "Figura 2D
+  stilizzata SVG". Non è mai stato 3D.
+- **I vestiti sì, ed è stato riprodotto.** In `AvatarSvg.jsx` la foto del capo
+  entrava con `preserveAspectRatio="xMidYMid slice"` dentro una `clipPath` a
+  forma di indumento, in riquadri 68×238 (rapporto 1:3,5). Da una foto quadrata
+  sopravviveva solo la **striscia centrale, il 28% della larghezza**: le gambe si
+  riempivano di sfondo. Nessuno scontornava il capo. Screenshot del prima/dopo in
+  `docs/verifiche/2026-07-09-avatar-3d/`.
+
+**Cosa c'è ora**, a scelta dell'utente (richiesta di Lorenzo: "metti tutto a
+scelta, con le spunte, poi sta a lei decidere", "esponendo anche quanto costa"):
+
+| Modalità | Cosa fa | Costo |
+|---|---|---|
+| 3D | corpo e capi three.js generati da codice, si ruota col dito | gratis |
+| Piatto | il capo scontornato, intero, appoggiato sul corpo | gratis |
+| Sulla tua foto (AI) | Gemini: il capo esatto addosso, immagine ferma | ~$0,04/foto |
+
+- Pipeline: `garmentTexture.js` (puro, testato: maschera dello sfondo dai quattro
+  angoli, rettangolo del capo, colore dominante) → `garmentImage.js` (canvas,
+  sottile) → `AvatarSvg` / `Avatar3D`.
+- **La `clipPath` è sparita dal percorso principale**: il capo scontornato ha lo
+  sfondo trasparente, non serve infilarlo in una sagoma. Le sagome restano solo
+  per il caso degradato (tinta unita).
+- `Avatar3D.jsx` è l'unico file che importa three.js, caricato con `React.lazy`:
+  chunk separato da 492 kB (124 kB gzip), scaricato **solo** aprendo `/tryon`.
+- Corpo e capi sono mesh generate da codice (nessun GLB, nessuna licenza): la
+  corporatura di `avatar_config` resta un parametro, lo slider continua a valere.
+- Rete di sicurezza: se il renderer WebGL non si crea (memoria satura su Android)
+  o il context si perde a metà sessione, si passa da soli alla modalità piatta.
+  C'è un ErrorBoundary. **Verificato rompendo il renderer di proposito**: niente
+  schermo bianco.
+- 96 test Vitest verdi. Verifica a schermo con Chrome: 3D vestito, rotazione,
+  piatto, fallback senza WebGL, 0 errori in console.
+
+### Secondo giro (2026-07-10): smettere di incollare la foto
+
+Feedback di Lorenzo sul 3D: «non è proprio bellissima l'immagine sull'avatar» e
+«il logo sarebbe carino vedere dove è posizionato nel capo, e mantenere quella
+coerenza». Era lo stesso errore del bug originale, in tre dimensioni: la foto
+veniva incollata su una superficie curva davanti al corpo, si vedeva il *disegno*
+della maglietta schiacciato su un torso che ha già la sua forma, e i pantaloni
+incollati su un'unica superficie che abbracciava le due gambe sembravano una gonna.
+
+Ora **la forma la fa la mesh, il tessuto la foto**:
+- i capi sono parti vere (`garmentParts`): busto **con le maniche**, due gambe
+  separate, due scarpe;
+- il materiale è una **piastrella di tessuto** ritagliata *dentro* il capo
+  (`fabricSwatch`, lontana dai bordi e dalla stampa) e ripetuta: righe e quadri
+  si vedono, il contorno disegnato del capo no;
+- la **stampa** viene riappoggiata nel punto in cui stava sul capo fotografato
+  (`printRegion` + `printPlacement` + `printAt`): un logo sul taschino resta sul
+  taschino. Sui capi sdoppiati va su una gamba sola, quella giusta;
+- ombra a terra, luci più contrastate, e via il decal cilindrico che sporgeva.
+
+**Quattro difetti che nessun test poteva vedere**, trovati a schermo e
+diagnosticati interrogando le funzioni pure nel browser sulle foto vere:
+1. la piastrella pescava il logo → ripetuto a pois su tutto il capo;
+2. le righe chiare sparivano: distavano dallo sfondo **esattamente** quanto
+   `BG_TOLERANCE` (32) e, toccando il bordo del capo, il riempimento se le
+   mangiava dai lati. Tolleranza portata a **24**;
+3. `printRegion` non trovava **mai** una stampa su una foto reale: l'anello di
+   pixel sfumati fra capo e sfondo (antialiasing) sembrava stampa e faceva
+   rinunciare. Ora si erode il bordo di 3 px (erosione separabile);
+4. sui jeans i pixel diversi dal tessuto erano **due macchie staccate** (la toppa
+   e una cucitura all'inguine): il rettangolo unione era vuoto all'81% e veniva
+   scartato. Ora si prende la **macchia connessa più grande**, e una stampa deve
+   riempire almeno il 25% del proprio rettangolo (un orlo è un anello vuoto).
+
+Modalità piatta: i pantaloni si fermavano a metà polpaccio perché a strozzarli
+era la **larghezza** del riquadro, non l'altezza (`meet` scala sul lato più
+stretto). Riquadro `bottom` da 76 a 96.
+
+Prove a schermo: `docs/verifiche/2026-07-10-avatar-bellezza/` — due magliette
+identiche col logo in punti diversi, e il logo si sposta di conseguenza.
+
+**Difetti cosmetici che restano**: la testa non ha volto; la forma del capo è
+generica (una maglietta è "una maglietta"). Il capo esatto addosso lo dà solo la
+scheda "Sulla tua foto (AI)".
+
+Piano del secondo giro: `docs/superpowers/plans/2026-07-10-avatar-3d-bellezza.md`
+Spec: `docs/superpowers/specs/2026-07-09-avatar-3d-design.md`
+Piano: `docs/superpowers/plans/2026-07-09-avatar-3d.md`
+
+**Prossimo progetto, già deciso (§9 della spec): proxy Gemini.** Oggi la scheda AI
+pretende che sia l'utente a crearsi chiave e fatturazione su Google: Mary non lo
+farà mai. Serve una Edge Function Supabase che tenga la chiave di Lorenzo lato
+server. **Vincoli non negoziabili**: solo utenti autenticati (JWT) e quota per
+utente contata su Postgres (~20/mese) — la chiave è di Lorenzo e il sito è
+pubblico, senza difese chiunque si registri spende i suoi soldi.
+
+---
 
 **Novità 2026-07-09 — cloud Supabase attivato e verificato (prima volta live):**
 - Progetto Supabase dell'account `lorefara97@gmail.com` (creato in automatico

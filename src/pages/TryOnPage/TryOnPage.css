@@ -243,3 +243,12 @@
   background: var(--sv-ink);
   color: var(--sv-bg);
 }
+
+.tryon-page__photo-cost {
+  margin-top: var(--sv-space-2);
+  padding: var(--sv-space-2) var(--sv-space-3);
+  border-left: 2px solid var(--sv-accent);
+  text-transform: none;
+  letter-spacing: 0;
+  line-height: 1.5;
+}

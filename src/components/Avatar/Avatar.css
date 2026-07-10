@@ -279,3 +279,56 @@
 .tryon__slot--accessory.tryon__slot--empty {
   aspect-ratio: 1;
 }
+
+/* ── Selettore modalità di resa (3D / Piatto) ──────── */
+
+.tryon__render {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sv-space-2);
+  margin-bottom: var(--sv-space-3);
+}
+
+.tryon__render-tabs {
+  display: inline-flex;
+  border: 1px solid var(--sv-border);
+}
+
+.tryon__render-tab {
+  padding: var(--sv-space-2) var(--sv-space-4);
+  background: none;
+  border: none;
+  font: inherit;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  cursor: pointer;
+  color: var(--sv-ink-soft);
+}
+
+.tryon__render-tab--active {
+  background: var(--sv-ink);
+  color: var(--sv-bg);
+}
+
+.tryon__render-tab:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.tryon__render-hint {
+  max-width: 34ch;
+  text-align: center;
+  line-height: 1.5;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.avatar3d canvas {
+  display: block;
+}
+
+.tryon__loading {
+  padding: var(--sv-space-6) 0;
+}
