@@ -189,6 +189,83 @@ describe('fabricSwatch', () => {
   });
 });
 
+describe('printRegion, un orlo non è una stampa', () => {
+  it('scarta un anello (cucitura, orlo) che non riempie il proprio rettangolo', () => {
+    // Un logo riempie il rettangolo che lo contiene; una cucitura lungo il
+    // profilo forma un anello vuoto: stesso rettangolo, densità bassissima.
+    const img = makeImage(40, 40, WHITE, BLUE, { x: 4, y: 4, width: 32, height: 32 });
+    for (let y = 12; y < 28; y++) {
+      for (let x = 12; x < 28; x++) {
+        const anello = x === 12 || y === 12 || x === 27 || y === 27;
+        if (!anello) continue;
+        const i = (y * 40 + x) * 4;
+        img.data[i] = RED[0];
+        img.data[i + 1] = RED[1];
+        img.data[i + 2] = RED[2];
+      }
+    }
+    const mask = backgroundMask(img);
+    expect(printRegion(img, mask, '#284f7f')).toBeNull();
+  });
+
+  it('un pixel sfumato incastrato in un angolo concavo non fa scartare la stampa', () => {
+    // È il caso reale: la punta del cavallo dei pantaloni. Un solo pixel chiaro
+    // sul bordo dell'interno faceva rinunciare a tutta la stampa.
+    const img = makeImage(40, 40, WHITE, BLUE, { x: 4, y: 4, width: 32, height: 32 });
+    // cuneo di sfondo che entra dal basso, con un pixel sfumato sulla punta
+    for (let y = 30; y < 36; y++) {
+      for (let x = 19; x < 21; x++) {
+        const i = (y * 40 + x) * 4;
+        img.data[i] = WHITE[0];
+        img.data[i + 1] = WHITE[1];
+        img.data[i + 2] = WHITE[2];
+      }
+    }
+    const i = (29 * 40 + 19) * 4; // punta del cuneo: mezza tinta, lontana dal dominante
+    img.data[i] = 178;
+    img.data[i + 1] = 188;
+    img.data[i + 2] = 204;
+    // stampa piena, ben dentro il capo
+    for (let y = 10; y < 16; y++) {
+      for (let x = 10; x < 16; x++) {
+        const j = (y * 40 + x) * 4;
+        img.data[j] = RED[0];
+        img.data[j + 1] = RED[1];
+        img.data[j + 2] = RED[2];
+      }
+    }
+    const mask = backgroundMask(img);
+    expect(printRegion(img, mask, '#284f7f')).toEqual({ x: 10, y: 10, width: 6, height: 6 });
+  });
+});
+
+describe('printRegion, la stampa è una macchia connessa', () => {
+  it('sceglie la macchia più grande e ignora una cucitura lontana', () => {
+    // Caso reale dei jeans: la toppa (stampa) sta in alto, una cucitura chiara
+    // di antialiasing all'inguine sta in basso. Il rettangolo che le contiene
+    // entrambe è alto e quasi vuoto, e faceva scartare tutto.
+    const img = makeImage(60, 60, WHITE, BLUE, { x: 8, y: 8, width: 44, height: 44 });
+    // toppa 10x8 in alto a sinistra
+    for (let y = 14; y < 22; y++) {
+      for (let x = 16; x < 26; x++) {
+        const i = (y * 60 + x) * 4;
+        img.data[i] = 244; img.data[i + 1] = 224; img.data[i + 2] = 77;
+      }
+    }
+    // cucitura chiara, 2x8, molto più in basso e staccata
+    for (let y = 38; y < 46; y++) {
+      for (let x = 30; x < 32; x++) {
+        const i = (y * 60 + x) * 4;
+        img.data[i] = 178; img.data[i + 1] = 188; img.data[i + 2] = 204;
+      }
+    }
+    const mask = backgroundMask(img);
+    const r = printRegion(img, mask, '#284f7f');
+
+    expect(r).toEqual({ x: 16, y: 14, width: 10, height: 8 }); // solo la toppa
+  });
+});
+
 describe('printRegion con il bordo sfumato delle foto vere', () => {
   it('trova la stampa anche se il capo ha un anello antialiasato', () => {
     // Ogni foto reale ha, fra capo e sfondo, un anello di pixel sfumati: colori

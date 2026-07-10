@@ -262,6 +262,9 @@ const onGarmentEdge = (mask, width, height, p) => {
 const PRINT_MIN_AREA = 0.005;
 const PRINT_MAX_AREA = 0.25;
 
+/** Quanto del proprio rettangolo deve riempire una stampa per essere tale. */
+const PRINT_MIN_DENSITY = 0.25;
+
 /**
  * Zona di stampa: pixel interni al capo il cui colore dista dal dominante più
  * di `minDistance` (Chebyshev). Si restituisce il loro rettangolo solo se è una
@@ -277,36 +280,78 @@ export function printRegion(image, mask, dominantHex, { minDistance = 60 } = {})
   // lontani dal dominante e sembrerebbero stampa in ogni foto reale.
   const interior = erodeMask(mask, width, height, EDGE_MARGIN);
 
-  let minX = width;
-  let minY = height;
-  let maxX = -1;
-  let maxY = -1;
-  let printPixels = 0;
+  // Pixel "diversi dal tessuto", cioè candidati a far parte di una stampa.
+  // I pixel sul bordo dell'interno si IGNORANO, non fanno rinunciare: in una foto
+  // vera basta un pixel sfumato incastrato in un angolo concavo per buttare via
+  // una stampa perfettamente buona.
+  const candidate = new Uint8Array(width * height);
   let interiorPixels = 0;
-
   for (let p = 0; p < interior.length; p++) {
     if (!interior[p]) continue;
     interiorPixels++;
-    const i = p * 4;
-    if (colorDistance(data, i, dr, dg, db) <= minDistance) continue;
-    // Se la zona diversa tocca il bordo dell'interno è un orlo, una cucitura,
-    // l'ombra di una piega: non è una stampa. Meglio rinunciare a una stampa
-    // vera che appiccicare un orlo in mezzo al petto.
-    if (onGarmentEdge(interior, width, height, p)) return null;
-    printPixels++;
-    const x = p % width;
-    const y = (p - x) / width;
-    if (x < minX) minX = x;
-    if (x > maxX) maxX = x;
-    if (y < minY) minY = y;
-    if (y > maxY) maxY = y;
+    if (colorDistance(data, p * 4, dr, dg, db) <= minDistance) continue;
+    if (onGarmentEdge(interior, width, height, p)) continue;
+    candidate[p] = 1;
+  }
+  if (!interiorPixels) return null;
+
+  // Una stampa è **una macchia connessa**, non l'unione di tutto ciò che è
+  // diverso. Sui jeans, la toppa gialla e la cucitura chiara dell'inguine sono
+  // due macchie lontane: il rettangolo che le contiene entrambe è enorme e quasi
+  // vuoto, e veniva scartato. Si prende la macchia più grande e si giudica quella.
+  const seen = new Uint8Array(width * height);
+  let best = null;
+
+  for (let start = 0; start < candidate.length; start++) {
+    if (!candidate[start] || seen[start]) continue;
+    const stack = [start];
+    seen[start] = 1;
+    let count = 0;
+    let minX = width;
+    let minY = height;
+    let maxX = -1;
+    let maxY = -1;
+
+    while (stack.length) {
+      const p = stack.pop();
+      count++;
+      const x = p % width;
+      const y = (p - x) / width;
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
+
+      const neighbours = [
+        x > 0 ? p - 1 : -1,
+        x < width - 1 ? p + 1 : -1,
+        y > 0 ? p - width : -1,
+        y < height - 1 ? p + width : -1,
+      ];
+      for (const n of neighbours) {
+        if (n < 0 || seen[n] || !candidate[n]) continue;
+        seen[n] = 1;
+        stack.push(n);
+      }
+    }
+
+    if (!best || count > best.count) {
+      best = { count, x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
+    }
   }
 
-  if (!interiorPixels || maxX < 0) return null;
-  const share = printPixels / interiorPixels;
+  if (!best) return null;
+
+  const share = best.count / interiorPixels;
   if (share < PRINT_MIN_AREA || share > PRINT_MAX_AREA) return null;
 
-  return { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
+  // Un logo riempie il suo rettangolo; un orlo o una cucitura lungo il profilo
+  // formano un anello vuoto, con un rettangolo grande e quasi tutto tessuto.
+  // La densità separa i due casi meglio di qualunque soglia di area.
+  const density = best.count / (best.width * best.height);
+  if (density < PRINT_MIN_DENSITY) return null;
+
+  return { x: best.x, y: best.y, width: best.width, height: best.height };
 }
 
 /**
