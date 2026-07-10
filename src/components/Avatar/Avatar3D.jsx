@@ -18,11 +18,17 @@ import {
   SRGBColorSpace,
 } from 'three';
 import { bodyProfiles } from '../../utils/avatarMesh';
-import { garmentProfile } from '../../utils/garmentMesh';
+import { garmentProfile, decalBounds } from '../../utils/garmentMesh';
 import { garmentLayers } from '../../utils/tryonComposer';
 
 const RADIAL_SEGMENTS = 32;
 const DECAL_ARC = (140 * Math.PI) / 180;
+const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
+const FALLBACK_COLOR = '#cfc7bb';
+
+/** Colore sicuro: una stringa esadecimale malformata non deve sbagliare il
+ * colore in silenzio, ripiega su un beige neutro. */
+const safeColor = (hex) => new Color(HEX_COLOR_RE.test(hex || '') ? hex : FALLBACK_COLOR);
 
 const lathe = (profile) =>
   new LatheGeometry(
@@ -31,15 +37,27 @@ const lathe = (profile) =>
   );
 
 /**
+ * Libera geometria, texture e materiale di ogni figlio della figura. Usata
+ * sia al cambio di outfit (le mesh precedenti vanno rifatte) sia allo
+ * smontaggio del componente: senza, le risorse GPU si accumulano a ogni
+ * ricostruzione o non vengono mai liberate quando il componente sparisce.
+ */
+const clearFigure = (figure) => {
+  while (figure.children.length) {
+    const child = figure.children.pop();
+    child.geometry?.dispose();
+    child.material?.map?.dispose();
+    child.material?.dispose();
+  }
+};
+
+/**
  * Superficie curva sul davanti del capo, dove si applica la fantasia vera.
  * Serve anche ai capi sdoppiati (pantaloni, scarpe): senza, uscirebbero in
  * tinta unita e la fantasia si vedrebbe solo sulla metà superiore del corpo.
  */
 const frontDecal = (profile, textureUrl, onReady, extraRadius = 0) => {
-  const ys = profile.map(([, y]) => y);
-  const top = Math.max(...ys);
-  const bottom = Math.min(...ys);
-  const radius = Math.max(...profile.map(([r]) => r)) + extraRadius + 0.004;
+  const { top, bottom, radius, centerY } = decalBounds(profile, extraRadius);
 
   const geometry = new CylinderGeometry(
     radius,
@@ -55,13 +73,19 @@ const frontDecal = (profile, textureUrl, onReady, extraRadius = 0) => {
     transparent: true,
     side: DoubleSide,
     roughness: 0.9,
+    // Il cilindro del decal sta a soli 0.004 unità dalla mesh sottostante:
+    // senza polygon offset le due superfici litigano per lo stesso pixel
+    // (z-fighting) a seconda dell'angolo di vista.
+    polygonOffset: true,
+    polygonOffsetFactor: -1,
+    polygonOffsetUnits: -1,
   });
   const texture = new TextureLoader().load(textureUrl, onReady);
   texture.colorSpace = SRGBColorSpace;
   material.map = texture;
 
   const mesh = new Mesh(geometry, material);
-  mesh.position.y = (top + bottom) / 2;
+  mesh.position.y = centerY;
   mesh.rotation.y = Math.PI; // il fronte guarda la camera
   return mesh;
 };
@@ -70,6 +94,10 @@ export default function Avatar3D({ config, outfit, textures, height = 420 }) {
   const mountRef = useRef(null);
   const stateRef = useRef({});
 
+  // La scena (renderer, camera, luci, gruppo figura) si crea una volta sola,
+  // al mount. Un `height` che cambia non deve distruggerla: altrimenti corpo
+  // e capi, ricostruiti solo dall'altro effect, sparirebbero dalla scena
+  // nuova finché config/outfit/textures non cambiano di nuovo.
   useEffect(() => {
     const mount = mountRef.current;
     if (!mount) return undefined;
@@ -95,8 +123,16 @@ export default function Avatar3D({ config, outfit, textures, height = 420 }) {
     const figure = new Group();
     scene.add(figure);
 
-    const render = () => renderer.render(scene, camera);
-    Object.assign(stateRef.current, { scene, camera, renderer, figure, render });
+    const state = stateRef.current;
+    state.unmounted = false;
+    // Guardia contro la corsa asincrona della texture: se lo smontaggio
+    // arriva prima che l'immagine sia pronta, il suo onReady (= render) non
+    // deve disegnare su un renderer già disposato.
+    const render = () => {
+      if (state.unmounted) return;
+      renderer.render(scene, camera);
+    };
+    Object.assign(state, { scene, camera, renderer, figure, render });
 
     // Rotazione al trascinamento: si ridisegna solo mentre il dito si muove.
     let dragging = false;
@@ -123,13 +159,33 @@ export default function Avatar3D({ config, outfit, textures, height = 420 }) {
     renderer.domElement.style.cursor = 'grab';
 
     return () => {
+      state.unmounted = true;
       renderer.domElement.removeEventListener('pointerdown', onDown);
       renderer.domElement.removeEventListener('pointermove', onMove);
       renderer.domElement.removeEventListener('pointerup', onUp);
       renderer.domElement.removeEventListener('pointercancel', onUp);
+      // Libera geometrie, materiali e texture di corpo/capi/decal prima di
+      // disporre il renderer: altrimenti restano risorse GPU orfane.
+      clearFigure(figure);
       renderer.dispose();
       mount.removeChild(renderer.domElement);
     };
+    // Dipendenze vuote apposta: la scena si crea una sola volta. Il resize
+    // vive nel prossimo effect, la ricostruzione di corpo/capi in quello dopo.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Ridimensionamento: non distrugge né ricrea nulla, aggiorna solo renderer
+  // e camera esistenti e ridisegna la figura già in scena.
+  useEffect(() => {
+    const { renderer, camera, render } = stateRef.current;
+    if (!renderer || !camera) return;
+
+    const width = height / 2;
+    renderer.setSize(width, height);
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+    render?.();
   }, [height]);
 
   // Corpo e capi si ricostruiscono quando cambia la configurazione o l'outfit.
@@ -137,12 +193,7 @@ export default function Avatar3D({ config, outfit, textures, height = 420 }) {
     const { figure, render } = stateRef.current;
     if (!figure) return;
 
-    while (figure.children.length) {
-      const child = figure.children.pop();
-      child.geometry?.dispose();
-      child.material?.map?.dispose();
-      child.material?.dispose();
-    }
+    clearFigure(figure);
 
     const body = bodyProfiles(config);
     const skin = new MeshStandardMaterial({ color: new Color(body.skinHex), roughness: 0.85 });
@@ -174,7 +225,7 @@ export default function Avatar3D({ config, outfit, textures, height = 420 }) {
       const shape = garmentProfile(kind, config);
       if (!shape) continue;
       const texture = textures?.[item.id];
-      const color = new Color(texture?.colorHex || '#cfc7bb');
+      const color = safeColor(texture?.colorHex || FALLBACK_COLOR);
       const material = new MeshStandardMaterial({ color, roughness: 0.92 });
 
       const offsets = shape.doubled ? [-shape.offsetX, shape.offsetX] : [0];

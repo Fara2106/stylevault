@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { garmentProfile, radiusAt, GARMENT_KINDS, GARMENT_GAP } from './garmentMesh';
+import { garmentProfile, radiusAt, decalBounds, GARMENT_KINDS, GARMENT_GAP } from './garmentMesh';
 import { bodyProfiles } from './avatarMesh';
 
 const cfg = { bodyShape: 'average', skinTone: 'medium', hairColor: 'brown', hairStyle: 'medium' };
@@ -137,5 +137,51 @@ describe('garmentProfile', () => {
   it('i cinque tipi producono profili distinti', () => {
     const seen = GARMENT_KINDS.map((k) => JSON.stringify(garmentProfile(k, cfg).profile));
     expect(new Set(seen).size).toBe(5);
+  });
+});
+
+describe('decalBounds', () => {
+  // Profilo inventato a mano: raggio massimo 0.1 a quota 0.5, estremi 0 e 1.
+  // Valori attesi calcolati a mente, non richiamando decalBounds stessa:
+  // top = 1, bottom = 0, raggio = 0.1 + extraRadius + 0.004, centro = 0.5.
+  const profile = [
+    [0.02, 0],
+    [0.1, 0.5],
+    [0.05, 1],
+  ];
+
+  it('calcola top, bottom, raggio e centro da un profilo semplice', () => {
+    const bounds = decalBounds(profile);
+    expect(bounds.top).toBe(1);
+    expect(bounds.bottom).toBe(0);
+    expect(bounds.radius).toBeCloseTo(0.104, 9); // 0.1 + 0 + 0.004
+    expect(bounds.centerY).toBe(0.5);
+  });
+
+  it('allarga il raggio di extraRadius per abbracciare i capi sdoppiati', () => {
+    const bounds = decalBounds(profile, 0.03);
+    expect(bounds.radius).toBeCloseTo(0.134, 9); // 0.1 + 0.03 + 0.004
+    // top/bottom/centro non dipendono da extraRadius
+    expect(bounds.top).toBe(1);
+    expect(bounds.bottom).toBe(0);
+  });
+
+  it("non dipende dall'ordine dei punti nel profilo", () => {
+    const shuffled = [profile[2], profile[0], profile[1]];
+    expect(decalBounds(shuffled)).toEqual(decalBounds(profile));
+  });
+
+  it('gestisce profili con quote negative (sotto lo zero della figura)', () => {
+    const legProfile = [
+      [0.03, -0.2],
+      [0.08, 0.1],
+      [0.04, 0.4],
+    ];
+    // top = 0.4, bottom = -0.2, raggio = 0.08 + 0 + 0.004, centro = 0.1
+    const bounds = decalBounds(legProfile);
+    expect(bounds.top).toBe(0.4);
+    expect(bounds.bottom).toBe(-0.2);
+    expect(bounds.radius).toBeCloseTo(0.084, 9);
+    expect(bounds.centerY).toBeCloseTo(0.1, 9);
   });
 });
