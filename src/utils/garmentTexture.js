@@ -134,6 +134,134 @@ export function dominantColor({ data, width, height }, mask) {
 const MAX_COVERAGE = 0.92;
 const MIN_COVERAGE = 0.02;
 
+/** Vero se il quadrato di lato `side` con angolo (x,y) è tutto dentro il capo. */
+const squareInside = (mask, width, x, y, side) => {
+  for (let yy = y; yy < y + side; yy++) {
+    for (let xx = x; xx < x + side; xx++) {
+      if (!mask[yy * width + xx]) return false;
+    }
+  }
+  return true;
+};
+
+/**
+ * Quadrato tutto interno al capo, da usare come piastrella di tessuto ripetuta.
+ * Si parte dal baricentro della maschera e si rimpicciolisce finché ogni pixel
+ * del quadrato appartiene al capo: così non entrano mai bordi, cuciture del
+ * disegno o sfondo.
+ * @returns {{x,y,width,height}|null} null se non c'è spazio (capo troppo sottile)
+ */
+export function fabricSwatch(mask, width, height, bounds) {
+  if (!bounds) return null;
+  // baricentro dei pixel del capo: sta nel pieno del tessuto, non sui bordi
+  let sx = 0;
+  let sy = 0;
+  let n = 0;
+  for (let y = bounds.y; y < bounds.y + bounds.height; y++) {
+    for (let x = bounds.x; x < bounds.x + bounds.width; x++) {
+      if (!mask[y * width + x]) continue;
+      sx += x;
+      sy += y;
+      n++;
+    }
+  }
+  if (!n) return null;
+  const cx = Math.round(sx / n);
+  const cy = Math.round(sy / n);
+
+  const maxSide = Math.min(bounds.width, bounds.height);
+  for (let side = maxSide; side >= 2; side--) {
+    const x = Math.max(0, Math.min(width - side, cx - (side >> 1)));
+    const y = Math.max(0, Math.min(height - side, cy - (side >> 1)));
+    if (squareInside(mask, width, x, y, side)) {
+      return { x, y, width: side, height: side };
+    }
+  }
+  return null;
+}
+
+const hexToRgb = (hex) => [
+  parseInt(hex.slice(1, 3), 16),
+  parseInt(hex.slice(3, 5), 16),
+  parseInt(hex.slice(5, 7), 16),
+];
+
+/** Vero se il pixel `p` tocca lo sfondo: sta sul bordo del capo. */
+const onGarmentEdge = (mask, width, height, p) => {
+  const x = p % width;
+  const y = (p - x) / width;
+  if (x === 0 || y === 0 || x === width - 1 || y === height - 1) return true;
+  return (
+    !mask[p - 1] || !mask[p + 1] || !mask[p - width] || !mask[p + width]
+  );
+};
+
+const PRINT_MIN_AREA = 0.005;
+const PRINT_MAX_AREA = 0.25;
+
+/**
+ * Zona di stampa: pixel interni al capo il cui colore dista dal dominante più
+ * di `minDistance` (Chebyshev). Si restituisce il loro rettangolo solo se è una
+ * stampa plausibile: fra lo 0.5% e il 25% dell'area del capo, e non attaccata al
+ * bordo del capo (quello sarebbe un'ombra o un orlo, non una stampa).
+ * @returns {{x,y,width,height}|null}
+ */
+export function printRegion(image, mask, dominantHex, { minDistance = 60 } = {}) {
+  const { data, width, height } = image;
+  const [dr, dg, db] = hexToRgb(dominantHex);
+
+  let minX = width;
+  let minY = height;
+  let maxX = -1;
+  let maxY = -1;
+  let printPixels = 0;
+  let garmentPixels = 0;
+
+  for (let p = 0; p < mask.length; p++) {
+    if (!mask[p]) continue;
+    garmentPixels++;
+    const i = p * 4;
+    if (colorDistance(data, i, dr, dg, db) <= minDistance) continue;
+    // Una zona attaccata al bordo del capo è un orlo, un'ombra, una cucitura:
+    // non è una stampa. Se ne trovo anche solo un pixel, rinuncio.
+    if (onGarmentEdge(mask, width, height, p)) return null;
+    printPixels++;
+    const x = p % width;
+    const y = (p - x) / width;
+    if (x < minX) minX = x;
+    if (x > maxX) maxX = x;
+    if (y < minY) minY = y;
+    if (y > maxY) maxY = y;
+  }
+
+  if (!garmentPixels || maxX < 0) return null;
+  const share = printPixels / garmentPixels;
+  if (share < PRINT_MIN_AREA || share > PRINT_MAX_AREA) return null;
+
+  return { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
+}
+
+/**
+ * Dove sta la stampa dentro il capo, in frazioni da 0 a 1 del rettangolo del capo.
+ * Serve a rimetterla sulla mesh **nello stesso punto in cui stava sul capo vero**:
+ * un logo sul taschino resta sul taschino, non finisce in mezzo al petto.
+ *
+ * `cx`: 0 = bordo sinistro del capo, 0.5 = centro, 1 = bordo destro.
+ * `cy`: 0 = orlo alto (spalle), 1 = orlo basso.
+ * `w`, `h`: quanto è larga e alta la stampa, sempre in frazioni del capo.
+ *
+ * @returns {{cx:number, cy:number, w:number, h:number}|null}
+ */
+export function printPlacement(bounds, print) {
+  if (!bounds || !print) return null;
+  return {
+    cx: (print.x + print.width / 2 - bounds.x) / bounds.width,
+    cy: (print.y + print.height / 2 - bounds.y) / bounds.height,
+    w: print.width / bounds.width,
+    h: print.height / bounds.height,
+  };
+}
+
 /**
  * Da foto a capo utilizzabile. `ok: false` significa: niente texture, vesti il
  * capo di tinta unita col colore dominante. Brutto no, sbagliato mai.
@@ -152,13 +280,22 @@ export function extractGarment(image, opts) {
       dominantHex: dominantColor(image, null),
       coverage,
       mask,
+      swatch: null,
+      print: null,
+      printAt: null,
     };
   }
+  const dominantHex = dominantColor(image, mask);
+  const bounds = garmentBounds(mask, width, height);
+  const print = printRegion(image, mask, dominantHex);
   return {
     ok: true,
-    bounds: garmentBounds(mask, width, height),
-    dominantHex: dominantColor(image, mask),
+    bounds,
+    dominantHex,
     coverage,
     mask,
+    swatch: fabricSwatch(mask, width, height, bounds),
+    print,
+    printAt: printPlacement(bounds, print),
   };
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { backgroundMask, BG_TOLERANCE, garmentBounds, dominantColor, extractGarment } from './garmentTexture';
+import { backgroundMask, BG_TOLERANCE, garmentBounds, dominantColor, extractGarment, fabricSwatch, printRegion, printPlacement } from './garmentTexture';
 
 /** Costruisce un'immagine RGBA piena di `bg`, con un rettangolo di `fg`. */
 const makeImage = (width, height, bg, fg, rect) => {
@@ -125,5 +125,110 @@ describe('extractGarment', () => {
     expect(out.ok).toBe(false);
     expect(out.bounds).toBeNull();
     expect(out.dominantHex).toBe('#ffffff');
+  });
+});
+
+const RED = [200, 40, 40];
+
+describe('fabricSwatch', () => {
+  it('sta tutto dentro il capo, mai sui bordi', () => {
+    const img = makeImage(20, 20, WHITE, BLUE, { x: 5, y: 5, width: 10, height: 10 });
+    const mask = backgroundMask(img);
+    const bounds = garmentBounds(mask, 20, 20);
+    const s = fabricSwatch(mask, 20, 20, bounds);
+
+    expect(s).not.toBeNull();
+    for (let y = s.y; y < s.y + s.height; y++) {
+      for (let x = s.x; x < s.x + s.width; x++) {
+        expect(mask[y * 20 + x]).toBe(1); // ogni pixel della piastrella è capo
+      }
+    }
+  });
+
+  it('restituisce null se il capo è troppo sottile per contenere un quadrato', () => {
+    // striscia alta 1 pixel: nessun quadrato di lato >= 2 ci sta dentro
+    const img = makeImage(20, 20, WHITE, BLUE, { x: 2, y: 10, width: 16, height: 1 });
+    const mask = backgroundMask(img);
+    const bounds = garmentBounds(mask, 20, 20);
+    expect(fabricSwatch(mask, 20, 20, bounds)).toBeNull();
+  });
+});
+
+describe('printRegion', () => {
+  it('trova la stampa: una macchia rossa dentro un capo blu', () => {
+    const img = makeImage(20, 20, WHITE, BLUE, { x: 2, y: 2, width: 16, height: 16 });
+    // stampa 4x4 al centro
+    for (let y = 8; y < 12; y++) {
+      for (let x = 8; x < 12; x++) {
+        const i = (y * 20 + x) * 4;
+        img.data[i] = RED[0]; img.data[i + 1] = RED[1]; img.data[i + 2] = RED[2];
+      }
+    }
+    const mask = backgroundMask(img);
+    const r = printRegion(img, mask, '#284f7f');
+    expect(r).toEqual({ x: 8, y: 8, width: 4, height: 4 });
+  });
+
+  it('non scambia per stampa un capo in tinta unita', () => {
+    const img = makeImage(20, 20, WHITE, BLUE, { x: 2, y: 2, width: 16, height: 16 });
+    const mask = backgroundMask(img);
+    expect(printRegion(img, mask, '#284f7f')).toBeNull();
+  });
+
+  it('non scambia per stampa una macchia che occupa quasi tutto il capo', () => {
+    const img = makeImage(20, 20, WHITE, BLUE, { x: 2, y: 2, width: 16, height: 16 });
+    for (let y = 3; y < 17; y++) {
+      for (let x = 3; x < 17; x++) {
+        const i = (y * 20 + x) * 4;
+        img.data[i] = RED[0]; img.data[i + 1] = RED[1]; img.data[i + 2] = RED[2];
+      }
+    }
+    const mask = backgroundMask(img);
+    expect(printRegion(img, mask, '#284f7f')).toBeNull(); // >25% dell'area
+  });
+
+  it('non scambia per stampa una zona attaccata al bordo del capo', () => {
+    const img = makeImage(20, 20, WHITE, BLUE, { x: 2, y: 2, width: 16, height: 16 });
+    // striscia rossa lungo il bordo sinistro del capo: e' un orlo, non una stampa
+    for (let y = 2; y < 18; y++) {
+      const i = (y * 20 + 2) * 4;
+      img.data[i] = RED[0]; img.data[i + 1] = RED[1]; img.data[i + 2] = RED[2];
+    }
+    const mask = backgroundMask(img);
+    expect(printRegion(img, mask, '#284f7f')).toBeNull();
+  });
+});
+
+describe('printPlacement', () => {
+  // Capo: rettangolo x 10..109, y 20..219 (100 x 200).
+  const bounds = { x: 10, y: 20, width: 100, height: 200 };
+
+  it('una stampa al centro esatto risulta al centro', () => {
+    // stampa 20x20 centrata: centro (60, 120)
+    const p = printPlacement(bounds, { x: 50, y: 110, width: 20, height: 20 });
+    expect(p.cx).toBeCloseTo(0.5, 6);
+    expect(p.cy).toBeCloseTo(0.5, 6);
+    expect(p.w).toBeCloseTo(0.2, 6); // 20/100
+    expect(p.h).toBeCloseTo(0.1, 6); // 20/200
+  });
+
+  it('un logo sul taschino resta in alto a sinistra, non al centro', () => {
+    // stampa 10x10 con angolo (20, 40): centro (25, 45)
+    const p = printPlacement(bounds, { x: 20, y: 40, width: 10, height: 10 });
+    expect(p.cx).toBeCloseTo(0.15, 6); // (25-10)/100
+    expect(p.cy).toBeCloseTo(0.125, 6); // (45-20)/200
+    expect(p.cx).toBeLessThan(0.5);
+    expect(p.cy).toBeLessThan(0.5);
+  });
+
+  it('una scritta sull’orlo basso resta in basso', () => {
+    const p = printPlacement(bounds, { x: 40, y: 200, width: 30, height: 10 });
+    expect(p.cy).toBeCloseTo(0.925, 6); // (205-20)/200
+    expect(p.cy).toBeGreaterThan(0.8);
+  });
+
+  it('senza stampa o senza capo non c’è collocazione', () => {
+    expect(printPlacement(bounds, null)).toBeNull();
+    expect(printPlacement(null, { x: 1, y: 1, width: 1, height: 1 })).toBeNull();
   });
 });
