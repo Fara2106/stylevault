@@ -1,8 +1,27 @@
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import AvatarSvg from './AvatarSvg';
 import { Icon } from '../common';
 import { MAX_ACCESSORIES } from '../../utils/tryonComposer';
+import { loadGarmentTexture } from '../../utils/garmentImage';
+import { hasWebGL } from '../../utils/webgl';
 import './Avatar.css';
+
+const Avatar3D = lazy(() => import('./Avatar3D'));
+
+const RENDER_KEY = 'sv_avatar_render';
+
+const readRenderMode = () => {
+  if (!hasWebGL()) return 'flat';
+  try {
+    return localStorage.getItem(RENDER_KEY) === 'flat' ? 'flat' : '3d';
+  } catch {
+    return '3d';
+  }
+};
+
+const outfitItems = (outfit) =>
+  [outfit.top, outfit.bottom, outfit.shoes, outfit.outerwear].filter(Boolean);
 
 /**
  * Prova outfit sull'avatar: la silhouette dell'utente viene vestita con le
@@ -16,6 +35,39 @@ import './Avatar.css';
 export default function OutfitOnAvatar({ outfit, avatarConfig, onSlotClick, onRemove }) {
   const { t } = useTranslation();
   const interactive = typeof onSlotClick === 'function';
+
+  const webgl = hasWebGL();
+  const [renderMode, setRenderMode] = useState(readRenderMode);
+  const [textures, setTextures] = useState({});
+
+  const chooseMode = (mode) => {
+    setRenderMode(mode);
+    try {
+      localStorage.setItem(RENDER_KEY, mode);
+    } catch {
+      /* modalità privata: la preferenza vale solo per questa sessione */
+    }
+  };
+
+  // Le texture si calcolano una volta per capo e si riusano finché l'outfit non cambia.
+  const itemsKey = outfitItems(outfit || {})
+    .map((i) => i.id)
+    .join(',');
+
+  useEffect(() => {
+    let cancelled = false;
+    const items = outfitItems(outfit || {});
+    Promise.all(items.map((item) => loadGarmentTexture(item).then((t) => [item.id, t]))).then(
+      (entries) => {
+        if (!cancelled) setTextures(Object.fromEntries(entries));
+      }
+    );
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [itemsKey]);
+
   if (!outfit) return null;
 
   const slots = [
@@ -92,9 +144,53 @@ export default function OutfitOnAvatar({ outfit, avatarConfig, onSlotClick, onRe
 
   return (
     <div className="tryon">
+      <div className="tryon__render">
+        <div className="tryon__render-tabs" role="group">
+          <button
+            type="button"
+            className={`tryon__render-tab ${renderMode === '3d' ? 'tryon__render-tab--active' : ''}`}
+            onClick={() => chooseMode('3d')}
+            disabled={!webgl}
+            aria-pressed={renderMode === '3d'}
+          >
+            {t('avatar.render3d')}
+          </button>
+          <button
+            type="button"
+            className={`tryon__render-tab ${renderMode === 'flat' ? 'tryon__render-tab--active' : ''}`}
+            onClick={() => chooseMode('flat')}
+            aria-pressed={renderMode === 'flat'}
+          >
+            {t('avatar.renderFlat')}
+          </button>
+        </div>
+        <p className="tryon__render-hint sv-label">
+          {!webgl
+            ? t('avatar.renderNoWebgl')
+            : renderMode === '3d'
+              ? t('avatar.render3dHint')
+              : t('avatar.renderFlatHint')}
+        </p>
+      </div>
       <div className="tryon__stage">
         <div className="tryon__figure">
-          <AvatarSvg config={avatarConfig} outfit={outfit} height={420} />
+          {renderMode === '3d' && webgl ? (
+            <Suspense fallback={<p className="tryon__loading sv-label">{t('avatar.renderLoading')}</p>}>
+              <Avatar3D
+                config={avatarConfig}
+                outfit={outfit}
+                textures={textures}
+                height={420}
+              />
+            </Suspense>
+          ) : (
+            <AvatarSvg
+              config={avatarConfig}
+              outfit={outfit}
+              textures={textures}
+              height={420}
+            />
+          )}
         </div>
 
         {slots.map((slot) => (slot.item ? renderFilled(slot) : renderEmpty(slot)))}

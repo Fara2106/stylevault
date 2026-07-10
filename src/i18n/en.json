@@ -218,7 +218,13 @@
     "referencePhoto": "Reference photo",
     "uploadReference": "Upload a photo of you",
     "referenceHint": "It helps you tune the avatar until it looks like you. It stays on your device only.",
-    "removeReference": "Remove photo"
+    "removeReference": "Remove photo",
+    "render3d": "3D",
+    "renderFlat": "Flat",
+    "render3dHint": "Free and unlimited. Spin the figure with your finger. The garment shape is generic: the colour and pattern are yours, the cut is not.",
+    "renderFlatHint": "Free and unlimited. Light, easy on the battery. The figure does not rotate.",
+    "renderNoWebgl": "This device does not support 3D graphics: the flat mode is still available.",
+    "renderLoading": "Preparing the 3D scene..."
   },
   "advice": {
     "colorsHarmonious": "The colors work well together",

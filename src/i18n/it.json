@@ -218,7 +218,13 @@
     "referencePhoto": "Foto di riferimento",
     "uploadReference": "Carica una tua foto",
     "referenceHint": "Ti aiuta a regolare l'avatar finché ti somiglia. Resta solo sul tuo dispositivo.",
-    "removeReference": "Rimuovi foto"
+    "removeReference": "Rimuovi foto",
+    "render3d": "3D",
+    "renderFlat": "Piatto",
+    "render3dHint": "Gratis e illimitata. Ruota la figura col dito. La forma del capo è generica: colore e fantasia sono i tuoi, il taglio no.",
+    "renderFlatHint": "Gratis e illimitata. Leggera, non consuma batteria. La figura non ruota.",
+    "renderNoWebgl": "Questo dispositivo non supporta la grafica 3D: resta disponibile la modalità piatta.",
+    "renderLoading": "Preparo la scena 3D..."
   },
   "advice": {
     "colorsHarmonious": "I colori si armonizzano bene tra loro",
