@@ -24,43 +24,122 @@ const loadImage = (src) =>
     img.src = src;
   });
 
+/** Canvas pieno con tutto `imageData` disegnato, da cui poi si ritaglia un rettangolo. */
+const toCanvas = (imageData) => {
+  const canvas = document.createElement('canvas');
+  canvas.width = imageData.width;
+  canvas.height = imageData.height;
+  canvas.getContext('2d').putImageData(imageData, 0, 0);
+  return canvas;
+};
+
 /**
- * Ritaglia `bounds` e rende trasparenti i pixel di sfondo.
- * `mask` arriva già calcolata da extractGarment: ricalcolarla qui vorrebbe dire
- * ripetere il riempimento su tutta l'immagine per ogni capo.
+ * Ritaglia `rect` da `imageData` così com'è, senza toccare l'alpha: serve per la
+ * piastrella di tessuto, che va usata così com'è (un ritaglio di tessuto pieno,
+ * niente sfondo da togliere). Non deve girare dopo `cutout`, che azzera l'alpha
+ * sull'`imageData` condiviso: per questo va chiamata prima.
+ */
+const cropToDataUrl = (imageData, rect) => {
+  const out = document.createElement('canvas');
+  out.width = rect.width;
+  out.height = rect.height;
+  out
+    .getContext('2d')
+    .drawImage(
+      toCanvas(imageData),
+      rect.x,
+      rect.y,
+      rect.width,
+      rect.height,
+      0,
+      0,
+      rect.width,
+      rect.height
+    );
+  return out.toDataURL('image/png');
+};
+
+/**
+ * Ritaglia `bounds` e rende trasparenti i pixel di sfondo, **modificando
+ * `imageData` sul posto** (azzera l'alpha dei pixel fuori maschera prima di
+ * disegnare sul canvas). Va bene solo per il capo intero: deve essere l'ultima
+ * a leggere `imageData`, dopo piastrella e stampa, altrimenti quelle due
+ * ritaglierebbero un'immagine già bucata di trasparenza al posto dello sfondo.
  */
 const cutout = (imageData, mask, bounds) => {
   const { data } = imageData;
   for (let p = 0; p < mask.length; p++) {
     if (!mask[p]) data[p * 4 + 3] = 0;
   }
-  const full = document.createElement('canvas');
-  full.width = imageData.width;
-  full.height = imageData.height;
-  full.getContext('2d').putImageData(imageData, 0, 0);
+  return cropToDataUrl(imageData, bounds);
+};
+
+/**
+ * Ritaglia il rettangolo `print` e rende trasparenti i pixel che non fanno
+ * parte della stampa: quelli entro `PRINT_MIN_DISTANCE` dal colore dominante
+ * sono tessuto di fondo, non il logo. Stessa soglia e stessa metrica
+ * (Chebyshev) di `printRegion` in garmentTexture.js, per restare coerenti con
+ * la zona già individuata là. Anche questa legge `imageData` non ancora
+ * toccato da `cutout`, quindi va chiamata prima di quella.
+ */
+const PRINT_MIN_DISTANCE = 60;
+
+const printToDataUrl = (imageData, print, dominantHex) => {
+  const [dr, dg, db] = [
+    parseInt(dominantHex.slice(1, 3), 16),
+    parseInt(dominantHex.slice(3, 5), 16),
+    parseInt(dominantHex.slice(5, 7), 16),
+  ];
 
   const out = document.createElement('canvas');
-  out.width = bounds.width;
-  out.height = bounds.height;
-  out
-    .getContext('2d')
-    .drawImage(
-      full,
-      bounds.x,
-      bounds.y,
-      bounds.width,
-      bounds.height,
-      0,
-      0,
-      bounds.width,
-      bounds.height
+  out.width = print.width;
+  out.height = print.height;
+  const ctx = out.getContext('2d');
+  ctx.drawImage(
+    toCanvas(imageData),
+    print.x,
+    print.y,
+    print.width,
+    print.height,
+    0,
+    0,
+    print.width,
+    print.height
+  );
+
+  const cropped = ctx.getImageData(0, 0, print.width, print.height);
+  const { data } = cropped;
+  for (let p = 0; p < print.width * print.height; p++) {
+    const i = p * 4;
+    const dist = Math.max(
+      Math.abs(data[i] - dr),
+      Math.abs(data[i + 1] - dg),
+      Math.abs(data[i + 2] - db)
     );
+    if (dist <= PRINT_MIN_DISTANCE) data[i + 3] = 0;
+  }
+  ctx.putImageData(cropped, 0, 0);
   return out.toDataURL('image/png');
 };
 
+/**
+ * @typedef {Object} GarmentTexture
+ * @property {string|null} textureUrl PNG del capo intero scontornato (modalità piatta)
+ * @property {string|null} swatchUrl  PNG della piastrella di tessuto, da ripetere sulla mesh
+ * @property {string|null} printUrl   PNG della sola stampa, sfondo trasparente
+ * @property {{cx:number,cy:number,w:number,h:number}|null} printAt posizione della stampa sul capo, in frazioni
+ * @property {string} colorHex
+ * @property {'texture'|'flat'} kind
+ * @property {string|null} reason
+ */
+
+/** @returns {Promise<GarmentTexture>} */
 export async function loadGarmentTexture(item) {
   const flat = (reason) => ({
     textureUrl: null,
+    swatchUrl: null,
+    printUrl: null,
+    printAt: null,
     colorHex: garmentFallbackHex(item),
     kind: 'flat',
     reason,
@@ -91,11 +170,30 @@ export async function loadGarmentTexture(item) {
 
   const result = extractGarment(imageData);
   if (!result.ok) {
-    return { textureUrl: null, colorHex: result.dominantHex, kind: 'flat', reason: 'degraded' };
+    return {
+      textureUrl: null,
+      swatchUrl: null,
+      printUrl: null,
+      printAt: null,
+      colorHex: result.dominantHex,
+      kind: 'flat',
+      reason: 'degraded',
+    };
   }
 
+  // Piastrella e stampa leggono `imageData` prima che `cutout` azzeri l'alpha
+  // dello sfondo: se giro l'ordine, ritaglierebbero un tessuto già bucato.
+  const swatchUrl = result.swatch ? cropToDataUrl(imageData, result.swatch) : null;
+  const printUrl = result.print
+    ? printToDataUrl(imageData, result.print, result.dominantHex)
+    : null;
+  const textureUrl = cutout(imageData, result.mask, result.bounds);
+
   return {
-    textureUrl: cutout(imageData, result.mask, result.bounds),
+    textureUrl,
+    swatchUrl,
+    printUrl,
+    printAt: result.printAt,
     colorHex: result.dominantHex,
     kind: 'texture',
     reason: null,
