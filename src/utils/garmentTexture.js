@@ -12,7 +12,16 @@ const colorDistance = (data, i, r, g, b) =>
     Math.abs(data[i + 2] - b)
   );
 
-export const BG_TOLERANCE = 32;
+/**
+ * Quanto un pixel può discostarsi dal colore dell'angolo per essere ancora
+ * sfondo. Tenerla stretta non è pignoleria: una maglietta a righe chiare su
+ * sfondo chiaro ha le righe a una manciata di livelli dallo sfondo, e le righe
+ * toccano il bordo del capo. Con una soglia larga il riempimento entra dai lati
+ * e se le mangia: la maschera diventa un pettine, il tessuto sparisce e il capo
+ * esce in tinta unita. Con 24 le righe sopravvivono, e uno sfondo con un po' di
+ * rumore viene comunque riconosciuto.
+ */
+export const BG_TOLERANCE = 24;
 
 /**
  * Riempimento dai quattro angoli: un pixel è sfondo se è raggiungibile da un
@@ -151,30 +160,37 @@ const squareInside = (mask, width, x, y, side) => {
  * disegno o sfondo.
  * @returns {{x,y,width,height}|null} null se non c'è spazio (capo troppo sottile)
  */
-export function fabricSwatch(mask, width, height, bounds) {
+/** Vero se i due rettangoli si toccano anche solo per un pixel. */
+const overlaps = (a, b) =>
+  Math.max(a.x, b.x) < Math.min(a.x + a.width, b.x + b.width) &&
+  Math.max(a.y, b.y) < Math.min(a.y + a.height, b.y + b.height);
+
+/**
+ * Quadrato di tessuto, tutto interno al capo e **lontano dalla stampa**.
+ *
+ * Prendere la piastrella dove c'è il logo significa ripeterlo su tutto il capo,
+ * che esce a pois: è successo, si vede nello screenshot del 2026-07-10. Per
+ * questo `print` va passata ed evitata.
+ *
+ * Si prova il quadrato più grande possibile e si scende; per ogni lato si
+ * cercano più posizioni su una griglia, non solo quella centrale, perché con una
+ * stampa grande al centro il tessuto buono sta ai lati.
+ *
+ * @param {{x,y,width,height}|null} print zona da evitare (può essere null)
+ * @returns {{x,y,width,height}|null} null se non c'è spazio
+ */
+export function fabricSwatch(mask, width, height, bounds, print = null) {
   if (!bounds) return null;
-  // baricentro dei pixel del capo: sta nel pieno del tessuto, non sui bordi
-  let sx = 0;
-  let sy = 0;
-  let n = 0;
-  for (let y = bounds.y; y < bounds.y + bounds.height; y++) {
-    for (let x = bounds.x; x < bounds.x + bounds.width; x++) {
-      if (!mask[y * width + x]) continue;
-      sx += x;
-      sy += y;
-      n++;
-    }
-  }
-  if (!n) return null;
-  const cx = Math.round(sx / n);
-  const cy = Math.round(sy / n);
 
   const maxSide = Math.min(bounds.width, bounds.height);
   for (let side = maxSide; side >= 2; side--) {
-    const x = Math.max(0, Math.min(width - side, cx - (side >> 1)));
-    const y = Math.max(0, Math.min(height - side, cy - (side >> 1)));
-    if (squareInside(mask, width, x, y, side)) {
-      return { x, y, width: side, height: side };
+    const step = Math.max(1, side >> 1);
+    for (let y = bounds.y; y + side <= bounds.y + bounds.height; y += step) {
+      for (let x = bounds.x; x + side <= bounds.x + bounds.width; x += step) {
+        const square = { x, y, width: side, height: side };
+        if (print && overlaps(square, print)) continue;
+        if (squareInside(mask, width, x, y, side)) return square;
+      }
     }
   }
   return null;
@@ -294,7 +310,9 @@ export function extractGarment(image, opts) {
     dominantHex,
     coverage,
     mask,
-    swatch: fabricSwatch(mask, width, height, bounds),
+    // La stampa va cercata prima del tessuto: la piastrella deve evitarla,
+    // altrimenti il logo si ripete su tutto il capo.
+    swatch: fabricSwatch(mask, width, height, bounds, print),
     print,
     printAt: printPlacement(bounds, print),
   };

@@ -152,6 +152,60 @@ describe('fabricSwatch', () => {
     const bounds = garmentBounds(mask, 20, 20);
     expect(fabricSwatch(mask, 20, 20, bounds)).toBeNull();
   });
+
+  it('non prende mai il tessuto dove c’è la stampa', () => {
+    // Se la piastrella contiene il logo, il logo viene ripetuto su tutto il capo
+    // come una fantasia a pois. È il difetto visto a schermo il 2026-07-10.
+    const img = makeImage(40, 40, WHITE, BLUE, { x: 4, y: 4, width: 32, height: 32 });
+    const mask = backgroundMask(img);
+    const bounds = garmentBounds(mask, 40, 40);
+    const print = { x: 14, y: 14, width: 12, height: 12 }; // logo al centro
+
+    const s = fabricSwatch(mask, 40, 40, bounds, print);
+
+    expect(s).not.toBeNull();
+    const sovrapposti =
+      Math.max(s.x, print.x) < Math.min(s.x + s.width, print.x + print.width) &&
+      Math.max(s.y, print.y) < Math.min(s.y + s.height, print.y + print.height);
+    expect(sovrapposti).toBe(false);
+  });
+
+  it('trova comunque il tessuto quando la stampa occupa il centro del capo', () => {
+    const img = makeImage(40, 40, WHITE, BLUE, { x: 4, y: 4, width: 32, height: 32 });
+    const mask = backgroundMask(img);
+    const bounds = garmentBounds(mask, 40, 40);
+    // stampa grande e centrata: il tessuto va cercato ai lati, non solo al centro
+    const s = fabricSwatch(mask, 40, 40, bounds, { x: 10, y: 10, width: 20, height: 20 });
+    expect(s).not.toBeNull();
+    expect(s.width).toBeGreaterThanOrEqual(4);
+  });
+});
+
+describe('backgroundMask, righe chiare sul bordo del capo', () => {
+  it('non si mangia le righe che sfiorano il colore dello sfondo', () => {
+    // Maglietta verde a righe chiare: le righe distano 32 dallo sfondo e toccano
+    // il bordo del capo. Con una tolleranza larga il riempimento entrava dai
+    // lati e le cancellava, e il capo usciva in tinta unita.
+    const GREEN = [31, 111, 92];
+    const STRIPE = [232, 226, 208];
+    const BG = [240, 240, 240];
+    const img = makeImage(30, 30, BG, GREEN, { x: 5, y: 5, width: 20, height: 20 });
+    for (let y = 5; y < 25; y++) {
+      if ((y - 5) % 4 !== 0) continue;
+      for (let x = 5; x < 25; x++) {
+        const i = (y * 30 + x) * 4;
+        img.data[i] = STRIPE[0];
+        img.data[i + 1] = STRIPE[1];
+        img.data[i + 2] = STRIPE[2];
+      }
+    }
+    const mask = backgroundMask(img);
+    // il centro di una riga chiara resta capo, non diventa sfondo
+    expect(mask[9 * 30 + 15]).toBe(1);
+    // e la piastrella esiste: senza righe nella maschera non ci starebbe
+    const bounds = garmentBounds(mask, 30, 30);
+    expect(fabricSwatch(mask, 30, 30, bounds, null)).not.toBeNull();
+  });
 });
 
 describe('printRegion', () => {
