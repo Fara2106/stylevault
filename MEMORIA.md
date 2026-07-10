@@ -3,9 +3,13 @@
 > File di ripartenza: se apri una nuova chat, leggi questo file per riprendere il lavoro
 > esattamente da dove eravamo. Va aggiornato a ogni avanzamento significativo.
 
-## Situazione attuale (2026-07-09)
+## Situazione attuale (2026-07-10)
 
 **L'app è ONLINE in MODALITÀ CLOUD: account veri, dati e foto su Supabase.**
+
+**Lavoro pronto ma NON ancora online: branch `avatar-3d`.** Aspetta il giudizio di
+Lorenzo prima di essere unito a `main` (il merge su main fa deploy sul sito che
+Mary sta usando). Vedi la sezione "Avatar 3D" più sotto.
 
 - **Feedback di Mary (2026-07-09): positivo** — "va bene", continuerà a provarla.
   Il nome resta "StyleVault" finché non se ne sceglie uno definitivo.
@@ -13,6 +17,62 @@
   pubblico è la versione cloud (registrazione vera; niente più capi demo).
   Chi aveva dati nella vecchia demo locale li ha ancora nel proprio browser,
   ma nel cloud si riparte da zero: Mary deve registrarsi.
+
+## Avatar 3D (branch `avatar-3d`, 2026-07-10) — da approvare
+
+Segnalazione di Lorenzo: «l'avatar non è 3D ma è piatto» e «i vestiti non si
+inseriscono correttamente».
+
+- **Il "piatto" non era un bug**: la spec del 2026-07-07 prescriveva "Figura 2D
+  stilizzata SVG". Non è mai stato 3D.
+- **I vestiti sì, ed è stato riprodotto.** In `AvatarSvg.jsx` la foto del capo
+  entrava con `preserveAspectRatio="xMidYMid slice"` dentro una `clipPath` a
+  forma di indumento, in riquadri 68×238 (rapporto 1:3,5). Da una foto quadrata
+  sopravviveva solo la **striscia centrale, il 28% della larghezza**: le gambe si
+  riempivano di sfondo. Nessuno scontornava il capo. Screenshot del prima/dopo in
+  `docs/verifiche/2026-07-09-avatar-3d/`.
+
+**Cosa c'è ora**, a scelta dell'utente (richiesta di Lorenzo: "metti tutto a
+scelta, con le spunte, poi sta a lei decidere", "esponendo anche quanto costa"):
+
+| Modalità | Cosa fa | Costo |
+|---|---|---|
+| 3D | corpo e capi three.js generati da codice, si ruota col dito | gratis |
+| Piatto | il capo scontornato, intero, appoggiato sul corpo | gratis |
+| Sulla tua foto (AI) | Gemini: il capo esatto addosso, immagine ferma | ~$0,04/foto |
+
+- Pipeline: `garmentTexture.js` (puro, testato: maschera dello sfondo dai quattro
+  angoli, rettangolo del capo, colore dominante) → `garmentImage.js` (canvas,
+  sottile) → `AvatarSvg` / `Avatar3D`.
+- **La `clipPath` è sparita dal percorso principale**: il capo scontornato ha lo
+  sfondo trasparente, non serve infilarlo in una sagoma. Le sagome restano solo
+  per il caso degradato (tinta unita).
+- `Avatar3D.jsx` è l'unico file che importa three.js, caricato con `React.lazy`:
+  chunk separato da 492 kB (124 kB gzip), scaricato **solo** aprendo `/tryon`.
+- Corpo e capi sono mesh generate da codice (nessun GLB, nessuna licenza): la
+  corporatura di `avatar_config` resta un parametro, lo slider continua a valere.
+- Rete di sicurezza: se il renderer WebGL non si crea (memoria satura su Android)
+  o il context si perde a metà sessione, si passa da soli alla modalità piatta.
+  C'è un ErrorBoundary. **Verificato rompendo il renderer di proposito**: niente
+  schermo bianco.
+- 96 test Vitest verdi. Verifica a schermo con Chrome: 3D vestito, rotazione,
+  piatto, fallback senza WebGL, 0 errori in console.
+
+**Difetti noti, cosmetici** (dichiarati, non nascosti): il decal della fantasia è
+un cilindro a raggio costante e sporge di lato dove il busto si assottiglia; la
+testa non ha volto; in modalità piatta i jeans finiscono sopra la caviglia.
+
+Spec: `docs/superpowers/specs/2026-07-09-avatar-3d-design.md`
+Piano: `docs/superpowers/plans/2026-07-09-avatar-3d.md`
+
+**Prossimo progetto, già deciso (§9 della spec): proxy Gemini.** Oggi la scheda AI
+pretende che sia l'utente a crearsi chiave e fatturazione su Google: Mary non lo
+farà mai. Serve una Edge Function Supabase che tenga la chiave di Lorenzo lato
+server. **Vincoli non negoziabili**: solo utenti autenticati (JWT) e quota per
+utente contata su Postgres (~20/mese) — la chiave è di Lorenzo e il sito è
+pubblico, senza difese chiunque si registri spende i suoi soldi.
+
+---
 
 **Novità 2026-07-09 — cloud Supabase attivato e verificato (prima volta live):**
 - Progetto Supabase dell'account `lorefara97@gmail.com` (creato in automatico
