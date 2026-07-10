@@ -160,6 +160,49 @@ const squareInside = (mask, width, x, y, side) => {
  * disegno o sfondo.
  * @returns {{x,y,width,height}|null} null se non c'è spazio (capo troppo sottile)
  */
+/**
+ * Larghezza dell'anello di bordo da ignorare, in pixel.
+ *
+ * Fra il capo e lo sfondo, in ogni foto reale, c'è un anello di pixel sfumati
+ * (antialiasing, ombra del capo sul piano). Stanno dentro la maschera ma hanno
+ * colori lontanissimi dal dominante: presi alla lettera sembrano "stampa", e
+ * facevano scartare ogni stampa vera. Si erode la maschera di qualche pixel e
+ * si lavora solo sull'interno.
+ */
+const EDGE_MARGIN = 3;
+
+/**
+ * Erosione della maschera: un pixel resta capo solo se lo sono anche tutti
+ * quelli entro `r` pixel. Fatta in due passate separate (orizzontale e
+ * verticale) invece che con una finestra quadrata: su una foto da 600px la
+ * differenza è fra ~4 milioni di letture e ~150.
+ */
+const erodeMask = (mask, width, height, r) => {
+  const h = new Uint8Array(width * height);
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      let keep = 1;
+      for (let d = -r; d <= r && keep; d++) {
+        const xx = x + d;
+        if (xx < 0 || xx >= width || !mask[y * width + xx]) keep = 0;
+      }
+      h[y * width + x] = keep;
+    }
+  }
+  const out = new Uint8Array(width * height);
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      let keep = 1;
+      for (let d = -r; d <= r && keep; d++) {
+        const yy = y + d;
+        if (yy < 0 || yy >= height || !h[yy * width + x]) keep = 0;
+      }
+      out[y * width + x] = keep;
+    }
+  }
+  return out;
+};
+
 /** Vero se i due rettangoli si toccano anche solo per un pixel. */
 const overlaps = (a, b) =>
   Math.max(a.x, b.x) < Math.min(a.x + a.width, b.x + b.width) &&
@@ -182,6 +225,10 @@ const overlaps = (a, b) =>
 export function fabricSwatch(mask, width, height, bounds, print = null) {
   if (!bounds) return null;
 
+  // Stesso anello di bordo scartato da printRegion: una piastrella che pesca i
+  // pixel sfumati del contorno porta quel contorno su tutto il capo.
+  const interior = erodeMask(mask, width, height, EDGE_MARGIN);
+
   const maxSide = Math.min(bounds.width, bounds.height);
   for (let side = maxSide; side >= 2; side--) {
     const step = Math.max(1, side >> 1);
@@ -189,7 +236,7 @@ export function fabricSwatch(mask, width, height, bounds, print = null) {
       for (let x = bounds.x; x + side <= bounds.x + bounds.width; x += step) {
         const square = { x, y, width: side, height: side };
         if (print && overlaps(square, print)) continue;
-        if (squareInside(mask, width, x, y, side)) return square;
+        if (squareInside(interior, width, x, y, side)) return square;
       }
     }
   }
@@ -226,21 +273,26 @@ export function printRegion(image, mask, dominantHex, { minDistance = 60 } = {})
   const { data, width, height } = image;
   const [dr, dg, db] = hexToRgb(dominantHex);
 
+  // Solo l'interno del capo: l'anello di bordo è sfumato, i suoi colori sono
+  // lontani dal dominante e sembrerebbero stampa in ogni foto reale.
+  const interior = erodeMask(mask, width, height, EDGE_MARGIN);
+
   let minX = width;
   let minY = height;
   let maxX = -1;
   let maxY = -1;
   let printPixels = 0;
-  let garmentPixels = 0;
+  let interiorPixels = 0;
 
-  for (let p = 0; p < mask.length; p++) {
-    if (!mask[p]) continue;
-    garmentPixels++;
+  for (let p = 0; p < interior.length; p++) {
+    if (!interior[p]) continue;
+    interiorPixels++;
     const i = p * 4;
     if (colorDistance(data, i, dr, dg, db) <= minDistance) continue;
-    // Una zona attaccata al bordo del capo è un orlo, un'ombra, una cucitura:
-    // non è una stampa. Se ne trovo anche solo un pixel, rinuncio.
-    if (onGarmentEdge(mask, width, height, p)) return null;
+    // Se la zona diversa tocca il bordo dell'interno è un orlo, una cucitura,
+    // l'ombra di una piega: non è una stampa. Meglio rinunciare a una stampa
+    // vera che appiccicare un orlo in mezzo al petto.
+    if (onGarmentEdge(interior, width, height, p)) return null;
     printPixels++;
     const x = p % width;
     const y = (p - x) / width;
@@ -250,8 +302,8 @@ export function printRegion(image, mask, dominantHex, { minDistance = 60 } = {})
     if (y > maxY) maxY = y;
   }
 
-  if (!garmentPixels || maxX < 0) return null;
-  const share = printPixels / garmentPixels;
+  if (!interiorPixels || maxX < 0) return null;
+  const share = printPixels / interiorPixels;
   if (share < PRINT_MIN_AREA || share > PRINT_MAX_AREA) return null;
 
   return { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 };

@@ -171,13 +171,57 @@ describe('fabricSwatch', () => {
   });
 
   it('trova comunque il tessuto quando la stampa occupa il centro del capo', () => {
-    const img = makeImage(40, 40, WHITE, BLUE, { x: 4, y: 4, width: 32, height: 32 });
+    // Capo 44x44, stampa 20x20 al centro: il tessuto buono resta solo nelle
+    // fasce laterali. Cercarlo solo al centro non basta.
+    const img = makeImage(60, 60, WHITE, BLUE, { x: 8, y: 8, width: 44, height: 44 });
     const mask = backgroundMask(img);
-    const bounds = garmentBounds(mask, 40, 40);
-    // stampa grande e centrata: il tessuto va cercato ai lati, non solo al centro
-    const s = fabricSwatch(mask, 40, 40, bounds, { x: 10, y: 10, width: 20, height: 20 });
+    const bounds = garmentBounds(mask, 60, 60);
+    const print = { x: 20, y: 20, width: 20, height: 20 };
+
+    const s = fabricSwatch(mask, 60, 60, bounds, print);
+
     expect(s).not.toBeNull();
     expect(s.width).toBeGreaterThanOrEqual(4);
+    const sovrapposti =
+      Math.max(s.x, print.x) < Math.min(s.x + s.width, print.x + print.width) &&
+      Math.max(s.y, print.y) < Math.min(s.y + s.height, print.y + print.height);
+    expect(sovrapposti).toBe(false);
+  });
+});
+
+describe('printRegion con il bordo sfumato delle foto vere', () => {
+  it('trova la stampa anche se il capo ha un anello antialiasato', () => {
+    // Ogni foto reale ha, fra capo e sfondo, un anello di pixel sfumati: colori
+    // lontanissimi dal dominante, ma dentro la maschera. La vecchia regola
+    // "se un pixel di stampa tocca il bordo rinuncio" scattava sempre, e
+    // nessuna stampa veniva mai trovata su una foto vera.
+    const img = makeImage(40, 40, WHITE, BLUE, { x: 6, y: 6, width: 28, height: 28 });
+
+    // anello di 1 pixel a mezza tinta lungo tutto il contorno del capo
+    const MID = [128, 148, 168];
+    for (let y = 6; y < 34; y++) {
+      for (let x = 6; x < 34; x++) {
+        const bordo = x === 6 || y === 6 || x === 33 || y === 33;
+        if (!bordo) continue;
+        const i = (y * 40 + x) * 4;
+        img.data[i] = MID[0];
+        img.data[i + 1] = MID[1];
+        img.data[i + 2] = MID[2];
+      }
+    }
+    // stampa rossa 6x6 al centro
+    for (let y = 17; y < 23; y++) {
+      for (let x = 17; x < 23; x++) {
+        const i = (y * 40 + x) * 4;
+        img.data[i] = RED[0];
+        img.data[i + 1] = RED[1];
+        img.data[i + 2] = RED[2];
+      }
+    }
+
+    const mask = backgroundMask(img);
+    const r = printRegion(img, mask, '#284f7f');
+    expect(r).toEqual({ x: 17, y: 17, width: 6, height: 6 });
   });
 });
 
