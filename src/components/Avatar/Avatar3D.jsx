@@ -21,11 +21,11 @@ import {
   SRGBColorSpace,
 } from 'three';
 import { bodyProfiles } from '../../utils/avatarMesh';
-import { garmentParts, radiusAt } from '../../utils/garmentMesh';
+import { garmentParts } from '../../utils/garmentMesh';
 import { garmentLayers } from '../../utils/tryonComposer';
+import { panelPlacement } from '../../utils/garmentPanel';
 
 const RADIAL_SEGMENTS = 32;
-const DECAL_ARC = (140 * Math.PI) / 180;
 const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
 const FALLBACK_COLOR = '#cfc7bb';
 
@@ -57,94 +57,72 @@ const clearFigure = (figure) => {
   }
 };
 
-/**
- * Materiale del capo: la piastrella di tessuto vera (foto) ripetuta come
- * pattern, non il disegno intero del capo — quello aveva già collo, maniche
- * e orli propri, che schiacciati su un corpo diverso producevano la "piastra
- * sporgente" del vecchio decal cilindrico. Se non c'è una piastrella si
- * ripiega sul colore dominante.
- */
-const garmentMaterial = (texture, onReady) => {
-  if (texture?.swatchUrl) {
-    const map = new TextureLoader().load(texture.swatchUrl, onReady);
-    map.wrapS = RepeatWrapping;
-    map.wrapT = RepeatWrapping;
-    map.repeat.set(3, 3);
-    map.colorSpace = SRGBColorSpace;
-    return new MeshStandardMaterial({ map, color: 0xffffff, roughness: 0.95 });
-  }
-  return new MeshStandardMaterial({ color: safeColor(texture?.colorHex), roughness: 0.95 });
-};
+// Il pannello del capo: un arco di cilindro davanti al corpo, su cui si mappa
+// il ritaglio del capo. L'arco massimo lascia spazio al profilo (la stampa gira
+// col corpo). Il raggio e l'ampiezza reali li calcola panelPlacement.
+const PANEL_ARC = (150 * Math.PI) / 180;
+const PANEL_GAP = 0.02;
+const PANEL_RADIAL_SEGMENTS = 24;
 
-/**
- * La stampa del capo (logo, scritta...) rimessa esattamente dove stava sulla
- * foto vera, sulla parte principale del capo. `printAt` è in frazioni del
- * rettangolo del capo fotografato: cx/cy il centro, w/h la dimensione.
- *
- * Per i capi sdoppiati (mirror: true, es. pantaloni) `printAt.cx` è misurato
- * sull'intera foto che contiene due gambe: va prima scelta la gamba (sinistra
- * se cx < 0.5) e poi ricalcolata la frazione locale a quella sola gamba,
- * altrimenti l'angolo attorno all'asse cadrebbe nel posto sbagliato. Se la
- * stampa, ricalcolata, risulta più larga di mezzo capo (localW > 1) vuol dire
- * che è una fantasia diffusa su entrambe le gambe, non un logo da tasca: se
- * ne occupa già la piastrella di tessuto, qui si rinuncia.
- */
-const printDecal = (mainPart, printUrl, printAt, onReady) => {
-  const ys = mainPart.profile.map(([, y]) => y);
-  const from = Math.min(...ys);
-  const to = Math.max(...ys);
-
-  let localCx = printAt.cx;
-  let localW = printAt.w;
-  let instanceX = 0;
-
-  if (mainPart.mirror) {
-    const onLeft = printAt.cx < 0.5;
-    instanceX = onLeft ? -mainPart.offsetX : mainPart.offsetX;
-    localCx = onLeft ? printAt.cx * 2 : (printAt.cx - 0.5) * 2;
-    localW = printAt.w * 2;
-    if (localW > 1) return null;
-  }
-
-  // `printAt.cy` è misurata dall'alto del capo, mentre y cresce verso l'alto.
-  const y = to - printAt.cy * (to - from);
-  const patchHeight = printAt.h * (to - from);
-
-  // `printAt.cx` = 0.5 è il centro del davanti. Lo scarto orizzontale diventa
-  // un angolo attorno all'asse: la stampa gira col corpo, resta incollata al
-  // tessuto.
-  const theta = (localCx - 0.5) * DECAL_ARC;
-  const arc = localW * DECAL_ARC;
-  const radius = radiusAt(mainPart.profile, y) + 0.004;
-
+/** Un pannello (arco di cilindro) con sopra la texture del ritaglio. */
+const garmentPanel = (placement, thetaStart, map) => {
   const geometry = new CylinderGeometry(
-    radius,
-    radius,
-    Math.max(patchHeight, 0.001),
-    24,
+    placement.radius,
+    placement.radius,
+    Math.max(placement.height, 0.001),
+    PANEL_RADIAL_SEGMENTS,
     1,
-    true,
-    theta - arc / 2,
-    arc
+    true, // aperto: è un guscio d'arco, non un cilindro pieno
+    thetaStart,
+    placement.arcAngle
   );
   const material = new MeshStandardMaterial({
+    map,
     transparent: true,
     side: DoubleSide,
     roughness: 0.9,
-    // Il cilindro della stampa sta a soli 0.004 unità dalla mesh sottostante:
-    // senza polygon offset le due superfici litigano per lo stesso pixel
-    // (z-fighting) a seconda dell'angolo di vista.
-    polygonOffset: true,
-    polygonOffsetFactor: -1,
-    polygonOffsetUnits: -1,
   });
-  const map = new TextureLoader().load(printUrl, onReady);
-  map.colorSpace = SRGBColorSpace;
-  material.map = map;
-
   const mesh = new Mesh(geometry, material);
-  mesh.position.set(instanceX, y, 0);
+  mesh.position.y = placement.yCenter;
   return mesh;
+};
+
+/**
+ * Carica il ritaglio del capo e, quando l'immagine è pronta (serve l'aspect
+ * ratio), aggiunge un pannello davanti e uno dietro. `isCancelled` evita di
+ * aggiungere mesh a una figura già ripulita da una ricostruzione successiva.
+ */
+const addGarmentPanels = (figure, mainPart, url, onRender, isCancelled) => {
+  const map = new TextureLoader().load(url, () => {
+    if (isCancelled()) {
+      map.dispose();
+      return;
+    }
+    const aspect = (map.image?.width || 1) / (map.image?.height || 1);
+    const placement = panelPlacement({
+      profile: mainPart.profile,
+      offsetX: mainPart.offsetX,
+      mirror: mainPart.mirror,
+      aspect,
+      arc: PANEL_ARC,
+      gap: PANEL_GAP,
+    });
+
+    map.colorSpace = SRGBColorSpace;
+    // Davanti, centrato sul fronte (+Z, come faceva il vecchio decal a theta 0).
+    figure.add(garmentPanel(placement, -placement.arcAngle / 2, map));
+
+    // Dietro: stessa immagine, ribaltata in orizzontale così non appare
+    // speculare guardando la schiena.
+    const back = map.clone();
+    back.colorSpace = SRGBColorSpace;
+    back.wrapS = RepeatWrapping;
+    back.repeat.x = -1;
+    back.needsUpdate = true;
+    figure.add(garmentPanel(placement, Math.PI - placement.arcAngle / 2, back));
+
+    onRender();
+  });
 };
 
 export default function Avatar3D({ config, outfit, textures, height = 420, onUnavailable }) {
@@ -283,8 +261,9 @@ export default function Avatar3D({ config, outfit, textures, height = 420, onUna
   // Corpo e capi si ricostruiscono quando cambia la configurazione o l'outfit.
   useEffect(() => {
     const { figure, render } = stateRef.current;
-    if (!figure) return;
+    if (!figure) return undefined;
 
+    let cancelled = false;
     clearFigure(figure);
 
     const body = bodyProfiles(config);
@@ -328,30 +307,41 @@ export default function Avatar3D({ config, outfit, textures, height = 420, onUna
     for (const { kind, item } of garmentLayers(outfit)) {
       const parts = garmentParts(kind, config);
       if (!parts.length) continue;
-
       const texture = textures?.[item.id];
-      // Un solo materiale per capo: busto e maniche sono lo stesso tessuto,
-      // non due foto diverse.
-      const material = garmentMaterial(texture, render);
 
-      for (const part of parts) {
-        const xs = part.mirror ? [-part.offsetX, part.offsetX] : [0];
-        for (const dx of xs) {
-          const mesh = new Mesh(lathe(part.profile), material);
-          mesh.position.x = dx;
-          figure.add(mesh);
+      if (texture?.textureUrl) {
+        // Il capo intero ritagliato, messo sul corpo come un capo — non tilato.
+        addGarmentPanels(
+          figure,
+          parts[0],
+          texture.textureUrl,
+          () => {
+            if (!cancelled) render();
+          },
+          () => cancelled
+        );
+      } else {
+        // Fallback: niente ritaglio (foto CORS o degradata) → tinta unita.
+        const material = new MeshStandardMaterial({
+          color: safeColor(texture?.colorHex),
+          roughness: 0.95,
+        });
+        for (const part of parts) {
+          const xs = part.mirror ? [-part.offsetX, part.offsetX] : [0];
+          for (const dx of xs) {
+            const mesh = new Mesh(lathe(part.profile), material);
+            mesh.position.x = dx;
+            figure.add(mesh);
+          }
         }
-      }
-
-      // La stampa va sulla parte principale del capo (parts[0]), mai sulle
-      // maniche: un logo sul taschino resta sul taschino.
-      if (texture?.printUrl && texture?.printAt) {
-        const decal = printDecal(parts[0], texture.printUrl, texture.printAt, render);
-        if (decal) figure.add(decal);
       }
     }
 
     render();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config, outfit, textures]);
 
   return <div className="avatar3d" ref={mountRef} style={{ height }} aria-label="avatar 3D" />;
