@@ -68,14 +68,12 @@ describe('classifyGarmentImage (sintetico)', () => {
     expect(out.verdict).toBe('clean');
   });
 
-  it('collage con tante isole e testo = screenshot', () => {
-    // fondo bianco; foto liscia + due badge + una fascia "testo" a righe fitte
+  it('collage: tante isole sparse su molto sfondo = screenshot', () => {
+    // Uno screenshot frammenta il contenuto in molte isole su chrome uniforme.
+    // Griglia 6x6 di blocchetti (36 isole) su fondo bianco: isole alte, sfondo alto.
     const img = imageFrom(80, 80, (x, y) => {
-      if (x >= 10 && x < 70 && y >= 8 && y < 40) return [150, 170, 200]; // foto
-      if (x >= 12 && x < 24 && y >= 44 && y < 52) return [200, 40, 40]; // badge 1
-      if (x >= 40 && x < 52 && y >= 44 && y < 52) return [40, 160, 60]; // badge 2
-      if (y >= 60 && y < 72) return x % 2 === 0 ? [0, 0, 0] : [255, 255, 255]; // testo
-      return [255, 255, 255];
+      const inBlock = x % 12 < 6 && y % 12 < 6 && x < 72 && y < 72; // 6x6 blocchi 6x6px
+      return inBlock ? [40, 60, 90] : [255, 255, 255];
     });
     const out = classifyGarmentImage(img);
     expect(out.verdict).toBe('screenshot');

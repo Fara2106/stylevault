@@ -64,15 +64,23 @@ export function textDensity({ data, width, height }, { contrast = 60 } = {}) {
   return pairs === 0 ? 0 : flips / pairs;
 }
 
-// Tarate al Task 4 su immagini vere. Valori iniziali prudenti.
-export const ISLAND_MIN = 3;   // almeno 3 isole di contenuto
-export const TEXT_MIN = 0.06;  // e testo apprezzabile
-export const REACH_CLEAN = 0.45; // sfondo che copre buona parte del frame
+/**
+ * Soglie tarate su immagini VERE (2026-07-14): screenshot dell'app vs foto di capi
+ * reali. Scoperta: il TESTO non separa (una maglietta liscia ha densità di testo
+ * maggiore di uno screenshot poco testuale). Separano invece nettissimo le ISOLE
+ * di contenuto (capi reali 1–9, screenshot 52–145) e lo SFONDO uniforme (screenshot
+ * 0.84–0.95 perché pieni di chrome dell'app; un capo riempie il frame, sfondo basso).
+ * Quindi: screenshot = TANTE isole E MOLTO sfondo. Il testo resta solo diagnostico.
+ */
+export const ISLAND_SCREENSHOT = 24; // ben sopra il max dei capi (9), sotto il min screenshot (52)
+export const REACH_SCREENSHOT = 0.4; // uno screenshot ha molto sfondo uniforme
+export const REACH_CLEAN = 0.45;     // sfondo che copre buona parte del frame
 
 /**
- * Verdetto sul tipo di immagine capo. Conservativo: 'screenshot' solo quando
- * DUE segnali forti concordano (tante isole E testo), così una foto vera non
- * viene mai scambiata per uno screenshot e bloccata a torto.
+ * Verdetto sul tipo di immagine capo. Conservativo: 'screenshot' solo quando la
+ * scena è frammentata in molte isole E c'è molto sfondo uniforme — così un capo
+ * vero (un solo oggetto che riempie il frame) non viene mai scambiato per uno
+ * screenshot e bloccato a torto, nemmeno se ha una fantasia molto "testurata".
  */
 export function classifyGarmentImage(image, opts = {}) {
   const { width, height } = image;
@@ -81,10 +89,10 @@ export function classifyGarmentImage(image, opts = {}) {
   for (let p = 0; p < mask.length; p++) if (!mask[p]) bg++;
   const reach = bg / (width * height);
   const islands = countIslands(mask, width, height);
-  const text = textDensity(image, opts);
+  const text = textDensity(image, opts); // solo diagnostico, non entra nel verdetto
 
   let verdict;
-  if (islands >= ISLAND_MIN && text >= TEXT_MIN) verdict = 'screenshot';
+  if (islands >= ISLAND_SCREENSHOT && reach >= REACH_SCREENSHOT) verdict = 'screenshot';
   else if (reach >= REACH_CLEAN && islands <= 1) verdict = 'clean';
   else verdict = 'messy';
 
