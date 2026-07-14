@@ -14,8 +14,8 @@ Nasce da un'osservazione di Lorenzo: siti che scontornano i capi e li fanno
 indossare "in tempo reale, senza sembrare AI" alla foto di una persona. Tecnica:
 **compositing 2D** (overlay del capo ritagliato), non generazione. Gratis e
 real-time è possibile; il prezzo nascosto è che i capi restano **posati, non
-indossati** (piatti, niente pieghe né occlusione). La resa realistica-addosso resta
-alla scheda AI a pagamento.
+indossati** (piatti, niente pieghe né occlusione). La resa realistica-addosso
+richiederebbe AI generativa a pagamento — fuori scope per vincolo (non spendere).
 
 ## Decisioni prese (brainstorming)
 
@@ -31,9 +31,9 @@ alla scheda AI a pagamento.
   derivati dai punti chiave della posa.
 - **Ripiego**: capo senza ritaglio pulito (screenshot degradato) → sagoma in tinta
   unita sul modello, mai lo screenshot.
-- **Relazione con la scheda AI**: stesso input (la foto dell'utente), ma questo è
-  il **gratis e posato**; "Sulla tua foto (AI)" resta il **realistico a pagamento**
-  (~$0,04/foto, Gemini). Gratis e premium della stessa idea.
+- **Vestizione realistica fuori scope**: qui il capo è **posato** (compositing 2D),
+  non cade addosso. La resa realistica (drappeggio, pieghe) richiederebbe AI
+  generativa a pagamento, che per vincolo (non spendere) **non facciamo**.
 
 ## Architettura
 
@@ -41,8 +41,8 @@ alla scheda AI a pagamento.
 
 1. **Modo "Su modello"** — terzo tab di render accanto a 3D e Piatto (oggi
    `OutfitOnAvatar` / `TryOnPage` gestiscono i modi; qui va aggiunto il terzo).
-2. **Foto di riferimento** — `referencePhoto` da `ProfileContext` (già esistente,
-   già usata dalla scheda AI). Nessun nuovo input all'utente.
+2. **Foto di riferimento** — `referencePhoto` da `ProfileContext` (già esistente
+   nel Profilo). Nessun nuovo input all'utente.
 3. **Gate di posa** — al momento in cui l'utente imposta/aggiorna `referencePhoto`:
    un modello di pose in-browser (gratis, es. MediaPipe Pose o equivalente) verifica
    la posa standard. Se valida, estrae e salva i **punti chiave** normalizzati
@@ -89,7 +89,7 @@ RENDER "Su modello" → per ogni capo:
 
 ## Fuori scope
 
-- Deformazione/drappeggio realistico dei capi (è la scheda AI a pagamento).
+- Deformazione/drappeggio realistico dei capi (richiederebbe AI a pagamento).
 - Modello fisso fornito da noi / foto stock (scelto: la foto dell'utente).
 - Gestione dell'occlusione (braccia davanti al capo).
 

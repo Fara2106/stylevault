@@ -594,7 +594,8 @@ Annotare qui l'esito reale dei passi 2-4 (cosa si è visto davvero). Se un caso 
 - Gate all'aggiunta che blocca gli screenshot → Task 6. ✓
 - Rete di sicurezza a tinta unita per il backlog al render → Task 5. ✓
 - 3D invariato → nessun task lo tocca. ✓
-- **Fuori da questo piano (rung 2 e 4):** ML in-browser + cache IndexedDB, e Gemini BYOK. Vanno nei Piani 2 e 3. Annotato.
+- **Fuori da questo piano:** scontorno gratis on-device (guida al ritaglio +
+  `@imgly` + tap-to-cutout SAM) + cache IndexedDB. Va nel Piano 2. Annotato.
 
 **Placeholder scan:** nessun TBD/TODO nel codice. Le uniche dipendenze esterne (immagini reali al Task 4) sono esplicite e con condizione di stop.
 
