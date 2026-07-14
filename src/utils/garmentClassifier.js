@@ -63,3 +63,30 @@ export function textDensity({ data, width, height }, { contrast = 60 } = {}) {
   }
   return pairs === 0 ? 0 : flips / pairs;
 }
+
+// Tarate al Task 4 su immagini vere. Valori iniziali prudenti.
+export const ISLAND_MIN = 3;   // almeno 3 isole di contenuto
+export const TEXT_MIN = 0.06;  // e testo apprezzabile
+export const REACH_CLEAN = 0.45; // sfondo che copre buona parte del frame
+
+/**
+ * Verdetto sul tipo di immagine capo. Conservativo: 'screenshot' solo quando
+ * DUE segnali forti concordano (tante isole E testo), così una foto vera non
+ * viene mai scambiata per uno screenshot e bloccata a torto.
+ */
+export function classifyGarmentImage(image, opts = {}) {
+  const { width, height } = image;
+  const mask = backgroundMask(image, opts);
+  let bg = 0;
+  for (let p = 0; p < mask.length; p++) if (!mask[p]) bg++;
+  const reach = bg / (width * height);
+  const islands = countIslands(mask, width, height);
+  const text = textDensity(image, opts);
+
+  let verdict;
+  if (islands >= ISLAND_MIN && text >= TEXT_MIN) verdict = 'screenshot';
+  else if (reach >= REACH_CLEAN && islands <= 1) verdict = 'clean';
+  else verdict = 'messy';
+
+  return { verdict, islands, text, reach };
+}

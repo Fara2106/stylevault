@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { countIslands, textDensity } from './garmentClassifier';
+import { countIslands, textDensity, classifyGarmentImage } from './garmentClassifier';
 
 /** mask width*height con 1 dentro i rettangoli passati. */
 const maskWith = (width, height, rects) => {
@@ -55,5 +55,39 @@ describe('textDensity', () => {
   it('un pattern fitto bianco/nero (tipo testo) ha densità alta', () => {
     const img = imageFrom(40, 40, (x) => (x % 2 === 0 ? [0, 0, 0] : [255, 255, 255]));
     expect(textDensity(img)).toBeGreaterThan(0.4);
+  });
+});
+
+describe('classifyGarmentImage (sintetico)', () => {
+  it('capo pieno su fondo bianco uniforme = clean', () => {
+    // fondo bianco, un rettangolo azzurro liscio al centro
+    const img = imageFrom(60, 60, (x, y) =>
+      x >= 15 && x < 45 && y >= 15 && y < 45 ? [150, 170, 200] : [255, 255, 255]
+    );
+    const out = classifyGarmentImage(img);
+    expect(out.verdict).toBe('clean');
+  });
+
+  it('collage con tante isole e testo = screenshot', () => {
+    // fondo bianco; foto liscia + due badge + una fascia "testo" a righe fitte
+    const img = imageFrom(80, 80, (x, y) => {
+      if (x >= 10 && x < 70 && y >= 8 && y < 40) return [150, 170, 200]; // foto
+      if (x >= 12 && x < 24 && y >= 44 && y < 52) return [200, 40, 40]; // badge 1
+      if (x >= 40 && x < 52 && y >= 44 && y < 52) return [40, 160, 60]; // badge 2
+      if (y >= 60 && y < 72) return x % 2 === 0 ? [0, 0, 0] : [255, 255, 255]; // testo
+      return [255, 255, 255];
+    });
+    const out = classifyGarmentImage(img);
+    expect(out.verdict).toBe('screenshot');
+  });
+
+  it('oggetto su sfondo NON uniforme e senza testo = messy, mai screenshot', () => {
+    // sfondo rumoroso (niente flood-fill pulito), un blocco: nessun testo
+    const img = imageFrom(60, 60, (x, y) => {
+      if (x >= 20 && x < 40 && y >= 20 && y < 40) return [150, 170, 200];
+      return [200 + ((x * 7 + y * 13) % 40), 190, 180]; // sfondo variato
+    });
+    const out = classifyGarmentImage(img);
+    expect(out.verdict).not.toBe('screenshot');
   });
 });
