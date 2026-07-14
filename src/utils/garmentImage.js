@@ -7,6 +7,7 @@
  * In quel caso si ripiega sulla tinta unita, come già fa il try-on Gemini.
  */
 import { extractGarment } from './garmentTexture';
+import { classifyGarmentImage } from './garmentClassifier';
 import { CLOTHING_COLORS } from './categories';
 
 const FALLBACK_HEX = '#cfc7bb';
@@ -166,6 +167,22 @@ export async function loadGarmentTexture(item) {
   } catch {
     // canvas "sporcato" da un'immagine cross-origin senza header CORS
     return flat('cors');
+  }
+
+  // Rete di sicurezza per i capi già in guardaroba: se la foto è uno screenshot
+  // (collage con UI), lo scontorno geometrico incollerebbe l'intera schermata
+  // sul manichino. Meglio la sagoma in tinta unita. I capi NUOVI vengono già
+  // bloccati all'aggiunta (AddItemPage); questo copre il backlog.
+  if (classifyGarmentImage(imageData).verdict === 'screenshot') {
+    return {
+      textureUrl: null,
+      swatchUrl: null,
+      printUrl: null,
+      printAt: null,
+      colorHex: garmentFallbackHex(item),
+      kind: 'flat',
+      reason: 'screenshot',
+    };
   }
 
   const result = extractGarment(imageData);
