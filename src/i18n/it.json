@@ -107,6 +107,8 @@
     },
     "shopLink": "Link al negozio",
     "photoHint": "Scatta o carica una foto del capo",
+    "screenshotBlocked": "Sembra uno screenshot. Per far vestire davvero il capo all'avatar, carica una foto del capo (meglio se steso o su sfondo semplice) oppure aggiungilo da link.",
+    "screenshotBlockedTitle": "Questa è una schermata, non un capo",
     "linkHint": "Incolla il link da un negozio online",
     "changePhoto": "Cambia foto",
     "price": "Prezzo (€)",

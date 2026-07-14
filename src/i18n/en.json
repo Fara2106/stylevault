@@ -107,6 +107,8 @@
     },
     "shopLink": "Shop link",
     "photoHint": "Take or upload a photo of the item",
+    "screenshotBlocked": "This looks like a screenshot. To actually dress the avatar, upload a photo of the garment (ideally flat or on a plain background) or add it from a link.",
+    "screenshotBlockedTitle": "This is a screen capture, not a garment",
     "linkHint": "Paste a link from an online store",
     "changePhoto": "Change photo",
     "price": "Price (€)",
