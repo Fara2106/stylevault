@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { countIslands } from './garmentClassifier';
+import { countIslands, textDensity } from './garmentClassifier';
 
 /** mask width*height con 1 dentro i rettangoli passati. */
 const maskWith = (width, height, rects) => {
@@ -8,6 +8,18 @@ const maskWith = (width, height, rects) => {
     for (let y = r.y; y < r.y + r.h; y++)
       for (let x = r.x; x < r.x + r.w; x++) m[y * width + x] = 1;
   return m;
+};
+
+/** imageData RGBA da una funzione (x,y)->[r,g,b]. */
+const imageFrom = (width, height, fn) => {
+  const data = new Uint8ClampedArray(width * height * 4);
+  for (let y = 0; y < height; y++)
+    for (let x = 0; x < width; x++) {
+      const [r, g, b] = fn(x, y);
+      const i = (y * width + x) * 4;
+      data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = 255;
+    }
+  return { data, width, height };
 };
 
 describe('countIslands', () => {
@@ -31,5 +43,17 @@ describe('countIslands', () => {
       { x: 18, y: 18, w: 1, h: 1 }, // 1 px: rumore
     ]);
     expect(countIslands(m, 20, 20, { minSize: 12 })).toBe(1);
+  });
+});
+
+describe('textDensity', () => {
+  it('una foto liscia ha densità quasi nulla', () => {
+    const img = imageFrom(40, 40, () => [150, 160, 170]);
+    expect(textDensity(img)).toBeLessThan(0.02);
+  });
+
+  it('un pattern fitto bianco/nero (tipo testo) ha densità alta', () => {
+    const img = imageFrom(40, 40, (x) => (x % 2 === 0 ? [0, 0, 0] : [255, 255, 255]));
+    expect(textDensity(img)).toBeGreaterThan(0.4);
   });
 });

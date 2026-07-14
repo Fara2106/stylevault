@@ -39,3 +39,27 @@ export function countIslands(mask, width, height, { minSize = 12 } = {}) {
   }
   return islands;
 }
+
+const luminance = (data, i) =>
+  0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+
+/**
+ * Frazione di transizioni ad alto contrasto sulle scanline orizzontali: per ogni
+ * coppia di pixel adiacenti sulla riga, conta quando il salto di luminanza supera
+ * `contrast`. Il testo produce moltissimi salti chiaro/scuro; una foto no.
+ */
+export function textDensity({ data, width, height }, { contrast = 60 } = {}) {
+  let flips = 0;
+  let pairs = 0;
+  for (let y = 0; y < height; y++) {
+    let prev = luminance(data, (y * width) * 4);
+    for (let x = 1; x < width; x++) {
+      const i = (y * width + x) * 4;
+      const lum = luminance(data, i);
+      if (Math.abs(lum - prev) > contrast) flips++;
+      pairs++;
+      prev = lum;
+    }
+  }
+  return pairs === 0 ? 0 : flips / pairs;
+}
