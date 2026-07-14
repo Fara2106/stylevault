@@ -48,37 +48,86 @@ permette. L'utente non deve sapere niente di "link vs foto vs screenshot".
 - **Quando/cache:** lo scontorno gira **all'aggiunta** (spinner); il PNG ritagliato
   si salva in **cache locale** (IndexedDB). Niente modifiche a Supabase. Il backlog
   (capi già in guardaroba) si lavora in modo **pigro al primo render**.
-- **Screenshot:** all'aggiunta si **blocca** e si chiede un input migliore; il
-  render tiene comunque il **degrado a tinta unita** come backstop per il backlog e
-  per gli screenshot che sfuggono al gate.
+- **Screenshot (REVISIONE 2026-07-14, vedi sotto):** non più solo "blocca". Si
+  **guida l'utente a ritagliare e inquadrare solo il capo**, e per i casi che
+  restano ostici c'è il **tap-to-cutout on-device** (l'utente tocca il capo, un
+  modello di segmentazione tipo SAM/MobileSAM lo ritaglia, gratis, sul dispositivo).
+  Il **degrado a tinta unita** resta come backstop al render per il backlog.
 - **Approccio C:** la ML si innesta **solo sulla modalità piatta**; il **3D resta
   invariato** (pipeline geometrica `garmentTexture.js` toccata zero). Blast radius
   minimo sulla parte live e funzionante. Condivisi il classificatore e il gate;
   diverso solo il meccanismo di ritaglio.
-- **Gemini (BYOK):** 4° gradino opzionale. La chiave la mette l'utente (Mary), sta
-  **solo nel browser** (localStorage) → niente proxy, niente costi per StyleVault.
+- **Gemini (BYOK): NON più necessario per essere gratis.** Con guida al ritaglio +
+  tap-to-cutout on-device, tutta la pipeline di scontorno è gratuita e locale.
+  Gemini resta al massimo un lusso opzionale (chiave dell'utente in localStorage,
+  niente proxy), **non un gradino obbligato**. Requisito esplicito di Lorenzo:
+  **non spendere; trovare un modo gratis.** Trovato: il tap sostituisce l'AI
+  semantica a pagamento (è l'utente a dire *quale* è il capo).
 
 ## Architettura
 
-### La scala dei ripieghi
+### La scala dei ripieghi (rivista 2026-07-14: tutta gratis, on-device)
 
 ```
+0. GUIDA AL RITAGLIO → l'utente inquadra/ritaglia solo il capo (riduce gli errori
+                       a monte: uno screenshot ritagliato ≈ foto quasi-pulita)
 1. clean       → scontorno geometrico attuale (gratis, istantaneo)
-2. messy       → bg-removal ML in-browser (gratis)
-3. screenshot + NESSUNA chiave Gemini → BLOCCA (add) / tinta unita (backlog)
-4. screenshot/messy + chiave Gemini   → estrazione semantica via Gemini (BYOK)
+2. messy       → bg-removal ML in-browser (@imgly, gratis, on-device)
+3. screenshot / cutout non pulito → TAP-TO-CUTOUT: l'utente tocca il capo,
+                 segmentazione on-device (SAM/MobileSAM, WebGPU) lo ritaglia (gratis)
+4. render, capo senza ritaglio (backlog) → tinta unita (backstop)
+(opz.) Gemini BYOK → lusso facoltativo, NON necessario. Solo se l'utente ha una
+                     chiave e vuole l'estrazione automatica senza toccare.
 ```
 
 ### Flusso dati
 
 ```
-AGGIUNTA (foto) → classify → screenshot (no key)? → BLOCCA + chiedi input migliore
-                           → altrimenti → salva capo → [bg] scontorno → cache IndexedDB
+AGGIUNTA (foto) → GUIDA/RITAGLIO al capo → classify
+   → clean/messy → scontorno automatico on-device → cache IndexedDB
+   → screenshot / risultato sporco → "tocca il capo" → SAM on-device → cache
 RENDER piatto → cutout in cache? → usa PNG
                                  → miss (backlog)? → classify + scontorno pigro
-                                                    | screenshot senza key → tinta unita
+                                                    | screenshot non risolto → tinta unita
 RENDER 3D → pipeline geometrica attuale (INVARIATA)
 ```
+
+### Scontorno gratis: guida al ritaglio + tap-to-cutout (REVISIONE 2026-07-14)
+
+Il vincolo di Lorenzo è **non spendere**. La svolta: il motivo per cui uno
+screenshot non si scontorna in automatico è che la macchina non sa **quale** cosa
+sia il capo dentro il collage — quella comprensione è ciò che si pagherebbe con
+Gemini. Ma se è **l'utente** a indicarlo, il costo sparisce.
+
+**Due leve gratuite, in ordine:**
+
+1. **Guida al ritaglio (a monte).** All'aggiunta, si invita/aiuta l'utente a
+   **inquadrare o ritagliare solo il capo** (via barra di stato, prezzo, badge,
+   altri prodotti). Idea di Lorenzo. Effetto: uno screenshot ritagliato stretto sul
+   capo diventa ≈ una foto quasi-pulita, e lo **scontorno automatico gratis**
+   (`@imgly`, on-device) ci arriva da solo. Riduce gli errori senza modelli extra.
+2. **Tap-to-cutout (rete per i casi ostici).** Se dopo il ritaglio l'immagine è
+   ancora sporca (es. capo **indossato da una modella** nello screenshot), l'utente
+   **tocca il capo** e un modello di **segmentazione interattiva on-device**
+   (SAM / MobileSAM / SlimSAM via WebGPU o WASM) ritaglia esattamente la regione
+   toccata. Gratis, sul dispositivo, nessun server, nessuna chiave. Il tap
+   fornisce il "quale oggetto" che altrimenti richiederebbe l'AI semantica.
+
+**Costi/limiti onesti (nessuno è denaro):**
+- Il modello SAM si scarica la prima volta (decine di MB), come la bg-removal.
+- Il tap è un'interazione in più (ma è UX migliore del blocco secco).
+- Se il capo è indossato, il tap può prendere anche la persona: ritaglio meno
+  pulito, ma comunque meglio dello screenshot intero.
+- Resta escluso il solo **vestire realistico** (il capo che *cade* addosso): quello
+  è un'altra cosa (compositing "posato" gratis, o Gemini a pagamento), fuori dallo
+  scontorno.
+
+**Conseguenza sul piano:** il gradino "screenshot → blocca/Gemini" del Piano 1
+diventa "screenshot → guida al ritaglio → (se serve) tap-to-cutout". Il Piano 1
+già fatto (classificatore + blocco + degrado) resta valido come **primo strato**
+(rileva lo screenshot e non incolla mai la foto grezza); la guida al ritaglio e il
+tap-to-cutout sono materia del **Piano 2** (era "ML in-browser + cache"), che ora
+include anche SAM on-device. Gemini scende a **Piano 3 opzionale, non necessario**.
 
 ### Componenti
 
