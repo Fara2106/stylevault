@@ -123,6 +123,11 @@
   line-height: 1.5;
 }
 
+.add-item__link-note--error {
+  color: var(--sv-danger, #c0392b);
+  line-height: 1.5;
+}
+
 .add-item__form {
   display: flex;
   flex-direction: column;
