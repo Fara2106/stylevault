@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useProfile } from '../../context/ProfileContext';
 import { useWardrobe } from '../../context/WardrobeContext';
 import OutfitOnAvatar from '../../components/Avatar/OutfitOnAvatar';
+import ModelTryOn from '../../components/Avatar/ModelTryOn';
 import { Header, Button, Modal, Icon } from '../../components/common';
 import { CLOTHING_COLORS } from '../../utils/categories';
 import { resizeImageFile } from '../../utils/imageUtils';
@@ -148,6 +149,15 @@ export default function TryOnPage() {
         <button
           type="button"
           role="tab"
+          aria-selected={mode === 'model'}
+          className={`tryon-page__mode ${mode === 'model' ? 'tryon-page__mode--active' : ''}`}
+          onClick={() => setMode('model')}
+        >
+          {t('tryon.modeModel')}
+        </button>
+        <button
+          type="button"
+          role="tab"
           aria-selected={mode === 'photo'}
           className={`tryon-page__mode ${mode === 'photo' ? 'tryon-page__mode--active' : ''}`}
           onClick={() => setMode('photo')}
@@ -178,6 +188,44 @@ export default function TryOnPage() {
             </div>
           )}
         </>
+      )}
+
+      {/* "Su di te": la persona della foto, scontornata e vestita coi capi
+          scontornati nelle sue proporzioni. Gratis, tutto on-device. */}
+      {mode === 'model' && (
+        <section className="tryon-page__photo">
+          <p className="tryon-page__photo-intro">{t('tryon.modelIntro')}</p>
+
+          {!outfitHasItems(outfit) ? (
+            <p className="tryon-page__photo-note">{t('tryon.photoNoOutfit')}</p>
+          ) : !referencePhoto ? (
+            <>
+              <p className="tryon-page__photo-note">{t('tryon.modelNeedsPhoto')}</p>
+              <Button
+                fullWidth
+                variant="secondary"
+                icon={<Icon name="camera" size={15} />}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {t('tryon.photoUpload')}
+              </Button>
+            </>
+          ) : (
+            <>
+              <ModelTryOn outfit={outfit} referencePhoto={referencePhoto} />
+              <div className="tryon-page__actions">
+                <Button
+                  fullWidth
+                  variant="secondary"
+                  icon={<Icon name="camera" size={14} />}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {t('tryon.photoChange')}
+                </Button>
+              </div>
+            </>
+          )}
+        </section>
       )}
 
       {/* Try-on fotografico con Gemini */}
@@ -265,15 +313,18 @@ export default function TryOnPage() {
             </>
           )}
 
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            hidden
-            onChange={handlePhotoFile}
-          />
         </section>
       )}
+
+      {/* Input foto condiviso fra "Su di te" e la scheda AI */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        hidden
+        onChange={handlePhotoFile}
+      />
+
 
       {paletteIds.length > 0 && (
         <div className="tryon-page__palette">

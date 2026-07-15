@@ -171,23 +171,13 @@ export async function loadGarmentTexture(item) {
     return flat('cors');
   }
 
-  // Rete di sicurezza per i capi già in guardaroba: se la foto è uno screenshot
-  // (collage con UI), lo scontorno geometrico incollerebbe l'intera schermata
-  // sul manichino. Meglio la sagoma in tinta unita. I capi NUOVI vengono già
-  // bloccati all'aggiunta (AddItemPage); questo copre il backlog.
-  if (classifyGarmentImage(imageData).verdict === 'screenshot') {
-    return {
-      textureUrl: null,
-      swatchUrl: null,
-      printUrl: null,
-      printAt: null,
-      colorHex: garmentFallbackHex(item),
-      kind: 'flat',
-      reason: 'screenshot',
-    };
-  }
-
-  const result = extractGarment(imageData);
+  // Se la foto è uno screenshot (collage con UI), il geometrico non va usato:
+  // piastrella e stampa pescherebbero pezzi di interfaccia, e il suo ritaglio
+  // incollerebbe l'intera schermata sul manichino. Lo scontorno ML invece
+  // funziona anche sugli screenshot (isola il capo, ignora l'UI): il capo
+  // scontornato resta disponibile per la piatta, il 3D e il "Su modello".
+  const isScreenshot = classifyGarmentImage(imageData).verdict === 'screenshot';
+  const result = isScreenshot ? { ok: false, dominantHex: garmentFallbackHex(item) } : extractGarment(imageData);
 
   // Piastrella e stampa (servono al 3D) si leggono da `imageData` PRIMA di qualunque
   // `cutout`, che azzera l'alpha dello sfondo: se giro l'ordine, ritaglierebbero un
@@ -217,6 +207,6 @@ export async function loadGarmentTexture(item) {
     printAt: result.ok ? result.printAt : null,
     colorHex: result.dominantHex,
     kind: textureUrl ? 'texture' : 'flat',
-    reason: textureUrl ? null : 'degraded',
+    reason: textureUrl ? null : isScreenshot ? 'screenshot' : 'degraded',
   };
 }
