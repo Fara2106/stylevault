@@ -13,24 +13,7 @@ import {
 } from '../../utils/categories';
 import { resizeImageFile } from '../../utils/imageUtils';
 import { fetchLinkMetadata, isValidHttpUrl } from '../../services/linkMetadata';
-import { classifyGarmentImage } from '../../utils/garmentClassifier';
 import './AddItemPage.css';
-
-/** Decodifica un dataURL in ImageData, per il classificatore. */
-const dataUrlToImageData = (dataUrl) =>
-  new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-      const ctx = canvas.getContext('2d', { willReadFrequently: true });
-      ctx.drawImage(img, 0, 0);
-      resolve(ctx.getImageData(0, 0, canvas.width, canvas.height));
-    };
-    img.onerror = () => reject(new Error('decode'));
-    img.src = dataUrl;
-  });
 
 const EMPTY_FORM = {
   name: '',
@@ -97,12 +80,11 @@ export default function AddItemPage() {
     if (!file) return;
     try {
       const dataUrl = await resizeImageFile(file, 600);
-      const imageData = await dataUrlToImageData(dataUrl);
-      if (classifyGarmentImage(imageData).verdict === 'screenshot') {
-        setErrors((prev) => ({ ...prev, photo: t('addItem.screenshotBlocked') }));
-      } else {
-        set('photo', dataUrl);
-      }
+      // Niente blocco sugli screenshot: il capo viene aggiunto comunque. Se è uno
+      // screenshot, l'avatar lo mostra in tinta unita (rete di sicurezza in
+      // loadGarmentTexture) invece della foto grezza, finché il Piano 2 non porta
+      // ritaglio + tap-to-cutout per scontornarlo davvero.
+      set('photo', dataUrl);
     } catch {
       /* file non leggibile: nessun cambiamento */
     }
@@ -220,11 +202,6 @@ export default function AddItemPage() {
             className="visually-hidden"
             onChange={handlePhotoUpload}
           />
-          {errors.photo && (
-            <p className="add-item__link-note add-item__link-note--error" role="alert">
-              {errors.photo}
-            </p>
-          )}
         </div>
       ) : (
         <div className="add-item__source">
