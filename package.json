@@ -19,6 +19,7 @@
     "vitest": "^4.1.10"
   },
   "dependencies": {
+    "@imgly/background-removal": "^1.7.0",
     "@supabase/supabase-js": "^2.110.1",
     "i18next": "^26.3.4",
     "react": "^19.2.7",
