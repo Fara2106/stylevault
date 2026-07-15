@@ -8,6 +8,8 @@
  */
 import { extractGarment } from './garmentTexture';
 import { classifyGarmentImage } from './garmentClassifier';
+import { getCachedCutout, putCachedCutout } from './garmentCutoutCache';
+import { removeGarmentBackground } from './backgroundRemoval';
 import { CLOTHING_COLORS } from './categories';
 
 const FALLBACK_HEX = '#cfc7bb';
@@ -204,7 +206,18 @@ export async function loadGarmentTexture(item) {
   const printUrl = result.print
     ? printToDataUrl(imageData, result.print, result.dominantHex)
     : null;
-  const textureUrl = cutout(imageData, result.mask, result.bounds);
+
+  // textureUrl (modalità piatta): scontorno ML on-device, cachato. Miss → @imgly →
+  // salva in cache. Se @imgly fallisce, ripiego sul ritaglio geometrico grezzo.
+  let textureUrl = await getCachedCutout(item);
+  if (!textureUrl) {
+    try {
+      textureUrl = await removeGarmentBackground(item.photo);
+      await putCachedCutout(item, textureUrl);
+    } catch {
+      textureUrl = cutout(imageData, result.mask, result.bounds);
+    }
+  }
 
   return {
     textureUrl,
