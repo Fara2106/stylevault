@@ -230,7 +230,8 @@
     "render3dHint": "Gratis e illimitata. Ruota la figura col dito. La forma del capo è generica: colore e fantasia sono i tuoi, il taglio no.",
     "renderFlatHint": "Gratis e illimitata. Leggera, non consuma batteria. La figura non ruota.",
     "renderNoWebgl": "Questo dispositivo non supporta la grafica 3D: resta disponibile la modalità piatta.",
-    "renderLoading": "Preparo la scena 3D..."
+    "renderLoading": "Preparo la scena 3D...",
+    "preparingGarments": "Preparo i capi..."
   },
   "advice": {
     "colorsHarmonious": "I colori si armonizzano bene tra loro",

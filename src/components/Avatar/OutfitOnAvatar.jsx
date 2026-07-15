@@ -40,6 +40,9 @@ export default function OutfitOnAvatar({ outfit, avatarConfig, onSlotClick, onRe
   const webgl = hasWebGL();
   const [renderMode, setRenderMode] = useState(readRenderMode);
   const [textures, setTextures] = useState({});
+  // Vero mentre lo scontorno (@imgly) sta preparando i capi non ancora in cache:
+  // il primo caricamento di un capo richiede qualche secondo, serve un segnale.
+  const [texturesLoading, setTexturesLoading] = useState(false);
   // Una volta caduti in piatto per un guasto del 3D (renderer non creabile o
   // context perso a metà sessione), il bottone 3D resta disabilitato: è una
   // via sola, niente retry automatici in loop. Solo stato di sessione: non va
@@ -79,6 +82,7 @@ export default function OutfitOnAvatar({ outfit, avatarConfig, onSlotClick, onRe
     const items = outfitItems(outfit || {});
     const cache = textureCacheRef.current;
     const pending = items.filter((item) => !cache.has(item.id));
+    if (pending.length > 0) setTexturesLoading(true);
 
     Promise.all(pending.map((item) => loadGarmentTexture(item).then((t) => cache.set(item.id, t)))).then(
       () => {
@@ -86,6 +90,7 @@ export default function OutfitOnAvatar({ outfit, avatarConfig, onSlotClick, onRe
         const next = {};
         for (const item of items) next[item.id] = cache.get(item.id);
         setTextures(next);
+        setTexturesLoading(false);
       }
     );
     return () => {
@@ -213,12 +218,17 @@ export default function OutfitOnAvatar({ outfit, avatarConfig, onSlotClick, onRe
               </Suspense>
             </Avatar3DBoundary>
           ) : (
-            <AvatarSvg
-              config={avatarConfig}
-              outfit={outfit}
-              textures={textures}
-              height={420}
-            />
+            <>
+              <AvatarSvg
+                config={avatarConfig}
+                outfit={outfit}
+                textures={textures}
+                height={420}
+              />
+              {texturesLoading && (
+                <p className="tryon__preparing sv-label">{t('avatar.preparingGarments')}</p>
+              )}
+            </>
           )}
         </div>
 

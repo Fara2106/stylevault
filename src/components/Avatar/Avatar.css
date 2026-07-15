@@ -332,3 +332,18 @@
 .tryon__loading {
   padding: var(--sv-space-6) 0;
 }
+
+/* Segnale mentre @imgly prepara i capi al primo caricamento (modalità piatta). */
+.tryon__preparing {
+  position: absolute;
+  bottom: var(--sv-space-3);
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 6px 12px;
+  background: color-mix(in srgb, var(--sv-surface) 88%, transparent);
+  border: 1px solid var(--sv-border);
+  border-radius: 999px;
+  box-shadow: var(--sv-shadow-soft);
+  white-space: nowrap;
+}
