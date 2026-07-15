@@ -188,34 +188,25 @@ export async function loadGarmentTexture(item) {
   }
 
   const result = extractGarment(imageData);
-  if (!result.ok) {
-    return {
-      textureUrl: null,
-      swatchUrl: null,
-      printUrl: null,
-      printAt: null,
-      colorHex: result.dominantHex,
-      kind: 'flat',
-      reason: 'degraded',
-    };
-  }
 
-  // Piastrella e stampa leggono `imageData` prima che `cutout` azzeri l'alpha
-  // dello sfondo: se giro l'ordine, ritaglierebbero un tessuto già bucato.
-  const swatchUrl = result.swatch ? cropToDataUrl(imageData, result.swatch) : null;
-  const printUrl = result.print
-    ? printToDataUrl(imageData, result.print, result.dominantHex)
-    : null;
+  // Piastrella e stampa (servono al 3D) si leggono da `imageData` PRIMA di qualunque
+  // `cutout`, che azzera l'alpha dello sfondo: se giro l'ordine, ritaglierebbero un
+  // tessuto già bucato. Nulli se il geometrico degrada (il 3D ripiega a tinta unita).
+  const swatchUrl = result.ok && result.swatch ? cropToDataUrl(imageData, result.swatch) : null;
+  const printUrl =
+    result.ok && result.print ? printToDataUrl(imageData, result.print, result.dominantHex) : null;
 
-  // textureUrl (modalità piatta): scontorno ML on-device, cachato. Miss → @imgly →
-  // salva in cache. Se @imgly fallisce, ripiego sul ritaglio geometrico grezzo.
+  // textureUrl (modalità piatta): scontorno ML on-device, cachato. Vale per TUTTE le
+  // foto non-screenshot, ANCHE quando il geometrico degrada (una foto che riempie il
+  // frame): è proprio lì che @imgly serve di più. Miss → @imgly → salva in cache. Se
+  // @imgly fallisce, ripiego sul ritaglio geometrico (solo se il geometrico è valido).
   let textureUrl = await getCachedCutout(item);
   if (!textureUrl) {
     try {
       textureUrl = await removeGarmentBackground(item.photo);
       await putCachedCutout(item, textureUrl);
     } catch {
-      textureUrl = cutout(imageData, result.mask, result.bounds);
+      textureUrl = result.ok ? cutout(imageData, result.mask, result.bounds) : null;
     }
   }
 
@@ -223,9 +214,9 @@ export async function loadGarmentTexture(item) {
     textureUrl,
     swatchUrl,
     printUrl,
-    printAt: result.printAt,
+    printAt: result.ok ? result.printAt : null,
     colorHex: result.dominantHex,
-    kind: 'texture',
-    reason: null,
+    kind: textureUrl ? 'texture' : 'flat',
+    reason: textureUrl ? null : 'degraded',
   };
 }
