@@ -3,6 +3,18 @@
  * Defines the configurable parameters of the stylized fashion-figure avatar.
  */
 
+/**
+ * Genere dell'avatar: sceglie la sagoma corporea di base (spalle/fianchi),
+ * indipendente da `bodyShape` che resta il fattore di larghezza applicato
+ * sopra la sagoma scelta. Default 'male': l'utente principale è maschile.
+ */
+export const GENDERS = [
+  { id: 'male', labelKey: 'avatar.genders.male' },
+  { id: 'female', labelKey: 'avatar.genders.female' },
+];
+
+export const DEFAULT_GENDER = 'male';
+
 export const BODY_SHAPES = [
   { id: 'slim', labelKey: 'avatar.bodyShapes.slim', widthFactor: 0.88 },
   { id: 'average', labelKey: 'avatar.bodyShapes.average', widthFactor: 1 },
@@ -43,6 +55,7 @@ export const HAIR_STYLES = [
 ];
 
 export const DEFAULT_AVATAR_CONFIG = {
+  gender: DEFAULT_GENDER,
   bodyShape: 'average',
   skinTone: 'medium',
   hairColor: 'brown',
@@ -59,4 +72,9 @@ export function getHairHex(hairColorId) {
 
 export function getBodyWidthFactor(bodyShapeId) {
   return BODY_SHAPES.find((b) => b.id === bodyShapeId)?.widthFactor || 1;
+}
+
+/** Genere valido, con ripiego sul default se assente o sconosciuto. */
+export function getGender(genderId) {
+  return GENDERS.find((g) => g.id === genderId)?.id || DEFAULT_GENDER;
 }
