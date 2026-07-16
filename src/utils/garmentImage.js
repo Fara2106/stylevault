@@ -10,6 +10,7 @@ import { extractGarment } from './garmentTexture';
 import { classifyGarmentImage } from './garmentClassifier';
 import { getCachedCutout, putCachedCutout } from './garmentCutoutCache';
 import { removeGarmentBackground } from './backgroundRemoval';
+import { garmentContentBounds } from './personSilhouette';
 import { CLOTHING_COLORS } from './categories';
 
 const FALLBACK_HEX = '#cfc7bb';
@@ -125,6 +126,26 @@ const printToDataUrl = (imageData, print, dominantHex) => {
   return out.toDataURL('image/png');
 };
 
+/** Ritaglia un PNG scontornato (dataURL) al riquadro del contenuto opaco. */
+const cropToContent = async (dataUrl) => {
+  const img = await loadImage(dataUrl);
+  const canvas = document.createElement('canvas');
+  canvas.width = img.naturalWidth;
+  canvas.height = img.naturalHeight;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(img, 0, 0);
+  const b = garmentContentBounds(ctx.getImageData(0, 0, canvas.width, canvas.height));
+  if (!b) return null;
+  const w = b.right - b.left + 1;
+  const h = b.bottom - b.top + 1;
+  if (w === canvas.width && h === canvas.height) return dataUrl;
+  const out = document.createElement('canvas');
+  out.width = w;
+  out.height = h;
+  out.getContext('2d').drawImage(img, b.left, b.top, w, h, 0, 0, w, h);
+  return out.toDataURL('image/png');
+};
+
 /**
  * @typedef {Object} GarmentTexture
  * @property {string|null} textureUrl PNG del capo intero scontornato (modalità piatta)
@@ -171,23 +192,13 @@ export async function loadGarmentTexture(item) {
     return flat('cors');
   }
 
-  // Rete di sicurezza per i capi già in guardaroba: se la foto è uno screenshot
-  // (collage con UI), lo scontorno geometrico incollerebbe l'intera schermata
-  // sul manichino. Meglio la sagoma in tinta unita. I capi NUOVI vengono già
-  // bloccati all'aggiunta (AddItemPage); questo copre il backlog.
-  if (classifyGarmentImage(imageData).verdict === 'screenshot') {
-    return {
-      textureUrl: null,
-      swatchUrl: null,
-      printUrl: null,
-      printAt: null,
-      colorHex: garmentFallbackHex(item),
-      kind: 'flat',
-      reason: 'screenshot',
-    };
-  }
-
-  const result = extractGarment(imageData);
+  // Se la foto è uno screenshot (collage con UI), il geometrico non va usato:
+  // piastrella e stampa pescherebbero pezzi di interfaccia, e il suo ritaglio
+  // incollerebbe l'intera schermata sul manichino. Lo scontorno ML invece
+  // funziona anche sugli screenshot (isola il capo, ignora l'UI): il capo
+  // scontornato resta disponibile per la piatta, il 3D e il "Su modello".
+  const isScreenshot = classifyGarmentImage(imageData).verdict === 'screenshot';
+  const result = isScreenshot ? { ok: false, dominantHex: garmentFallbackHex(item) } : extractGarment(imageData);
 
   // Piastrella e stampa (servono al 3D) si leggono da `imageData` PRIMA di qualunque
   // `cutout`, che azzera l'alpha dello sfondo: se giro l'ordine, ritaglierebbero un
@@ -196,10 +207,10 @@ export async function loadGarmentTexture(item) {
   const printUrl =
     result.ok && result.print ? printToDataUrl(imageData, result.print, result.dominantHex) : null;
 
-  // textureUrl (modalità piatta): scontorno ML on-device, cachato. Vale per TUTTE le
-  // foto non-screenshot, ANCHE quando il geometrico degrada (una foto che riempie il
-  // frame): è proprio lì che @imgly serve di più. Miss → @imgly → salva in cache. Se
-  // @imgly fallisce, ripiego sul ritaglio geometrico (solo se il geometrico è valido).
+  // textureUrl: scontorno ML on-device, cachato. Vale per TUTTE le foto, ANCHE
+  // quando il geometrico degrada (una foto che riempie il frame) e ANCHE per gli
+  // screenshot: è proprio lì che @imgly serve di più. Miss → @imgly → salva in
+  // cache. Se @imgly fallisce, ripiego sul ritaglio geometrico (se valido).
   let textureUrl = await getCachedCutout(item);
   if (!textureUrl) {
     try {
@@ -210,6 +221,18 @@ export async function loadGarmentTexture(item) {
     }
   }
 
+  // Il PNG scontornato conserva le dimensioni della foto intera: in uno
+  // screenshot il capo occupa un angolo del frame e sui pannelli 3D
+  // arriverebbe minuscolo e fuori centro. Si ritaglia al contenuto opaco
+  // (gruccia esclusa). Se qualcosa va storto si tiene il PNG com'è.
+  if (textureUrl) {
+    try {
+      textureUrl = (await cropToContent(textureUrl)) || textureUrl;
+    } catch {
+      /* PNG illeggibile: meglio intero che niente */
+    }
+  }
+
   return {
     textureUrl,
     swatchUrl,
@@ -217,6 +240,6 @@ export async function loadGarmentTexture(item) {
     printAt: result.ok ? result.printAt : null,
     colorHex: result.dominantHex,
     kind: textureUrl ? 'texture' : 'flat',
-    reason: textureUrl ? null : 'degraded',
+    reason: textureUrl ? null : isScreenshot ? 'screenshot' : 'degraded',
   };
 }

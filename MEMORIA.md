@@ -3,6 +3,57 @@
 > File di ripartenza: se apri una nuova chat, leggi questo file per riprendere il lavoro
 > esattamente da dove eravamo. Va aggiornato a ogni avanzamento significativo.
 
+## Novità 2026-07-16 — scheda "Su di te": la persona vera vestita, gratis on-device
+
+Richiesta di Lorenzo: «il risultato possibilmente senza avatar e con una foto di
+persona vera, e questa persona deve essere vestita con i capi caricati sia da
+link, che da screenshot che da foto, queste ultime due ovviamente scontornate»,
+«le proporzioni devono essere per la persona caricata nella foto, anche quella
+scontornata», «si può evitare l'AI di Google? facciamo girare tutto in locale».
+
+**FATTO e verificato a schermo** (branch `feat/scontorno-imgly` → `main`).
+Niente Google, niente costi: tutto on-device.
+
+- **Terza scheda in /tryon**: "Sull'avatar" | **"Su di te"** | "Sulla tua foto (AI)".
+  Arrivando con outfit pronto + foto di riferimento caricata si apre direttamente
+  "Su di te" (richiesta esplicita: vedere la persona, non l'avatar).
+- **Pipeline**: foto persona → scontorno @imgly (stessa cache IndexedDB dei capi,
+  id riservato `__person__`) → `personSilhouette.js` (puro: riquadro, spalle,
+  fianchi, cavallo, caviglie dall'alpha) → `modelComposer.js` (puro: rettangoli
+  di posa scalati sulle proporzioni REALI del corpo) → `ModelTryOn.jsx` (SVG:
+  sfondo studio, ombra a terra, persona, capi sopra).
+- **Scontorno esteso agli screenshot**: `loadGarmentTexture` non li blocca più a
+  tinta unita — @imgly isola il capo anche da uno screenshot intero di shop
+  (verificato: pagina prodotto finta 1280px → solo i jeans addosso). Il
+  geometrico resta escluso (piastrella/stampa pescherebbero UI): piatta = tinta
+  unita per gli screenshot, 3D e "Su di te" = capo scontornato.
+- **textureUrl ora ritagliato al contenuto** (`garmentContentBounds`): senza i
+  margini trasparenti del frame intero (sennò sui pannelli 3D il capo da
+  screenshot arrivava minuscolo) e **senza il gancio della gruccia** (righe
+  strette in cima scartate — le foto di capi appesi sono comunissime).
+- **Lezioni dai dati veri** (diagnosi in console sulle funzioni pure, non dai test):
+  1. le spalle NON sono "la riga più larga in alto": le braccia scostate vincono
+     già a metà torace → riga fissa al 18% dell'altezza (antropometria);
+  2. la mano scontornata può staccarsi dal corpo → i fianchi misurano solo la
+     corsa che contiene l'asse, e il cavallo dev'essere un vuoto A CAVALLO
+     dell'asse (sennò la fessura braccio-fianco sembra il cavallo);
+  3. scarpe: foto con aspect ≥ 1.4 = già un paio → disegnata una volta sola,
+     sotto i piedi; foto strette = una copia per piede.
+- **Tarature a schermo**: top 1.3× spalle (colletto a -4% altezza), pantaloni
+  vita = cavallo - 13%, orlo alla caviglia, cap larghezza 1.25× fianchi.
+- **Prova end-to-end (2026-07-16)**: persona vera da foto stock a figura intera;
+  t-shirt nera DA FOTO (appesa a gruccia), jeans DA SCREENSHOT (pagina shop
+  finta con UI), sneakers DA LINK (og:image Wikipedia, CORS ok). Risultato:
+  `docs/verifiche/2026-07-16-su-di-te/`. 162 test verdi.
+- **Residui**: capi da link con CDN senza CORS restano foto intera (non
+  scontornabile in browser — per spec va bene); le maniche/orlo del vestito
+  originale della persona possono spuntare (collage 2D, niente warping);
+  @imgly su mobile ancora da verificare (24MB WASM).
+- In questo giro è entrato anche il **genere dell'avatar** (M/F, sagome busto
+  SVG + profili mesh 3D, chip nell'editor) e la **piatta a piastrella di
+  tessuto** (capo con tessuto reale = piastrella clippata nella sagoma + stampa
+  riappoggiata, come nel 3D).
+
 ## Situazione attuale (2026-07-10)
 
 **L'app è ONLINE in MODALITÀ CLOUD: account veri, dati e foto su Supabase.**

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import AvatarSvg from './AvatarSvg';
 import Icon from '../common/Icon';
 import {
+  GENDERS,
   BODY_SHAPES,
   SKIN_TONES,
   HAIR_COLORS,
@@ -80,6 +81,21 @@ export default function AvatarEditor({
       </div>
 
       <div className="avatar-editor__controls">
+        <div className="avatar-editor__group">
+          <span className="sv-label">{t('avatar.gender')}</span>
+          <div className="avatar-editor__options">
+            {GENDERS.map((gender) => (
+              <button
+                key={gender.id}
+                className={`avatar-editor__chip ${config.gender === gender.id ? 'avatar-editor__chip--active' : ''}`}
+                onClick={() => onChange({ gender: gender.id })}
+              >
+                {t(gender.labelKey)}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="avatar-editor__group">
           <span className="sv-label">{t('avatar.bodyShape')}</span>
           <div className="avatar-editor__options">

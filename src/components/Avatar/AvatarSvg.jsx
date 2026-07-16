@@ -3,8 +3,36 @@ import {
   getSkinHex,
   getHairHex,
   getBodyWidthFactor,
+  getGender,
 } from '../../utils/avatarOptions';
 import { garmentLayers } from '../../utils/tryonComposer';
+
+/**
+ * Sagome del busto e delle braccia, per genere: non più un'unica clessidra
+ * unisex. La femminile è l'hourglass originale (spalle strette, vita
+ * marcata, fianchi più larghi delle spalle); la maschile ha spalle più
+ * larghe delle spalle femminili, vita meno marcata e fianchi più stretti
+ * delle spalle (silhouette a V). Gambe e piedi restano condivisi: la
+ * differenza principale fra le due sagome sta nel busto.
+ */
+const BODY_PATHS = {
+  female: {
+    torso:
+      'M100 66 C84 66 70 72 68 82 C65 98 75 116 77 134 C79 152 72 168 70 184 C68 197 78 206 100 206 C122 206 132 197 130 184 C128 168 121 152 123 134 C125 116 135 98 132 82 C130 72 116 66 100 66 Z',
+    armLeft:
+      'M68 82 C59 94 57 118 56 140 C55.5 155 54 170 53 182 C52.6 189 60 190 61 184 C63 170 65 155 66.5 140 C68 122 70 102 73 90 Z',
+    armRight:
+      'M132 82 C141 94 143 118 144 140 C144.5 155 146 170 147 182 C147.4 189 140 190 139 184 C137 170 135 155 133.5 140 C132 122 130 102 127 90 Z',
+  },
+  male: {
+    torso:
+      'M100 64 C80 64 62 70 60 80 C57 96 66 112 68 130 C69 146 67 162 66 180 C65 196 76 206 100 206 C124 206 135 196 134 180 C133 162 131 146 132 130 C134 112 143 96 140 80 C138 70 120 64 100 64 Z',
+    armLeft:
+      'M60 80 C50 92 48 118 47 142 C46.5 158 45 174 44 186 C43.6 193 52 194 53 188 C55 174 57 158 58.5 142 C60 122 62 100 65 88 Z',
+    armRight:
+      'M140 80 C150 92 152 118 153 142 C153.5 158 155 174 156 186 C156.4 193 147 194 146 188 C144 174 142 158 140.5 142 C139 122 137 100 134 88 Z',
+  },
+};
 
 /**
  * Sagome degli indumenti nel sistema di coordinate del corpo (viewBox 200x400):
@@ -53,22 +81,6 @@ const GARMENT_SHAPES = {
 };
 
 /**
- * Riquadri di ancoraggio per gli indumenti scontornati (foto trasparente).
- * Coordinate nel viewBox 200×400.
- */
-const GARMENT_ANCHORS = {
-  top:       { x: 48, y: 60,  width: 104, height: 100 },
-  dress:     { x: 50, y: 60,  width: 100, height: 240 },
-  // Il capo si adatta senza essere tagliato (`meet`), quindi la scala la decide
-  // il lato più stretto. Con un riquadro largo 76 i pantaloni si fermavano a
-  // metà polpaccio: era la larghezza a strozzarli, non l'altezza. A 96 arrivano
-  // alla caviglia (i piedi stanno a y = 368).
-  bottom:    { x: 52, y: 128, width: 96,  height: 232 },
-  outerwear: { x: 40, y: 56,  width: 120, height: 155 },
-  shoes:     { x: 74, y: 350, width: 52,  height: 30 },
-};
-
-/**
  * Silhouette stilizzata da figurino di moda, parametrica.
  * Corporatura: scala orizzontale del corpo (la testa resta fissa).
  * viewBox 200x400, esportata con height richiesta.
@@ -80,6 +92,7 @@ export default function AvatarSvg({ config, outfit, textures, height = 320, clas
   const hair = getHairHex(config?.hairColor);
   const w = getBodyWidthFactor(config?.bodyShape);
   const style = config?.hairStyle || 'medium';
+  const body = BODY_PATHS[getGender(config?.gender)];
   const uid = useId();
   const layers = garmentLayers(outfit);
 
@@ -87,35 +100,80 @@ export default function AvatarSvg({ config, outfit, textures, height = 320, clas
     const shape = GARMENT_SHAPES[kind];
     if (!shape) return null;
     const texture = textures?.[item.id];
+    const clipId = `${uid}-${kind}`;
 
-    // Capo scontornato: si appoggia sul corpo intero, senza ritagli.
-    if (texture?.textureUrl) {
+    const clipDef = (
+      <clipPath id={clipId}>
+        {shape.paths.map((d, i) => (
+          <path key={i} d={d} />
+        ))}
+      </clipPath>
+    );
+    const outline = shape.paths.map((d, i) => (
+      <path key={`o${i}`} d={d} fill="none" stroke="rgba(26, 26, 26, 0.18)" strokeWidth="1" />
+    ));
+
+    // Capo scontornato con tessuto reale: la sagoma resta quella dell'app (non
+    // il profilo della foto), riempita da una piastrella di tessuto ripetuta
+    // e clippata sulla sagoma — stesso principio della modalità 3D, dove la
+    // forma viene dalla mesh e il tessuto da una piastrella applicata sopra.
+    // La stampa/logo, se c'è, va rimessa separatamente nella sua posizione
+    // relativa sul capo (printAt), non incollata dentro la piastrella.
+    if (texture?.swatchUrl) {
+      const patternId = `${uid}-${kind}-swatch`;
+      const tileW = shape.box.width / 3;
+      const tileH = shape.box.height / 3;
+      const printAt = texture.printAt;
+      const printW = printAt ? printAt.w * shape.box.width : 0;
+      const printH = printAt ? printAt.h * shape.box.height : 0;
       return (
-        <image
-          key={kind}
-          href={texture.textureUrl}
-          {...GARMENT_ANCHORS[kind]}
-          preserveAspectRatio="xMidYMin meet"
-        />
+        <g key={kind}>
+          {clipDef}
+          <pattern
+            id={patternId}
+            patternUnits="userSpaceOnUse"
+            x={shape.box.x}
+            y={shape.box.y}
+            width={tileW}
+            height={tileH}
+          >
+            <image
+              href={texture.swatchUrl}
+              x="0"
+              y="0"
+              width={tileW}
+              height={tileH}
+              preserveAspectRatio="xMidYMid slice"
+            />
+          </pattern>
+          <g clipPath={`url(#${clipId})`}>
+            <rect {...shape.box} fill={`url(#${patternId})`} />
+            {texture.printUrl && printAt && (
+              <image
+                href={texture.printUrl}
+                x={shape.box.x + printAt.cx * shape.box.width - printW / 2}
+                y={shape.box.y + printAt.cy * shape.box.height - printH / 2}
+                width={printW}
+                height={printH}
+                preserveAspectRatio="xMidYMid meet"
+              />
+            )}
+          </g>
+          {outline}
+        </g>
       );
     }
 
-    // Ripiego: la sagoma dell'indumento in tinta unita.
-    const clipId = `${uid}-${kind}`;
+    // Ripiego: nessuna foto leggibile o nessun tessuto isolabile, la sagoma
+    // dell'indumento resta in tinta unita.
     const fill = texture?.colorHex || '#cfc7bb';
     return (
       <g key={kind}>
-        <clipPath id={clipId}>
-          {shape.paths.map((d, i) => (
-            <path key={i} d={d} />
-          ))}
-        </clipPath>
+        {clipDef}
         <g clipPath={`url(#${clipId})`}>
           <rect {...shape.box} fill={fill} />
         </g>
-        {shape.paths.map((d, i) => (
-          <path key={`o${i}`} d={d} fill="none" stroke="rgba(26, 26, 26, 0.18)" strokeWidth="1" />
-        ))}
+        {outline}
       </g>
     );
   };
@@ -147,20 +205,11 @@ export default function AvatarSvg({ config, outfit, textures, height = 320, clas
       <g transform={`translate(100 0) scale(${w} 1) translate(-100 0)`}>
         {/* collo */}
         <rect x="95" y="52" width="10" height="18" rx="4" fill={skin} />
-        {/* torso a clessidra morbida */}
-        <path
-          d="M100 66 C84 66 70 72 68 82 C65 98 75 116 77 134 C79 152 72 168 70 184 C68 197 78 206 100 206 C122 206 132 197 130 184 C128 168 121 152 123 134 C125 116 135 98 132 82 C130 72 116 66 100 66 Z"
-          fill={skin}
-        />
+        {/* torso: sagoma dipende dal genere (vedi BODY_PATHS) */}
+        <path d={body.torso} fill={skin} />
         {/* braccia */}
-        <path
-          d="M68 82 C59 94 57 118 56 140 C55.5 155 54 170 53 182 C52.6 189 60 190 61 184 C63 170 65 155 66.5 140 C68 122 70 102 73 90 Z"
-          fill={skin}
-        />
-        <path
-          d="M132 82 C141 94 143 118 144 140 C144.5 155 146 170 147 182 C147.4 189 140 190 139 184 C137 170 135 155 133.5 140 C132 122 130 102 127 90 Z"
-          fill={skin}
-        />
+        <path d={body.armLeft} fill={skin} />
+        <path d={body.armRight} fill={skin} />
         {/* gambe */}
         <path
           d="M79 202 C81 242 85 282 87 320 C88 336 89 352 90 362 L98 362 C98 348 98 330 98 316 C98 278 99 240 99 206 Z"
