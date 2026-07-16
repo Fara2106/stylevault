@@ -44,8 +44,13 @@ export default function TryOnPage() {
   const [pickerSlot, setPickerSlot] = useState(null);
   const [saved, setSaved] = useState(false);
 
-  // Due modalità di prova: sagome sull'avatar (gratis) o foto AI (Gemini)
-  const [mode, setMode] = useState('avatar');
+  // Tre modalità di prova: avatar (gratis), "Su di te" (gratis, foto vera),
+  // foto AI (Gemini). Arrivando con un outfit già pronto e con la foto di
+  // riferimento caricata si parte direttamente dalla persona vera: è quello
+  // che si vuole vedere; l'avatar resta per comporre da zero.
+  const [mode, setMode] = useState(() =>
+    referencePhoto && (state?.outfit || state?.item) ? 'model' : 'avatar'
+  );
 
   // Try-on fotografico (Gemini): chiave dell'utente, salvata solo nel browser
   const geminiKey = getGeminiKey();

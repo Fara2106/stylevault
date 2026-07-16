@@ -11,23 +11,25 @@
  * I valori sono tarati a schermo su foto vere, non calcolati.
  */
 
-export const TOP_WIDTH_FACTOR = 1.35;
+export const TOP_WIDTH_FACTOR = 1.3;
 export const DRESS_WIDTH_FACTOR = 1.25;
 export const OUTER_WIDTH_FACTOR = 1.5;
 /** I pantaloni scalano sull'altezza vita→caviglia; una foto anomala molto
  * larga (capo steso di traverso) non deve coprire mezza figura. */
-export const BOTTOM_MAX_WIDTH_FACTOR = 1.6;
+export const BOTTOM_MAX_WIDTH_FACTOR = 1.25;
 
 /** Quanto il colletto sale sopra la linea delle spalle, in frazione dell'altezza figura. */
-const TOP_NECK_RISE = 0.03;
+const TOP_NECK_RISE = 0.04;
 const OUTER_NECK_RISE = 0.04;
 /** La vita dei pantaloni sta sopra il cavallo di questa frazione dell'altezza. */
 const WAIST_ABOVE_CROTCH = 0.13;
-/** L'orlo dei pantaloni scende un filo oltre le caviglie. */
-const HEM_BELOW_ANKLE = 0.02;
 const SHOE_HEIGHT = 0.09;
 const SHOE_SPREAD = 0.22;
 const SHOE_DROP = 0.01;
+/** Foto più larga di così = mostra già un paio (o una scarpa di profilo
+ * grande): va disegnata una volta sola, non una copia per piede. */
+const SHOE_PAIR_ASPECT = 1.4;
+const SHOE_PAIR_HEIGHT = 0.1;
 
 /** Rettangolo centrato su `cx`, con la larghezza data e l'altezza dal rapporto della foto. */
 const byWidth = (kind, cx, y, width, aspect) => ({
@@ -54,7 +56,7 @@ export function garmentPlacements(person, garments) {
   if (garments.bottom) {
     const { aspect } = garments.bottom;
     const y = person.crotchY - WAIST_ABOVE_CROTCH * H;
-    const hem = person.ankleY + HEM_BELOW_ANKLE * H;
+    const hem = person.ankleY;
     let height = hem - y;
     let width = height * aspect;
     const cap = person.hips.width * BOTTOM_MAX_WIDTH_FACTOR;
@@ -92,12 +94,20 @@ export function garmentPlacements(person, garments) {
   }
 
   if (garments.shoes) {
-    const height = SHOE_HEIGHT * H;
-    const width = height * garments.shoes.aspect;
-    const y = person.box.bottom + SHOE_DROP * H - height;
-    for (const side of [-1, 1]) {
-      const cx = person.cx + side * person.hips.width * SHOE_SPREAD;
-      out.push({ kind: 'shoes', x: cx - width / 2, y, width, height });
+    const { aspect } = garments.shoes;
+    if (aspect >= SHOE_PAIR_ASPECT) {
+      const height = SHOE_PAIR_HEIGHT * H;
+      const width = height * aspect;
+      const y = person.box.bottom + SHOE_DROP * H - height;
+      out.push({ kind: 'shoes', x: person.cx - width / 2, y, width, height });
+    } else {
+      const height = SHOE_HEIGHT * H;
+      const width = height * aspect;
+      const y = person.box.bottom + SHOE_DROP * H - height;
+      for (const side of [-1, 1]) {
+        const cx = person.cx + side * person.hips.width * SHOE_SPREAD;
+        out.push({ kind: 'shoes', x: cx - width / 2, y, width, height });
+      }
     }
   }
 

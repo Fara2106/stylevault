@@ -31,7 +31,7 @@ describe('garmentPlacements', () => {
     expect(top.width).toBeCloseTo(width, 5);
     expect(top.height).toBeCloseTo(width / 1.2, 5);
     expect(top.x).toBeCloseTo(person.cx - width / 2, 5);
-    expect(top.y).toBeCloseTo(person.shoulders.y - 0.03 * H, 5);
+    expect(top.y).toBeCloseTo(person.shoulders.y - 0.04 * H, 5);
   });
 
   it('abito: come il top ma con fattore proprio', () => {
@@ -44,7 +44,7 @@ describe('garmentPlacements', () => {
     const [bottom] = garmentPlacements(person, { bottom: { aspect: 0.5 } });
     expect(bottom.kind).toBe('bottom');
     const y = person.crotchY - 0.13 * H;
-    const height = person.ankleY + 0.02 * H - y;
+    const height = person.ankleY - y;
     expect(bottom.y).toBeCloseTo(y, 5);
     expect(bottom.height).toBeCloseTo(height, 5);
     expect(bottom.width).toBeCloseTo(height * 0.5, 5);
@@ -57,7 +57,7 @@ describe('garmentPlacements', () => {
     expect(bottom.width).toBeCloseTo(cap, 5);
     expect(bottom.height).toBeCloseTo(cap / 2, 5);
     // resta ancorato in basso, alle caviglie
-    expect(bottom.y + bottom.height).toBeCloseTo(person.ankleY + 0.02 * H, 5);
+    expect(bottom.y + bottom.height).toBeCloseTo(person.ankleY, 5);
   });
 
   it('capospalla: più largo del top', () => {
@@ -66,14 +66,25 @@ describe('garmentPlacements', () => {
     expect(outer.width).toBeCloseTo(person.shoulders.width * OUTER_WIDTH_FACTOR, 5);
   });
 
-  it('scarpe: una per piede, ancorate al fondo della figura', () => {
+  it('scarpe da foto larga (già un paio, o di profilo): una sola immagine centrata', () => {
     const shoes = garmentPlacements(person, { shoes: { aspect: 2 } });
+    expect(shoes).toHaveLength(1);
+    const [shoe] = shoes;
+    expect(shoe.kind).toBe('shoes');
+    expect(shoe.height).toBeCloseTo(0.1 * H, 5);
+    expect(shoe.width).toBeCloseTo(0.1 * H * 2, 5);
+    expect(shoe.x + shoe.width / 2).toBeCloseTo(person.cx, 5);
+    expect(shoe.y + shoe.height).toBeCloseTo(person.box.bottom + 0.01 * H, 5);
+  });
+
+  it('scarpe da foto stretta (una scarpa sola): una copia per piede', () => {
+    const shoes = garmentPlacements(person, { shoes: { aspect: 0.9 } });
     expect(shoes).toHaveLength(2);
     const height = 0.09 * H;
     for (const shoe of shoes) {
       expect(shoe.kind).toBe('shoes');
       expect(shoe.height).toBeCloseTo(height, 5);
-      expect(shoe.width).toBeCloseTo(height * 2, 5);
+      expect(shoe.width).toBeCloseTo(height * 0.9, 5);
       expect(shoe.y + shoe.height).toBeCloseTo(person.box.bottom + 0.01 * H, 5);
     }
     const centers = shoes.map((s) => s.x + s.width / 2).sort((a, b) => a - b);
@@ -86,7 +97,7 @@ describe('garmentPlacements', () => {
       top: { aspect: 1 },
       bottom: { aspect: 0.5 },
       outerwear: { aspect: 1 },
-      shoes: { aspect: 2 },
+      shoes: { aspect: 0.9 },
     }).map((p) => p.kind);
     expect(kinds).toEqual(['bottom', 'top', 'outerwear', 'shoes', 'shoes']);
   });

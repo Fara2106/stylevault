@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { alphaBounds, analyzeSilhouette } from './personSilhouette';
+import { alphaBounds, analyzeSilhouette, garmentContentBounds } from './personSilhouette';
 
 /**
  * Silhouette sintetica di una persona in piedi, frontale, braccia lungo i
@@ -79,6 +79,36 @@ describe('alphaBounds', () => {
   });
 });
 
+describe('garmentContentBounds', () => {
+  it('scarta il gancio della gruccia: righe strette sopra il capo', () => {
+    const image = makeImage((setRow) => {
+      // gancio: colonna stretta (6 px) sopra la maglietta
+      for (let y = 5; y < 30; y++) setRow(y, 47, 53);
+      // maglietta appesa: da y=30 quasi tutta la larghezza
+      for (let y = 30; y < 120; y++) setRow(y, 15, 86);
+    });
+    const b = garmentContentBounds(image);
+    expect(b.top).toBe(30);
+    expect(b).toMatchObject({ left: 15, right: 85, bottom: 119 });
+  });
+
+  it('senza gruccia coincide col riquadro dei pixel opachi', () => {
+    const image = makeImage((setRow) => {
+      for (let y = 20; y < 100; y++) setRow(y, 20, 81);
+    });
+    expect(garmentContentBounds(image)).toMatchObject({
+      top: 20,
+      bottom: 99,
+      left: 20,
+      right: 80,
+    });
+  });
+
+  it('è null su un\'immagine vuota', () => {
+    expect(garmentContentBounds(makeImage(() => {}))).toBeNull();
+  });
+});
+
 describe('analyzeSilhouette', () => {
   const image = makeImage((setRow) => paintPerson(setRow));
   const person = analyzeSilhouette(image);
@@ -122,5 +152,26 @@ describe('analyzeSilhouette', () => {
 
   it('asse del corpo: media fra centro spalle e centro fianchi', () => {
     expect(person.cx).toBe(50);
+  });
+
+  describe('mano staccata dal corpo (braccia lungo i fianchi)', () => {
+    // La mano scontornata può risultare separata dal corpo: una macchia
+    // a destra del bacino. Non deve gonfiare i fianchi né sembrare un cavallo.
+    const withHand = analyzeSilhouette(
+      makeImage((setRow) => {
+        paintPerson(setRow, { splitLegs: false });
+        for (let y = 95; y < 118; y++) setRow(y, 78, 88); // mano a destra
+      })
+    );
+
+    it('i fianchi misurano il solo corpo, non la mano', () => {
+      expect(withHand.hips.width).toBe(45);
+      expect(withHand.hips.right).toBeLessThan(78);
+    });
+
+    it('la separazione mano-corpo non è un cavallo (non sta sull\'asse)', () => {
+      // gambe unite: il cavallo deve restare la stima al 53%
+      expect(withHand.crotchY).toBe(10 + Math.round(0.53 * 201));
+    });
   });
 });

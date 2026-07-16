@@ -9,7 +9,7 @@
  */
 import { removeGarmentBackground } from './backgroundRemoval';
 import { getCachedCutout, putCachedCutout } from './garmentCutoutCache';
-import { alphaBounds, analyzeSilhouette } from './personSilhouette';
+import { analyzeSilhouette, garmentContentBounds } from './personSilhouette';
 
 const loadImage = (src) =>
   new Promise((resolve, reject) => {
@@ -53,9 +53,10 @@ export async function analyzePersonImage(cutoutUrl) {
 }
 
 /**
- * Ritaglia il PNG scontornato del capo al suo contenuto (il riquadro dei pixel
- * opachi): serve il rapporto larghezza/altezza VERO del capo, senza i margini
- * trasparenti che @imgly lascia attorno (la foto intera meno lo sfondo).
+ * Ritaglia il PNG scontornato del capo al suo contenuto: il riquadro dei pixel
+ * opachi, senza i margini trasparenti che @imgly lascia attorno (la foto intera
+ * meno lo sfondo) e senza il gancio della gruccia (garmentContentBounds).
+ * Serve il rapporto larghezza/altezza VERO del capo.
  * @returns {Promise<{url:string, aspect:number}|null>}
  */
 export async function trimmedGarment(cutoutUrl) {
@@ -68,7 +69,7 @@ export async function trimmedGarment(cutoutUrl) {
     // si usa la foto com'è (il chiamante decide).
     return null;
   }
-  const b = alphaBounds(imageData);
+  const b = garmentContentBounds(imageData);
   if (!b) return null;
   const w = b.right - b.left + 1;
   const h = b.bottom - b.top + 1;
