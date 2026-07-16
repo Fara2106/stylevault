@@ -3,6 +3,42 @@
 > File di ripartenza: se apri una nuova chat, leggi questo file per riprendere il lavoro
 > esattamente da dove eravamo. Va aggiornato a ogni avanzamento significativo.
 
+## Novità 2026-07-16 (bis) — "Su di te" col WARPING: il capo segue il corpo
+
+Richiesta di Lorenzo: «E non si può fare meglio?» → «procedi con i primi 2»
+(1: coprire i vestiti originali; 2: posa vera). FATTO, MERGED e LIVE.
+Sempre gratis e on-device; il 3° gradino (fotorealismo generativo) resta
+fuori dai vincoli (serve GPU server, gratis affidabile non esiste).
+
+- **MediaPipe Tasks Vision** (`bodyAnalysis.js`, lazy): ImageSegmenter
+  multiclass (classe "vestiti") + PoseLandmarker lite. WASM da jsdelivr
+  pinnato, modelli dal CDN MediaPipe (~20MB al primo uso, poi cache HTTP):
+  è SOLO download di file, l'elaborazione è locale, la foto non esce.
+- **`modelWarp.js` puro (16 test)**: piani di warping riga per riga.
+  Top: ogni riga copre lo span dei vestiti indossati (via maniche/orlo del
+  capo vecchio che spuntavano); righe strette (scollo) proporzionali e
+  centrate; nella zona colletto lookahead verso il basso (le spalle nuove
+  coprono le vecchie). Bottom: mappa verticale LINEARE vita→caviglia
+  (ancorare il cavallo del capo al cavallo della persona distorce quando
+  in foto le cosce si toccano), orizzontale riga per riga: una corsa→
+  tronco/unione gambe, due corse→una per gamba lungo anca→ginocchio→
+  caviglia, riga fusa→metà per gamba. Orlo proporzionale (gli shorts non
+  arrivano alle caviglie). Scarpe alle caviglie vere.
+- **Ripiego totale**: se segmentazione E posa falliscono si torna ai
+  rettangoli del giro precedente (ModelTryOn tiene entrambe le strade).
+- **Lezioni**: la mano davanti alla coscia è "pelle" e va ESCLUSA dalle
+  corse delle gambe (creava un gradino); i moduli ES ricaricati in console
+  vanno importati con cache-buster `?t=` sennò si testa il codice vecchio;
+  il ciclo stretto di taratura = pipeline in console + POST a un sink HTTP
+  locale, senza cliccare la UI ogni volta.
+- Prove a schermo (stessa persona; capo da foto con gruccia, jeans da
+  screenshot in DIAGONALE e jeans dritti da foto):
+  `docs/verifiche/2026-07-16-su-di-te/risultato-warping-*.jpg`. 178 test.
+- **Residui**: la mano davanti alla coscia può scoprire una scheggia del
+  pantalone originale; braccia molto piegate/pose dinamiche non seguite
+  (le maniche restano row-based); mobile da verificare (24MB @imgly +
+  ~20MB MediaPipe al primo uso).
+
 ## Novità 2026-07-16 — scheda "Su di te": la persona vera vestita, gratis on-device
 
 Richiesta di Lorenzo: «il risultato possibilmente senza avatar e con una foto di
