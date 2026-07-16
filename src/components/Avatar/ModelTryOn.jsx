@@ -7,6 +7,7 @@ import {
   analyzePersonImage,
   trimmedGarment,
   imageAspect,
+  buildWarpedLayers,
 } from '../../utils/modelImage';
 import { garmentPlacements } from '../../utils/modelComposer';
 import './Avatar.css';
@@ -84,6 +85,45 @@ export default function ModelTryOn({ outfit, referencePhoto, height = 480 }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [itemsKey]);
 
+  // Livelli warpati (segmentazione vestiti + posa, on-device): il capo segue
+  // riga per riga la sagoma vestita e le gambe vere. Se i modelli ML non
+  // caricano si resta sui rettangoli classici (placements qui sotto).
+  const [warped, setWarped] = useState(null);
+  const [warping, setWarping] = useState(false);
+  const assetsKey = Object.entries(assets)
+    .map(([k, a]) => `${k}:${a ? a.url.length : 0}`)
+    .join(',');
+
+  useEffect(() => {
+    let cancelled = false;
+    if (personState.status !== 'ready' || Object.keys(assets).length === 0) {
+      setWarped(null);
+      setWarping(false);
+      return undefined;
+    }
+    setWarping(true);
+    buildWarpedLayers({
+      photo: referencePhoto,
+      cutoutUrl: personState.cutoutUrl,
+      person: personState.person,
+      assets,
+    })
+      .then((w) => {
+        if (cancelled) return;
+        setWarped(w);
+        setWarping(false);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setWarped(null);
+        setWarping(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [personState, assetsKey, referencePhoto]);
+
   // Rettangoli di posa nelle coordinate della foto della persona.
   const placements = useMemo(() => {
     if (personState.status !== 'ready') return [];
@@ -140,23 +180,43 @@ export default function ModelTryOn({ outfit, referencePhoto, height = 480 }) {
           fill="rgba(26, 26, 26, 0.10)"
         />
         <image href={cutoutUrl} x="0" y="0" width={natW} height={natH} />
-        {placements.map((p, i) => {
-          const asset = assets[p.kind] || (p.kind === 'dress' ? assets.dress : null);
-          if (!asset) return null;
-          return (
-            <image
-              key={`${p.kind}-${i}`}
-              href={asset.url}
-              x={p.x}
-              y={p.y}
-              width={p.width}
-              height={p.height}
-              preserveAspectRatio="none"
-            />
-          );
-        })}
+        {warped ? (
+          <>
+            {warped.layers.map((l) => (
+              <image key={l.kind} href={l.url} x="0" y="0" width={natW} height={natH} />
+            ))}
+            {warped.shoes.map((p, i) => (
+              <image
+                key={`shoes-${i}`}
+                href={assets.shoes?.url}
+                x={p.x}
+                y={p.y}
+                width={p.width}
+                height={p.height}
+                preserveAspectRatio="none"
+              />
+            ))}
+          </>
+        ) : (
+          !warping &&
+          placements.map((p, i) => {
+            const asset = assets[p.kind] || (p.kind === 'dress' ? assets.dress : null);
+            if (!asset) return null;
+            return (
+              <image
+                key={`${p.kind}-${i}`}
+                href={asset.url}
+                x={p.x}
+                y={p.y}
+                width={p.width}
+                height={p.height}
+                preserveAspectRatio="none"
+              />
+            );
+          })
+        )}
       </svg>
-      {garmentsLoading && (
+      {(garmentsLoading || warping) && (
         <p className="tryon__preparing sv-label">{t('avatar.preparingGarments')}</p>
       )}
     </div>
