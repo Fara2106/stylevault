@@ -38,6 +38,11 @@ fuori dai vincoli (serve GPU server, gratis affidabile non esiste).
   pantalone originale; braccia molto piegate/pose dinamiche non seguite
   (le maniche restano row-based); mobile da verificare (24MB @imgly +
   ~20MB MediaPipe al primo uso).
+- **DECISIONE FINALE (2026-07-16): la strada fotorealistica è CHIUSA.**
+  Lorenzo ha valutato e rifiutato sia Gemini a pagamento sia il generativo
+  locale (in browser non esiste per il try-on; sul Mac servirebbe un server
+  personale sempre acceso). Il warping è il punto d'arrivo della prova
+  gratis: da qui in poi si aspetta il feedback di Mary da mobile.
 
 ## Novità 2026-07-16 — scheda "Su di te": la persona vera vestita, gratis on-device
 
