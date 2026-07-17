@@ -1,8 +1,11 @@
 # Armocromia — Design
 
-**Data:** 2026-07-17
-**Stato:** approvato dall'utente (brainstorming completato)
-**Branch di partenza:** `feat/scontorno-imgly`
+**Data:** 2026-07-17 (ripulito dai riferimenti all'avatar il 2026-07-18)
+**Stato:** approvato dall'utente (brainstorming completato; richiesta confermata
+da Lorenzo il 2026-07-18: "metto la foto mia, mi guardi i colori e mi suggerisci
+cosa mettere con link agli shop e il make-up adeguato, in base alla mia stagione")
+**Branch di partenza:** `main` dopo il merge di `feat/tryon-prompt` (l'avatar
+non esiste più nell'app: resta "Su di te")
 
 ## 1. Visione
 
@@ -133,14 +136,14 @@ foto ──▶ faceColorAnalysis.js ──▶ {skin,hair,eyes hex}
 - Flusso:
   1. Nessuna foto ⇒ invito a caricarla/scattarla (riuso l'uploader della foto di
      riferimento del profilo; hint "luce naturale, senza filtri/trucco pesante").
-  2. Analisi ⇒ spinner "analizzo i tuoi colori" (pattern download MediaPipe dell'avatar).
+  2. Analisi ⇒ spinner "analizzo i tuoi colori" (stesso pattern di download
+     MediaPipe di "Su di te"/bodyAnalysis).
   3. **Colori trovati** (campioni pelle/capelli/occhi) **correggibili con un tap**.
   4. **Verdetto stagione** + descrizione + confidenza.
   5. **Palette** (campioni) + pochi da evitare + metallo.
   6. **Outfit per te**: combo di colori dalla palette, ognuna con link shop per
      categoria **e** i tuoi capi in palette.
   7. **Make-up per te**: famiglie di tinte con link shop.
-  8. Bonus opzionale: "usa questi colori per l'avatar" (auto-compila carnagione/capelli).
 - Ingresso: card "I tuoi colori / Armocromia" nel Profilo. Route `/armocromia` dentro il layout protetto.
 
 ### 3.2 Persistenza
@@ -158,7 +161,8 @@ armocromia: {
 - **Locale:** parte del blob profilo in `localStorage` (nessun lavoro extra).
 - **Cloud:** nuova colonna `armocromia jsonb` in `profiles` (migrazione
   `supabase/migrations/002_armocromia.sql`); `fetchProfile`/`upsertProfile`
-  la leggono/scrivono come già fanno per `avatar_config`.
+  la leggono/scrivono con lo stesso pattern delle altre colonne del profilo
+  (mappatura esplicita campo→colonna in `db.js`).
 
 ## 4. Onestà sui limiti
 
