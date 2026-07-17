@@ -3,6 +3,58 @@
 > File di ripartenza: se apri una nuova chat, leggi questo file per riprendere il lavoro
 > esattamente da dove eravamo. Va aggiornato a ogni avanzamento significativo.
 
+## Novità 2026-07-17 — DUE feature decise e speccate; esecuzione appena iniziata
+
+**RIPARTIRE DA QUI.** Giornata di brainstorming: due feature approvate da Lorenzo,
+spec committati, esecuzione della prima appena partita (interrotta per cambio chat).
+
+### 1. Prova AI via prompt + RIMOZIONE TOTALE AVATAR — branch `feat/tryon-prompt`, IN CORSO
+
+- Spec: `docs/superpowers/specs/2026-07-17-tryon-prompt-design.md` (714616a).
+- Piano: `docs/superpowers/plans/2026-07-17-prova-prompt-avatar.md` (444b524), 6 task.
+- Cosa fa: la scheda AI di /tryon NON chiama più Gemini con la chiave utente.
+  Diventa "Prompt AI": **l'app genera il prompt** (modulo puro `tryOnPrompt.js`,
+  in inglese, modificabile) + istruzioni passo-passo + link ChatGPT/Gemini +
+  accesso alle immagini dei capi; Mary incolla tutto in ChatGPT/Gemini (che ha
+  gratis) e l'immagine la generano loro. Niente chiave, niente costi.
+  Deciso dopo il dubbio di Lorenzo «non so se l'app da sola sia capace»:
+  convinto da un esempio concreto (il prompt è una formula, la fedeltà la danno
+  le immagini caricate). NO ad AI esterne per il prompt (Grok è a pagamento;
+  una chiave su sito statico è pubblica → servirebbe un proxy).
+- **AVATAR: Lorenzo ha scelto "Tutto l'avatar"** — si rimuove TUTTO (scheda in
+  /tryon, editor nel Profilo, onboarding, Avatar3D/AvatarSvg/mesh, three.js dal
+  bundle). Resta SOLO "Su di te" (che non condivide codice con l'avatar:
+  dipendenze verificate, liste keep/remove in §4 dello spec). Prova = 2 schede.
+- **Stato esecuzione (subagent-driven)**: Task 1/6 implementato (commit
+  `fa8f44e`, `tryOnPrompt.js` + 4 test, 182 verdi) ma **REVISIONE PENDENTE**.
+  Riprendere da: review del Task 1 (base 444b524), poi Task 2-6.
+  Ledger: `.superpowers/sdd/progress.md`.
+
+### 2. Armocromia — branch `feat/armocromia`, spec pronto, piano DA SCRIVERE
+
+- Spec: `docs/superpowers/specs/2026-07-17-armocromia-design.md` (6151530), approvato.
+- Cosa fa: foto → colori pelle/capelli/OCCHI on-device (riuso MediaPipe di
+  `bodyAnalysis.js` + FaceLandmarker per l'iride) → **12 sotto-stagioni**
+  (3 assi Lab: caldo/freddo, chiaro/scuro, brillante/soffuso, classificatore
+  puro TDD) → palette + outfit con **link di ricerca agli shop** (Zalando/Asos/
+  Amazon; make-up Sephora/Douglas) + **match coi capi del guardaroba** (deltaE).
+  Colori rilevati correggibili a mano prima del calcolo. Pagina `/armocromia`
+  da card nel Profilo. Persistenza: profilo + colonna `armocromia jsonb`.
+- **ORDINE DECISO: prima finire feat/tryon-prompt (merge), POI l'armocromia**
+  off main aggiornato (entrambe toccano Profilo/Onboarding). Prima di
+  pianificarla: **aggiornare lo spec** togliendo il bonus "usa i colori per
+  l'avatar" e ogni riferimento ad `avatarOptions` (l'avatar non esiste più).
+
+### Valutazioni AI immagini (per non ripetersi)
+
+- **Raphael.app**: gratis solo via sito col watermark; API solo Enterprise a
+  pagamento. Non integra.
+- **free-image-generation-api (GitHub)**: Cloudflare Workers AI self-hosted,
+  gratis MA solo text-to-image → inventa la persona, inutile per il try-on.
+  Al più, in futuro, figurini decorativi per l'armocromia.
+- Il muro resta quello del 2026-07-16: gratis = inventa; try-on vero = a
+  pagamento. Lorenzo sulle immagini: «ora ci penso» — non riproporre.
+
 ## Novità 2026-07-16 (bis) — "Su di te" col WARPING: il capo segue il corpo
 
 Richiesta di Lorenzo: «E non si può fare meglio?» → «procedi con i primi 2»
