@@ -8,6 +8,7 @@ import { Header, Button, Modal, Icon } from '../../components/common';
 import { CLOTHING_COLORS } from '../../utils/categories';
 import { resizeImageFile } from '../../utils/imageUtils';
 import { buildTryOnPrompt } from '../../utils/tryOnPrompt';
+import { shareFilePlan, buildShareFiles, canShareFiles } from '../../utils/tryOnShare';
 import {
   emptyOutfit,
   normalizeOutfit,
@@ -105,6 +106,24 @@ export default function TryOnPage() {
       // Clipboard non disponibile (browser vecchio, contesto non sicuro): il
       // testo resta comunque selezionabile a mano nella textarea.
       setPromptCopied(false);
+    }
+  };
+
+  // Condivisione nativa (telefono): prompt + foto in ordine dritti nell'app
+  // AI scelta dalla share sheet. Sul desktop il bottone non compare.
+  const shareSupported = canShareFiles();
+  const [sharing, setSharing] = useState(false);
+
+  const handleShare = async () => {
+    setSharing(true);
+    try {
+      const files = await buildShareFiles(shareFilePlan(referencePhoto, items));
+      await navigator.share({ files, text: promptText });
+    } catch {
+      // Annullata dall'utente o app di arrivo senza supporto: restano
+      // Copia e i link qui sotto.
+    } finally {
+      setSharing(false);
     }
   };
 
@@ -306,6 +325,20 @@ export default function TryOnPage() {
                 <li>{t('tryon.promptStep3')}</li>
                 <li>{t('tryon.promptStep4')}</li>
               </ol>
+
+              {shareSupported && (
+                <>
+                  <Button
+                    fullWidth
+                    icon={<Icon name="external" size={15} />}
+                    onClick={handleShare}
+                    disabled={sharing}
+                  >
+                    {sharing ? t('tryon.promptSharing') : t('tryon.promptShare')}
+                  </Button>
+                  <p className="tryon-page__photo-note">{t('tryon.promptShareHint')}</p>
+                </>
+              )}
 
               <div className="tryon-page__prompt-links">
                 <a
