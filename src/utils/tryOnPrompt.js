@@ -36,3 +36,27 @@ export function garmentDescriptor(item) {
   const color = COLOR_EN[colorId];
   return color ? `${color} ${noun}` : noun;
 }
+
+export function buildTryOnPrompt(items = []) {
+  const lines = items.map(
+    (item, i) => `${i + 1}. ${garmentDescriptor(item)} (Image ${i + 2}).`
+  );
+  const garments = lines.length
+    ? `Dress this same person in the garments shown in the next images:\n${lines.join('\n')}`
+    : 'Dress this same person in the garments shown in the following images.';
+
+  return [
+    'Photorealistic virtual try-on.',
+    '',
+    "Image 1 is a real person — preserve their exact face, hairstyle, skin tone, " +
+      'body shape, height, pose and background with total fidelity. Do not change ' +
+      'their identity in any way.',
+    '',
+    garments,
+    '',
+    "Replace ONLY the person's current clothing with these garments. Fit each item " +
+      'naturally with realistic folds, seams and shadows, matching the lighting and ' +
+      'perspective of Image 1. Full-body framing, head to feet, sharp focus, natural ' +
+      'light. Return only the final edited photograph, no text.',
+  ].join('\n');
+}
