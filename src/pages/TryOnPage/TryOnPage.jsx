@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useProfile } from '../../context/ProfileContext';
 import { useWardrobe } from '../../context/WardrobeContext';
-import OutfitOnAvatar from '../../components/Avatar/OutfitOnAvatar';
 import ModelTryOn from '../../components/Avatar/ModelTryOn';
 import { Header, Button, Modal, Icon } from '../../components/common';
 import { CLOTHING_COLORS } from '../../utils/categories';
@@ -17,6 +16,7 @@ import {
   removeFromSlot,
   slotCategories,
   outfitHasItems,
+  MAX_ACCESSORIES,
 } from '../../utils/tryonComposer';
 import './TryOnPage.css';
 
@@ -25,15 +25,16 @@ const outfitItems = (outfit) =>
     .filter(Boolean);
 
 /**
- * Prova outfit sull'avatar. Si può partire da un outfit già pronto
- * (via location.state, dalla pagina Outfit/Calendario) o da zero:
- * ogni slot è cliccabile e apre il guardaroba filtrato per categoria.
+ * Prova outfit. Si può partire da un outfit già pronto (via location.state,
+ * dalla pagina Outfit/Calendario) o da un singolo capo (dal Dettaglio): la
+ * riga di slot in cima è sempre cliccabile e apre il guardaroba filtrato per
+ * categoria, per completare o cambiare l'outfit prima di vederlo addosso.
  */
 export default function TryOnPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { state } = useLocation();
-  const { avatarConfig, referencePhoto, setReferencePhoto } = useProfile();
+  const { referencePhoto, setReferencePhoto } = useProfile();
   const { items: wardrobeItems, saveOutfit } = useWardrobe();
 
   const [outfit, setOutfit] = useState(() => {
@@ -44,13 +45,10 @@ export default function TryOnPage() {
   const [pickerSlot, setPickerSlot] = useState(null);
   const [saved, setSaved] = useState(false);
 
-  // Tre modalità di prova: avatar (gratis), "Su di te" (gratis, foto vera),
-  // foto AI (Gemini). Arrivando con un outfit già pronto e con la foto di
-  // riferimento caricata si parte direttamente dalla persona vera: è quello
-  // che si vuole vedere; l'avatar resta per comporre da zero.
-  const [mode, setMode] = useState(() =>
-    referencePhoto && (state?.outfit || state?.item) ? 'model' : 'avatar'
-  );
+  // Due modalità di prova, entrambe gratuite: "Su di te" (foto vera, capi
+  // scontornati nelle sue proporzioni) e "Prompt AI" (prompt da incollare in
+  // ChatGPT/Gemini). "Su di te" è la modalità predefinita.
+  const [mode, setMode] = useState('model');
 
   const fileInputRef = useRef(null);
 
@@ -70,6 +68,22 @@ export default function TryOnPage() {
   const paletteIds = [...new Set(items.flatMap((i) => i.colors || []))];
   const paletteHex = (id) => CLOTHING_COLORS.find((c) => c.id === id)?.hex || '#ccc';
   const hasWishlistItems = items.some((i) => i.fromWishlist);
+
+  // Slot dell'outfit: capospalla, top/abito, bottom, scarpe. Ogni slot è
+  // cliccabile (pieno o vuoto) per aprire il picker filtrato per categoria.
+  const slotDefs = [
+    { key: 'outerwear', item: outfit.outerwear, label: t('outfit.outerwear') },
+    {
+      key: 'top',
+      item: outfit.top,
+      label:
+        outfit.top && !outfit.bottom && outfit.top.category === 'dresses'
+          ? t('outfit.dress')
+          : t('outfit.top'),
+    },
+    { key: 'bottom', item: outfit.bottom, label: t('outfit.bottom') },
+    { key: 'shoes', item: outfit.shoes, label: t('outfit.shoes') },
+  ];
 
   // Scheda "Prompt AI": nessuna chiamata di rete. Il prompt (inglese) si
   // rigenera quando cambiano i capi dell'outfit; resta editabile a mano.
@@ -129,17 +143,94 @@ export default function TryOnPage() {
         <p className="tryon-page__wishlist-note sv-label">{t('tryon.withWishlist')}</p>
       )}
 
+      {/* Composizione dell'outfit: uno slot per tipo di capo, sempre visibile
+          (indipendente dalla scheda scelta sotto). Cliccare uno slot pieno o
+          vuoto apre il guardaroba filtrato per quella categoria. */}
+      <div className="tryon-page__slots">
+        {slotDefs.map(({ key, item, label }) =>
+          item ? (
+            <div key={key} className="tryon-page__slot">
+              <button
+                type="button"
+                className="tryon-page__slot-pick"
+                onClick={() => setPickerSlot(key)}
+                aria-label={`${label}: ${item.name}`}
+              >
+                <img src={item.photo} alt={item.name} title={item.name} />
+              </button>
+              <button
+                type="button"
+                className="tryon-page__slot-remove"
+                onClick={() => handleRemove(key, item.id)}
+                aria-label={`${t('common.remove')} ${item.name}`}
+              >
+                <Icon name="close" size={11} />
+              </button>
+              <span className="tryon-page__slot-label sv-label">{label}</span>
+            </div>
+          ) : (
+            <button
+              key={key}
+              type="button"
+              className="tryon-page__slot tryon-page__slot--empty"
+              onClick={() => setPickerSlot(key)}
+            >
+              <Icon name="plus" size={16} />
+              <span>{label}</span>
+            </button>
+          )
+        )}
+
+        <div className="tryon-page__slot-accessories">
+          {outfit.accessories.map((acc) => (
+            <div key={acc.id} className="tryon-page__slot tryon-page__slot--accessory">
+              <button
+                type="button"
+                className="tryon-page__slot-pick"
+                onClick={() => setPickerSlot('accessories')}
+                aria-label={acc.name}
+              >
+                <img src={acc.photo} alt={acc.name} title={acc.name} />
+              </button>
+              <button
+                type="button"
+                className="tryon-page__slot-remove"
+                onClick={() => handleRemove('accessories', acc.id)}
+                aria-label={`${t('common.remove')} ${acc.name}`}
+              >
+                <Icon name="close" size={11} />
+              </button>
+            </div>
+          ))}
+          {outfit.accessories.length < MAX_ACCESSORIES && (
+            <button
+              type="button"
+              className="tryon-page__slot tryon-page__slot--empty tryon-page__slot--accessory"
+              onClick={() => setPickerSlot('accessories')}
+              aria-label={t('outfit.accessoriesLabel')}
+              title={t('outfit.accessoriesLabel')}
+            >
+              <Icon name="plus" size={14} />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {outfitHasItems(outfit) && (
+        <div className="tryon-page__actions">
+          <Button
+            fullWidth
+            icon={<Icon name={saved ? 'check' : 'heart'} size={15} />}
+            onClick={handleSave}
+            disabled={saved}
+          >
+            {saved ? t('outfit.saved') : t('tryon.saveOutfit')}
+          </Button>
+        </div>
+      )}
+
       {/* Scelta della modalità di prova */}
       <div className="tryon-page__modes" role="tablist">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={mode === 'avatar'}
-          className={`tryon-page__mode ${mode === 'avatar' ? 'tryon-page__mode--active' : ''}`}
-          onClick={() => setMode('avatar')}
-        >
-          {t('tryon.modeAvatar')}
-        </button>
         <button
           type="button"
           role="tab"
@@ -159,30 +250,6 @@ export default function TryOnPage() {
           {t('tryon.modePhoto')}
         </button>
       </div>
-
-      {mode === 'avatar' && (
-        <>
-          <OutfitOnAvatar
-            outfit={outfit}
-            avatarConfig={avatarConfig}
-            onSlotClick={setPickerSlot}
-            onRemove={handleRemove}
-          />
-
-          {outfitHasItems(outfit) && (
-            <div className="tryon-page__actions">
-              <Button
-                fullWidth
-                icon={<Icon name={saved ? 'check' : 'heart'} size={15} />}
-                onClick={handleSave}
-                disabled={saved}
-              >
-                {saved ? t('outfit.saved') : t('tryon.saveOutfit')}
-              </Button>
-            </div>
-          )}
-        </>
-      )}
 
       {/* "Su di te": la persona della foto, scontornata e vestita coi capi
           scontornati nelle sue proporzioni. Gratis, tutto on-device. */}

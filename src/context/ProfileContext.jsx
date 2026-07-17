@@ -10,7 +10,6 @@ import { useAuth } from './AuthContext';
 import { useSettings } from './SettingsContext';
 import { isSupabaseEnabled } from '../services/supabaseClient';
 import { fetchProfile, upsertProfile } from '../services/db';
-import { DEFAULT_AVATAR_CONFIG } from '../utils/avatarOptions';
 
 const ProfileContext = createContext(null);
 
@@ -18,7 +17,6 @@ const ProfileContext = createContext(null);
 const profileKey = (userId) => `sv_profile_${userId || 'anon'}`;
 
 const DEFAULT_PROFILE = {
-  avatarConfig: DEFAULT_AVATAR_CONFIG,
   referencePhoto: null,
   onboarded: false,
 };
@@ -34,7 +32,7 @@ function loadLocalProfile(userId) {
 }
 
 /**
- * ProfileProvider — avatar, foto di riferimento, onboarding.
+ * ProfileProvider — foto di riferimento, onboarding.
  * In modalità cloud il profilo (incluse lingua e città predefinita) vive nella
  * tabella `profiles` di Supabase e la foto di riferimento su Storage.
  */
@@ -83,7 +81,6 @@ export function ProfileProvider({ children }) {
         if (!alive) return;
         if (remote) {
           setProfile({
-            avatarConfig: remote.avatarConfig || DEFAULT_AVATAR_CONFIG,
             referencePhoto: remote.referencePhoto,
             onboarded: remote.onboarded,
           });
@@ -140,17 +137,6 @@ export function ProfileProvider({ children }) {
     [userId]
   );
 
-  const setAvatarConfig = useCallback(
-    (updates) => {
-      setProfile((prev) => {
-        const merged = { ...prev.avatarConfig, ...updates };
-        persistCloud({ avatarConfig: merged });
-        return { ...prev, avatarConfig: merged };
-      });
-    },
-    [persistCloud]
-  );
-
   const setReferencePhoto = useCallback(
     (dataUrl) => {
       // Ottimistico: il dataURL si vede subito; il cloud risponde con l'URL firmata
@@ -172,11 +158,9 @@ export function ProfileProvider({ children }) {
   }, [persistCloud]);
 
   const value = {
-    avatarConfig: profile.avatarConfig,
     referencePhoto: profile.referencePhoto,
     onboarded: profile.onboarded,
     profileLoading,
-    setAvatarConfig,
     setReferencePhoto,
     completeOnboarding,
   };

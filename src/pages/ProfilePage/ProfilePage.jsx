@@ -1,15 +1,12 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
-import { useProfile } from '../../context/ProfileContext';
 import { useSettings } from '../../context/SettingsContext';
 import { useWardrobe } from '../../context/WardrobeContext';
-import AvatarSvg from '../../components/Avatar/AvatarSvg';
-import AvatarEditor from '../../components/Avatar/AvatarEditor';
 import CitySearch from '../../components/CitySearch/CitySearch';
 import LanguageSwitch from '../../components/LanguageSwitch/LanguageSwitch';
-import { Button, Modal, Icon } from '../../components/common';
+import { Button, Icon } from '../../components/common';
 import { CLOTHING_COLORS } from '../../utils/categories';
 import {
   getMostWorn,
@@ -24,16 +21,8 @@ export default function ProfilePage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const {
-    avatarConfig,
-    setAvatarConfig,
-    referencePhoto,
-    setReferencePhoto,
-  } = useProfile();
   const { defaultCity, setDefaultCity } = useSettings();
   const { items, savedOutfits, outfitHistory } = useWardrobe();
-
-  const [avatarOpen, setAvatarOpen] = useState(false);
 
   const wornCount = outfitHistory.filter((l) => l.worn !== false).length;
   const favCount = items.filter((i) => i.favorite).length;
@@ -55,14 +44,7 @@ export default function ProfilePage() {
 
   return (
     <div className="sv-page profile-page">
-      {/* Intestazione con avatar */}
       <header className="profile-page__head">
-        <button className="profile-page__avatar" onClick={() => setAvatarOpen(true)}>
-          <AvatarSvg config={avatarConfig} height={130} />
-          <span className="profile-page__avatar-edit">
-            <Icon name="edit" size={12} /> {t('profile.editAvatar')}
-          </span>
-        </button>
         <div>
           <h1 className="profile-page__name">{user?.name}</h1>
           <p className="profile-page__email">{user?.email}</p>
@@ -208,23 +190,6 @@ export default function ProfilePage() {
           {t('auth.logout')}
         </Button>
       </div>
-
-      {/* Editor avatar */}
-      <Modal
-        isOpen={avatarOpen}
-        onClose={() => setAvatarOpen(false)}
-        title={t('avatar.title')}
-        footer={
-          <Button onClick={() => setAvatarOpen(false)}>{t('common.done')}</Button>
-        }
-      >
-        <AvatarEditor
-          config={avatarConfig}
-          onChange={setAvatarConfig}
-          referencePhoto={referencePhoto}
-          onReferencePhotoChange={setReferencePhoto}
-        />
-      </Modal>
     </div>
   );
 }

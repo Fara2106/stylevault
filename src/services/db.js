@@ -238,7 +238,6 @@ export async function fetchProfile(userId) {
     displayName: data.display_name,
     language: data.language,
     defaultCity: data.default_city,
-    avatarConfig: data.avatar_config,
     referencePhoto: data.reference_photo_path
       ? await signedUrl(data.reference_photo_path, 'profile-photos')
       : null,
@@ -252,7 +251,6 @@ export async function upsertProfile(userId, updates) {
   if ('displayName' in updates) row.display_name = updates.displayName;
   if ('language' in updates) row.language = updates.language;
   if ('defaultCity' in updates) row.default_city = updates.defaultCity;
-  if ('avatarConfig' in updates) row.avatar_config = updates.avatarConfig;
   if ('onboarded' in updates) row.onboarded = updates.onboarded;
 
   if ('referencePhoto' in updates) {
