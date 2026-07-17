@@ -195,40 +195,10 @@
     "promptGarments": "Foto dei capi da caricare"
   },
   "avatar": {
-    "gender": "Genere",
-    "bodyShape": "Corporatura",
-    "skinTone": "Carnagione",
-    "hairColor": "Colore capelli",
-    "hairStyle": "Taglio",
-    "genders": {
-      "male": "Maschile",
-      "female": "Femminile"
-    },
-    "bodyShapes": {
-      "slim": "Esile",
-      "average": "Media",
-      "athletic": "Atletica",
-      "curvy": "Morbida",
-      "plus": "Curvy plus"
-    },
-    "hairStyles": {
-      "short": "Corti",
-      "medium": "Medi",
-      "long": "Lunghi",
-      "bun": "Raccolti",
-      "curly": "Ricci",
-      "bald": "Rasati"
-    },
     "referencePhoto": "Foto di riferimento",
     "uploadReference": "Carica una tua foto",
     "referenceHint": "Ti aiuta a regolare l'avatar finché ti somiglia. Resta solo sul tuo dispositivo.",
     "removeReference": "Rimuovi foto",
-    "render3d": "3D",
-    "renderFlat": "Piatto",
-    "render3dHint": "Gratis e illimitata. Ruota la figura col dito. La forma del capo è generica: colore e fantasia sono i tuoi, il taglio no.",
-    "renderFlatHint": "Gratis e illimitata. Leggera, non consuma batteria. La figura non ruota.",
-    "renderNoWebgl": "Questo dispositivo non supporta la grafica 3D: resta disponibile la modalità piatta.",
-    "renderLoading": "Preparo la scena 3D...",
     "preparingGarments": "Preparo i capi..."
   },
   "advice": {
@@ -254,7 +224,7 @@
     "neverWorn": "Mai indossato",
     "openShop": "Apri nel negozio",
     "deleteItem": "Elimina capo",
-    "tryOn": "Prova sull'avatar"
+    "tryOn": "Prova su di te"
   },
   "calendar": {
     "title": "Calendario",
