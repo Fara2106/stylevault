@@ -27,7 +27,8 @@ const SUBCATEGORY_EN = {
   sneakers: 'sneakers', boots: 'boots', loafers: 'loafers', sandals: 'sandals',
   heels: 'heels', ankleboots: 'ankle boots', pumps: 'pumps',
   hat: 'hat', scarf: 'scarf', belt: 'belt', bag: 'bag', sunglasses: 'sunglasses',
-  jewelry: 'jewelry',
+  jewelry: 'jewelry', watch: 'watch', umbrella: 'umbrella',
+  underwear_item: 'underwear', socks: 'socks', pajamas: 'pajamas',
 };
 
 export function garmentDescriptor(item) {

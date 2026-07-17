@@ -340,7 +340,7 @@ export default function TryOnPage() {
                         href={item.photo}
                         title={item.name}
                         {...(isLocal
-                          ? { download: `${item.name || 'capo'}.jpg` }
+                          ? { download: `${item.name || 'garment'}.jpg` }
                           : { target: '_blank', rel: 'noopener' })}
                       >
                         <img src={item.photo} alt={item.name} />
