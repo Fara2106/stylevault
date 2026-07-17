@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useState, useRef, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useProfile } from '../../context/ProfileContext';
 import { useWardrobe } from '../../context/WardrobeContext';
@@ -8,7 +8,7 @@ import ModelTryOn from '../../components/Avatar/ModelTryOn';
 import { Header, Button, Modal, Icon } from '../../components/common';
 import { CLOTHING_COLORS } from '../../utils/categories';
 import { resizeImageFile } from '../../utils/imageUtils';
-import { getGeminiKey, generateTryOnPhoto } from '../../services/geminiTryon';
+import { buildTryOnPrompt } from '../../utils/tryOnPrompt';
 import {
   emptyOutfit,
   normalizeOutfit,
@@ -52,21 +52,7 @@ export default function TryOnPage() {
     referencePhoto && (state?.outfit || state?.item) ? 'model' : 'avatar'
   );
 
-  // Try-on fotografico (Gemini): chiave dell'utente, salvata solo nel browser
-  const geminiKey = getGeminiKey();
-  const [generating, setGenerating] = useState(false);
-  const [photoResult, setPhotoResult] = useState(null);
-  const [photoError, setPhotoError] = useState(null);
   const fileInputRef = useRef(null);
-
-  const PHOTO_ERRORS = {
-    'invalid-key': 'tryon.photoErrorInvalidKey',
-    quota: 'tryon.photoErrorQuota',
-    network: 'tryon.photoErrorNetwork',
-    'no-image': 'tryon.photoErrorNoImage',
-    'person-photo': 'tryon.photoErrorPerson',
-    'no-garments': 'tryon.photoErrorGarments',
-  };
 
   const handlePhotoFile = async (e) => {
     const file = e.target.files?.[0];
@@ -75,28 +61,8 @@ export default function TryOnPage() {
     try {
       const dataUrl = await resizeImageFile(file, 1024, 0.85);
       setReferencePhoto(dataUrl);
-      setPhotoResult(null);
-      setPhotoError(null);
     } catch {
-      setPhotoError('person-photo');
-    }
-  };
-
-  const handleGenerate = async () => {
-    setGenerating(true);
-    setPhotoError(null);
-    setPhotoResult(null);
-    try {
-      const result = await generateTryOnPhoto({
-        apiKey: getGeminiKey(),
-        personPhoto: referencePhoto,
-        items: outfitItems(outfit),
-      });
-      setPhotoResult(result);
-    } catch (err) {
-      setPhotoError(err.code || 'network');
-    } finally {
-      setGenerating(false);
+      // Ridimensionamento fallito: la foto di riferimento resta quella precedente.
     }
   };
 
@@ -104,6 +70,29 @@ export default function TryOnPage() {
   const paletteIds = [...new Set(items.flatMap((i) => i.colors || []))];
   const paletteHex = (id) => CLOTHING_COLORS.find((c) => c.id === id)?.hex || '#ccc';
   const hasWishlistItems = items.some((i) => i.fromWishlist);
+
+  // Scheda "Prompt AI": nessuna chiamata di rete. Il prompt (inglese) si
+  // rigenera quando cambiano i capi dell'outfit; resta editabile a mano.
+  const itemsKey = items.map((i) => i.id).join(',');
+  const [promptText, setPromptText] = useState(() => buildTryOnPrompt(items));
+  const [promptCopied, setPromptCopied] = useState(false);
+
+  useEffect(() => {
+    setPromptText(buildTryOnPrompt(items));
+    setPromptCopied(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [itemsKey]);
+
+  const handleCopyPrompt = async () => {
+    try {
+      await navigator.clipboard.writeText(promptText);
+      setPromptCopied(true);
+    } catch {
+      // Clipboard non disponibile (browser vecchio, contesto non sicuro): il
+      // testo resta comunque selezionabile a mano nella textarea.
+      setPromptCopied(false);
+    }
+  };
 
   const pickerItems = pickerSlot
     ? wardrobeItems.filter((i) => slotCategories(pickerSlot).includes(i.category))
@@ -233,91 +222,91 @@ export default function TryOnPage() {
         </section>
       )}
 
-      {/* Try-on fotografico con Gemini */}
+      {/* Prompt AI: l'app genera il testo del prompt (inglese, zero rete),
+          Mary lo copia in ChatGPT/Gemini insieme alla sua foto e a quelle
+          dei capi. Nessuna chiave, nessuna chiamata da qui. */}
       {mode === 'photo' && (
-        <section className="tryon-page__photo">
-          <p className="tryon-page__photo-intro">{t('tryon.photoIntro')}</p>
-          <p className="tryon-page__photo-cost sv-label">{t('tryon.photoCost')}</p>
+        <section className="tryon-page__prompt">
+          <p className="tryon-page__photo-intro">{t('tryon.promptIntro')}</p>
 
           {!outfitHasItems(outfit) ? (
             <p className="tryon-page__photo-note">{t('tryon.photoNoOutfit')}</p>
-          ) : !geminiKey ? (
-            <p className="tryon-page__photo-note">
-              {t('tryon.photoNeedsKey')}{' '}
-              <Link to="/profile">{t('tryon.photoSetKey')}</Link>
-            </p>
           ) : (
             <>
-              {referencePhoto ? (
-                <div className="tryon-page__photo-row">
-                  <img
-                    className="tryon-page__photo-person"
-                    src={referencePhoto}
-                    alt={t('tryon.photoTitle')}
-                  />
-                  <div className="tryon-page__photo-controls">
-                    <Button
-                      fullWidth
-                      icon={<Icon name="sparkle" size={15} />}
-                      onClick={handleGenerate}
-                      loading={generating}
-                      disabled={generating}
-                    >
-                      {generating
-                        ? t('tryon.photoGenerating')
-                        : t('tryon.photoGenerate')}
-                    </Button>
-                    <Button
-                      fullWidth
-                      variant="secondary"
-                      icon={<Icon name="camera" size={14} />}
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={generating}
-                    >
-                      {t('tryon.photoChange')}
-                    </Button>
-                  </div>
+              <ol className="tryon-page__prompt-steps">
+                <li>{t('tryon.promptStep1')}</li>
+                <li>{t('tryon.promptStep2')}</li>
+                <li>{t('tryon.promptStep3')}</li>
+                <li>{t('tryon.promptStep4')}</li>
+              </ol>
+
+              <div className="tryon-page__prompt-links">
+                <a
+                  className="tryon-page__prompt-link"
+                  href="https://chatgpt.com/"
+                  target="_blank"
+                  rel="noopener"
+                >
+                  <Icon name="external" size={14} />
+                  {t('tryon.promptOpenChatgpt')}
+                </a>
+                <a
+                  className="tryon-page__prompt-link"
+                  href="https://gemini.google.com/"
+                  target="_blank"
+                  rel="noopener"
+                >
+                  <Icon name="external" size={14} />
+                  {t('tryon.promptOpenGemini')}
+                </a>
+              </div>
+
+              <div className="tryon-page__prompt-garments">
+                <span className="sv-label">{t('tryon.promptGarments')}</span>
+                <div className="tryon-page__prompt-garments-row">
+                  {items.map((item, i) => {
+                    const isLocal = item.photo?.startsWith('data:');
+                    return (
+                      <a
+                        key={item.id}
+                        className="tryon-page__prompt-garment"
+                        href={item.photo}
+                        title={item.name}
+                        {...(isLocal
+                          ? { download: `${item.name || 'capo'}.jpg` }
+                          : { target: '_blank', rel: 'noopener' })}
+                      >
+                        <img src={item.photo} alt={item.name} />
+                        <span>{i + 2}</span>
+                      </a>
+                    );
+                  })}
                 </div>
-              ) : (
-                <>
-                  <p className="tryon-page__photo-note">
-                    {t('tryon.photoNeedsPhoto')}
-                  </p>
-                  <Button
-                    fullWidth
-                    variant="secondary"
-                    icon={<Icon name="camera" size={15} />}
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    {t('tryon.photoUpload')}
-                  </Button>
-                </>
-              )}
+              </div>
 
-              {photoError && (
-                <p className="tryon-page__photo-error">
-                  {t(PHOTO_ERRORS[photoError] || 'tryon.photoErrorNetwork')}
-                </p>
-              )}
-
-              {photoResult && (
-                <figure className="tryon-page__photo-result">
-                  <img src={photoResult.image} alt={t('tryon.photoResult')} />
-                  <figcaption className="sv-label">
-                    {t('tryon.photoResult')}
-                  </figcaption>
-                  {photoResult.skipped.length > 0 && (
-                    <p className="tryon-page__photo-note">
-                      {t('tryon.photoSkipped', {
-                        names: photoResult.skipped.join(', '),
-                      })}
-                    </p>
-                  )}
-                </figure>
-              )}
+              <label className="tryon-page__prompt-label sv-label" htmlFor="tryon-prompt-text">
+                {t('tryon.promptTitle')}
+              </label>
+              <textarea
+                id="tryon-prompt-text"
+                className="tryon-page__prompt-textarea"
+                value={promptText}
+                onChange={(e) => {
+                  setPromptText(e.target.value);
+                  setPromptCopied(false);
+                }}
+                rows={10}
+              />
+              <Button
+                fullWidth
+                variant="secondary"
+                icon={promptCopied ? <Icon name="check" size={14} /> : undefined}
+                onClick={handleCopyPrompt}
+              >
+                {promptCopied ? t('tryon.promptCopied') : t('tryon.promptCopy')}
+              </Button>
             </>
           )}
-
         </section>
       )}
 

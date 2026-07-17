@@ -174,7 +174,7 @@
     "withWishlist": "Include capi della wishlist",
     "modeAvatar": "Sull'avatar",
     "modeModel": "Su di te",
-    "modePhoto": "Sulla tua foto (AI)",
+    "modePhoto": "Prompt AI",
     "modelIntro": "La persona della tua foto, vestita con le foto vere dei capi scelti, nelle sue proporzioni. Gratis: lo scontorno avviene sul tuo dispositivo, la foto non esce da qui.",
     "modelPreparingPhoto": "Preparo la tua foto (scontorno)…",
     "modelNoFigure": "Non riesco a distinguere una figura intera nella foto: usa una foto in piedi, frontale, a figura intera.",
@@ -199,7 +199,18 @@
     "photoErrorNetwork": "Errore di rete: controlla la connessione e riprova.",
     "photoErrorNoImage": "Il modello non ha restituito un'immagine: riprova.",
     "photoErrorPerson": "Non riesco a leggere la tua foto: caricala di nuovo.",
-    "photoErrorGarments": "Non riesco a leggere le foto dei capi scelti."
+    "photoErrorGarments": "Non riesco a leggere le foto dei capi scelti.",
+    "promptTitle": "Prompt da copiare",
+    "promptIntro": "Genera un prompt in inglese da incollare in ChatGPT o Gemini insieme alla tua foto e alle foto dei capi: il risultato è una fotografia di te che li indossa. Gratis, nessuna chiave richiesta.",
+    "promptCopy": "Copia prompt",
+    "promptCopied": "Copiato!",
+    "promptStep1": "Apri ChatGPT o Gemini",
+    "promptStep2": "Carica una tua foto a figura intera",
+    "promptStep3": "Carica le foto dei capi qui sotto",
+    "promptStep4": "Incolla il prompt copiato e genera l'immagine",
+    "promptOpenChatgpt": "Apri ChatGPT",
+    "promptOpenGemini": "Apri Gemini",
+    "promptGarments": "Foto dei capi da caricare"
   },
   "avatar": {
     "title": "Il tuo avatar",

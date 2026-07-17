@@ -174,7 +174,7 @@
     "withWishlist": "Includes wishlist items",
     "modeAvatar": "On the avatar",
     "modeModel": "On you",
-    "modePhoto": "On your photo (AI)",
+    "modePhoto": "AI Prompt",
     "modelIntro": "The person in your photo, dressed with the real photos of the chosen items, in their proportions. Free: the cutout runs on your device, the photo never leaves it.",
     "modelPreparingPhoto": "Preparing your photo (cutout)…",
     "modelNoFigure": "I can't make out a full figure in the photo: use a standing, front-facing, full-body photo.",
@@ -199,7 +199,18 @@
     "photoErrorNetwork": "Network error: check your connection and retry.",
     "photoErrorNoImage": "The model didn't return an image: try again.",
     "photoErrorPerson": "Couldn't read your photo: upload it again.",
-    "photoErrorGarments": "Couldn't read the photos of the selected items."
+    "photoErrorGarments": "Couldn't read the photos of the selected items.",
+    "promptTitle": "Prompt to copy",
+    "promptIntro": "Generate an English prompt to paste into ChatGPT or Gemini along with your photo and the garment photos: the result is a photograph of you wearing them. Free, no key required.",
+    "promptCopy": "Copy prompt",
+    "promptCopied": "Copied!",
+    "promptStep1": "Open ChatGPT or Gemini",
+    "promptStep2": "Upload a full-body photo of yourself",
+    "promptStep3": "Upload the garment photos below",
+    "promptStep4": "Paste the copied prompt and generate the image",
+    "promptOpenChatgpt": "Open ChatGPT",
+    "promptOpenGemini": "Open Gemini",
+    "promptGarments": "Garment photos to upload"
   },
   "avatar": {
     "title": "Your avatar",
