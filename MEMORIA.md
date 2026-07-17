@@ -3,12 +3,42 @@
 > File di ripartenza: se apri una nuova chat, leggi questo file per riprendere il lavoro
 > esattamente da dove eravamo. Va aggiornato a ogni avanzamento significativo.
 
+## Novità 2026-07-18 — "Prompt AI" LIVE, avatar RIMOSSO del tutto
+
+**RIPARTIRE DA QUI.** La feature `feat/tryon-prompt` è FINITA e ONLINE:
+merge fast-forward `a3e664c..164786f` su main, Action verde,
+https://fara2106.github.io/stylevault/ . Lorenzo la sta provando online —
+il suo feedback è l'unico punto aperto.
+
+- **Com'è andata**: 6/6 task subagent-driven, ognuno con revisione dedicata,
+  più revisione finale dell'intero branch (opus): «pronto al merge», nessun
+  rilievo Critical/Important. Fix wave finale `164786f` (CSS morto, fallback
+  `'garment'`, 5 sotto-categorie EN mancanti, commenti stale).
+  Dettaglio completo nel ledger `.superpowers/sdd/progress.md`.
+- **Cosa c'è ora in /tryon**: 2 schede — "Su di te" (default, invariata) e
+  "Prompt AI": textarea col prompt inglese generato da `tryOnPrompt.js`
+  (puro, 7 test; 45/45 sotto-categorie coperte), bottone Copia, istruzioni
+  numerate, link ChatGPT/Gemini, immagini dei capi scaricabili numerate da
+  "Image 2". Zero chiave, zero rete, zero costi.
+- **Rimozioni**: `geminiTryon.js` + chiave nel Profilo; 13 file avatar
+  (Avatar3D/AvatarSvg/AvatarEditor/OutfitOnAvatar/mesh/webgl) e `three`
+  disinstallato. `avatar_config` resta come colonna Supabase ma il codice
+  la ignora (retrocompatibile). i18n it/en identici a 356 chiavi.
+- **Spostamento chiave (Task 5)**: slot-picker outfit + "Salva outfit"
+  stavano SOLO dentro la scheda avatar → ora sezione sempre visibile sopra
+  le schede (senza, il flusso dettaglio-capo → /tryon si rompeva).
+- **Test**: 146 verdi in 14 file (via i test di avatar/gemini, +7 di
+  tryOnPrompt). Onboarding ridotto a 2 step (foto → città).
+- **PROSSIMO**: raccogliere il feedback di Lorenzo dalla prova online;
+  poi cancellare il branch remoto `feat/tryon-prompt` e pianificare
+  l'**armocromia** (spec da ripulire dai riferimenti all'avatar, v. sotto).
+
 ## Novità 2026-07-17 — DUE feature decise e speccate; esecuzione appena iniziata
 
-**RIPARTIRE DA QUI.** Giornata di brainstorming: due feature approvate da Lorenzo,
+Giornata di brainstorming: due feature approvate da Lorenzo,
 spec committati, esecuzione della prima appena partita (interrotta per cambio chat).
 
-### 1. Prova AI via prompt + RIMOZIONE TOTALE AVATAR — branch `feat/tryon-prompt`, IN CORSO
+### 1. Prova AI via prompt + RIMOZIONE TOTALE AVATAR — branch `feat/tryon-prompt`, COMPLETATO (v. sezione 2026-07-18)
 
 - Spec: `docs/superpowers/specs/2026-07-17-tryon-prompt-design.md` (714616a).
 - Piano: `docs/superpowers/plans/2026-07-17-prova-prompt-avatar.md` (444b524), 6 task.
@@ -25,9 +55,8 @@ spec committati, esecuzione della prima appena partita (interrotta per cambio ch
   /tryon, editor nel Profilo, onboarding, Avatar3D/AvatarSvg/mesh, three.js dal
   bundle). Resta SOLO "Su di te" (che non condivide codice con l'avatar:
   dipendenze verificate, liste keep/remove in §4 dello spec). Prova = 2 schede.
-- **Stato esecuzione (subagent-driven)**: Task 1/6 implementato (commit
-  `fa8f44e`, `tryOnPrompt.js` + 4 test, 182 verdi) ma **REVISIONE PENDENTE**.
-  Riprendere da: review del Task 1 (base 444b524), poi Task 2-6.
+- **Stato esecuzione**: COMPLETATA il 2026-07-18 (tutti e 6 i task + revisione
+  finale + deploy) — vedere la sezione 2026-07-18 in cima al file.
   Ledger: `.superpowers/sdd/progress.md`.
 
 ### 2. Armocromia — branch `feat/armocromia`, spec pronto, piano DA SCRIVERE
