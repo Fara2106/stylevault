@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildShopLinks, buildOutfitLinks } from './shopLinks';
+import { buildShopLinks, buildShopLink } from './shopLinks';
 
 describe('buildShopLinks', () => {
   it('abbigliamento IT: Zalando, Asos, Amazon con query codificata', () => {
@@ -28,19 +28,24 @@ describe('buildShopLinks', () => {
   });
 });
 
-describe('buildOutfitLinks', () => {
-  it("IT: cerca il coordinato nel colore guida sugli shop abbigliamento", () => {
-    const links = buildOutfitLinks({ colorName: 'bordeaux', lang: 'it' });
-    expect(links.map((l) => l.shop)).toEqual(['zalando', 'asos', 'amazon']);
-    expect(links[0].url).toBe('https://www.zalando.it/catalogo/?q=coordinato%20bordeaux');
+describe('buildShopLink', () => {
+  it('Zara IT con query codificata', () => {
+    expect(buildShopLink({ shop: 'zara', query: 'maglietta pesca', lang: 'it' })).toEqual({
+      shop: 'zara',
+      label: 'Zara',
+      url: 'https://www.zara.com/it/it/search?searchTerm=maglietta%20pesca',
+    });
   });
-  it('EN: usa il termine co-ord', () => {
-    const [l] = buildOutfitLinks({ colorName: 'burgundy', lang: 'en' });
-    expect(l.url).toBe('https://www.zalando.co.uk/catalog/?q=co-ord%20burgundy');
+  it('Bershka IT e Zalando EN', () => {
+    expect(buildShopLink({ shop: 'bershka', query: 'pantaloni crema', lang: 'it' }).url).toBe(
+      'https://www.bershka.com/it/search?q=pantaloni%20crema'
+    );
+    expect(buildShopLink({ shop: 'zalando', query: 'peach t-shirt', lang: 'en' }).url).toBe(
+      'https://www.zalando.co.uk/catalog/?q=peach%20t-shirt'
+    );
   });
-  it('lingua ignota → ripiego su it', () => {
-    const [l] = buildOutfitLinks({ colorName: 'x', lang: 'de' });
-    expect(l.url).toContain('zalando.it');
-    expect(l.url).toContain('coordinato%20x');
+  it('shop ignoto → null; lingua ignota → ripiego it', () => {
+    expect(buildShopLink({ shop: 'boh', query: 'x', lang: 'it' })).toBeNull();
+    expect(buildShopLink({ shop: 'zara', query: 'x', lang: 'de' }).url).toContain('zara.com/it/it');
   });
 });

@@ -7,7 +7,7 @@ import { Header, Button, Icon } from '../../components/common';
 import { analyzeFaceColors } from '../../utils/faceColorAnalysis';
 import { classifySeason } from '../../utils/armocromiaClassifier';
 import { getSeason } from '../../utils/armocromiaSeasons';
-import { buildShopLinks, buildOutfitLinks } from '../../utils/shopLinks';
+import { buildShopLinks, buildShopLink } from '../../utils/shopLinks';
 import { matchWardrobe } from '../../utils/armocromiaWardrobe';
 import { resizeImageFile } from '../../utils/imageUtils';
 import './ArmocromiaPage.css';
@@ -89,15 +89,33 @@ export default function ArmocromiaPage() {
       ]
     : [];
   const outfitParts = [t('armocromia.ui.outfitTop'), t('armocromia.ui.outfitBottom'), t('armocromia.ui.outfitShoes')];
+  // Un capo → un negozio, a rotazione: l'outfit si compone fra shop diversi.
+  const OUTFIT_SHOPS = ['zara', 'bershka', 'zalando'];
 
-  const swatchRow = (colors) => (
+  // I campioni di palette e neutri sono LINK: tap → ricerca del colore negli
+  // shop (Zalando, il più affidabile sulla ricerca per colore).
+  const swatchRow = (colors, { linked = false } = {}) => (
     <div className="armocromia__swatches">
-      {colors.map((c) => (
-        <span key={c.nameKey + c.hex} className="armocromia__swatch" title={t(c.nameKey)}>
-          <i style={{ backgroundColor: c.hex }} />
-          <small>{t(c.nameKey)}</small>
-        </span>
-      ))}
+      {colors.map((c) =>
+        linked ? (
+          <a
+            key={c.nameKey + c.hex}
+            className="armocromia__swatch"
+            href={buildShopLink({ shop: 'zalando', query: t(c.nameKey), lang }).url}
+            target="_blank"
+            rel="noopener"
+            title={`${t(c.nameKey)} — Zalando`}
+          >
+            <i style={{ backgroundColor: c.hex }} />
+            <small>{t(c.nameKey)}</small>
+          </a>
+        ) : (
+          <span key={c.nameKey + c.hex} className="armocromia__swatch" title={t(c.nameKey)}>
+            <i style={{ backgroundColor: c.hex }} />
+            <small>{t(c.nameKey)}</small>
+          </span>
+        )
+      )}
     </div>
   );
 
@@ -195,9 +213,10 @@ export default function ArmocromiaPage() {
           </div>
 
           <h3 className="sv-label">{t('armocromia.ui.paletteTitle')}</h3>
-          {swatchRow(season.palette)}
+          <p className="armocromia__tap-hint sv-label">{t('armocromia.ui.paletteHint')}</p>
+          {swatchRow(season.palette, { linked: true })}
           <h3 className="sv-label">{t('armocromia.ui.neutralsTitle')}</h3>
-          {swatchRow(season.neutrals)}
+          {swatchRow(season.neutrals, { linked: true })}
           <h3 className="sv-label">{t('armocromia.ui.avoidTitle')}</h3>
           {swatchRow(season.avoid)}
           <p className="armocromia__metal sv-label">
@@ -208,24 +227,26 @@ export default function ArmocromiaPage() {
           <div className="armocromia__outfits">
             {outfits.map((combo, i) => (
               <div key={i} className="armocromia__outfit">
-                {combo.map((c, j) => (
-                  <div key={j} className="armocromia__outfit-item">
-                    <i style={{ backgroundColor: c.hex }} />
-                    <span>{t(c.nameKey)} — {outfitParts[j]}</span>
-                    {shopRow('clothing', `${outfitParts[j]} ${t(c.nameKey)}`)}
-                  </div>
-                ))}
-                {/* Outfit intero: i coordinati (co-ord) nel colore guida della combo */}
-                <div className="armocromia__outfit-item armocromia__outfit-complete">
-                  <span>{t('armocromia.ui.outfitComplete')}</span>
-                  <span className="armocromia__shops">
-                    {buildOutfitLinks({ colorName: t(combo[0].nameKey), lang }).map((l) => (
-                      <a key={l.shop} href={l.url} target="_blank" rel="noopener">
-                        <Icon name="external" size={11} /> {l.label}
-                      </a>
-                    ))}
-                  </span>
-                </div>
+                {combo.map((c, j) => {
+                  const link = buildShopLink({
+                    shop: OUTFIT_SHOPS[(i + j) % OUTFIT_SHOPS.length],
+                    query: `${outfitParts[j]} ${t(c.nameKey)}`,
+                    lang,
+                  });
+                  return (
+                    <div key={j} className="armocromia__outfit-item">
+                      <i style={{ backgroundColor: c.hex }} />
+                      <span>
+                        {outfitParts[j]} {t(c.nameKey)}
+                      </span>
+                      <span className="armocromia__shops">
+                        <a href={link.url} target="_blank" rel="noopener">
+                          <Icon name="external" size={11} /> {link.label}
+                        </a>
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             ))}
           </div>

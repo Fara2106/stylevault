@@ -36,11 +36,37 @@ export function buildShopLinks({ kind, query, lang }) {
 }
 
 /**
- * Link all'OUTFIT COMPLETO nel colore guida: nessuno shop compone un look
- * multi-capo via URL, ma tutti vendono i coordinati (co-ord) — outfit interi
- * come articolo unico — e la ricerca "coordinato + colore" li restituisce.
+ * Shop per i suggerimenti outfit "un capo → un negozio": include anche i
+ * fast-fashion (Zara, Bershka) che non stanno nel giro dei link per colore.
  */
-export function buildOutfitLinks({ colorName, lang }) {
-  const term = lang === 'en' ? 'co-ord' : 'coordinato';
-  return buildShopLinks({ kind: 'clothing', query: `${term} ${colorName}`, lang });
+const SINGLE_SHOPS = {
+  zara: {
+    label: 'Zara',
+    it: 'https://www.zara.com/it/it/search?searchTerm=',
+    en: 'https://www.zara.com/uk/en/search?searchTerm=',
+  },
+  bershka: {
+    label: 'Bershka',
+    it: 'https://www.bershka.com/it/search?q=',
+    en: 'https://www.bershka.com/gb/search?q=',
+  },
+  zalando: {
+    label: 'Zalando',
+    it: 'https://www.zalando.it/catalogo/?q=',
+    en: 'https://www.zalando.co.uk/catalog/?q=',
+  },
+  asos: {
+    label: 'ASOS',
+    it: 'https://www.asos.com/it/search/?q=',
+    en: 'https://www.asos.com/search/?q=',
+  },
+};
+
+/** Un solo link a UNO shop preciso. null se lo shop non è tra i previsti. */
+export function buildShopLink({ shop, query, lang }) {
+  const entry = SINGLE_SHOPS[shop];
+  if (!entry) return null;
+  const base = entry[lang] || entry.it;
+  const q = encodeURIComponent(query).replace(/\+/g, '%20');
+  return { shop, label: entry.label, url: base + q };
 }
