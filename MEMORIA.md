@@ -3,6 +3,24 @@
 > File di ripartenza: se apri una nuova chat, leggi questo file per riprendere il lavoro
 > esattamente da dove eravamo. Va aggiornato a ogni avanzamento significativo.
 
+## Novità 2026-07-18 (notte) — "Su di te" RIMOSSA: la Prova è solo Prompt AI
+
+Richiesta di Lorenzo: «togli la parte su di me che tanto non serve più» — il
+try-on ormai lo fa ChatGPT/Gemini col prompt. Fatto e LIVE (`586ba7e`):
+
+- La pagina Prova non ha più schede: slot outfit + Salva + flusso Prompt AI.
+- La foto della persona è il PANNELLO 1 della fila "Foto da caricare in chat"
+  (tap per caricarla/cambiarla): resta la Image 1 di prompt/provino/share e
+  la base dell'armocromia. Onboarding invariato (copy aggiornata).
+- Cancellati ModelTryOn, Avatar.css, modelImage/modelComposer/modelWarp
+  (+ test). RESTANO personSilhouette (scontorno capi), bodyAnalysis
+  (armocromia), tryonComposer (slot). i18n 469/469.
+- Prima, nella stessa serata (`cd2951a`): armocromia col RITAGLIO SUL VISO
+  (il modello selfie riceveva la figura intera) + correzioni manuali
+  RICORDATE; e bottone "Copia le foto (immagine unica)" — provino numerato
+  negli appunti, niente più caccia in galleria.
+- 162 test verdi, verifiche headless in scratchpad, deploy verdi.
+
 ## Novità 2026-07-18 (sera) — freeze sistemato, condivisione, ARMOCROMIA pronta
 
 Tre avanzamenti dopo la prova online di Lorenzo:
