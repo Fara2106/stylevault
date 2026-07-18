@@ -12,6 +12,7 @@ import OutfitPage from './pages/OutfitPage/OutfitPage';
 import TryOnPage from './pages/TryOnPage/TryOnPage';
 import CalendarPage from './pages/CalendarPage/CalendarPage';
 import ProfilePage from './pages/ProfilePage/ProfilePage';
+import ArmocromiaPage from './pages/ArmocromiaPage/ArmocromiaPage';
 
 /** Riporta lo scroll in cima a ogni cambio pagina. */
 function ScrollToTop() {
@@ -68,6 +69,7 @@ export default function App() {
         <Route path="/tryon" element={<TryOnPage />} />
         <Route path="/calendar" element={<CalendarPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/armocromia" element={<ArmocromiaPage />} />
       </Route>
         <Route path="*" element={<Navigate to="/wardrobe" replace />} />
       </Routes>

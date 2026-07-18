@@ -1,0 +1,43 @@
+/* Armocromia: campioni colore, verdetto, combo outfit, make-up. */
+.armocromia__intro { display: flex; flex-direction: column; gap: var(--sv-space-3); }
+.armocromia__status { text-align: center; margin: var(--sv-space-5) auto; }
+.armocromia__failed { color: var(--sv-error, #b3261e); font-size: 0.85rem; }
+
+.armocromia__pickers { display: flex; gap: var(--sv-space-3); margin: var(--sv-space-3) 0; }
+.armocromia__picker { position: relative; flex: 1; display: flex; flex-direction: column;
+  align-items: center; gap: 4px; cursor: pointer; }
+.armocromia__picker input[type='color'] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.armocromia__picker i { width: 44px; height: 44px; border-radius: 50%;
+  border: 1px solid var(--sv-border); display: block; }
+
+.armocromia__verdict h2 { margin: var(--sv-space-3) 0 4px; }
+.armocromia__swatches { display: flex; flex-wrap: wrap; gap: var(--sv-space-2);
+  margin: var(--sv-space-2) 0 var(--sv-space-4); }
+.armocromia__swatch { display: flex; flex-direction: column; align-items: center;
+  gap: 2px; width: 64px; }
+.armocromia__swatch i { width: 36px; height: 36px; border-radius: 8px;
+  border: 1px solid var(--sv-border); display: block; }
+.armocromia__swatch small { font-size: 0.65rem; text-align: center; line-height: 1.15; }
+
+.armocromia__outfits { display: flex; flex-direction: column; gap: var(--sv-space-3);
+  margin-bottom: var(--sv-space-4); }
+.armocromia__outfit { border: 1px solid var(--sv-border); border-radius: 12px;
+  padding: var(--sv-space-3); display: flex; flex-direction: column; gap: var(--sv-space-2); }
+.armocromia__outfit-item { display: flex; align-items: center; gap: var(--sv-space-2);
+  flex-wrap: wrap; font-size: 0.85rem; }
+.armocromia__outfit-item i { width: 18px; height: 18px; border-radius: 4px;
+  border: 1px solid var(--sv-border); flex-shrink: 0; }
+.armocromia__shops { display: inline-flex; gap: var(--sv-space-2); margin-left: auto; }
+.armocromia__shops a { display: inline-flex; align-items: center; gap: 3px;
+  font-size: 0.75rem; text-decoration: underline; }
+
+.armocromia__wardrobe { list-style: none; padding: 0; margin: 0 0 var(--sv-space-4);
+  display: flex; flex-direction: column; gap: var(--sv-space-2); }
+.armocromia__wardrobe li { display: flex; align-items: center; gap: var(--sv-space-2); }
+.armocromia__wardrobe img { width: 40px; height: 40px; object-fit: cover; border-radius: 8px; }
+.armocromia__wardrobe i { width: 16px; height: 16px; border-radius: 50%;
+  border: 1px solid var(--sv-border); margin-left: auto; }
+
+.armocromia__makeup-row { margin-bottom: var(--sv-space-3); }
+.armocromia__actions { display: flex; flex-direction: column; gap: var(--sv-space-2);
+  margin: var(--sv-space-4) 0; }

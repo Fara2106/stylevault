@@ -67,6 +67,18 @@ export default function ProfilePage() {
         </div>
       </div>
 
+      {/* Armocromia: ingresso all'analisi colori personali */}
+      <section className="profile-page__section">
+        <Button
+          fullWidth
+          variant="secondary"
+          icon={<Icon name="sparkle" size={15} />}
+          onClick={() => navigate('/armocromia')}
+        >
+          {t('armocromia.ui.profileCard')}
+        </Button>
+      </section>
+
       {/* Impostazioni */}
       <section className="profile-page__section">
         <h2 className="sv-label">{t('profile.settings')}</h2>
