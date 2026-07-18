@@ -16,15 +16,14 @@ Tre avanzamenti dopo la prova online di Lorenzo:
    Prompt AI ha "Invia foto e prompt all'app AI" (Web Share API): 1-persona.jpg
    per prima (= Image 1), capi numerati come nel prompt. Un gesto, niente
    ricerca manuale delle foto.
-3. **ARMOCROMIA completa su `feat/armocromia` (HEAD `fed0552`, pushato, NON
-   mergiato)**: pagina /armocromia dal Profilo — foto → pelle/capelli/occhi
+3. **ARMOCROMIA LIVE** (merge ff `b0f319d..5b9a665` la notte del 18, deploy
+   verde; Lorenzo ha applicato la migrazione 002 su Supabase e approvato sugli
+   screenshot): pagina /armocromia dal Profilo — foto → pelle/capelli/occhi
    on-device → 12 sotto-stagioni (centroidi su 3 assi Lab, tarati in prototipo)
    → palette + combo outfit con link shop + guardaroba in palette + make-up.
    9/9 task revisionati, revisione finale opus "pronto al merge", 186 test
    verdi, verifica a schermo in docs/verifiche/2026-07-18-armocromia/.
-   **BLOCCANTE PRE-MERGE**: applicare su Supabase (SQL Editor):
-   `alter table public.profiles add column if not exists armocromia jsonb;`
-   poi verifica di Lorenzo con la sua foto → merge ff → deploy.
+   Fix-after rimandati: retry singleton MediaPipe, drop colonna avatar_config.
 
 ## Novità 2026-07-18 — "Prompt AI" LIVE, avatar RIMOSSO del tutto
 
