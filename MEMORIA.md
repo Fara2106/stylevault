@@ -20,7 +20,7 @@ try-on ormai lo fa ChatGPT/Gemini col prompt. Fatto e LIVE (`586ba7e`):
   RICORDATE; e bottone "Copia le foto (immagine unica)" — provino numerato
   negli appunti, niente più caccia in galleria.
 - 162 test verdi, verifiche headless in scratchpad, deploy verdi.
-- Aggiunta successiva (`ecc.` stessa notte): riga **"Outfit completo
+- Aggiunta successiva (`4a63f4d`, stessa notte): riga **"Outfit completo
   (coordinato)"** in ogni combo dell'armocromia — ricerca `coordinato
   <colore guida>` (EN co-ord) su Zalando/ASOS/Amazon: i coordinati sono
   l'unico "outfit intero" linkabile via URL. 165 test verdi.
