@@ -73,11 +73,56 @@ const discPixels = (imageData, cx, cy, radius) => {
   return out;
 };
 
-async function eyesColor(img, imageData) {
+/** Landmark del volto (478 punti, iridi incluse) o null. */
+async function detectFacePoints(img) {
   try {
     const lm = await getFaceLandmarker();
     const result = lm.detect(img);
-    const points = result.faceLandmarks?.[0];
+    return result.faceLandmarks?.[0] || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Riquadro del MEZZOBUSTO attorno al volto, in pixel immagine: il
+ * segmentatore selfie è addestrato su mezzibusti a 256px — su una foto a
+ * figura intera il viso è una manciata di pixel del suo input e pelle/capelli
+ * si perdono. Margini larghi: sopra 1.1×viso (i capelli), lati 0.7, sotto 0.5.
+ */
+function faceCropBox(points, width, height) {
+  let minX = 1, maxX = 0, minY = 1, maxY = 0;
+  for (const p of points) {
+    if (p.x < minX) minX = p.x;
+    if (p.x > maxX) maxX = p.x;
+    if (p.y < minY) minY = p.y;
+    if (p.y > maxY) maxY = p.y;
+  }
+  const fw = (maxX - minX) * width;
+  const fh = (maxY - minY) * height;
+  const x0 = Math.max(0, Math.round(minX * width - 0.7 * fw));
+  const y0 = Math.max(0, Math.round(minY * height - 1.1 * fh));
+  const x1 = Math.min(width, Math.round(maxX * width + 0.7 * fw));
+  const y1 = Math.min(height, Math.round(maxY * height + 0.5 * fh));
+  const w = x1 - x0;
+  const h = y1 - y0;
+  return w > 8 && h > 8 ? { x: x0, y: y0, w, h } : null;
+}
+
+/** Ritaglio come dataURL, riscalato perché il lato lungo sia ~TARGET px. */
+const CROP_TARGET = 720;
+function cropDataUrl(img, box) {
+  const scale = Math.min(2.5, CROP_TARGET / Math.max(box.w, box.h));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(box.w * scale);
+  canvas.height = Math.round(box.h * scale);
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, box.x, box.y, box.w, box.h, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL('image/jpeg', 0.92);
+}
+
+function eyesColor(points, imageData) {
+  try {
     if (!points) return null;
     const pixels = [];
     for (const { center, ring } of IRIS) {
@@ -100,24 +145,43 @@ async function eyesColor(img, imageData) {
   }
 }
 
+/** Pelle/capelli via segmentazione dell'immagine indicata. */
+async function skinAndHair(sourceUrl, sourceImg) {
+  const seg = await segmentBody(sourceUrl);
+  if (!seg) return { skin: null, hair: null, skinCount: 0 };
+  const maskData = imageDataOf(sourceImg, seg.width, seg.height);
+  const skinPx = maskedPixels(maskData, seg.categories, [SEG_FACE_SKIN]);
+  const hairPx = maskedPixels(maskData, seg.categories, [SEG_HAIR]);
+  return {
+    skin: skinPx.length >= MIN_REGION_PIXELS ? representativeColor(skinPx) : null,
+    hair: hairPx.length >= MIN_REGION_PIXELS ? representativeColor(hairPx) : null,
+    skinCount: skinPx.length,
+  };
+}
+
 export async function analyzeFaceColors(photoUrl) {
   try {
-    const [seg, img] = await Promise.all([segmentBody(photoUrl), loadImage(photoUrl)]);
-    let skin = null;
-    let hair = null;
-    let skinCount = 0;
-    if (seg) {
-      const maskData = imageDataOf(img, seg.width, seg.height);
-      const skinPx = maskedPixels(maskData, seg.categories, [SEG_FACE_SKIN]);
-      const hairPx = maskedPixels(maskData, seg.categories, [SEG_HAIR]);
-      skinCount = skinPx.length;
-      if (skinPx.length >= MIN_REGION_PIXELS) skin = representativeColor(skinPx);
-      if (hairPx.length >= MIN_REGION_PIXELS) hair = representativeColor(hairPx);
+    const img = await loadImage(photoUrl);
+    const points = await detectFacePoints(img);
+
+    // Mezzobusto ritagliato quando il volto si trova: al segmentatore selfie
+    // arriva un input nel suo dominio. Senza volto (o ritaglio degenere) si
+    // resta sull'immagine intera, come prima.
+    let result = { skin: null, hair: null, skinCount: 0 };
+    const box = points ? faceCropBox(points, img.naturalWidth, img.naturalHeight) : null;
+    if (box) {
+      const cropUrl = cropDataUrl(img, box);
+      result = await skinAndHair(cropUrl, await loadImage(cropUrl));
     }
+    if (!result.skin && !result.hair) {
+      result = await skinAndHair(photoUrl, img);
+    }
+
     // occhi alla risoluzione naturale (l'iride è piccola)
     const fullData = imageDataOf(img, img.naturalWidth, img.naturalHeight);
-    const eyes = await eyesColor(img, fullData);
+    const eyes = eyesColor(points, fullData);
 
+    const { skin, hair, skinCount } = result;
     if (!skin && !hair && !eyes) return null;
     const parts = [skin, hair, eyes].filter(Boolean).length;
     const confidence =

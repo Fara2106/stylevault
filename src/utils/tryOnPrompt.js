@@ -55,6 +55,9 @@ export function buildTryOnPrompt(items = []) {
     '',
     garments,
     '',
+    'The photos may be attached as separate images or combined into a single ' +
+      'numbered contact sheet — the numbers always identify the same person and garments.',
+    '',
     "Replace ONLY the person's current clothing with these garments. Fit each item " +
       'naturally with realistic folds, seams and shadows, matching the lighting and ' +
       'perspective of Image 1. Full-body framing, head to feet, sharp focus, natural ' +

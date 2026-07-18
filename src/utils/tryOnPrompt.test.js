@@ -41,4 +41,7 @@ describe('buildTryOnPrompt', () => {
     expect(() => buildTryOnPrompt([])).not.toThrow();
     expect(buildTryOnPrompt([])).toMatch(/photorealistic virtual try-on/i);
   });
+  it('spiega che le foto possono arrivare come provino unico numerato', () => {
+    expect(buildTryOnPrompt(items)).toMatch(/single numbered contact sheet/i);
+  });
 });

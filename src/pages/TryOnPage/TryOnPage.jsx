@@ -8,7 +8,13 @@ import { Header, Button, Modal, Icon } from '../../components/common';
 import { CLOTHING_COLORS } from '../../utils/categories';
 import { resizeImageFile } from '../../utils/imageUtils';
 import { buildTryOnPrompt } from '../../utils/tryOnPrompt';
-import { shareFilePlan, buildShareFiles, canShareFiles } from '../../utils/tryOnShare';
+import {
+  shareFilePlan,
+  buildShareFiles,
+  canShareFiles,
+  canCopyImages,
+  buildPhotoSheet,
+} from '../../utils/tryOnShare';
 import {
   emptyOutfit,
   normalizeOutfit,
@@ -95,8 +101,42 @@ export default function TryOnPage() {
   useEffect(() => {
     setPromptText(buildTryOnPrompt(items));
     setPromptCopied(false);
+    setPhotosCopied(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [itemsKey]);
+
+  // "Copia le foto": provino unico (1 = persona, 2.. = capi) negli appunti,
+  // così in chat si incolla invece di ripescare le foto dalla galleria.
+  // Il PNG si prepara in anticipo: la copia deve avvenire DENTRO il gesto
+  // (Safari rifiuta le scritture asincrone negli appunti).
+  const canCopyPhotos = canCopyImages();
+  const [photoSheet, setPhotoSheet] = useState(null);
+  const [photosCopied, setPhotosCopied] = useState(false);
+
+  useEffect(() => {
+    if (!canCopyPhotos || mode !== 'photo' || items.length === 0) {
+      setPhotoSheet(null);
+      return undefined;
+    }
+    let cancelled = false;
+    buildPhotoSheet(shareFilePlan(referencePhoto, items)).then((blob) => {
+      if (!cancelled) setPhotoSheet(blob);
+    });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [itemsKey, referencePhoto, mode, canCopyPhotos]);
+
+  const handleCopyPhotos = async () => {
+    try {
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': photoSheet })]);
+      setPhotosCopied(true);
+    } catch {
+      // Appunti non disponibili: restano condivisione e download qui sotto.
+      setPhotosCopied(false);
+    }
+  };
 
   const handleCopyPrompt = async () => {
     try {
@@ -405,6 +445,16 @@ export default function TryOnPage() {
               >
                 {promptCopied ? t('tryon.promptCopied') : t('tryon.promptCopy')}
               </Button>
+              {canCopyPhotos && photoSheet && (
+                <Button
+                  fullWidth
+                  variant="secondary"
+                  icon={photosCopied ? <Icon name="check" size={14} /> : <Icon name="image" size={14} />}
+                  onClick={handleCopyPhotos}
+                >
+                  {photosCopied ? t('tryon.promptPhotosCopied') : t('tryon.promptCopyPhotos')}
+                </Button>
+              )}
             </>
           )}
         </section>

@@ -51,6 +51,66 @@ export async function buildShareFiles(plan) {
   return files;
 }
 
+/** true se si possono copiare immagini negli appunti (desktop e mobile moderni). */
+export function canCopyImages() {
+  return (
+    typeof navigator !== 'undefined' &&
+    Boolean(navigator.clipboard && navigator.clipboard.write) &&
+    typeof ClipboardItem !== 'undefined'
+  );
+}
+
+const loadSheetImage = (src) =>
+  new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('load'));
+    img.src = src;
+  });
+
+/**
+ * Provino unico: i pannelli del piano affiancati su sfondo bianco, ognuno col
+ * badge del SUO numero nel prompt (preso dal prefisso del nome file: la
+ * persona è 1 anche quando manca e i capi partono comunque da 2).
+ * Un solo incolla in chat al posto della caccia in galleria; il prompt spiega
+ * il provino. @returns {Promise<Blob|null>} PNG, null se nessuna foto carica.
+ */
+export async function buildPhotoSheet(plan, { panel = 512, gap = 12 } = {}) {
+  const loaded = [];
+  for (const entry of plan) {
+    try {
+      loaded.push({ img: await loadSheetImage(entry.source), number: parseInt(entry.name, 10) });
+    } catch {
+      // foto irraggiungibile: pannello saltato, i numeri restanti non cambiano
+    }
+  }
+  if (loaded.length === 0) return null;
+  const canvas = document.createElement('canvas');
+  canvas.width = loaded.length * panel + (loaded.length + 1) * gap;
+  canvas.height = panel + gap * 2;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  loaded.forEach(({ img, number }, i) => {
+    const x = gap + i * (panel + gap);
+    const scale = Math.min(panel / img.naturalWidth, panel / img.naturalHeight);
+    const w = img.naturalWidth * scale;
+    const h = img.naturalHeight * scale;
+    ctx.drawImage(img, x + (panel - w) / 2, gap + (panel - h) / 2, w, h);
+    ctx.fillStyle = '#1a1a1a';
+    ctx.beginPath();
+    ctx.arc(x + 28, gap + 28, 22, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 24px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(String(number), x + 28, gap + 29);
+  });
+  return new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+}
+
 /** true se il browser sa condividere file (in pratica: telefono/tablet). */
 export function canShareFiles() {
   if (typeof navigator === 'undefined' || typeof File === 'undefined') return false;

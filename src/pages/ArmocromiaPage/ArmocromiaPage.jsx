@@ -38,12 +38,15 @@ export default function ArmocromiaPage() {
     setPhase('analyzing');
     setFailed(false);
     const res = await analyzeFaceColors(photoUrl);
-    if (res) {
-      setDetected({ skin: res.skin, hair: res.hair, eyes: res.eyes });
-    } else {
-      setDetected({ skin: null, hair: null, eyes: null });
-      setFailed(true);
-    }
+    // Un campo che l'analisi non trova riparte dall'ultima correzione salvata:
+    // chi ha già sistemato i colori a mano non deve rifarlo a ogni analisi.
+    const saved = armocromia?.detected || {};
+    setDetected({
+      skin: res?.skin || saved.skin || null,
+      hair: res?.hair || saved.hair || null,
+      eyes: res?.eyes || saved.eyes || null,
+    });
+    if (!res) setFailed(true);
     setPhase('detected');
   };
 

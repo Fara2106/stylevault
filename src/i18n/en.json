@@ -186,6 +186,8 @@
     "promptIntro": "Generate an English prompt to paste into ChatGPT or Gemini along with your photo and the garment photos: the result is a photograph of you wearing them. Free, no key required.",
     "promptCopy": "Copy prompt",
     "promptCopied": "Copied!",
+    "promptCopyPhotos": "Copy the photos (single image)",
+    "promptPhotosCopied": "Photos copied! Paste them in the chat",
     "promptShare": "Send photos and prompt to the AI app",
     "promptSharing": "Preparing the share\u2026",
     "promptShareHint": "Your phone's share sheet opens: pick ChatGPT or Gemini. Photos arrive in order (1 is you); if the text doesn't come through, tap Copy prompt and paste it.",

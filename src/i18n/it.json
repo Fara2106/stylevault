@@ -186,6 +186,8 @@
     "promptIntro": "Genera un prompt in inglese da incollare in ChatGPT o Gemini insieme alla tua foto e alle foto dei capi: il risultato è una fotografia di te che li indossa. Gratis, nessuna chiave richiesta.",
     "promptCopy": "Copia prompt",
     "promptCopied": "Copiato!",
+    "promptCopyPhotos": "Copia le foto (immagine unica)",
+    "promptPhotosCopied": "Foto copiate! Incollale in chat",
     "promptShare": "Invia foto e prompt all'app AI",
     "promptSharing": "Preparo la condivisione\u2026",
     "promptShareHint": "Si apre la condivisione del telefono: scegli ChatGPT o Gemini. Le foto arrivano gi\u00e0 in ordine (la 1 sei tu); se il testo non compare, tocca Copia prompt e incollalo.",
