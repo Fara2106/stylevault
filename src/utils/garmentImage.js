@@ -4,7 +4,7 @@
  *
  * Le foto dei capi aggiunti da link stanno su domini esterni: leggerne i pixel
  * fa scattare la protezione CORS del browser e il canvas diventa illeggibile.
- * In quel caso si ripiega sulla tinta unita, come già fa il try-on "Su di te".
+ * In quel caso si ripiega sulla tinta unita.
  */
 import { extractGarment } from './garmentTexture';
 import { classifyGarmentImage } from './garmentClassifier';

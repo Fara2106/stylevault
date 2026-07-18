@@ -237,12 +237,6 @@
   color: var(--sv-muted);
 }
 
-.tryon-page__photo {
-  max-width: 340px;
-  margin: 0 auto;
-  text-align: center;
-}
-
 .tryon-page__photo-intro {
   font-size: 13px;
   line-height: 1.6;
@@ -261,38 +255,6 @@
   color: var(--sv-accent-ink);
   text-decoration: underline;
   text-underline-offset: 2px;
-}
-
-/* ── Selettore modalità (Su di te / Prompt AI) ─────── */
-
-.tryon-page__modes {
-  display: flex;
-  max-width: 340px;
-  margin: 0 auto var(--sv-space-4);
-  background: var(--sv-surface);
-  border: 1px solid var(--sv-border-strong);
-  border-radius: 999px;
-  padding: 3px;
-}
-
-.tryon-page__mode {
-  flex: 1;
-  padding: 8px 10px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--sv-muted);
-  background: transparent;
-  border: none;
-  border-radius: 999px;
-  cursor: pointer;
-  transition: all var(--sv-transition);
-}
-
-.tryon-page__mode--active {
-  background: var(--sv-ink);
-  color: var(--sv-bg);
 }
 
 /* ── Prompt AI (copia in ChatGPT/Gemini, niente chiave) ───── */
@@ -381,6 +343,21 @@
   color: var(--sv-bg);
   background: rgba(0, 0, 0, 0.65);
   border-radius: 7px;
+}
+
+/* Pannello 1: la foto della persona, caricabile/cambiabile con un tap */
+button.tryon-page__prompt-garment {
+  padding: 0;
+  cursor: pointer;
+  background: var(--sv-surface-soft);
+}
+
+.tryon-page__prompt-garment--add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-style: dashed;
+  color: var(--sv-muted);
 }
 
 .tryon-page__prompt-label {

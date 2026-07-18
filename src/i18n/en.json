@@ -59,7 +59,7 @@
     "welcome": "Welcome to StyleVault",
     "intro": "Three steps to get started: your avatar, your city, your clothes.",
     "stepPhoto": "Your photo",
-    "stepPhotoHint": "Upload a full-body photo of yourself: you'll use it to try on outfits \"on you\". It stays on your device and is optional.",
+    "stepPhotoHint": "Upload a full-body photo of yourself: you'll use it with the AI prompt to see outfits on you, and for the color analysis. It stays on your device and is optional.",
     "stepCity": "Your city",
     "stepCityHint": "Outfits are suggested based on this city's real weather. You can change it anytime.",
     "finish": "Get started",
@@ -172,16 +172,9 @@
     "noItems": "No items of this kind in your wardrobe",
     "saveOutfit": "Save outfit",
     "withWishlist": "Includes wishlist items",
-    "modeModel": "On you",
-    "modePhoto": "AI Prompt",
-    "modelIntro": "The person in your photo, dressed with the real photos of the chosen items, in their proportions. Free: the cutout runs on your device, the photo never leaves it.",
-    "modelPreparingPhoto": "Preparing your photo (cutout)…",
-    "modelNoFigure": "I can't make out a full figure in the photo: use a standing, front-facing, full-body photo.",
-    "modelError": "Couldn't prepare the photo: try again or change photo.",
-    "modelNeedsPhoto": "Upload a full-body photo of yourself to start (it stays on your device).",
     "photoUpload": "Upload a photo of you",
     "photoChange": "Change photo",
-    "photoNoOutfit": "First pick the items above, then generate the photo here.",
+    "photoNoOutfit": "Pick the garments above first: the prompt and photos to copy will appear here.",
     "promptTitle": "Prompt to copy",
     "promptIntro": "Generate an English prompt to paste into ChatGPT or Gemini along with your photo and the garment photos: the result is a photograph of you wearing them. Free, no key required.",
     "promptCopy": "Copy prompt",
@@ -189,7 +182,7 @@
     "promptCopyPhotos": "Copy the photos (single image)",
     "promptPhotosCopied": "Photos copied! Paste them in the chat",
     "promptShare": "Send photos and prompt to the AI app",
-    "promptSharing": "Preparing the share\u2026",
+    "promptSharing": "Preparing the share…",
     "promptShareHint": "Your phone's share sheet opens: pick ChatGPT or Gemini. Photos arrive in order (1 is you); if the text doesn't come through, tap Copy prompt and paste it.",
     "promptStep1": "Open ChatGPT or Gemini",
     "promptStep2": "Upload a full-body photo of yourself",
@@ -197,14 +190,13 @@
     "promptStep4": "Paste the copied prompt and generate the image",
     "promptOpenChatgpt": "Open ChatGPT",
     "promptOpenGemini": "Open Gemini",
-    "promptGarments": "Garment photos to upload"
+    "promptGarments": "Photos to upload in the chat"
   },
   "avatar": {
     "referencePhoto": "Reference photo",
     "uploadReference": "Upload a photo of you",
-    "referenceHint": "It helps you tune the avatar until it looks like you. It stays on your device only.",
-    "removeReference": "Remove photo",
-    "preparingGarments": "Preparing the garments..."
+    "referenceHint": "You'll upload it in the chat with the AI prompt and it powers the color analysis. It stays on your device only.",
+    "removeReference": "Remove photo"
   },
   "advice": {
     "colorsHarmonious": "The colors work well together",
@@ -229,7 +221,7 @@
     "neverWorn": "Never worn",
     "openShop": "Open in store",
     "deleteItem": "Delete item",
-    "tryOn": "Try it on"
+    "tryOn": "Try the outfit"
   },
   "calendar": {
     "title": "Calendar",
@@ -406,38 +398,115 @@
   },
   "armocromia": {
     "seasons": {
-      "light-spring": { "name": "Light Spring", "desc": "Warm, light, delicate colors: peach, mint, cream. Soft luminous shades suit you — never heavy ones." },
-      "light-summer": { "name": "Light Summer", "desc": "Cool, light, dusty colors: lavender, powder pink, powder blue. Gentle tones beat strong contrast." },
-      "true-spring": { "name": "True Spring", "desc": "Warm, lively colors: coral, grass green, golden yellow. Warmth is your signature: keep black away from your face." },
-      "true-summer": { "name": "True Summer", "desc": "Cool, soft colors: mauve, blues, light plum. Silver and dusty tones flatter you." },
-      "true-autumn": { "name": "True Autumn", "desc": "Warm, earthy colors: rust, olive, mustard, copper. Spice and earth tones are yours." },
-      "true-winter": { "name": "True Winter", "desc": "Cool, crisp colors: fuchsia, royal blue, cherry red, black and white. Clean contrast is your strength." },
-      "bright-spring": { "name": "Bright Spring", "desc": "Warm, vivid colors: bright coral, turquoise, golden yellow. The brighter the color, the better it works." },
-      "bright-winter": { "name": "Bright Winter", "desc": "Cool, vivid colors: fuchsia, electric blue, cherry red. Sharp contrast and saturated shades light you up." },
-      "soft-autumn": { "name": "Soft Autumn", "desc": "Warm, muted colors: sage, honey, dusty terracotta. Blended dusty tones flatter more than pure brights." },
-      "soft-summer": { "name": "Soft Summer", "desc": "Cool, muted colors: lilac, sage, ice blue. Soft shades, never loud ones." },
-      "deep-autumn": { "name": "Deep Autumn", "desc": "Warm, deep colors: wine, pine green, chocolate. Rich dark shades frame your face." },
-      "deep-winter": { "name": "Deep Winter", "desc": "Cool, deep colors: burgundy, navy, emerald. Intense darks with pure white contrast." }
+      "light-spring": {
+        "name": "Light Spring",
+        "desc": "Warm, light, delicate colors: peach, mint, cream. Soft luminous shades suit you — never heavy ones."
+      },
+      "light-summer": {
+        "name": "Light Summer",
+        "desc": "Cool, light, dusty colors: lavender, powder pink, powder blue. Gentle tones beat strong contrast."
+      },
+      "true-spring": {
+        "name": "True Spring",
+        "desc": "Warm, lively colors: coral, grass green, golden yellow. Warmth is your signature: keep black away from your face."
+      },
+      "true-summer": {
+        "name": "True Summer",
+        "desc": "Cool, soft colors: mauve, blues, light plum. Silver and dusty tones flatter you."
+      },
+      "true-autumn": {
+        "name": "True Autumn",
+        "desc": "Warm, earthy colors: rust, olive, mustard, copper. Spice and earth tones are yours."
+      },
+      "true-winter": {
+        "name": "True Winter",
+        "desc": "Cool, crisp colors: fuchsia, royal blue, cherry red, black and white. Clean contrast is your strength."
+      },
+      "bright-spring": {
+        "name": "Bright Spring",
+        "desc": "Warm, vivid colors: bright coral, turquoise, golden yellow. The brighter the color, the better it works."
+      },
+      "bright-winter": {
+        "name": "Bright Winter",
+        "desc": "Cool, vivid colors: fuchsia, electric blue, cherry red. Sharp contrast and saturated shades light you up."
+      },
+      "soft-autumn": {
+        "name": "Soft Autumn",
+        "desc": "Warm, muted colors: sage, honey, dusty terracotta. Blended dusty tones flatter more than pure brights."
+      },
+      "soft-summer": {
+        "name": "Soft Summer",
+        "desc": "Cool, muted colors: lilac, sage, ice blue. Soft shades, never loud ones."
+      },
+      "deep-autumn": {
+        "name": "Deep Autumn",
+        "desc": "Warm, deep colors: wine, pine green, chocolate. Rich dark shades frame your face."
+      },
+      "deep-winter": {
+        "name": "Deep Winter",
+        "desc": "Cool, deep colors: burgundy, navy, emerald. Intense darks with pure white contrast."
+      }
     },
     "colors": {
-      "pesca": "peach", "albicocca": "apricot", "corallo": "coral", "menta": "mint green",
-      "azzurro-polvere": "powder blue", "limone": "lemon yellow", "nero": "black",
-      "viola": "purple", "bordeaux": "burgundy", "crema": "cream", "beige": "beige",
-      "sabbia": "sand", "rame": "copper", "rosa-cipria": "powder pink", "lavanda": "lavender",
-      "malva": "mauve", "blu-ghiaccio": "ice blue", "arancio": "orange",
-      "ruggine": "rust", "grigio-perla": "pearl gray", "tortora": "taupe",
-      "bianco-caldo": "off-white", "rosa-antico": "dusty rose", "giallo-dorato": "golden yellow",
-      "verde-erba": "grass green", "turchese": "turquoise", "rosso-pomodoro": "tomato red",
-      "vinaccia": "wine", "cammello": "camel", "prugna": "plum", "blu-navy": "navy blue",
-      "grigio-antracite": "charcoal", "oliva": "olive green", "terracotta": "terracotta",
-      "senape": "mustard", "verde-pino": "pine green", "rosa-shocking": "hot pink",
-      "kaki": "khaki", "marrone-cioccolato": "chocolate brown", "fucsia": "fuchsia",
-      "blu-royal": "royal blue", "smeraldo": "emerald green", "rosso-ciliegia": "cherry red",
-      "bianco-puro": "pure white", "verde-salvia": "sage green", "miele": "honey",
-      "lilla": "lilac", "petrolio": "teal"
+      "pesca": "peach",
+      "albicocca": "apricot",
+      "corallo": "coral",
+      "menta": "mint green",
+      "azzurro-polvere": "powder blue",
+      "limone": "lemon yellow",
+      "nero": "black",
+      "viola": "purple",
+      "bordeaux": "burgundy",
+      "crema": "cream",
+      "beige": "beige",
+      "sabbia": "sand",
+      "rame": "copper",
+      "rosa-cipria": "powder pink",
+      "lavanda": "lavender",
+      "malva": "mauve",
+      "blu-ghiaccio": "ice blue",
+      "arancio": "orange",
+      "ruggine": "rust",
+      "grigio-perla": "pearl gray",
+      "tortora": "taupe",
+      "bianco-caldo": "off-white",
+      "rosa-antico": "dusty rose",
+      "giallo-dorato": "golden yellow",
+      "verde-erba": "grass green",
+      "turchese": "turquoise",
+      "rosso-pomodoro": "tomato red",
+      "vinaccia": "wine",
+      "cammello": "camel",
+      "prugna": "plum",
+      "blu-navy": "navy blue",
+      "grigio-antracite": "charcoal",
+      "oliva": "olive green",
+      "terracotta": "terracotta",
+      "senape": "mustard",
+      "verde-pino": "pine green",
+      "rosa-shocking": "hot pink",
+      "kaki": "khaki",
+      "marrone-cioccolato": "chocolate brown",
+      "fucsia": "fuchsia",
+      "blu-royal": "royal blue",
+      "smeraldo": "emerald green",
+      "rosso-ciliegia": "cherry red",
+      "bianco-puro": "pure white",
+      "verde-salvia": "sage green",
+      "miele": "honey",
+      "lilla": "lilac",
+      "petrolio": "teal"
     },
-    "undertone": { "warm": "warm undertone", "cool": "cool undertone", "neutral": "neutral undertone" },
-    "metal": { "gold": "gold", "silver": "silver", "both": "gold and silver" },
+    "undertone": {
+      "warm": "warm undertone",
+      "cool": "cool undertone",
+      "neutral": "neutral undertone"
+    },
+    "metal": {
+      "gold": "gold",
+      "silver": "silver",
+      "both": "gold and silver"
+    },
     "ui": {
       "title": "Your colors",
       "profileCard": "Color analysis — find your palette",
@@ -471,8 +540,12 @@
       "redo": "Redo the analysis",
       "save": "Save the result",
       "saved": "Saved to profile",
-      "outfitTop": "sweater", "outfitBottom": "trousers", "outfitShoes": "shoes",
-      "lipstick": "lipstick", "blushQuery": "blush", "eyeshadowQuery": "eyeshadow"
+      "outfitTop": "sweater",
+      "outfitBottom": "trousers",
+      "outfitShoes": "shoes",
+      "lipstick": "lipstick",
+      "blushQuery": "blush",
+      "eyeshadowQuery": "eyeshadow"
     }
   }
 }

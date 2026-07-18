@@ -9,7 +9,7 @@ import { resizeImageFile } from '../../utils/imageUtils';
 import './OnboardingPage.css';
 
 /**
- * Primo accesso: foto di riferimento (facoltativa, per "Su di te") e città
+ * Primo accesso: foto di riferimento (facoltativa: prompt AI e armocromia) e città
  * predefinita.
  */
 export default function OnboardingPage() {

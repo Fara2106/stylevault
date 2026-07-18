@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useProfile } from '../../context/ProfileContext';
 import { useWardrobe } from '../../context/WardrobeContext';
-import ModelTryOn from '../../components/Avatar/ModelTryOn';
 import { Header, Button, Modal, Icon } from '../../components/common';
 import { CLOTHING_COLORS } from '../../utils/categories';
 import { resizeImageFile } from '../../utils/imageUtils';
@@ -52,11 +51,8 @@ export default function TryOnPage() {
   const [pickerSlot, setPickerSlot] = useState(null);
   const [saved, setSaved] = useState(false);
 
-  // Due modalità di prova, entrambe gratuite: "Su di te" (foto vera, capi
-  // scontornati nelle sue proporzioni) e "Prompt AI" (prompt da incollare in
-  // ChatGPT/Gemini). "Su di te" è la modalità predefinita.
-  const [mode, setMode] = useState('model');
-
+  // La foto della persona è la "Image 1" di prompt, provino e condivisione:
+  // si carica/cambia dal pannello 1 della fila foto qui sotto.
   const fileInputRef = useRef(null);
 
   const handlePhotoFile = async (e) => {
@@ -114,7 +110,7 @@ export default function TryOnPage() {
   const [photosCopied, setPhotosCopied] = useState(false);
 
   useEffect(() => {
-    if (!canCopyPhotos || mode !== 'photo' || items.length === 0) {
+    if (!canCopyPhotos || items.length === 0) {
       setPhotoSheet(null);
       return undefined;
     }
@@ -126,7 +122,7 @@ export default function TryOnPage() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [itemsKey, referencePhoto, mode, canCopyPhotos]);
+  }, [itemsKey, referencePhoto, canCopyPhotos]);
 
   const handleCopyPhotos = async () => {
     try {
@@ -288,71 +284,10 @@ export default function TryOnPage() {
         </div>
       )}
 
-      {/* Scelta della modalità di prova */}
-      <div className="tryon-page__modes" role="tablist">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={mode === 'model'}
-          className={`tryon-page__mode ${mode === 'model' ? 'tryon-page__mode--active' : ''}`}
-          onClick={() => setMode('model')}
-        >
-          {t('tryon.modeModel')}
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={mode === 'photo'}
-          className={`tryon-page__mode ${mode === 'photo' ? 'tryon-page__mode--active' : ''}`}
-          onClick={() => setMode('photo')}
-        >
-          {t('tryon.modePhoto')}
-        </button>
-      </div>
-
-      {/* "Su di te": la persona della foto, scontornata e vestita coi capi
-          scontornati nelle sue proporzioni. Gratis, tutto on-device. */}
-      {mode === 'model' && (
-        <section className="tryon-page__photo">
-          <p className="tryon-page__photo-intro">{t('tryon.modelIntro')}</p>
-
-          {!outfitHasItems(outfit) ? (
-            <p className="tryon-page__photo-note">{t('tryon.photoNoOutfit')}</p>
-          ) : !referencePhoto ? (
-            <>
-              <p className="tryon-page__photo-note">{t('tryon.modelNeedsPhoto')}</p>
-              <Button
-                fullWidth
-                variant="secondary"
-                icon={<Icon name="camera" size={15} />}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                {t('tryon.photoUpload')}
-              </Button>
-            </>
-          ) : (
-            <>
-              <ModelTryOn outfit={outfit} referencePhoto={referencePhoto} />
-              <div className="tryon-page__actions">
-                <Button
-                  fullWidth
-                  variant="secondary"
-                  icon={<Icon name="camera" size={14} />}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  {t('tryon.photoChange')}
-                </Button>
-              </div>
-            </>
-          )}
-        </section>
-      )}
-
       {/* Prompt AI: l'app genera il testo del prompt (inglese, zero rete),
-          Mary lo copia in ChatGPT/Gemini insieme alla sua foto e a quelle
-          dei capi. Nessuna chiave, nessuna chiamata da qui. */}
-      {mode === 'photo' && (
-        <section className="tryon-page__prompt">
+          Mary lo copia o condivide in ChatGPT/Gemini insieme alla sua foto
+          (pannello 1) e a quelle dei capi. Nessuna chiave, nessuna chiamata. */}
+      <section className="tryon-page__prompt">
           <p className="tryon-page__photo-intro">{t('tryon.promptIntro')}</p>
 
           {!outfitHasItems(outfit) ? (
@@ -404,6 +339,22 @@ export default function TryOnPage() {
               <div className="tryon-page__prompt-garments">
                 <span className="sv-label">{t('tryon.promptGarments')}</span>
                 <div className="tryon-page__prompt-garments-row">
+                  <button
+                    type="button"
+                    className={`tryon-page__prompt-garment ${
+                      referencePhoto ? '' : 'tryon-page__prompt-garment--add'
+                    }`}
+                    onClick={() => fileInputRef.current?.click()}
+                    title={referencePhoto ? t('tryon.photoChange') : t('tryon.photoUpload')}
+                    aria-label={referencePhoto ? t('tryon.photoChange') : t('tryon.photoUpload')}
+                  >
+                    {referencePhoto ? (
+                      <img src={referencePhoto} alt="" />
+                    ) : (
+                      <Icon name="camera" size={18} />
+                    )}
+                    <span>1</span>
+                  </button>
                   {items.map((item, i) => {
                     const isLocal = item.photo?.startsWith('data:');
                     return (
@@ -458,9 +409,8 @@ export default function TryOnPage() {
             </>
           )}
         </section>
-      )}
 
-      {/* Input foto condiviso fra "Su di te" e la scheda AI */}
+      {/* Input per caricare/cambiare la foto della persona (pannello 1) */}
       <input
         ref={fileInputRef}
         type="file"

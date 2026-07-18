@@ -1,6 +1,6 @@
 /**
  * Composizione manuale dell'outfit sulla foto della persona (pagina "Prova",
- * scheda "Su di te"). L'outfit ha la stessa forma di quelli del motore:
+ * pagina Prova). L'outfit ha la stessa forma di quelli del motore:
  * { top, bottom, shoes, outerwear, accessories[] }; un abito (categoria
  * "dresses") occupa lo slot top e lascia il bottom vuoto, come fa il motore.
  */

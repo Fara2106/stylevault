@@ -59,7 +59,7 @@
     "welcome": "Benvenuto in StyleVault",
     "intro": "Tre passi per iniziare: il tuo avatar, la tua città, i tuoi capi.",
     "stepPhoto": "La tua foto",
-    "stepPhotoHint": "Carica una tua foto a figura intera: la userai per provare gli outfit \"su di te\". Resta sul tuo dispositivo ed è facoltativa.",
+    "stepPhotoHint": "Carica una tua foto a figura intera: la userai col prompt AI per vederti addosso gli outfit e per l'armocromia. Resta sul tuo dispositivo ed è facoltativa.",
     "stepCity": "La tua città",
     "stepCityHint": "Gli outfit vengono proposti in base al meteo reale di questa città. Potrai cambiarla ogni volta.",
     "finish": "Inizia",
@@ -172,16 +172,9 @@
     "noItems": "Nessun capo di questo tipo nel guardaroba",
     "saveOutfit": "Salva outfit",
     "withWishlist": "Include capi della wishlist",
-    "modeModel": "Su di te",
-    "modePhoto": "Prompt AI",
-    "modelIntro": "La persona della tua foto, vestita con le foto vere dei capi scelti, nelle sue proporzioni. Gratis: lo scontorno avviene sul tuo dispositivo, la foto non esce da qui.",
-    "modelPreparingPhoto": "Preparo la tua foto (scontorno)…",
-    "modelNoFigure": "Non riesco a distinguere una figura intera nella foto: usa una foto in piedi, frontale, a figura intera.",
-    "modelError": "Non riesco a preparare la foto: riprova o cambia foto.",
-    "modelNeedsPhoto": "Carica una tua foto a figura intera per iniziare (resta sul tuo dispositivo).",
     "photoUpload": "Carica una tua foto",
     "photoChange": "Cambia foto",
-    "photoNoOutfit": "Prima scegli i capi qui sopra, poi genera qui la foto.",
+    "photoNoOutfit": "Prima scegli i capi qui sopra: prompt e foto da copiare compaiono qui.",
     "promptTitle": "Prompt da copiare",
     "promptIntro": "Genera un prompt in inglese da incollare in ChatGPT o Gemini insieme alla tua foto e alle foto dei capi: il risultato è una fotografia di te che li indossa. Gratis, nessuna chiave richiesta.",
     "promptCopy": "Copia prompt",
@@ -189,22 +182,21 @@
     "promptCopyPhotos": "Copia le foto (immagine unica)",
     "promptPhotosCopied": "Foto copiate! Incollale in chat",
     "promptShare": "Invia foto e prompt all'app AI",
-    "promptSharing": "Preparo la condivisione\u2026",
-    "promptShareHint": "Si apre la condivisione del telefono: scegli ChatGPT o Gemini. Le foto arrivano gi\u00e0 in ordine (la 1 sei tu); se il testo non compare, tocca Copia prompt e incollalo.",
+    "promptSharing": "Preparo la condivisione…",
+    "promptShareHint": "Si apre la condivisione del telefono: scegli ChatGPT o Gemini. Le foto arrivano già in ordine (la 1 sei tu); se il testo non compare, tocca Copia prompt e incollalo.",
     "promptStep1": "Apri ChatGPT o Gemini",
     "promptStep2": "Carica una tua foto a figura intera",
     "promptStep3": "Carica le foto dei capi qui sotto",
     "promptStep4": "Incolla il prompt copiato e genera l'immagine",
     "promptOpenChatgpt": "Apri ChatGPT",
     "promptOpenGemini": "Apri Gemini",
-    "promptGarments": "Foto dei capi da caricare"
+    "promptGarments": "Foto da caricare in chat"
   },
   "avatar": {
     "referencePhoto": "Foto di riferimento",
     "uploadReference": "Carica una tua foto",
-    "referenceHint": "Ti aiuta a regolare l'avatar finché ti somiglia. Resta solo sul tuo dispositivo.",
-    "removeReference": "Rimuovi foto",
-    "preparingGarments": "Preparo i capi..."
+    "referenceHint": "La caricherai in chat col prompt AI ed è la base dell'armocromia. Resta solo sul tuo dispositivo.",
+    "removeReference": "Rimuovi foto"
   },
   "advice": {
     "colorsHarmonious": "I colori si armonizzano bene tra loro",
@@ -229,7 +221,7 @@
     "neverWorn": "Mai indossato",
     "openShop": "Apri nel negozio",
     "deleteItem": "Elimina capo",
-    "tryOn": "Prova su di te"
+    "tryOn": "Prova outfit"
   },
   "calendar": {
     "title": "Calendario",
@@ -406,38 +398,115 @@
   },
   "armocromia": {
     "seasons": {
-      "light-spring": { "name": "Primavera Chiara", "desc": "Colori caldi, chiari e delicati: pesca, menta, crema. Ti illuminano tinte tenui e luminose, mai pesanti." },
-      "light-summer": { "name": "Estate Chiara", "desc": "Colori freddi, chiari e polverosi: lavanda, rosa cipria, azzurro polvere. Meglio i toni tenui dei contrasti forti." },
-      "true-spring": { "name": "Primavera Assoluta", "desc": "Colori caldi e vivaci: corallo, verde erba, giallo dorato. Il calore è la tua cifra: evita il nero vicino al viso." },
-      "true-summer": { "name": "Estate Assoluta", "desc": "Colori freddi e morbidi: malva, azzurri, prugna chiaro. L'argento e i toni polverosi ti donano." },
-      "true-autumn": { "name": "Autunno Assoluto", "desc": "Colori caldi e terrosi: ruggine, oliva, senape, rame. I toni delle spezie e della terra sono i tuoi." },
-      "true-winter": { "name": "Inverno Assoluto", "desc": "Colori freddi e netti: fucsia, blu royal, rosso ciliegia, bianco e nero. Il contrasto pulito è il tuo punto di forza." },
-      "bright-spring": { "name": "Primavera Brillante", "desc": "Colori caldi e accesi: corallo vivo, turchese, giallo oro. Più il colore è vivo, più funziona." },
-      "bright-winter": { "name": "Inverno Brillante", "desc": "Colori freddi e accesi: fucsia, blu elettrico, rosso ciliegia. Contrasti netti e tinte sature ti esaltano." },
-      "soft-autumn": { "name": "Autunno Soft", "desc": "Colori caldi e attenuati: salvia, miele, terracotta spenta. I toni fusi e polverosi valorizzano più dei colori puri." },
-      "soft-summer": { "name": "Estate Soft", "desc": "Colori freddi e attenuati: lilla, salvia, blu ghiaccio. Sfumature morbide, mai tinte urlate." },
-      "deep-autumn": { "name": "Autunno Profondo", "desc": "Colori caldi e profondi: vinaccia, verde pino, cioccolato. Le tinte ricche e scure incorniciano il viso." },
-      "deep-winter": { "name": "Inverno Profondo", "desc": "Colori freddi e profondi: bordeaux, navy, smeraldo. Scuri intensi e contrasto col bianco puro." }
+      "light-spring": {
+        "name": "Primavera Chiara",
+        "desc": "Colori caldi, chiari e delicati: pesca, menta, crema. Ti illuminano tinte tenui e luminose, mai pesanti."
+      },
+      "light-summer": {
+        "name": "Estate Chiara",
+        "desc": "Colori freddi, chiari e polverosi: lavanda, rosa cipria, azzurro polvere. Meglio i toni tenui dei contrasti forti."
+      },
+      "true-spring": {
+        "name": "Primavera Assoluta",
+        "desc": "Colori caldi e vivaci: corallo, verde erba, giallo dorato. Il calore è la tua cifra: evita il nero vicino al viso."
+      },
+      "true-summer": {
+        "name": "Estate Assoluta",
+        "desc": "Colori freddi e morbidi: malva, azzurri, prugna chiaro. L'argento e i toni polverosi ti donano."
+      },
+      "true-autumn": {
+        "name": "Autunno Assoluto",
+        "desc": "Colori caldi e terrosi: ruggine, oliva, senape, rame. I toni delle spezie e della terra sono i tuoi."
+      },
+      "true-winter": {
+        "name": "Inverno Assoluto",
+        "desc": "Colori freddi e netti: fucsia, blu royal, rosso ciliegia, bianco e nero. Il contrasto pulito è il tuo punto di forza."
+      },
+      "bright-spring": {
+        "name": "Primavera Brillante",
+        "desc": "Colori caldi e accesi: corallo vivo, turchese, giallo oro. Più il colore è vivo, più funziona."
+      },
+      "bright-winter": {
+        "name": "Inverno Brillante",
+        "desc": "Colori freddi e accesi: fucsia, blu elettrico, rosso ciliegia. Contrasti netti e tinte sature ti esaltano."
+      },
+      "soft-autumn": {
+        "name": "Autunno Soft",
+        "desc": "Colori caldi e attenuati: salvia, miele, terracotta spenta. I toni fusi e polverosi valorizzano più dei colori puri."
+      },
+      "soft-summer": {
+        "name": "Estate Soft",
+        "desc": "Colori freddi e attenuati: lilla, salvia, blu ghiaccio. Sfumature morbide, mai tinte urlate."
+      },
+      "deep-autumn": {
+        "name": "Autunno Profondo",
+        "desc": "Colori caldi e profondi: vinaccia, verde pino, cioccolato. Le tinte ricche e scure incorniciano il viso."
+      },
+      "deep-winter": {
+        "name": "Inverno Profondo",
+        "desc": "Colori freddi e profondi: bordeaux, navy, smeraldo. Scuri intensi e contrasto col bianco puro."
+      }
     },
     "colors": {
-      "pesca": "pesca", "albicocca": "albicocca", "corallo": "corallo", "menta": "verde menta",
-      "azzurro-polvere": "azzurro polvere", "limone": "giallo limone", "nero": "nero",
-      "viola": "viola", "bordeaux": "bordeaux", "crema": "crema", "beige": "beige",
-      "sabbia": "sabbia", "rame": "rame", "rosa-cipria": "rosa cipria", "lavanda": "lavanda",
-      "malva": "malva", "blu-ghiaccio": "blu ghiaccio", "arancio": "arancio",
-      "ruggine": "ruggine", "grigio-perla": "grigio perla", "tortora": "tortora",
-      "bianco-caldo": "bianco panna", "rosa-antico": "rosa antico", "giallo-dorato": "giallo dorato",
-      "verde-erba": "verde erba", "turchese": "turchese", "rosso-pomodoro": "rosso pomodoro",
-      "vinaccia": "vinaccia", "cammello": "cammello", "prugna": "prugna", "blu-navy": "blu navy",
-      "grigio-antracite": "grigio antracite", "oliva": "verde oliva", "terracotta": "terracotta",
-      "senape": "senape", "verde-pino": "verde pino", "rosa-shocking": "rosa shocking",
-      "kaki": "kaki", "marrone-cioccolato": "marrone cioccolato", "fucsia": "fucsia",
-      "blu-royal": "blu royal", "smeraldo": "verde smeraldo", "rosso-ciliegia": "rosso ciliegia",
-      "bianco-puro": "bianco ottico", "verde-salvia": "verde salvia", "miele": "miele",
-      "lilla": "lilla", "petrolio": "petrolio"
+      "pesca": "pesca",
+      "albicocca": "albicocca",
+      "corallo": "corallo",
+      "menta": "verde menta",
+      "azzurro-polvere": "azzurro polvere",
+      "limone": "giallo limone",
+      "nero": "nero",
+      "viola": "viola",
+      "bordeaux": "bordeaux",
+      "crema": "crema",
+      "beige": "beige",
+      "sabbia": "sabbia",
+      "rame": "rame",
+      "rosa-cipria": "rosa cipria",
+      "lavanda": "lavanda",
+      "malva": "malva",
+      "blu-ghiaccio": "blu ghiaccio",
+      "arancio": "arancio",
+      "ruggine": "ruggine",
+      "grigio-perla": "grigio perla",
+      "tortora": "tortora",
+      "bianco-caldo": "bianco panna",
+      "rosa-antico": "rosa antico",
+      "giallo-dorato": "giallo dorato",
+      "verde-erba": "verde erba",
+      "turchese": "turchese",
+      "rosso-pomodoro": "rosso pomodoro",
+      "vinaccia": "vinaccia",
+      "cammello": "cammello",
+      "prugna": "prugna",
+      "blu-navy": "blu navy",
+      "grigio-antracite": "grigio antracite",
+      "oliva": "verde oliva",
+      "terracotta": "terracotta",
+      "senape": "senape",
+      "verde-pino": "verde pino",
+      "rosa-shocking": "rosa shocking",
+      "kaki": "kaki",
+      "marrone-cioccolato": "marrone cioccolato",
+      "fucsia": "fucsia",
+      "blu-royal": "blu royal",
+      "smeraldo": "verde smeraldo",
+      "rosso-ciliegia": "rosso ciliegia",
+      "bianco-puro": "bianco ottico",
+      "verde-salvia": "verde salvia",
+      "miele": "miele",
+      "lilla": "lilla",
+      "petrolio": "petrolio"
     },
-    "undertone": { "warm": "sottotono caldo", "cool": "sottotono freddo", "neutral": "sottotono neutro" },
-    "metal": { "gold": "oro", "silver": "argento", "both": "oro e argento" },
+    "undertone": {
+      "warm": "sottotono caldo",
+      "cool": "sottotono freddo",
+      "neutral": "sottotono neutro"
+    },
+    "metal": {
+      "gold": "oro",
+      "silver": "argento",
+      "both": "oro e argento"
+    },
     "ui": {
       "title": "I tuoi colori",
       "profileCard": "Armocromia — scopri i tuoi colori",
@@ -471,8 +540,12 @@
       "redo": "Rifai l'analisi",
       "save": "Salva il risultato",
       "saved": "Salvato nel profilo",
-      "outfitTop": "maglia", "outfitBottom": "pantaloni", "outfitShoes": "scarpe",
-      "lipstick": "rossetto", "blushQuery": "blush", "eyeshadowQuery": "ombretto"
+      "outfitTop": "maglia",
+      "outfitBottom": "pantaloni",
+      "outfitShoes": "scarpe",
+      "lipstick": "rossetto",
+      "blushQuery": "blush",
+      "eyeshadowQuery": "ombretto"
     }
   }
 }
