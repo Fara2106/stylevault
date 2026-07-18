@@ -20,10 +20,12 @@ try-on ormai lo fa ChatGPT/Gemini col prompt. Fatto e LIVE (`586ba7e`):
   RICORDATE; e bottone "Copia le foto (immagine unica)" — provino numerato
   negli appunti, niente più caccia in galleria.
 - 162 test verdi, verifiche headless in scratchpad, deploy verdi.
-- Aggiunta successiva (`4a63f4d`, stessa notte): riga **"Outfit completo
-  (coordinato)"** in ogni combo dell'armocromia — ricerca `coordinato
-  <colore guida>` (EN co-ord) su Zalando/ASOS/Amazon: i coordinati sono
-  l'unico "outfit intero" linkabile via URL. 165 test verdi.
+- Sezione shop dell'armocromia rivista due volte (vince l'ultima, `4a63f4d`
+  poi il commit successivo): **link solo sui colori** (palette e neutri
+  tappabili → ricerca colore su Zalando) e **"Outfit ispirati alla tua
+  stagione"** — ogni capo UN negozio a rotazione Zara/Bershka/Zalando
+  ("maglietta pesca — Zara"). Zara e Bershka aggiunti agli shop. La riga
+  "coordinato" è stata rimossa su indicazione di Lorenzo. 165 test verdi.
 
 ## Novità 2026-07-18 (sera) — freeze sistemato, condivisione, ARMOCROMIA pronta
 
