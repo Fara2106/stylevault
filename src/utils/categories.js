@@ -118,7 +118,7 @@ export const CLOTHING_COLORS = [
   { id: 'olive', hex: '#808000', labelKey: 'colors.olive' },
   { id: 'brown', hex: '#8B4513', labelKey: 'colors.brown' },
   { id: 'tan', hex: '#D2B48C', labelKey: 'colors.tan' },
-  { id: 'beige', hex: '#F5F0E1', labelKey: 'colors.beige' },
+  { id: 'beige', hex: '#C9B8A8', labelKey: 'colors.beige' },
   { id: 'cream', hex: '#FFFDD0', labelKey: 'colors.cream' },
   { id: 'yellow', hex: '#F4D03F', labelKey: 'colors.yellow' },
   { id: 'orange', hex: '#E67E22', labelKey: 'colors.orange' },
