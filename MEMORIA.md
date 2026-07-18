@@ -3,6 +3,29 @@
 > File di ripartenza: se apri una nuova chat, leggi questo file per riprendere il lavoro
 > esattamente da dove eravamo. Va aggiornato a ogni avanzamento significativo.
 
+## Novità 2026-07-18 (sera) — freeze sistemato, condivisione, ARMOCROMIA pronta
+
+Tre avanzamenti dopo la prova online di Lorenzo:
+
+1. **FIX del freeze su "Cambia foto" (LIVE, `756f740`)**: l'inferenza @imgly
+   girava nel main thread (il suo proxyToWorker vale solo con WebGPU) e dal
+   merge "Su di te" è la scheda d'ingresso → pagina congelata. Ora lo scontorno
+   gira in `cutoutWorker.js` (Web Worker) con ripiego al main thread. Misurato
+   in Chrome headless: lag max 460ms col worker vs 16.6s senza.
+2. **Condivisione foto+prompt (LIVE, `b0f319d`)**: su telefono la scheda
+   Prompt AI ha "Invia foto e prompt all'app AI" (Web Share API): 1-persona.jpg
+   per prima (= Image 1), capi numerati come nel prompt. Un gesto, niente
+   ricerca manuale delle foto.
+3. **ARMOCROMIA completa su `feat/armocromia` (HEAD `fed0552`, pushato, NON
+   mergiato)**: pagina /armocromia dal Profilo — foto → pelle/capelli/occhi
+   on-device → 12 sotto-stagioni (centroidi su 3 assi Lab, tarati in prototipo)
+   → palette + combo outfit con link shop + guardaroba in palette + make-up.
+   9/9 task revisionati, revisione finale opus "pronto al merge", 186 test
+   verdi, verifica a schermo in docs/verifiche/2026-07-18-armocromia/.
+   **BLOCCANTE PRE-MERGE**: applicare su Supabase (SQL Editor):
+   `alter table public.profiles add column if not exists armocromia jsonb;`
+   poi verifica di Lorenzo con la sua foto → merge ff → deploy.
+
 ## Novità 2026-07-18 — "Prompt AI" LIVE, avatar RIMOSSO del tutto
 
 **RIPARTIRE DA QUI.** La feature `feat/tryon-prompt` è FINITA e ONLINE:
