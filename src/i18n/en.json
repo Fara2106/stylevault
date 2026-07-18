@@ -401,5 +401,40 @@
     "thunderstorm": "Thunderstorm",
     "staleNotice": "Weather from {{time}} (no connection)",
     "error": "Weather unavailable right now"
+  },
+  "armocromia": {
+    "seasons": {
+      "light-spring": { "name": "Light Spring", "desc": "Warm, light, delicate colors: peach, mint, cream. Soft luminous shades suit you — never heavy ones." },
+      "light-summer": { "name": "Light Summer", "desc": "Cool, light, dusty colors: lavender, powder pink, powder blue. Gentle tones beat strong contrast." },
+      "true-spring": { "name": "True Spring", "desc": "Warm, lively colors: coral, grass green, golden yellow. Warmth is your signature: keep black away from your face." },
+      "true-summer": { "name": "True Summer", "desc": "Cool, soft colors: mauve, blues, light plum. Silver and dusty tones flatter you." },
+      "true-autumn": { "name": "True Autumn", "desc": "Warm, earthy colors: rust, olive, mustard, copper. Spice and earth tones are yours." },
+      "true-winter": { "name": "True Winter", "desc": "Cool, crisp colors: fuchsia, royal blue, cherry red, black and white. Clean contrast is your strength." },
+      "bright-spring": { "name": "Bright Spring", "desc": "Warm, vivid colors: bright coral, turquoise, golden yellow. The brighter the color, the better it works." },
+      "bright-winter": { "name": "Bright Winter", "desc": "Cool, vivid colors: fuchsia, electric blue, cherry red. Sharp contrast and saturated shades light you up." },
+      "soft-autumn": { "name": "Soft Autumn", "desc": "Warm, muted colors: sage, honey, dusty terracotta. Blended dusty tones flatter more than pure brights." },
+      "soft-summer": { "name": "Soft Summer", "desc": "Cool, muted colors: lilac, sage, ice blue. Soft shades, never loud ones." },
+      "deep-autumn": { "name": "Deep Autumn", "desc": "Warm, deep colors: wine, pine green, chocolate. Rich dark shades frame your face." },
+      "deep-winter": { "name": "Deep Winter", "desc": "Cool, deep colors: burgundy, navy, emerald. Intense darks with pure white contrast." }
+    },
+    "colors": {
+      "pesca": "peach", "albicocca": "apricot", "corallo": "coral", "menta": "mint green",
+      "azzurro-polvere": "powder blue", "limone": "lemon yellow", "nero": "black",
+      "viola": "purple", "bordeaux": "burgundy", "crema": "cream", "beige": "beige",
+      "sabbia": "sand", "rame": "copper", "rosa-cipria": "powder pink", "lavanda": "lavender",
+      "malva": "mauve", "blu-ghiaccio": "ice blue", "arancio": "orange",
+      "ruggine": "rust", "grigio-perla": "pearl gray", "tortora": "taupe",
+      "bianco-caldo": "off-white", "rosa-antico": "dusty rose", "giallo-dorato": "golden yellow",
+      "verde-erba": "grass green", "turchese": "turquoise", "rosso-pomodoro": "tomato red",
+      "vinaccia": "wine", "cammello": "camel", "prugna": "plum", "blu-navy": "navy blue",
+      "grigio-antracite": "charcoal", "oliva": "olive green", "terracotta": "terracotta",
+      "senape": "mustard", "verde-pino": "pine green", "rosa-shocking": "hot pink",
+      "kaki": "khaki", "marrone-cioccolato": "chocolate brown", "fucsia": "fuchsia",
+      "blu-royal": "royal blue", "smeraldo": "emerald green", "rosso-ciliegia": "cherry red",
+      "bianco-puro": "pure white", "verde-salvia": "sage green", "miele": "honey",
+      "lilla": "lilac", "petrolio": "teal"
+    },
+    "undertone": { "warm": "warm undertone", "cool": "cool undertone", "neutral": "neutral undertone" },
+    "metal": { "gold": "gold", "silver": "silver", "both": "gold and silver" }
   }
 }
