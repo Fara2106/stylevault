@@ -7,7 +7,7 @@ import { Header, Button, Icon } from '../../components/common';
 import { analyzeFaceColors } from '../../utils/faceColorAnalysis';
 import { classifySeason } from '../../utils/armocromiaClassifier';
 import { getSeason } from '../../utils/armocromiaSeasons';
-import { buildShopLinks } from '../../utils/shopLinks';
+import { buildShopLinks, buildOutfitLinks } from '../../utils/shopLinks';
 import { matchWardrobe } from '../../utils/armocromiaWardrobe';
 import { resizeImageFile } from '../../utils/imageUtils';
 import './ArmocromiaPage.css';
@@ -215,6 +215,17 @@ export default function ArmocromiaPage() {
                     {shopRow('clothing', `${outfitParts[j]} ${t(c.nameKey)}`)}
                   </div>
                 ))}
+                {/* Outfit intero: i coordinati (co-ord) nel colore guida della combo */}
+                <div className="armocromia__outfit-item armocromia__outfit-complete">
+                  <span>{t('armocromia.ui.outfitComplete')}</span>
+                  <span className="armocromia__shops">
+                    {buildOutfitLinks({ colorName: t(combo[0].nameKey), lang }).map((l) => (
+                      <a key={l.shop} href={l.url} target="_blank" rel="noopener">
+                        <Icon name="external" size={11} /> {l.label}
+                      </a>
+                    ))}
+                  </span>
+                </div>
               </div>
             ))}
           </div>

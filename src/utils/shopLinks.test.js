@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildShopLinks } from './shopLinks';
+import { buildShopLinks, buildOutfitLinks } from './shopLinks';
 
 describe('buildShopLinks', () => {
   it('abbigliamento IT: Zalando, Asos, Amazon con query codificata', () => {
@@ -25,5 +25,22 @@ describe('buildShopLinks', () => {
   it('lingua ignota → ripiego su it', () => {
     const links = buildShopLinks({ kind: 'clothing', query: 'x', lang: 'de' });
     expect(links[0].url).toContain('zalando.it');
+  });
+});
+
+describe('buildOutfitLinks', () => {
+  it("IT: cerca il coordinato nel colore guida sugli shop abbigliamento", () => {
+    const links = buildOutfitLinks({ colorName: 'bordeaux', lang: 'it' });
+    expect(links.map((l) => l.shop)).toEqual(['zalando', 'asos', 'amazon']);
+    expect(links[0].url).toBe('https://www.zalando.it/catalogo/?q=coordinato%20bordeaux');
+  });
+  it('EN: usa il termine co-ord', () => {
+    const [l] = buildOutfitLinks({ colorName: 'burgundy', lang: 'en' });
+    expect(l.url).toBe('https://www.zalando.co.uk/catalog/?q=co-ord%20burgundy');
+  });
+  it('lingua ignota → ripiego su it', () => {
+    const [l] = buildOutfitLinks({ colorName: 'x', lang: 'de' });
+    expect(l.url).toContain('zalando.it');
+    expect(l.url).toContain('coordinato%20x');
   });
 });

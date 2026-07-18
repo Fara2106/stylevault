@@ -34,3 +34,13 @@ export function buildShopLinks({ kind, query, lang }) {
   const q = encodeURIComponent(query).replace(/\+/g, '%20');
   return shops.map(({ shop, label, base }) => ({ shop, label, url: base + q }));
 }
+
+/**
+ * Link all'OUTFIT COMPLETO nel colore guida: nessuno shop compone un look
+ * multi-capo via URL, ma tutti vendono i coordinati (co-ord) — outfit interi
+ * come articolo unico — e la ricerca "coordinato + colore" li restituisce.
+ */
+export function buildOutfitLinks({ colorName, lang }) {
+  const term = lang === 'en' ? 'co-ord' : 'coordinato';
+  return buildShopLinks({ kind: 'clothing', query: `${term} ${colorName}`, lang });
+}
