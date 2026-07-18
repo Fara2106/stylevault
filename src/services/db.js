@@ -243,6 +243,7 @@ export async function fetchProfile(userId) {
       : null,
     referencePhotoPath: data.reference_photo_path,
     onboarded: data.onboarded,
+    armocromia: data.armocromia ?? null,
   };
 }
 
@@ -252,6 +253,7 @@ export async function upsertProfile(userId, updates) {
   if ('language' in updates) row.language = updates.language;
   if ('defaultCity' in updates) row.default_city = updates.defaultCity;
   if ('onboarded' in updates) row.onboarded = updates.onboarded;
+  if ('armocromia' in updates) row.armocromia = updates.armocromia ?? null;
 
   if ('referencePhoto' in updates) {
     if (updates.referencePhoto?.startsWith('data:')) {

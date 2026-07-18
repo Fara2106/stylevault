@@ -19,6 +19,7 @@ const profileKey = (userId) => `sv_profile_${userId || 'anon'}`;
 const DEFAULT_PROFILE = {
   referencePhoto: null,
   onboarded: false,
+  armocromia: null,
 };
 
 function loadLocalProfile(userId) {
@@ -83,6 +84,7 @@ export function ProfileProvider({ children }) {
           setProfile({
             referencePhoto: remote.referencePhoto,
             onboarded: remote.onboarded,
+            armocromia: remote.armocromia,
           });
           // Applica lingua e città salvate sul cloud
           applyingRemoteRef.current = true;
@@ -157,12 +159,22 @@ export function ProfileProvider({ children }) {
     persistCloud({ onboarded: true });
   }, [persistCloud]);
 
+  const setArmocromia = useCallback(
+    (value) => {
+      setProfile((prev) => ({ ...prev, armocromia: value }));
+      persistCloud({ armocromia: value });
+    },
+    [persistCloud]
+  );
+
   const value = {
     referencePhoto: profile.referencePhoto,
     onboarded: profile.onboarded,
+    armocromia: profile.armocromia,
     profileLoading,
     setReferencePhoto,
     completeOnboarding,
+    setArmocromia,
   };
 
   return (
