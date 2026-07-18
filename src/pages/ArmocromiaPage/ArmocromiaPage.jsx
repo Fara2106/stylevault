@@ -30,10 +30,9 @@ export default function ArmocromiaPage() {
   const [detected, setDetected] = useState(
     armocromia?.detected || { skin: null, hair: null, eyes: null }
   );
-  const [confidence, setConfidence] = useState(armocromia?.confidence ?? null);
   const [failed, setFailed] = useState(false);
   const [verdict, setVerdict] = useState(armocromia || null);
-  const [savedNow, setSavedNow] = useState(false);
+  const [savedNow, setSavedNow] = useState(() => Boolean(armocromia));
 
   const analyze = async (photoUrl) => {
     setPhase('analyzing');
@@ -41,10 +40,8 @@ export default function ArmocromiaPage() {
     const res = await analyzeFaceColors(photoUrl);
     if (res) {
       setDetected({ skin: res.skin, hair: res.hair, eyes: res.eyes });
-      setConfidence(res.confidence);
     } else {
       setDetected({ skin: null, hair: null, eyes: null });
-      setConfidence(null);
       setFailed(true);
     }
     setPhase('detected');
