@@ -4,8 +4,8 @@ import { matchWardrobe, IN_PALETTE_MAX } from './armocromiaWardrobe';
 const item = (id, colors) => ({ id, name: id, colors });
 
 describe('matchWardrobe', () => {
-  it('un capo bordeaux entra nella palette deep-winter, uno beige no', () => {
-    const res = matchWardrobe([item('a', ['burgundy']), item('b', ['beige'])], 'deep-winter');
+  it('un capo bordeaux entra nella palette deep-winter, uno arancio no', () => {
+    const res = matchWardrobe([item('a', ['burgundy']), item('b', ['orange'])], 'deep-winter');
     expect(res.map((r) => r.item.id)).toEqual(['a']);
     expect(res[0].distance).toBeLessThanOrEqual(IN_PALETTE_MAX);
     expect(res[0].itemHex).toBeTruthy();
