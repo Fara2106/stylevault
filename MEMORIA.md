@@ -24,8 +24,13 @@ try-on ormai lo fa ChatGPT/Gemini col prompt. Fatto e LIVE (`586ba7e`):
   poi il commit successivo): **link solo sui colori** (palette e neutri
   tappabili → ricerca colore su Zalando) e **"Outfit ispirati alla tua
   stagione"** — ogni capo UN negozio a rotazione Zara/Bershka/Zalando
-  ("maglietta pesca — Zara"). Zara e Bershka aggiunti agli shop. La riga
-  "coordinato" è stata rimossa su indicazione di Lorenzo. 165 test verdi.
+  ("maglietta pesca — Zara"). La riga "coordinato" è stata rimossa su
+  indicazione di Lorenzo. 165 test verdi.
+- **2026-07-19: shop VERIFICATI aprendo ogni URL in Chrome vero** («testa tu
+  in primis»): funzionano Zalando/Zara/ASOS/Amazon/H&M/Notino; Bershka,
+  Sephora e Douglas hanno la ricerca solo in overlay (deep-link impossibile)
+  → sostituiti: outfit = Zara/H&M/Zalando, make-up = Notino+Amazon. Regola:
+  mai aggiungere uno shop senza aprire l'URL generato in un browser vero.
 
 ## Novità 2026-07-18 (sera) — freeze sistemato, condivisione, ARMOCROMIA pronta
 
