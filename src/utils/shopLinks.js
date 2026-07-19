@@ -15,14 +15,15 @@ const SHOPS = {
       { shop: 'amazon', label: 'Amazon', base: 'https://www.amazon.com/s?k=' },
     ],
   },
+  // Solo shop coi deep-link di ricerca VERIFICATI sul campo (2026-07-19):
+  // Sephora e Douglas hanno la ricerca solo in overlay (niente URL con query).
   makeup: {
     it: [
-      { shop: 'sephora', label: 'Sephora', base: 'https://www.sephora.it/ricerca?q=' },
-      { shop: 'douglas', label: 'Douglas', base: 'https://www.douglas.it/it/search?query=' },
+      { shop: 'notino', label: 'Notino', base: 'https://www.notino.it/search.asp?exps=' },
       { shop: 'amazon', label: 'Amazon', base: 'https://www.amazon.it/s?k=' },
     ],
     en: [
-      { shop: 'sephora', label: 'Sephora', base: 'https://www.sephora.com/search?keyword=' },
+      { shop: 'notino', label: 'Notino', base: 'https://www.notino.co.uk/search.asp?exps=' },
       { shop: 'amazon', label: 'Amazon', base: 'https://www.amazon.com/s?k=' },
     ],
   },
@@ -45,10 +46,10 @@ const SINGLE_SHOPS = {
     it: 'https://www.zara.com/it/it/search?searchTerm=',
     en: 'https://www.zara.com/uk/en/search?searchTerm=',
   },
-  bershka: {
-    label: 'Bershka',
-    it: 'https://www.bershka.com/it/search?q=',
-    en: 'https://www.bershka.com/gb/search?q=',
+  hm: {
+    label: 'H&M',
+    it: 'https://www2.hm.com/it_it/search-results.html?q=',
+    en: 'https://www2.hm.com/en_gb/search-results.html?q=',
   },
   zalando: {
     label: 'Zalando',

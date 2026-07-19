@@ -13,10 +13,10 @@ describe('buildShopLinks', () => {
     expect(links[0].url).toContain('zalando.co.uk');
     expect(links[2].url).toContain('amazon.com');
   });
-  it('make-up IT: Sephora, Douglas, Amazon', () => {
+  it('make-up IT: Notino e Amazon (deep-link verificati sul campo)', () => {
     const links = buildShopLinks({ kind: 'makeup', query: 'rossetto corallo', lang: 'it' });
-    expect(links.map((l) => l.shop)).toEqual(['sephora', 'douglas', 'amazon']);
-    expect(links[0].url).toBe('https://www.sephora.it/ricerca?q=rossetto%20corallo');
+    expect(links.map((l) => l.shop)).toEqual(['notino', 'amazon']);
+    expect(links[0].url).toBe('https://www.notino.it/search.asp?exps=rossetto%20corallo');
   });
   it("l'encoding gestisce accenti e simboli", () => {
     const [l] = buildShopLinks({ kind: 'clothing', query: 'très & chic', lang: 'it' });
@@ -36,9 +36,9 @@ describe('buildShopLink', () => {
       url: 'https://www.zara.com/it/it/search?searchTerm=maglietta%20pesca',
     });
   });
-  it('Bershka IT e Zalando EN', () => {
-    expect(buildShopLink({ shop: 'bershka', query: 'pantaloni crema', lang: 'it' }).url).toBe(
-      'https://www.bershka.com/it/search?q=pantaloni%20crema'
+  it('H&M IT e Zalando EN', () => {
+    expect(buildShopLink({ shop: 'hm', query: 'pantaloni crema', lang: 'it' }).url).toBe(
+      'https://www2.hm.com/it_it/search-results.html?q=pantaloni%20crema'
     );
     expect(buildShopLink({ shop: 'zalando', query: 'peach t-shirt', lang: 'en' }).url).toBe(
       'https://www.zalando.co.uk/catalog/?q=peach%20t-shirt'

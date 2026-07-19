@@ -90,7 +90,7 @@ export default function ArmocromiaPage() {
     : [];
   const outfitParts = [t('armocromia.ui.outfitTop'), t('armocromia.ui.outfitBottom'), t('armocromia.ui.outfitShoes')];
   // Un capo → un negozio, a rotazione: l'outfit si compone fra shop diversi.
-  const OUTFIT_SHOPS = ['zara', 'bershka', 'zalando'];
+  const OUTFIT_SHOPS = ['zara', 'hm', 'zalando'];
 
   // I campioni di palette e neutri sono LINK: tap → ricerca del colore negli
   // shop (Zalando, il più affidabile sulla ricerca per colore).
