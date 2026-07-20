@@ -30,6 +30,9 @@
 .armocromia__shops { display: inline-flex; gap: var(--sv-space-2); margin-left: auto; }
 .armocromia__tap-hint { margin: -2px 0 var(--sv-space-2); font-size: 0.7rem; }
 a.armocromia__swatch { text-decoration: none; color: inherit; }
+.armocromia__also { margin: var(--sv-space-2) 0 0; font-size: 0.72rem; }
+.armocromia__also a { display: inline-flex; align-items: center; gap: 2px;
+  margin-left: var(--sv-space-2); text-decoration: underline; }
 .armocromia__shops a { display: inline-flex; align-items: center; gap: 3px;
   font-size: 0.75rem; text-decoration: underline; }
 

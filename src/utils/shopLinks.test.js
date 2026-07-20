@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildShopLinks, buildShopLink } from './shopLinks';
+import { buildShopLinks, buildShopLink, buildHomeLinks } from './shopLinks';
 
 describe('buildShopLinks', () => {
   it('abbigliamento IT: Zalando, Asos, Amazon con query codificata', () => {
@@ -47,5 +47,22 @@ describe('buildShopLink', () => {
   it('shop ignoto → null; lingua ignota → ripiego it', () => {
     expect(buildShopLink({ shop: 'boh', query: 'x', lang: 'it' })).toBeNull();
     expect(buildShopLink({ shop: 'zara', query: 'x', lang: 'de' }).url).toContain('zara.com/it/it');
+  });
+});
+
+describe('buildHomeLinks', () => {
+  it('abbigliamento IT: Bershka in home (niente query: la ricerca è solo overlay)', () => {
+    expect(buildHomeLinks({ kind: 'clothing', lang: 'it' })).toEqual([
+      { shop: 'bershka', label: 'Bershka', url: 'https://www.bershka.com/it/' },
+    ]);
+  });
+  it('make-up IT: Sephora e Douglas in home', () => {
+    expect(buildHomeLinks({ kind: 'makeup', lang: 'it' }).map((l) => l.url)).toEqual([
+      'https://www.sephora.it/',
+      'https://www.douglas.it/',
+    ]);
+  });
+  it('lingua ignota → ripiego it', () => {
+    expect(buildHomeLinks({ kind: 'makeup', lang: 'de' })[0].url).toContain('sephora.it');
   });
 });

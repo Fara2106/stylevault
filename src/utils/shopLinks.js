@@ -63,6 +63,32 @@ const SINGLE_SHOPS = {
   },
 };
 
+/**
+ * Shop richiesti da Lorenzo ma SENZA deep-link di ricerca (verificato sul
+ * campo 2026-07-19: la loro ricerca vive in un overlay e l'URL non porta la
+ * query — Bershka rimbalza in home, Sephora /ricerca dà 404, Douglas 403).
+ * Si linka la home verificata: lì l'utente cerca il colore a mano.
+ */
+const HOME_SHOPS = {
+  clothing: [
+    { shop: 'bershka', label: 'Bershka', it: 'https://www.bershka.com/it/', en: 'https://www.bershka.com/gb/' },
+  ],
+  makeup: [
+    { shop: 'sephora', label: 'Sephora', it: 'https://www.sephora.it/', en: 'https://www.sephora.com/' },
+    { shop: 'douglas', label: 'Douglas', it: 'https://www.douglas.it/', en: 'https://www.douglas.de/' },
+  ],
+};
+
+/** Link alla home degli shop senza ricerca linkabile, per categoria. */
+export function buildHomeLinks({ kind, lang }) {
+  const shops = HOME_SHOPS[kind] || [];
+  return shops.map(({ shop, label, ...urls }) => ({
+    shop,
+    label,
+    url: urls[lang] || urls.it,
+  }));
+}
+
 /** Un solo link a UNO shop preciso. null se lo shop non è tra i previsti. */
 export function buildShopLink({ shop, query, lang }) {
   const entry = SINGLE_SHOPS[shop];

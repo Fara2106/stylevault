@@ -7,7 +7,7 @@ import { Header, Button, Icon } from '../../components/common';
 import { analyzeFaceColors } from '../../utils/faceColorAnalysis';
 import { classifySeason } from '../../utils/armocromiaClassifier';
 import { getSeason } from '../../utils/armocromiaSeasons';
-import { buildShopLinks, buildShopLink } from '../../utils/shopLinks';
+import { buildShopLinks, buildShopLink, buildHomeLinks } from '../../utils/shopLinks';
 import { matchWardrobe } from '../../utils/armocromiaWardrobe';
 import { resizeImageFile } from '../../utils/imageUtils';
 import './ArmocromiaPage.css';
@@ -127,6 +127,19 @@ export default function ArmocromiaPage() {
         </a>
       ))}
     </span>
+  );
+
+  // Shop senza ricerca linkabile (Bershka, Sephora, Douglas): si apre la
+  // home e il colore si cerca lì a mano.
+  const homeShopsRow = (kind) => (
+    <p className="armocromia__also sv-label">
+      {t('armocromia.ui.alsoOn')}{' '}
+      {buildHomeLinks({ kind, lang }).map((l) => (
+        <a key={l.shop} href={l.url} target="_blank" rel="noopener">
+          <Icon name="external" size={10} /> {l.label}
+        </a>
+      ))}
+    </p>
   );
 
   return (
@@ -249,6 +262,7 @@ export default function ArmocromiaPage() {
                 })}
               </div>
             ))}
+            {homeShopsRow('clothing')}
           </div>
 
           <h3 className="sv-label">{t('armocromia.ui.wardrobeTitle')}</h3>
@@ -282,6 +296,7 @@ export default function ArmocromiaPage() {
             <p className="sv-label">
               {t('armocromia.ui.foundation')}: {t(`armocromia.undertone.${season.makeup.foundationUndertone}`)}
             </p>
+            {homeShopsRow('makeup')}
           </div>
 
           <div className="armocromia__actions">
