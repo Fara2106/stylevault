@@ -31,6 +31,9 @@ try-on ormai lo fa ChatGPT/Gemini col prompt. Fatto e LIVE (`586ba7e`):
   Sephora e Douglas hanno la ricerca solo in overlay (deep-link impossibile)
   → sostituiti: outfit = Zara/H&M/Zalando, make-up = Notino+Amazon. Regola:
   mai aggiungere uno shop senza aprire l'URL generato in un browser vero.
+  Poi, su richiesta di Lorenzo, i 3 sono TORNATI come "Anche su (lì cerca tu
+  i tuoi colori)" → link alla HOME verificata: Bershka sotto gli outfit,
+  Sephora+Douglas sotto il make-up. 168 test verdi.
 
 ## Novità 2026-07-18 (sera) — freeze sistemato, condivisione, ARMOCROMIA pronta
 
