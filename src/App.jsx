@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { useProfile } from './context/ProfileContext';
@@ -6,13 +6,36 @@ import AppLayout from './components/AppLayout/AppLayout';
 import LoginPage from './pages/LoginPage/LoginPage';
 import OnboardingPage from './pages/OnboardingPage/OnboardingPage';
 import WardrobePage from './pages/WardrobePage/WardrobePage';
-import ItemDetailPage from './pages/ItemDetailPage/ItemDetailPage';
-import AddItemPage from './pages/AddItemPage/AddItemPage';
-import OutfitPage from './pages/OutfitPage/OutfitPage';
-import TryOnPage from './pages/TryOnPage/TryOnPage';
-import CalendarPage from './pages/CalendarPage/CalendarPage';
-import ProfilePage from './pages/ProfilePage/ProfilePage';
-import ArmocromiaPage from './pages/ArmocromiaPage/ArmocromiaPage';
+
+// Le pagine dopo il Guardaroba si scaricano al primo uso: all'apertura (su
+// telefono, spesso in 4G) arriva solo quello che serve per la prima schermata.
+// Dopo un nuovo deploy i vecchi file spariscono da GitHub Pages: chi aveva
+// l'app aperta (o in background su iPhone) ricarica una volta la pagina
+// invece di restare su una schermata bianca.
+const RELOAD_FLAG = 'sv_chunk_reload';
+function lazyPage(load) {
+  return lazy(() =>
+    load()
+      .then((mod) => {
+        sessionStorage.removeItem(RELOAD_FLAG);
+        return mod;
+      })
+      .catch((err) => {
+        if (sessionStorage.getItem(RELOAD_FLAG)) throw err;
+        sessionStorage.setItem(RELOAD_FLAG, '1');
+        window.location.reload();
+        return new Promise(() => {});
+      })
+  );
+}
+
+const ItemDetailPage = lazyPage(() => import('./pages/ItemDetailPage/ItemDetailPage'));
+const AddItemPage = lazyPage(() => import('./pages/AddItemPage/AddItemPage'));
+const OutfitPage = lazyPage(() => import('./pages/OutfitPage/OutfitPage'));
+const TryOnPage = lazyPage(() => import('./pages/TryOnPage/TryOnPage'));
+const CalendarPage = lazyPage(() => import('./pages/CalendarPage/CalendarPage'));
+const ProfilePage = lazyPage(() => import('./pages/ProfilePage/ProfilePage'));
+const ArmocromiaPage = lazyPage(() => import('./pages/ArmocromiaPage/ArmocromiaPage'));
 
 /** Riporta lo scroll in cima a ogni cambio pagina. */
 function ScrollToTop() {

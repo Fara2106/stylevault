@@ -3,6 +3,47 @@
 > File di ripartenza: se apri una nuova chat, leggi questo file per riprendere il lavoro
 > esattamente da dove eravamo. Va aggiornato a ogni avanzamento significativo.
 
+## Novità 2026-11-03 — giro di miglioramenti per iPhone + BACKEND CLOUD SPARITO
+
+**PROBLEMA APERTO GRAVE: il progetto Supabase non esiste più.** L'host
+`frukvktbmxndyzgivwxq.supabase.co` risponde NXDOMAIN dal 2026-08-03 (il
+keep-alive è passato da verde a rosso tra il 30/07 e il 03/08, poi GitHub ha
+fermato il cron). Il sito live è in modalità cloud → registrazione e login
+falliscono per chiunque. Va deciso da Lorenzo: ricreare un progetto Supabase
+(nuove chiavi nei secrets GitHub + migrazioni 001/002) oppure pubblicare in
+modalità locale (secrets vuoti) finché non c'è un backend.
+
+Migliorie fatte (testate nel browser in viewport mobile e sul simulatore
+iPhone 18 Pro; NON ancora committate al momento della stesura):
+
+- **iPhone**: campi a 16px sui touch screen (prima Safari zoomava la pagina a
+  ogni tocco su un campo e restava zoomata — verificato nel simulatore);
+  safe-area per notch/barra Home (BottomNav che prima si schiacciava, bottom
+  sheet, pagine); `autoComplete` su login/registrazione (Portachiavi/Face ID),
+  `inputMode` email/decimale; etichette dei campi collegate (`useId`).
+- **Aggiungi a Home**: manifest + apple-touch-icon + icone 192/512/maskable
+  (generate con sharp dal monogramma "SV"). L'avviso demo suggerisce
+  "Aggiungi alla schermata Home" (le web app installate non subiscono la
+  cancellazione dei 7 giorni di Safari).
+- **Condivisione "Invia foto e prompt"**: i file si preparano PRIMA del tocco
+  (come il provino): Safari rifiuta `navigator.share` se il gesto scade
+  durante i download, e l'errore veniva ingoiato.
+- **Memoria piena (modalità locale)**: avviso persistente quando localStorage
+  rifiuta il salvataggio (prima i capi sparivano al riavvio in silenzio).
+- **Link degli shop**: microlink risponde "success" anche sul muro anti-bot
+  (H&M → titolo "Access Denied" + logo come foto): ora `statusCode >= 400` =
+  errore, niente logo come foto, titolo senza " - Zalando.it" in coda, e il
+  429 del piano gratuito (~50 letture/giorno, esaurito durante i test) ha il
+  suo messaggio "finita per oggi". Zalando funziona; H&M no.
+- **Griglie**: `minmax(0, 1fr)` ovunque — un nome lungo (tipico da link)
+  allargava una colonna e poteva far uscire la griglia dallo schermo.
+- **Bug prezzo**: modificando un capo con prezzo numerico l'etichetta restava
+  sopra il valore (`49.length` non esiste).
+- Pagine secondarie caricate al primo uso (React.lazy) con ricarica
+  automatica una tantum se un deploy ha tolto i vecchi file.
+- 172 test verdi. `.claude/launch.json` (locale, non tracciato) avvia il dev
+  server in modalità locale sulla porta 5180 anche con `.env.local` presente.
+
 ## Novità 2026-07-18 (notte) — "Su di te" RIMOSSA: la Prova è solo Prompt AI
 
 Richiesta di Lorenzo: «togli la parte su di me che tanto non serve più» — il

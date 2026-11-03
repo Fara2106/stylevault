@@ -2,8 +2,9 @@
   "app": {
     "name": "StyleVault",
     "tagline": "Your wardrobe, always with you",
-    "localNotice": "Demo version: your data lives only in this browser. If you don't open the app for about 7 days (or clear the cache), your device may delete it. In the online version with an account your data is safe in the cloud.",
-    "cloudPausedNotice": "The online service isn't responding: after a period of inactivity it goes to sleep. Your data is safe — let Lorenzo know and try again in a few minutes."
+    "localNotice": "Demo version: your data lives only in this browser. If you don't open the app for about 7 days (or clear the cache), your device may delete it. In the online version with an account your data is safe in the cloud. On iPhone: Share → Add to Home Screen, so the phone won't delete it.",
+    "cloudPausedNotice": "The online service isn't responding: after a period of inactivity it goes to sleep. Your data is safe — let Lorenzo know and try again in a few minutes.",
+    "storageFullNotice": "The app's storage on this device is full: your latest changes are NOT saved and will be lost when you close the app. Delete a few items or photos you no longer use."
   },
   "nav": {
     "wardrobe": "Wardrobe",
@@ -115,6 +116,7 @@
     "toWishlist": "To wishlist",
     "linkLoading": "Reading the store page...",
     "linkError": "This store blocks automatic reading: fill the fields manually, the link is saved anyway.",
+    "linkLimit": "Automatic link reading is used up for today (free service): fill the fields manually or try again tomorrow. The link is saved anyway.",
     "linkSuccess": "Data extracted: review and complete",
     "added": "Item added",
     "nameRequired": "Give the item a name",

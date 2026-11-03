@@ -77,6 +77,7 @@ export default function LoginPage() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             name="name"
+            autoComplete="name"
             required
           />
         )}
@@ -86,6 +87,9 @@ export default function LoginPage() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           name="email"
+          autoComplete="email"
+          autoCapitalize="none"
+          inputMode="email"
           required
         />
         <Input
@@ -94,6 +98,8 @@ export default function LoginPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           name="password"
+          autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+          minLength={mode === 'register' ? 6 : undefined}
           required
         />
 

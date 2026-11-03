@@ -20,6 +20,7 @@ export default function BottomNav() {
         <NavLink
           key={tab.path}
           to={tab.path}
+          aria-label={tab.isCenter ? tab.label : undefined}
           className={({ isActive }) =>
             `bottom-nav__tab ${isActive ? 'bottom-nav__tab--active' : ''} ${tab.isCenter ? 'bottom-nav__tab--center' : ''}`
           }

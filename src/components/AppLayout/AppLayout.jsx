@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import BottomNav from '../BottomNav/BottomNav';
@@ -42,7 +43,10 @@ export default function AppLayout() {
       </header>
 
       <main className="app-layout__content">
-        <Outlet />
+        {/* Pagine caricate al primo uso: la navigazione resta visibile */}
+        <Suspense fallback={null}>
+          <Outlet />
+        </Suspense>
       </main>
 
       <BottomNav />

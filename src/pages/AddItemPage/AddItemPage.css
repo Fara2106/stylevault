@@ -4,7 +4,7 @@
 
 .add-item__modes {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--sv-space-3);
   margin-bottom: var(--sv-space-4);
 }
@@ -205,6 +205,6 @@
 
 .add-item__row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--sv-space-3);
 }

@@ -147,19 +147,36 @@ export default function TryOnPage() {
 
   // Condivisione nativa (telefono): prompt + foto in ordine dritti nell'app
   // AI scelta dalla share sheet. Sul desktop il bottone non compare.
+  // Come per il provino, i file si preparano IN ANTICIPO: Safari/iOS accetta
+  // navigator.share solo dentro il gesto, e scaricare le foto dopo il tocco
+  // (soprattutto quelle dal cloud) lo faceva scadere → share rifiutata in
+  // silenzio.
   const shareSupported = canShareFiles();
-  const [sharing, setSharing] = useState(false);
+  const [shareFiles, setShareFiles] = useState(null);
+
+  useEffect(() => {
+    if (!shareSupported || items.length === 0) {
+      setShareFiles(null);
+      return undefined;
+    }
+    let cancelled = false;
+    setShareFiles(null);
+    buildShareFiles(shareFilePlan(referencePhoto, items)).then((files) => {
+      if (!cancelled) setShareFiles(files);
+    });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [itemsKey, referencePhoto, shareSupported]);
 
   const handleShare = async () => {
-    setSharing(true);
+    if (!shareFiles) return;
     try {
-      const files = await buildShareFiles(shareFilePlan(referencePhoto, items));
-      await navigator.share({ files, text: promptText });
+      await navigator.share({ files: shareFiles, text: promptText });
     } catch {
       // Annullata dall'utente o app di arrivo senza supporto: restano
       // Copia e i link qui sotto.
-    } finally {
-      setSharing(false);
     }
   };
 
@@ -307,9 +324,9 @@ export default function TryOnPage() {
                     fullWidth
                     icon={<Icon name="external" size={15} />}
                     onClick={handleShare}
-                    disabled={sharing}
+                    disabled={!shareFiles}
                   >
-                    {sharing ? t('tryon.promptSharing') : t('tryon.promptShare')}
+                    {shareFiles ? t('tryon.promptShare') : t('tryon.promptSharing')}
                   </Button>
                   <p className="tryon-page__photo-note">{t('tryon.promptShareHint')}</p>
                 </>

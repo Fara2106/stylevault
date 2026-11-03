@@ -3,7 +3,8 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: var(--sv-nav-height);
+  /* L'area della barra Home si aggiunge all'altezza invece di schiacciare i tab */
+  height: calc(var(--sv-nav-height) + env(safe-area-inset-bottom));
   display: flex;
   align-items: stretch;
   justify-content: space-around;

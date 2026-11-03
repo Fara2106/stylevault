@@ -5,7 +5,7 @@
 
 @media (min-width: 768px) {
   .item-detail__layout {
-    grid-template-columns: 5fr 7fr;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
     align-items: start;
   }
 }
@@ -81,7 +81,7 @@
 
 .item-detail__facts {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--sv-space-3) var(--sv-space-4);
   margin: var(--sv-space-5) 0;
 }

@@ -11,12 +11,14 @@ const DISMISS_KEY = 'sv_local_notice_dismissed';
  * Avvisi di stato sopra il guardaroba.
  * - Cloud non raggiungibile (es. progetto Supabase in pausa dopo inattività):
  *   invita ad avvisare Lorenzo; i dati sono al sicuro.
+ * - Memoria del browser piena (modalità locale): le ultime modifiche non
+ *   sono state salvate. Non chiudibile finché non si libera spazio.
  * - Modalità locale (demo, senza cloud): i dati vivono solo nel browser e
  *   Safari/iOS può cancellarli dopo ~7 giorni senza visite. Chiudibile.
  */
 export default function StatusNotice() {
   const { t } = useTranslation();
-  const { cloudOffline } = useWardrobe();
+  const { cloudOffline, storageFull } = useWardrobe();
   const [dismissed, setDismissed] = useState(
     () => localStorage.getItem(DISMISS_KEY) === '1'
   );
@@ -26,6 +28,14 @@ export default function StatusNotice() {
     return (
       <div className="status-notice status-notice--alert" role="alert">
         <p className="status-notice__text">{t('app.cloudPausedNotice')}</p>
+      </div>
+    );
+  }
+
+  if (storageFull) {
+    return (
+      <div className="status-notice status-notice--alert" role="alert">
+        <p className="status-notice__text">{t('app.storageFullNotice')}</p>
       </div>
     );
   }

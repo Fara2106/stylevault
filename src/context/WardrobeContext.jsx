@@ -180,11 +180,14 @@ function loadFromStorage(key, fallback) {
   return fallback;
 }
 
+/** @returns {boolean} false se la scrittura è fallita (tipicamente quota piena). */
 function saveToStorage(key, data) {
   try {
     localStorage.setItem(key, JSON.stringify(data));
+    return true;
   } catch (e) {
     console.warn(`Failed to save ${key} to localStorage:`, e);
+    return false;
   }
 }
 
@@ -229,6 +232,9 @@ export function WardrobeProvider({ children }) {
   // True quando il caricamento dal cloud è fallito (es. progetto Supabase in
   // pausa dopo inattività): la UI mostra l'avviso "avvisa Lorenzo".
   const [cloudOffline, setCloudOffline] = useState(false);
+  // Modalità locale: true quando il browser rifiuta di salvare (memoria piena,
+  // su iPhone ~5MB di foto). Senza avviso l'ultimo capo spariva al riavvio.
+  const [storageFull, setStorageFull] = useState(false);
 
   // ── Caricamento iniziale dal cloud (con cache offline in lettura) ──
   useEffect(() => {
@@ -273,17 +279,15 @@ export function WardrobeProvider({ children }) {
 
   // ── Persistenza locale (Fase A) ──
   useEffect(() => {
-    if (!isSupabaseEnabled) saveToStorage(KEYS.items, items);
-  }, [items]);
-  useEffect(() => {
-    if (!isSupabaseEnabled) saveToStorage(KEYS.outfitHistory, outfitHistory);
-  }, [outfitHistory]);
-  useEffect(() => {
-    if (!isSupabaseEnabled) saveToStorage(KEYS.wishlist, wishlist);
-  }, [wishlist]);
-  useEffect(() => {
-    if (!isSupabaseEnabled) saveToStorage(KEYS.savedOutfits, savedOutfits);
-  }, [savedOutfits]);
+    if (isSupabaseEnabled) return;
+    const ok = [
+      saveToStorage(KEYS.items, items),
+      saveToStorage(KEYS.outfitHistory, outfitHistory),
+      saveToStorage(KEYS.wishlist, wishlist),
+      saveToStorage(KEYS.savedOutfits, savedOutfits),
+    ].every(Boolean);
+    setStorageFull(!ok);
+  }, [items, outfitHistory, wishlist, savedOutfits]);
   useEffect(() => {
     saveToStorage(KEYS.customCategories, customCategories);
   }, [customCategories]);
@@ -509,6 +513,7 @@ export function WardrobeProvider({ children }) {
     customCategories,
     isSyncing,
     cloudOffline,
+    storageFull,
 
     // Item CRUD
     addItem,

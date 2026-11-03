@@ -15,9 +15,12 @@
   width: 100%;
   max-width: 560px;
   max-height: 88vh;
+  max-height: 88dvh;
   display: flex;
   flex-direction: column;
   animation: modal-rise 220ms ease;
+  /* Il bottom sheet arriva al bordo: l'ultima riga resta sopra la barra Home */
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 @media (min-width: 768px) {
@@ -29,6 +32,7 @@
   .modal {
     border-radius: var(--sv-radius-lg);
     box-shadow: var(--sv-shadow-lift);
+    padding-bottom: 0;
   }
 }
 
@@ -56,6 +60,7 @@
 .modal__body {
   padding: var(--sv-space-5);
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .modal__footer {

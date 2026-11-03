@@ -105,8 +105,8 @@ export default function AddItemPage() {
         brand: prev.brand || meta.site,
       }));
       setLinkState('success');
-    } catch {
-      setLinkState('error');
+    } catch (err) {
+      setLinkState(err.message === 'link-metadata-limit' ? 'limit' : 'error');
     }
   };
 
@@ -231,9 +231,9 @@ export default function AddItemPage() {
               <Icon name="check" size={13} /> {t('addItem.linkSuccess')}
             </p>
           )}
-          {linkState === 'error' && (
+          {(linkState === 'error' || linkState === 'limit') && (
             <p className="add-item__link-note add-item__link-note--warn">
-              {t('addItem.linkError')}
+              {t(linkState === 'limit' ? 'addItem.linkLimit' : 'addItem.linkError')}
             </p>
           )}
           {form.photo && (
@@ -371,6 +371,7 @@ export default function AddItemPage() {
         <Input
           label={`${t('addItem.price')} (${t('common.optional')})`}
           type="number"
+          inputMode="decimal"
           value={form.price}
           onChange={(e) => set('price', e.target.value)}
         />

@@ -2,8 +2,9 @@
   "app": {
     "name": "StyleVault",
     "tagline": "Il tuo guardaroba, sempre con te",
-    "localNotice": "Versione demo: i tuoi dati vivono solo in questo browser. Se non apri l'app per circa 7 giorni (o svuoti la cache), il telefono potrebbe cancellarli. Nella versione online con account i dati sono al sicuro nel cloud.",
-    "cloudPausedNotice": "Il servizio online non risponde: dopo un periodo senza utilizzo va in pausa. I tuoi dati sono al sicuro — avvisa Lorenzo e riprova tra qualche minuto."
+    "localNotice": "Versione demo: i tuoi dati vivono solo in questo browser. Se non apri l'app per circa 7 giorni (o svuoti la cache), il telefono potrebbe cancellarli. Nella versione online con account i dati sono al sicuro nel cloud. Su iPhone: Condividi → Aggiungi alla schermata Home, così il telefono non li cancella.",
+    "cloudPausedNotice": "Il servizio online non risponde: dopo un periodo senza utilizzo va in pausa. I tuoi dati sono al sicuro — avvisa Lorenzo e riprova tra qualche minuto.",
+    "storageFullNotice": "Memoria del telefono per l'app piena: le ultime modifiche NON sono salvate e si perderanno chiudendo l'app. Elimina qualche capo o foto che non usi più."
   },
   "nav": {
     "wardrobe": "Guardaroba",
@@ -115,6 +116,7 @@
     "toWishlist": "Nella wishlist",
     "linkLoading": "Leggo la pagina del negozio...",
     "linkError": "Questo negozio non permette la lettura automatica: compila i campi a mano, il link resta salvato.",
+    "linkLimit": "La lettura automatica dei link è finita per oggi (servizio gratuito): compila i campi a mano o riprova domani. Il link resta salvato.",
     "linkSuccess": "Dati estratti: controlla e completa",
     "added": "Capo aggiunto",
     "nameRequired": "Dai un nome al capo",

@@ -21,7 +21,7 @@
 
 .profile-page__counters {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--sv-space-3);
   margin-bottom: var(--sv-space-6);
 }
@@ -78,7 +78,7 @@
 
 .profile-page__bar-row {
   display: grid;
-  grid-template-columns: 90px 1fr 24px;
+  grid-template-columns: 90px minmax(0, 1fr) 24px;
   align-items: center;
   gap: var(--sv-space-2);
   margin-bottom: 6px;
