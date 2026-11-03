@@ -49,7 +49,7 @@ export async function deletePhoto(path, bucket = 'wardrobe-photos') {
 
 // ── Mappers capo ────────────────────────────────────────────────────────────
 
-function rowToItem(row, urls) {
+export function rowToItem(row, urls) {
   return {
     id: row.id,
     name: row.name,
@@ -63,6 +63,11 @@ function rowToItem(row, urls) {
     warmthLevel: row.warmth_level,
     photo: row.photo_path ? urls.get(row.photo_path) || '' : row.photo_url || '',
     photoPath: row.photo_path || null,
+    // Retro facoltativo: su Storage (firmato) o esterno (link shop)
+    photoBack: row.photo_back_path
+      ? urls.get(row.photo_back_path) || ''
+      : row.photo_back_url || '',
+    photoBackPath: row.photo_back_path || null,
     sourceUrl: row.source_url || '',
     price: row.price,
     favorite: row.favorite ?? false,
@@ -70,7 +75,7 @@ function rowToItem(row, urls) {
   };
 }
 
-function itemToRow(item, userId) {
+export function itemToRow(item, userId) {
   return {
     user_id: userId,
     name: item.name,
@@ -84,6 +89,8 @@ function itemToRow(item, userId) {
     warmth_level: item.warmthLevel ?? 2,
     photo_path: item.photoPath || null,
     photo_url: item.photoPath ? null : item.photo || null,
+    photo_back_path: item.photoBackPath || null,
+    photo_back_url: item.photoBackPath ? null : item.photoBack || null,
     source_url: item.sourceUrl || null,
     price: item.price ?? null,
     favorite: item.favorite ?? false,
@@ -108,7 +115,10 @@ export async function fetchAllData(userId) {
   const firstError = items.error || wishlist.error || outfits.error || calendar.error;
   if (firstError) throw firstError;
 
-  const allPaths = [...items.data, ...wishlist.data].map((r) => r.photo_path);
+  const allPaths = [...items.data, ...wishlist.data].flatMap((r) => [
+    r.photo_path,
+    r.photo_back_path,
+  ]);
   const urls = await signedUrlMap(allPaths);
 
   return {
@@ -142,15 +152,19 @@ export async function insertItem(item, userId, table = 'items') {
   if (prepared.photo?.startsWith('data:')) {
     prepared.photoPath = await uploadPhoto(prepared.photo, userId);
   }
+  if (prepared.photoBack?.startsWith('data:')) {
+    prepared.photoBackPath = await uploadPhoto(prepared.photoBack, userId);
+  }
   const { data, error } = await supabase
     .from(table)
     .insert(itemToRow(prepared, userId))
     .select()
     .single();
   if (error) throw error;
-  const urls = data.photo_path
-    ? new Map([[data.photo_path, await signedUrl(data.photo_path)]])
-    : new Map();
+  const urls = new Map();
+  for (const path of [data.photo_path, data.photo_back_path].filter(Boolean)) {
+    urls.set(path, await signedUrl(path));
+  }
   return rowToItem(data, urls);
 }
 
@@ -158,6 +172,9 @@ export async function updateItemRow(id, updates, userId, table = 'items') {
   const prepared = { ...updates };
   if (prepared.photo?.startsWith('data:')) {
     prepared.photoPath = await uploadPhoto(prepared.photo, userId);
+  }
+  if (prepared.photoBack?.startsWith('data:')) {
+    prepared.photoBackPath = await uploadPhoto(prepared.photoBack, userId);
   }
   const row = itemToRow(prepared, userId);
   const { error } = await supabase.from(table).update(row).eq('id', id);
@@ -244,6 +261,12 @@ export async function fetchProfile(userId) {
     referencePhotoPath: data.reference_photo_path,
     onboarded: data.onboarded,
     armocromia: data.armocromia ?? null,
+    theme: data.theme || 'system',
+    // Foto del corpo di lato e di spalle (la davanti è referencePhoto)
+    bodyPhotos: {
+      side: await signedUrl(data.body_photos?.side, 'profile-photos'),
+      back: await signedUrl(data.body_photos?.back, 'profile-photos'),
+    },
   };
 }
 
@@ -254,6 +277,31 @@ export async function upsertProfile(userId, updates) {
   if ('defaultCity' in updates) row.default_city = updates.defaultCity;
   if ('onboarded' in updates) row.onboarded = updates.onboarded;
   if ('armocromia' in updates) row.armocromia = updates.armocromia ?? null;
+  if ('theme' in updates) row.theme = updates.theme;
+
+  // bodyPhotos: { side?, back? } con dataURL (nuova foto) o null (rimossa).
+  // Percorsi univoci come le altre foto: lo storage non permette di
+  // sovrascrivere un file esistente.
+  if ('bodyPhotos' in updates) {
+    const { data: current } = await supabase
+      .from('profiles')
+      .select('body_photos')
+      .eq('id', userId)
+      .maybeSingle();
+    const paths = { ...(current?.body_photos || {}) };
+    for (const view of ['side', 'back']) {
+      if (!(view in updates.bodyPhotos)) continue;
+      const value = updates.bodyPhotos[view];
+      const old = paths[view];
+      if (value?.startsWith('data:')) {
+        paths[view] = await uploadPhoto(value, userId, 'profile-photos');
+      } else if (value === null) {
+        delete paths[view];
+      }
+      if (old && old !== paths[view]) await deletePhoto(old, 'profile-photos');
+    }
+    row.body_photos = paths;
+  }
 
   if ('referencePhoto' in updates) {
     if (updates.referencePhoto?.startsWith('data:')) {

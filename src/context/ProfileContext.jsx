@@ -85,11 +85,13 @@ export function ProfileProvider({ children }) {
             referencePhoto: remote.referencePhoto,
             onboarded: remote.onboarded,
             armocromia: remote.armocromia,
+            bodyPhotos: remote.bodyPhotos,
           });
           // Applica lingua e città salvate sul cloud
           applyingRemoteRef.current = true;
           if (remote.language) settings.setLanguage(remote.language);
           if (remote.defaultCity) settings.setDefaultCity(remote.defaultCity);
+          if (remote.theme) settings.setTheme(remote.theme);
           queueMicrotask(() => {
             applyingRemoteRef.current = false;
           });
@@ -118,16 +120,17 @@ export function ProfileProvider({ children }) {
     }
   }, [profile, userId]);
 
-  // ── Sync impostazioni → cloud (lingua e città) ──
+  // ── Sync impostazioni → cloud (lingua, città e tema) ──
   useEffect(() => {
     if (!isSupabaseEnabled || !userId || !loadedRef.current) return;
     if (applyingRemoteRef.current) return;
     upsertProfile(userId, {
       language: settings.language,
       defaultCity: settings.defaultCity,
+      theme: settings.theme,
     }).catch((e) => console.warn('Settings sync failed:', e));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [settings.language, settings.defaultCity, userId]);
+  }, [settings.language, settings.defaultCity, settings.theme, userId]);
 
   const persistCloud = useCallback(
     (updates) => {
@@ -171,6 +174,7 @@ export function ProfileProvider({ children }) {
     referencePhoto: profile.referencePhoto,
     onboarded: profile.onboarded,
     armocromia: profile.armocromia,
+    bodyPhotos: profile.bodyPhotos || { side: null, back: null },
     profileLoading,
     setReferencePhoto,
     completeOnboarding,
