@@ -20,6 +20,17 @@ toglieva). Testi del 18/07 tenuti, ripristinate solo le 8 chiavi model*.
   impossibile fare login. Da provare su un iPhone vero (24MB @imgly).
 - Test di quel giro: foto Unsplash in scratchpad, MAI usare foto scelte dal
   solo testo alternativo (una era di spalle e senza maglia: scartata).
+- **GPU del telefono** (richiesta di Lorenzo: «sfrutta il processore
+  dell'iPhone»): scontorno @imgly con `device: 'gpu'` (WebGPU, Safari iOS 26)
+  in `cutoutDevice.js` (+2 test), ripiego CPU se la GPU fallisce; MediaPipe
+  (segmenter, pose, face) con `delegate: 'GPU'` via `createVisionTask`,
+  ripiego CPU. Misure su Mac (Chromium): scontorno foto successive 8,5 s →
+  0,6 s; segmentazione 231 → 62 ms; colori armocromia invariati. Il primo
+  uso resta ~1 min (download modelli). Multithread WASM NON possibile:
+  GitHub Pages non manda gli header COOP/COEP. iPhone vero da provare.
+- Banco di prova in console: con il pannello browser NASCOSTO `img.decode()`
+  non si risolve mai → usare `onload` e lanciare le misure in background
+  (`window.__bench`), leggendole a parte.
 
 ## Novità 2026-11-03 — giro di miglioramenti per iPhone + BACKEND CLOUD SPARITO
 

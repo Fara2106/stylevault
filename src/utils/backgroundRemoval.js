@@ -9,6 +9,7 @@
  * era il freeze segnalato su "Cambia foto". Se il worker non parte o fallisce
  * si ripiega sull'esecuzione nel main thread, identica a prima.
  */
+import { cutoutWithGpuFallback } from './cutoutDevice';
 
 const blobToDataUrl = (blob) =>
   new Promise((resolve, reject) => {
@@ -61,7 +62,7 @@ const cutoutInWorker = (photoUrl) => {
 
 const cutoutInMain = async (photoUrl) => {
   const { removeBackground } = await import('@imgly/background-removal');
-  const blob = await removeBackground(photoUrl);
+  const blob = await cutoutWithGpuFallback(removeBackground, photoUrl);
   return blobToDataUrl(blob);
 };
 

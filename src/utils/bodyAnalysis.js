@@ -29,6 +29,23 @@ export const SEG_FACE_SKIN = 3;
 export const SEG_CLOTHES = 4;
 export const SEG_ACCESSORIES = 5;
 
+/**
+ * Crea un task MediaPipe sulla GPU del telefono (WebGL2: su iPhone è molto
+ * più veloce della CPU); se il browser non la concede si ripiega sulla CPU.
+ * Le maschere restano leggibili con getAsUint8Array() in entrambi i casi.
+ */
+export async function createVisionTask(Task, fileset, options) {
+  const withDelegate = (delegate) => ({
+    ...options,
+    baseOptions: { ...options.baseOptions, delegate },
+  });
+  try {
+    return await Task.createFromOptions(fileset, withDelegate('GPU'));
+  } catch {
+    return Task.createFromOptions(fileset, withDelegate('CPU'));
+  }
+}
+
 let visionPromise = null;
 const getVision = () => {
   if (!visionPromise) {
@@ -44,7 +61,7 @@ let segmenterPromise = null;
 const getSegmenter = () => {
   if (!segmenterPromise) {
     segmenterPromise = getVision().then(({ mp, fileset }) =>
-      mp.ImageSegmenter.createFromOptions(fileset, {
+      createVisionTask(mp.ImageSegmenter, fileset, {
         baseOptions: { modelAssetPath: SEGMENTER_MODEL_URL },
         runningMode: 'IMAGE',
         outputCategoryMask: true,
@@ -59,7 +76,7 @@ let posePromise = null;
 const getPose = () => {
   if (!posePromise) {
     posePromise = getVision().then(({ mp, fileset }) =>
-      mp.PoseLandmarker.createFromOptions(fileset, {
+      createVisionTask(mp.PoseLandmarker, fileset, {
         baseOptions: { modelAssetPath: POSE_MODEL_URL },
         runningMode: 'IMAGE',
         numPoses: 1,

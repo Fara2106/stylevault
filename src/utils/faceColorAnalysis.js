@@ -7,7 +7,7 @@
  * Ogni pezzo che fallisce diventa null; se cade tutto → null totale:
  * la UI parte dalla correzione manuale.
  */
-import { segmentBody, SEG_FACE_SKIN, SEG_HAIR } from './bodyAnalysis';
+import { segmentBody, SEG_FACE_SKIN, SEG_HAIR, createVisionTask } from './bodyAnalysis';
 import { representativeColor, maskedPixels } from './colorSampling';
 
 const VISION_VERSION = '0.10.35';
@@ -29,7 +29,7 @@ const getFaceLandmarker = () => {
   if (!landmarkerPromise) {
     landmarkerPromise = import('@mediapipe/tasks-vision').then(async (mp) => {
       const fileset = await mp.FilesetResolver.forVisionTasks(WASM_URL);
-      return mp.FaceLandmarker.createFromOptions(fileset, {
+      return createVisionTask(mp.FaceLandmarker, fileset, {
         baseOptions: { modelAssetPath: FACE_MODEL_URL },
         runningMode: 'IMAGE',
         numFaces: 1,

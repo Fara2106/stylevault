@@ -10,6 +10,8 @@
  * sul main thread come prima.
  */
 
+import { cutoutWithGpuFallback } from './cutoutDevice';
+
 let libPromise = null;
 
 self.onmessage = async (event) => {
@@ -17,7 +19,7 @@ self.onmessage = async (event) => {
   try {
     if (!libPromise) libPromise = import('@imgly/background-removal');
     const { removeBackground } = await libPromise;
-    const blob = await removeBackground(photo);
+    const blob = await cutoutWithGpuFallback(removeBackground, photo);
     self.postMessage({ id, ok: true, blob });
   } catch (err) {
     self.postMessage({ id, ok: false, error: String((err && err.message) || err) });
