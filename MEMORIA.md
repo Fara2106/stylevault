@@ -55,7 +55,72 @@ piano `docs/superpowers/plans/2026-11-03-app-ios.md`, registro decisioni
   2026-11-03 dal Chrome di Lorenzo (ora 3: localhost:5173/**,
   fara2106.github.io/stylevault/**, stylevault://**). Vale anche per Google. 35 test iOS verdi.
   PROVATO sull'iPhone il 2026-11-03: Lorenzo ha rifatto la password dal link
-  dell'email ed è entrato (checklist §8 punto 1 ok). NON ancora committato.
+  dell'email ed è entrato (checklist §8 punto 1 ok). Commit `f4f712f`.
+- **Foto del corpo di prova** (Lorenzo non sapeva come farsele): 3 foto
+  Unsplash guardate una per una (davanti 1763750581767, lato 1559734257-47e…,
+  spalle 1559907252 — lato e spalle stessa persona) in
+  `ios/build/foto-corpo-test/` (ignorata da git), passate all'iPhone via
+  AirDrop. Pre-verifica sul Mac compilando con `swiftc` gli stessi sorgenti
+  Vision + `BodyPhotosModel.validate`: tutte "ok". Il simulatore NON serve
+  per questo passo (Vision assente, niente login). Lorenzo le ha caricate
+  sull'iPhone ed è entrato nel sito: checklist §8 punto 2 OK (2026-11-03).
+- **Avatar sull'iPhone, primo giro** (screenshot di Lorenzo): una sola
+  scarpa enorme su tutti e due i piedi, maglione più stretto della maglia
+  sotto, jeans assenti. Cause e correzioni (non ancora committate):
+  - le foto prodotto hanno UNA scarpa di lato → `GarmentLayout.shoeFrames`
+    la mette su ogni piede (lunga 15% dell'altezza, punta verso fuori o
+    dove guarda la persona, `Silhouette.toeOnLeft` + specchiatura); un
+    paio (2 soggetti) resta un'immagine sola. `CutoutCache` ora salva il
+    numero di soggetti (`<chiave>.count`), prima lo perdeva (sempre 1);
+  - larghezze dal riquadro della persona (braccia, passo) → `Silhouette`
+    misura la sagoma alla riga del petto (top) e, di lato, dei fianchi;
+  - vita dei pantaloni a `hipY - 0.1·torso` (striscia di maglia scoperta)
+    e larghi almeno quanto le caviglie divaricate + 8% dell'altezza;
+  - jeans assenti al primo giro: l'outfit aperto non li conteneva (cache
+    dell'iPhone con 2 soli capi; al secondo giro, con log temporaneo del
+    ponte, arrivano Maglione/tops, Jeans/bottoms, Scarpe/shoes e si vedono).
+  - secondo giro: viste scambiate (foto di spalle salvata come "lato",
+    profilo come "spalle") → `BodyPhotosModel.seenView` rifiuta la foto
+    della vista sbagliata (`PhotoCheck.wrongView`): di lato spalle < 35%
+    del busto; davanti Vision mette la spalla sinistra a destra
+    nell'immagine, di spalle a sinistra. Verificato sulle 3 foto vere in
+    tutte le 9 combinazioni (3 ok, 6 rifiutate) + alternative + fixture.
+  - pantaloni mai più larghi del 35% dell'altezza (col profilo in falcata
+    salvato come "spalle" erano giganti). I capi caricati dal sito sono
+    data URL piccole (~415×600): ingranditi si vedono sgranati.
+  Render di verifica `docs/verifiche/2026-11-03-app-ios/avatar-3-viste-mac.jpg`;
+  script Mac che rifà i passi di AvatarView: scratchpad `arender`. Test iOS
+  46/46, Vision Mac 8/8. Limite noto: di lato col passo e col cappotto in
+  mano restano visibili gamba dietro e cappotto (foto di prova "in cammino").
+- **Lorenzo vuole i capi "esattamente lungo le linee del corpo"** (deformati).
+  Brainstorming in corso. Opzioni: collage preciso on-device (warp riga per
+  riga come `src/utils/modelWarp.js` del sito), servizio esterno (FASHN
+  ~0,075 $/img, un capo per volta, 10–20 s, foto fuori dal telefono),
+  modello on-device. Prova usa-e-getta di **Mobile-VTON** (CVPR 2026, 415M
+  param., licenza CC BY-NC-SA = solo non commerciale, solo parte di sopra,
+  addestrato su foto frontali testa→metà coscia, pesi 3,5 GiB) sul Mac M1
+  Pro: maglione sulla foto davanti ritagliata → risultato quasi
+  fotografico (maniche ai polsi, pieghe; trecce del maglione meno nitide),
+  102 s con 28 passi fp16 (2,64 s/passo). Codice esterno: il classificatore
+  di Claude Code blocca l'esecuzione, la lancia Lorenzo dal Terminale. Tutto
+  in scratchpad (`spike-mvton*`), nulla nel repo. Nessuna versione iPhone:
+  andrebbe convertita in Core ML. Seconde prove: figura intera OK (maglione giusto,
+  pantaloncini invariati: tocca solo la parte di sopra); di spalle
+  sorprendentemente OK (sostituisce il cappotto, trama un po' confusa);
+  10 passi ≈ qualità di 28 (denoise 9 s, 32 s con codifica testo/avvio).
+- **Design "avatar realistico"** scritto:
+  `docs/superpowers/specs/2026-11-03-avatar-realistico-design.md` (bozza, da
+  approvare). Decisioni di Lorenzo: parte da sola la vista davanti con barra
+  e percentuale, poi pulsanti "Genera di profilo"/"Genera di spalle";
+  download ~1 GB al primo uso con barra; modelli su Release GitHub; deve
+  girare sul suo 18 Pro Max e sul 15 Pro di Mary (8 GB RAM). Primo passo:
+  prova tecnica Core ML sull'iPhone (soglie ≤60 s / ≤90 s). Licenza NC:
+  niente uso commerciale, motore dietro `RealisticTryOn` per poterlo
+  cambiare. Design APPROVATO da Lorenzo (2026-11-03). Piano della sola
+  prova tecnica: `docs/superpowers/plans/2026-11-03-avatar-realistico-prova-tecnica.md`
+  (6 task: riferimento PyTorch, conversione Core ML fp16 + verifica, pipeline
+  Core ML sul Mac, 6 bit, app di misura `RealisticBench` su 18 Pro Max e
+  15 Pro, cancello). Il piano d'integrazione si scrive dopo il cancello.
   Test iOS: serve `CODE_SIGNING_ALLOWED=NO` (comando nel registro).
 - Revisione finale (revisore separato): 2 critici + 8 importanti CORRETTI
   (refresh token doppio, sessione al sito solo dopo 'ready', link esterni,
