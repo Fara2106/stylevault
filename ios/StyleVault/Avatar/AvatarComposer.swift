@@ -1,0 +1,51 @@
+import CoreGraphics
+
+/// Disegna una vista dell'avatar: fondo da studio, ombra, persona scontornata
+/// e capi scontornati nell'ordine scarpe → pantaloni → top → capospalla.
+/// CoreGraphics puro: uguale su iPhone e Mac (dove lo si verifica a occhio).
+enum AvatarComposer {
+    struct Garment {
+        let slot: String
+        let cutout: Cutout
+    }
+
+    static let drawOrder = ["shoes", "bottom", "top", "outerwear"]
+
+    static func render(person: Cutout, pose: Pose, garments: [Garment], view: BodyView) -> CGImage? {
+        let width = person.image.width, height = person.image.height
+        guard let ctx = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
+                                  space: CGColorSpaceCreateDeviceRGB(),
+                                  bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
+        let H = CGFloat(height)
+        // Da rettangolo con origine in alto (Vision, layout) a CoreGraphics (in basso)
+        func flipped(_ r: CGRect) -> CGRect { CGRect(x: r.minX, y: H - r.maxY, width: r.width, height: r.height) }
+
+        // Fondo da studio come il sito (#F5F0E8 → #EAE2D5)
+        let colors = [CGColor(red: 0.961, green: 0.941, blue: 0.910, alpha: 1),
+                      CGColor(red: 0.918, green: 0.886, blue: 0.835, alpha: 1)] as CFArray
+        if let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: colors, locations: [0, 1]) {
+            ctx.drawLinearGradient(gradient, start: CGPoint(x: 0, y: H), end: .zero, options: [])
+        }
+        // Ombra a terra sotto i piedi
+        let feet = person.bounds.maxY
+        ctx.setFillColor(CGColor(red: 0, green: 0, blue: 0, alpha: 0.10))
+        ctx.fillEllipse(in: flipped(CGRect(x: person.bounds.midX - person.bounds.width * 0.55,
+                                           y: feet - person.bounds.height * 0.015,
+                                           width: person.bounds.width * 1.1,
+                                           height: person.bounds.height * 0.03)))
+
+        ctx.draw(person.image, in: CGRect(x: 0, y: 0, width: width, height: height))
+
+        for slot in drawOrder {
+            for garment in garments where garment.slot == slot {
+                guard let piece = garment.cutout.image.cropping(to: garment.cutout.bounds.integral),
+                      let frame = GarmentLayout.frame(for: slot, pose: pose, bodyBounds: person.bounds,
+                                                      garmentAspect: CGFloat(piece.width) / CGFloat(piece.height),
+                                                      view: view) else { continue }
+                ctx.interpolationQuality = .high
+                ctx.draw(piece, in: flipped(frame))
+            }
+        }
+        return ctx.makeImage()
+    }
+}

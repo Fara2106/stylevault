@@ -46,7 +46,7 @@ targets:
     platform: iOS
     sources:
       - path: StyleVaultTests
-        excludes: [VisionTests.swift, Fixtures]
+        excludes: [VisionTests.swift, AvatarRenderTests.swift, Fixtures]
     dependencies:
       - target: StyleVault
   # Vision (scontorno, posa) gira davvero solo su hardware Apple: i suoi test
@@ -57,7 +57,11 @@ targets:
     deploymentTarget: "14.0"
     sources:
       - StyleVault/Vision
+      - StyleVault/Avatar/GarmentLayout.swift
+      - StyleVault/Avatar/AvatarComposer.swift
+      - StyleVault/Onboarding/BodyPhotosModel.swift
       - StyleVaultTests/VisionTests.swift
+      - StyleVaultTests/AvatarRenderTests.swift
       - StyleVaultTests/Fixtures
     settings:
       base:

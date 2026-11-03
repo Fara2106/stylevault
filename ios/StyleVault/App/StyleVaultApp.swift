@@ -30,6 +30,7 @@ struct RootView: View {
     @ObservedObject var web: WebViewStore
     @State private var missingPhotos: [BodyView]?
     @State private var retakePhotos = false
+    @State private var avatar: AvatarSession?
 
     var body: some View {
         Group {
@@ -50,6 +51,7 @@ struct RootView: View {
                 switch message {
                 case .signOut: Task { await auth.signOut() }
                 case .openBodyPhotos: retakePhotos = true
+                case let .openAvatar(request): avatar = AvatarSession(request: request)
                 default: break
                 }
             }
@@ -58,6 +60,9 @@ struct RootView: View {
         .task { await checkPhotos() }
         .fullScreenCover(isPresented: $retakePhotos) {
             BodyPhotosView(views: BodyView.allCases) { retakePhotos = false }
+        }
+        .fullScreenCover(item: $avatar) { session in
+            AvatarView(request: session.request) { avatar = nil }
         }
     }
 
@@ -74,4 +79,10 @@ struct RootView: View {
         let existing = (try? await ProfileService().loadBodyPhotos()) ?? [.front: AppConfig.siteURL, .side: AppConfig.siteURL, .back: AppConfig.siteURL]
         missingPhotos = BodyPhotosModel.needsOnboarding(existing: existing)
     }
+}
+
+/// Un'apertura dell'avatar (ogni outfit è una nuova sessione).
+struct AvatarSession: Identifiable {
+    let id = UUID()
+    let request: AvatarRequest
 }
