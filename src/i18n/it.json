@@ -202,13 +202,22 @@
     "promptStep4": "Incolla il prompt copiato e genera l'immagine",
     "promptOpenChatgpt": "Apri ChatGPT",
     "promptOpenGemini": "Apri Gemini",
-    "promptGarments": "Foto da caricare in chat"
+    "promptGarments": "Foto da caricare in chat",
+    "modeModel": "Su di te",
+    "modePhoto": "Prompt AI",
+    "modelIntro": "La persona della tua foto, vestita con le foto vere dei capi scelti, nelle sue proporzioni. Gratis: lo scontorno avviene sul tuo dispositivo, la foto non esce da qui.",
+    "modelPreparingPhoto": "Preparo la tua foto (scontorno)…",
+    "modelNoFigure": "Non riesco a distinguere una figura intera nella foto: usa una foto in piedi, frontale, a figura intera.",
+    "modelError": "Non riesco a preparare la foto: riprova o cambia foto.",
+    "modelNeedsPhoto": "Carica una tua foto a figura intera per iniziare (resta sul tuo dispositivo).",
+    "modelNoOutfit": "Prima scegli i capi qui sopra: qui li vedrai addosso."
   },
   "avatar": {
     "referencePhoto": "Foto di riferimento",
     "uploadReference": "Carica una tua foto",
     "referenceHint": "La caricherai in chat col prompt AI ed è la base dell'armocromia. Resta solo sul tuo dispositivo.",
-    "removeReference": "Rimuovi foto"
+    "removeReference": "Rimuovi foto",
+    "preparingGarments": "Preparo i capi..."
   },
   "advice": {
     "colorsHarmonious": "I colori si armonizzano bene tra loro",

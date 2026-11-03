@@ -202,13 +202,22 @@
     "promptStep4": "Paste the copied prompt and generate the image",
     "promptOpenChatgpt": "Open ChatGPT",
     "promptOpenGemini": "Open Gemini",
-    "promptGarments": "Photos to upload in the chat"
+    "promptGarments": "Photos to upload in the chat",
+    "modeModel": "On you",
+    "modePhoto": "AI Prompt",
+    "modelIntro": "The person in your photo, dressed with the real photos of the chosen items, in their proportions. Free: the cutout runs on your device, the photo never leaves it.",
+    "modelPreparingPhoto": "Preparing your photo (cutout)…",
+    "modelNoFigure": "I can't make out a full figure in the photo: use a standing, front-facing, full-body photo.",
+    "modelError": "Couldn't prepare the photo: try again or change photo.",
+    "modelNeedsPhoto": "Upload a full-body photo of yourself to start (it stays on your device).",
+    "modelNoOutfit": "First pick the items above: you'll see them on you here."
   },
   "avatar": {
     "referencePhoto": "Reference photo",
     "uploadReference": "Upload a photo of you",
     "referenceHint": "You'll upload it in the chat with the AI prompt and it powers the color analysis. It stays on your device only.",
-    "removeReference": "Remove photo"
+    "removeReference": "Remove photo",
+    "preparingGarments": "Preparing the garments..."
   },
   "advice": {
     "colorsHarmonious": "The colors work well together",

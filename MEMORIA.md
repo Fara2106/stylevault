@@ -3,6 +3,24 @@
 > File di ripartenza: se apri una nuova chat, leggi questo file per riprendere il lavoro
 > esattamente da dove eravamo. Va aggiornato a ogni avanzamento significativo.
 
+## Novità 2026-11-03 (pomeriggio) — "Su di te" TORNA (persona scontornata vestita)
+
+Richiesta di Lorenzo: «vesti anche l'avatar, deve essere la persona
+scontornata». Ripristinata la scheda "Su di te" tolta il 18/07 (revert di
+`586ba7e`: ModelTryOn + modelImage/modelComposer/modelWarp + 25 test). La
+Prova ha di nuovo 2 schede: **Su di te** (predefinita) | **Prompt AI**; il
+pannello "1 = la tua foto" nella fila del prompt è RIMASTO (il revert lo
+toglieva). Testi del 18/07 tenuti, ripristinate solo le 8 chiavi model*.
+- Prova con foto stock (ragazza a figura intera) + 3 capi Zalando: persona
+  scontornata su fondo studio, jeans ottimi, sneakers ok (un filo grandi),
+  maglione il punto debole (troppo largo, collo fino al mento, filo nero del
+  maglione originale lungo le braccia). Desktop, primo uso: ~2 minuti
+  (download modelli + ONNX single-thread), poi cache.
+- iPhone NON verificato: nel simulatore l'incolla nei campi non funziona,
+  impossibile fare login. Da provare su un iPhone vero (24MB @imgly).
+- Test di quel giro: foto Unsplash in scratchpad, MAI usare foto scelte dal
+  solo testo alternativo (una era di spalle e senza maglia: scartata).
+
 ## Novità 2026-11-03 — giro di miglioramenti per iPhone + BACKEND CLOUD SPARITO
 
 **Backend RIATTIVATO lo stesso giorno.** Il progetto Supabase
