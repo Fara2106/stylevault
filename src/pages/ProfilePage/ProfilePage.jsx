@@ -6,6 +6,7 @@ import { useSettings } from '../../context/SettingsContext';
 import { useWardrobe } from '../../context/WardrobeContext';
 import CitySearch from '../../components/CitySearch/CitySearch';
 import LanguageSwitch from '../../components/LanguageSwitch/LanguageSwitch';
+import ThemeSwitch from '../../components/ThemeSwitch/ThemeSwitch';
 import { Button, Icon } from '../../components/common';
 import { CLOTHING_COLORS } from '../../utils/categories';
 import {
@@ -91,6 +92,10 @@ export default function ProfilePage() {
         <div className="profile-page__setting">
           <span>{t('profile.language')}</span>
           <LanguageSwitch />
+        </div>
+        <div className="profile-page__setting">
+          <span>{t('profile.theme')}</span>
+          <ThemeSwitch />
         </div>
       </section>
 

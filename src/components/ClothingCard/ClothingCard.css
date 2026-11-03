@@ -30,7 +30,7 @@
   height: 32px;
   border-radius: 50%;
   border: none;
-  background: rgba(250, 247, 242, 0.9);
+  background: var(--sv-bg-glass);
   color: var(--sv-ink);
   display: inline-flex;
   align-items: center;

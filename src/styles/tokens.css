@@ -20,6 +20,9 @@
   --sv-danger-soft: #f4e4e4;
   --sv-success: #5f7a5a;
   --sv-success-soft: #e8efe6;
+  /* Fondo semitrasparente di barre e bottoni sopra le foto; testo su accento */
+  --sv-bg-glass: rgba(250, 247, 242, 0.94);
+  --sv-on-accent: #ffffff;
 
   /* Tipografia */
   --sv-font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
@@ -45,4 +48,29 @@
   --sv-shadow-soft: 0 2px 16px rgba(26, 26, 26, 0.06);
   --sv-shadow-lift: 0 8px 32px rgba(26, 26, 26, 0.1);
   --sv-transition: 180ms ease;
+}
+
+/* Tema scuro: stessa eleganza, fondo caffè quasi nero e accento più chiaro.
+   Attivo con <html data-theme="dark"> (Scuro, o Sistema col telefono scuro). */
+:root[data-theme='dark'] {
+  --sv-bg: #141210;
+  --sv-surface: #1d1a17;
+  --sv-surface-soft: #26221e;
+  --sv-ink: #f2ede6;
+  --sv-ink-soft: #d6cfc6;
+  --sv-muted: #a39b91;
+  --sv-faint: #7a736b;
+  --sv-accent: #c4a57f;
+  --sv-accent-ink: #d8bf9c;
+  --sv-accent-soft: #2e2822;
+  --sv-border: #3a342e;
+  --sv-border-strong: #4a433c;
+  --sv-danger: #e08a8a;
+  --sv-danger-soft: #3a2424;
+  --sv-success: #9fbf98;
+  --sv-success-soft: #22301f;
+  --sv-bg-glass: rgba(20, 18, 16, 0.92);
+  --sv-on-accent: #141210;
+  --sv-shadow-soft: 0 2px 16px rgba(0, 0, 0, 0.4);
+  --sv-shadow-lift: 0 8px 32px rgba(0, 0, 0, 0.5);
 }

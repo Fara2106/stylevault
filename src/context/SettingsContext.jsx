@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import i18n from '../i18n/i18n';
+import { resolveTheme, applyTheme } from '../utils/theme';
 
 const SettingsContext = createContext(null);
 
@@ -37,7 +38,8 @@ function getDefaults() {
     units: 'celsius',
     // Città come oggetto geografico (serve lat/lon per il meteo)
     defaultCity: { name: 'Milano', latitude: 45.4642, longitude: 9.19, country: 'Italia' },
-    theme: 'light',
+    // 'light' | 'dark' | 'system': di default segue il telefono
+    theme: 'system',
   };
 }
 
@@ -47,7 +49,11 @@ function getDefaults() {
 export function SettingsProvider({ children }) {
   const [settings, setSettings] = useState(() => {
     const stored = loadSettings();
-    return stored ? { ...getDefaults(), ...stored } : getDefaults();
+    if (!stored) return getDefaults();
+    // Prima del selettore il tema era 'light' fisso e salvato senza scelta
+    // dell'utente: vale solo se scelto davvero (themeChosen).
+    if (!stored.themeChosen) delete stored.theme;
+    return { ...getDefaults(), ...stored };
   });
 
   // Persist to localStorage on changes
@@ -58,6 +64,16 @@ export function SettingsProvider({ children }) {
       console.warn('Failed to save settings:', e);
     }
   }, [settings]);
+
+  // Tema su <html data-theme>; con "system" segue i cambi del telefono
+  useEffect(() => {
+    const media = window.matchMedia?.('(prefers-color-scheme: dark)');
+    const apply = () => applyTheme(resolveTheme(settings.theme, Boolean(media?.matches)));
+    apply();
+    if (settings.theme !== 'system' || !media) return undefined;
+    media.addEventListener('change', apply);
+    return () => media.removeEventListener('change', apply);
+  }, [settings.theme]);
 
   // Sync i18n language
   useEffect(() => {
@@ -79,7 +95,7 @@ export function SettingsProvider({ children }) {
   }, []);
 
   const setTheme = useCallback((theme) => {
-    setSettings((prev) => ({ ...prev, theme }));
+    setSettings((prev) => ({ ...prev, theme, themeChosen: true }));
   }, []);
 
   const value = {

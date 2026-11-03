@@ -39,7 +39,7 @@
 
 .btn--accent {
   background: var(--sv-accent);
-  color: #fff;
+  color: var(--sv-on-accent);
 }
 
 .btn--accent:not(:disabled):hover {
