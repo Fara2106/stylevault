@@ -3,6 +3,46 @@
 > File di ripartenza: se apri una nuova chat, leggi questo file per riprendere il lavoro
 > esattamente da dove eravamo. Va aggiornato a ogni avanzamento significativo.
 
+## Novità 2026-11-03 (sera tardi) — FEEDBACK per email (branch `feat/app-ios`)
+
+Richiesta di Lorenzo: sezione dove gli utenti segnalano difetti o idee, che
+arrivano per email a lui; avviso chiaro di NON mettere contenuti sensibili.
+Pensata già per un'eventuale pubblicazione («se un domani deciderò di
+pubblicarla»). Scelte (Lorenzo: «fai tu»):
+- **Dove**: pagina `/feedback` del SITO (`src/pages/FeedbackPage/`), dal
+  Profilo → sezione "Aiutaci a migliorare" → "Segnala un problema o
+  un'idea". Vale nel browser e nell'app (WebView). Testi IT + EN.
+- **Invio**: Edge Function `supabase/functions/send-feedback/` → Resend
+  (`onboarding@resend.dev`, piano gratuito = scrive solo all'email
+  dell'account Resend). Solo utenti con sessione (la funzione verifica il
+  token con `/auth/v1/user`; deploy `--no-verify-jwt` perché la chiave
+  `sb_publishable_` non è un JWT). Max 5 invii/10 min per utente (per
+  istanza). Secret: `RESEND_API_KEY`, `FEEDBACK_TO` (l'indirizzo NON è nel
+  repo), facoltativo `FEEDBACK_FROM`.
+- **Dati sensibili**: il sito blocca l'invio se trova email, numeri di 9+
+  cifre (telefono/carta/documento) o IBAN e dice cosa togliere; la funzione
+  li sostituisce comunque con `[rimosso]`. Email in solo testo.
+- **Info allegate** (visibili all'utente in "Cosa alleghiamo in
+  automatico"): origine (app iOS / sito web), lingua; nell'app versione
+  app, iOS e modello (`DeviceInfo.swift` → `window.svDeviceInfo`), nel
+  browser lo user agent. Né nome né email dell'utente.
+- Test: Deno 5/5 (`deno test --no-lock supabase/functions/send-feedback/`),
+  vitest 224/224, iOS 50/50. Pagina provata nel browser in modalità locale
+  (avviso, blocco email, errore "solo con il cloud").
+- 2026-11-03: secret `FEEDBACK_TO` SALVATO e funzione `send-feedback`
+  PUBBLICATA dalla dashboard (editor, 2 file: index.ts + feedback.ts),
+  dal browser dell'app dove Lorenzo era già entrato. CLI Supabase 3.0.0
+  installata (brew) ma non loggata. "Verify JWT with legacy secret" è
+  rimasto ACCESO (il classificatore di Claude Code blocca lo spegnimento):
+  se l'invio dà "Invalid JWT", Lorenzo lo spegne in Functions →
+  send-feedback → Settings.
+- Lorenzo ha creato l'account Resend e salvato `RESEND_API_KEY`. INVIO DI
+  PROVA RIUSCITO (2026-11-03) dal sito cloud :5181 nel browser dell'app,
+  con Lorenzo loggato: la funzione ha risposto ok ("Grazie!"), anche con
+  "Verify JWT" acceso (il token utente passa). Email ARRIVATA nella
+  casella di Lorenzo (Importanti, 19:14) con tipo, testo e info tecniche:
+  verificato da lui. Nota: l'ora "Inviata" è in UTC. Committato su feat/app-ios.
+
 ## Novità 2026-11-03 (sera) — APP iOS su branch `feat/app-ios` (non ancora su main)
 
 Richiesta di Lorenzo: app vera con Swift, «il telefono scontorna la persona

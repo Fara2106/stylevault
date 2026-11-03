@@ -1,0 +1,123 @@
+.feedback-page {
+  max-width: 640px;
+}
+
+.feedback-page__intro {
+  font-size: 14px;
+  color: var(--sv-ink-soft);
+  margin-bottom: var(--sv-space-4);
+}
+
+/* L'avviso deve saltare all'occhio prima del campo di testo */
+.feedback-page__warning {
+  display: flex;
+  gap: var(--sv-space-3);
+  align-items: flex-start;
+  padding: var(--sv-space-3) var(--sv-space-4);
+  margin-bottom: var(--sv-space-5);
+  background: var(--sv-danger-soft);
+  color: var(--sv-danger);
+  border: 1px solid var(--sv-danger);
+  border-radius: var(--sv-radius-sm);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.feedback-page__warning svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.feedback-page__warning strong {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+
+.feedback-page__warning p {
+  color: var(--sv-ink-soft);
+}
+
+.feedback-page__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sv-space-3);
+}
+
+.feedback-page__kind {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sv-space-2);
+  margin-bottom: var(--sv-space-2);
+}
+
+.feedback-page__kind .lang-switch {
+  align-self: flex-start;
+}
+
+.feedback-page__form textarea {
+  min-height: 150px;
+  resize: vertical;
+}
+
+.feedback-page__count {
+  text-align: right;
+  margin-top: calc(-1 * var(--sv-space-2));
+}
+
+.feedback-page__info {
+  font-size: 13px;
+  color: var(--sv-muted);
+  border-top: 1px solid var(--sv-border);
+  padding-top: var(--sv-space-3);
+}
+
+.feedback-page__info summary {
+  cursor: pointer;
+  color: var(--sv-ink-soft);
+  font-weight: 600;
+}
+
+.feedback-page__info p {
+  margin: var(--sv-space-2) 0;
+}
+
+.feedback-page__info dl div {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: var(--sv-space-2);
+  padding: 2px 0;
+}
+
+.feedback-page__info dd {
+  color: var(--sv-ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.feedback-page__error {
+  font-size: 13px;
+  color: var(--sv-danger);
+}
+
+.feedback-page__sent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sv-space-3);
+  padding: var(--sv-space-6) var(--sv-space-4);
+  text-align: center;
+}
+
+.feedback-page__sent svg {
+  color: var(--sv-success);
+}
+
+.feedback-page__sent h2 {
+  font-size: 24px;
+}
+
+.feedback-page__sent p {
+  font-size: 14px;
+  color: var(--sv-ink-soft);
+  margin-bottom: var(--sv-space-2);
+}

@@ -311,7 +311,9 @@
     "statsWears": "{{count}} wears",
     "statsNoData": "Statistics appear once you start logging outfits in the calendar",
     "statsNever": "never worn",
-    "retakeBodyPhotos": "Retake your body photos"
+    "retakeBodyPhotos": "Retake your body photos",
+    "feedbackSection": "Help us improve",
+    "feedbackButton": "Report a problem or an idea"
   },
   "categories": {
     "all": "All",
@@ -582,5 +584,41 @@
       "blushQuery": "blush",
       "eyeshadowQuery": "eyeshadow"
     }
+  },
+  "feedback": {
+    "title": "Feedback",
+    "intro": "Tell us what doesn't work or what you would improve in StyleVault. We read every report.",
+    "warningTitle": "Don't include sensitive content",
+    "warningText": "No passwords, personal data (name, address, phone, email), body photos or payment details. Only describe the problem or the improvement.",
+    "kindLabel": "What is it about?",
+    "kindBug": "Something's wrong",
+    "kindIdea": "An idea to improve",
+    "messageBug": "What happened?",
+    "messageBugHint": "Where you were, what you were doing, what you expected",
+    "messageIdea": "What would you improve?",
+    "messageIdeaHint": "What you would like to do, and why",
+    "count": "{{count}}/{{max}}",
+    "tooShort": "Write at least {{min}} characters.",
+    "sensitive": "It looks like you wrote {{what}}: remove it before sending.",
+    "sensitiveEmail": "an email address",
+    "sensitiveNumber": "a long number (phone, card, ID)",
+    "sensitiveIban": "an IBAN",
+    "infoTitle": "What we attach automatically",
+    "infoNote": "Only this technical info, to understand the problem: neither your name nor your email.",
+    "infoSource": "Source",
+    "infoAppVersion": "App version",
+    "infoOsVersion": "System",
+    "infoModel": "Device",
+    "infoLanguage": "Language",
+    "infoUserAgent": "Browser",
+    "send": "Send",
+    "sending": "Sending…",
+    "sentTitle": "Thank you!",
+    "sentText": "Your report has arrived. It helps us improve StyleVault.",
+    "sendAnother": "Send another report",
+    "backToProfile": "Back to Profile",
+    "errorFailed": "Sending failed. Check your connection and try again.",
+    "errorLimit": "You've sent many reports in a row: try again in a few minutes.",
+    "errorUnavailable": "Reports only work with the cloud enabled."
   }
 }

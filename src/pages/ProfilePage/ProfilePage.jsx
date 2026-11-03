@@ -111,6 +111,19 @@ export default function ProfilePage() {
         </div>
       </section>
 
+      {/* Feedback: segnalazioni per email a Lorenzo */}
+      <section className="profile-page__section">
+        <h2 className="sv-label">{t('profile.feedbackSection')}</h2>
+        <Button
+          fullWidth
+          variant="secondary"
+          icon={<Icon name="edit" size={15} />}
+          onClick={() => navigate('/feedback')}
+        >
+          {t('profile.feedbackButton')}
+        </Button>
+      </section>
+
       {/* Statistiche */}
       <section className="profile-page__section">
         <h2 className="sv-label">{t('profile.stats')}</h2>

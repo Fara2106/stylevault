@@ -311,7 +311,9 @@
     "statsWears": "{{count}} utilizzi",
     "statsNoData": "Le statistiche arrivano quando inizi a registrare gli outfit nel calendario",
     "statsNever": "mai indossato",
-    "retakeBodyPhotos": "Rifai le foto del corpo"
+    "retakeBodyPhotos": "Rifai le foto del corpo",
+    "feedbackSection": "Aiutaci a migliorare",
+    "feedbackButton": "Segnala un problema o un'idea"
   },
   "categories": {
     "all": "Tutti",
@@ -582,5 +584,41 @@
       "blushQuery": "blush",
       "eyeshadowQuery": "ombretto"
     }
+  },
+  "feedback": {
+    "title": "Feedback",
+    "intro": "Dicci cosa non funziona o cosa miglioreresti in StyleVault. Leggiamo ogni segnalazione.",
+    "warningTitle": "Non inserire contenuti sensibili",
+    "warningText": "Niente password, dati personali (nome, indirizzo, telefono, email), foto del corpo o dati di pagamento. Descrivi solo il difetto o il miglioramento.",
+    "kindLabel": "Di cosa si tratta?",
+    "kindBug": "Qualcosa non va",
+    "kindIdea": "Un'idea per migliorare",
+    "messageBug": "Cosa è successo?",
+    "messageBugHint": "Dove eri, cosa stavi facendo, cosa ti aspettavi",
+    "messageIdea": "Cosa miglioreresti?",
+    "messageIdeaHint": "Cosa vorresti poter fare, e perché",
+    "count": "{{count}}/{{max}}",
+    "tooShort": "Scrivi almeno {{min}} caratteri.",
+    "sensitive": "Sembra che tu abbia scritto {{what}}: toglilo prima di inviare.",
+    "sensitiveEmail": "un indirizzo email",
+    "sensitiveNumber": "un numero lungo (telefono, carta, documento)",
+    "sensitiveIban": "un IBAN",
+    "infoTitle": "Cosa alleghiamo in automatico",
+    "infoNote": "Solo queste info tecniche, per capire il problema: né il tuo nome né la tua email.",
+    "infoSource": "Origine",
+    "infoAppVersion": "Versione app",
+    "infoOsVersion": "Sistema",
+    "infoModel": "Dispositivo",
+    "infoLanguage": "Lingua",
+    "infoUserAgent": "Browser",
+    "send": "Invia",
+    "sending": "Invio…",
+    "sentTitle": "Grazie!",
+    "sentText": "La tua segnalazione è arrivata. Ci aiuta a migliorare StyleVault.",
+    "sendAnother": "Invia un'altra segnalazione",
+    "backToProfile": "Torna al Profilo",
+    "errorFailed": "Invio non riuscito. Controlla la connessione e riprova.",
+    "errorLimit": "Hai inviato molte segnalazioni di fila: riprova tra qualche minuto.",
+    "errorUnavailable": "Le segnalazioni funzionano solo con il cloud attivo."
   }
 }

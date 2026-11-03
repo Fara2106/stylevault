@@ -19,6 +19,10 @@ final class WebViewStore: NSObject, ObservableObject {
         webView = WKWebView(frame: .zero, configuration: config)
         super.init()
         config.userContentController.add(WeakHandler(self), name: "svNative")
+        // Per le segnalazioni del Feedback: versione app, iOS e modello
+        config.userContentController.addUserScript(WKUserScript(
+            source: DeviceInfo.current.script, injectionTime: .atDocumentStart, forMainFrameOnly: true
+        ))
         webView.navigationDelegate = self
         webView.uiDelegate = self
         webView.allowsBackForwardNavigationGestures = true

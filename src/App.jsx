@@ -36,6 +36,7 @@ const TryOnPage = lazyPage(() => import('./pages/TryOnPage/TryOnPage'));
 const CalendarPage = lazyPage(() => import('./pages/CalendarPage/CalendarPage'));
 const ProfilePage = lazyPage(() => import('./pages/ProfilePage/ProfilePage'));
 const ArmocromiaPage = lazyPage(() => import('./pages/ArmocromiaPage/ArmocromiaPage'));
+const FeedbackPage = lazyPage(() => import('./pages/FeedbackPage/FeedbackPage'));
 
 /** Riporta lo scroll in cima a ogni cambio pagina. */
 function ScrollToTop() {
@@ -93,6 +94,7 @@ export default function App() {
         <Route path="/calendar" element={<CalendarPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/armocromia" element={<ArmocromiaPage />} />
+        <Route path="/feedback" element={<FeedbackPage />} />
       </Route>
         <Route path="*" element={<Navigate to="/wardrobe" replace />} />
       </Routes>
