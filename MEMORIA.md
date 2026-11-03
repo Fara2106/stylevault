@@ -12,7 +12,8 @@ selettore Chiaro·Scuro·Sistema (resta nell'app: Profilo, e le schermate
 native lo seguono). Account Apple a pagamento RIMANDATO («proviamolo in
 locale»). Spec `docs/superpowers/specs/2026-11-03-app-ios-design.md`,
 piano `docs/superpowers/plans/2026-11-03-app-ios.md`, registro decisioni
-in `.superpowers/sdd/2026-11-03-app-ios/progress.md`.
+(rulings, correzioni della revisione, minori rimandati) in
+`docs/superpowers/plans/2026-11-03-app-ios-registro.md`.
 
 - **Sito**: tema chiaro/scuro/sistema, campo "Foto del retro" nei capi,
   ponte `nativeBridge.js` (nel browser non cambia nulla), migrazione 003.
@@ -29,6 +30,10 @@ in `.superpowers/sdd/2026-11-03-app-ios/progress.md`.
   toccare le loro app.
 - **PRIMA di pubblicare/mergiare**: applicare la migrazione 003 (sennò la
   sync impostazioni manda `theme` inesistente e fallisce anche lingua/città).
+- Revisione finale (revisore separato): 2 critici + 8 importanti CORRETTI
+  (refresh token doppio, sessione al sito solo dopo 'ready', link esterni,
+  avvio offline, 'Più tardi', conteggio persone, foto 48 MP, retro dei capi);
+  10 minori rimandati, elencati nel registro.
 - Da fare con Lorenzo: Apple ID in Xcode, installazione sull'iPhone,
   login reale, Google OAuth; inglese delle schermate native (oggi solo IT).
 
