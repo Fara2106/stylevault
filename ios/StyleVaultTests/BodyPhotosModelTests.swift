@@ -48,6 +48,36 @@ final class BodyPhotosModelTests: XCTestCase {
         XCTAssertEqual(BodyPhotosModel.validate(cutout(instances: 1), pose: fullBody, view: .front, people: 1), .ok)
     }
 
+    // Prova sull'iPhone (2026-11-03): foto di spalle salvata come "lato" e
+    // foto davanti come "spalle". Di lato le spalle si sovrappongono; davanti
+    // Vision mette la spalla sinistra a destra nell'immagine, di spalle a sinistra.
+    private func pose(leftShoulderX: CGFloat, rightShoulderX: CGFloat) -> Pose {
+        Pose(points: [
+            .nose: CGPoint(x: 50, y: 20),
+            .leftShoulder: CGPoint(x: leftShoulderX, y: 100), .rightShoulder: CGPoint(x: rightShoulderX, y: 100),
+            .leftHip: CGPoint(x: 50, y: 400), .rightHip: CGPoint(x: 60, y: 400),
+            .leftAnkle: CGPoint(x: 45, y: 900), .rightAnkle: CGPoint(x: 55, y: 900),
+        ])
+    }
+
+    func testFotoDellaVistaSbagliata() {
+        let front = pose(leftShoulderX: 150, rightShoulderX: -40)
+        let back = pose(leftShoulderX: -40, rightShoulderX: 150)
+        let side = pose(leftShoulderX: 60, rightShoulderX: 40)
+        func check(_ p: Pose, _ view: BodyView) -> PhotoCheck {
+            BodyPhotosModel.validate(cutout(instances: 1), pose: p, view: view, people: 1)
+        }
+        XCTAssertEqual(check(front, .front), .ok)
+        XCTAssertEqual(check(side, .side), .ok)
+        XCTAssertEqual(check(back, .back), .ok)
+        XCTAssertEqual(check(back, .side), .wrongView(seen: .back, wanted: .side))
+        XCTAssertEqual(check(front, .back), .wrongView(seen: .front, wanted: .back))
+        XCTAssertEqual(check(side, .back), .wrongView(seen: .side, wanted: .back))
+        XCTAssertEqual(check(back, .front), .wrongView(seen: .back, wanted: .front))
+        XCTAssertEqual(PhotoCheck.wrongView(seen: .side, wanted: .back).message,
+                       "Questa foto sembra fatta di lato, ma qui serve quella di spalle.")
+    }
+
     func testChiHaGiaLaFotoDavantiScattaSoloLatoESpalle() {
         let url = URL(string: "https://x/front.jpg")!
         XCTAssertEqual(BodyPhotosModel.needsOnboarding(existing: [.front: url]), [.side, .back])

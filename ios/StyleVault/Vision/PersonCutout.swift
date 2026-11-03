@@ -92,7 +92,7 @@ enum PersonCutout {
         return CGRect(x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1)
     }
 
-    private static func alphaChannel(_ image: CGImage) -> (pixels: [UInt8], width: Int, height: Int) {
+    static func alphaChannel(_ image: CGImage) -> (pixels: [UInt8], width: Int, height: Int) {
         let width = image.width, height = image.height
         var pixels = [UInt8](repeating: 0, count: width * height)
         pixels.withUnsafeMutableBytes { buffer in

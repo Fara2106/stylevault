@@ -24,6 +24,7 @@ enum BodyView: String, CaseIterable, Identifiable {
 
 enum PhotoCheck: Equatable {
     case ok, noPerson, multiplePeople, notFullBody
+    case wrongView(seen: BodyView, wanted: BodyView)
 
     var message: String? {
         switch self {
@@ -31,6 +32,8 @@ enum PhotoCheck: Equatable {
         case .noPerson: return "Non vedo nessuno nella foto: riprova inquadrandoti bene."
         case .multiplePeople: return "Nella foto ci sono più persone: serve solo tu."
         case .notFullBody: return "Non ti vedo dalla testa ai piedi: allontanati un po' e riprova."
+        case let .wrongView(seen, wanted):
+            return "Questa foto sembra fatta \(seen.title.lowercased()), ma qui serve quella \(wanted.title.lowercased())."
         }
     }
 }
@@ -49,7 +52,21 @@ enum BodyPhotosModel {
         let hasFace = points[.nose] != nil || points[.neck] != nil
         guard hasShoulder, hasAnkle else { return .notFullBody }
         if view == .front, !hasFace { return .notFullBody }
+        if let seen = seenView(points), seen != view { return .wrongView(seen: seen, wanted: view) }
         return .ok
+    }
+
+    /// Da che lato è stata fatta la foto, dalle spalle: di lato si
+    /// sovrappongono (meno di un terzo del busto); davanti Vision mette la
+    /// spalla sinistra a destra nell'immagine, di spalle a sinistra. nil se
+    /// mancano spalle o fianchi.
+    static func seenView(_ points: [Joint: CGPoint]) -> BodyView? {
+        guard let left = points[.leftShoulder], let right = points[.rightShoulder],
+              let hip = points[.leftHip] ?? points[.rightHip] else { return nil }
+        let torso = hip.y - (left.y + right.y) / 2
+        guard torso > 0 else { return nil }
+        if abs(left.x - right.x) < 0.35 * torso { return .side }
+        return left.x > right.x ? .front : .back
     }
 
     /// Le viste ancora da fotografare, nell'ordine davanti → lato → spalle.

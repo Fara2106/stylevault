@@ -36,16 +36,34 @@ enum AvatarComposer {
 
         ctx.draw(person.image, in: CGRect(x: 0, y: 0, width: width, height: height))
 
+        let body = Silhouette(person.image)
+        ctx.interpolationQuality = .high
         for slot in drawOrder {
             for garment in garments where garment.slot == slot {
-                guard let piece = garment.cutout.image.cropping(to: garment.cutout.bounds.integral),
-                      let frame = GarmentLayout.frame(for: slot, pose: pose, bodyBounds: person.bounds,
+                guard let piece = garment.cutout.image.cropping(to: garment.cutout.bounds.integral) else { continue }
+                if slot == "shoes" {
+                    for shoe in GarmentLayout.shoeFrames(pose: pose, bodyBounds: person.bounds, shoe: Silhouette(piece),
+                                                         pair: garment.cutout.instanceCount > 1, view: view,
+                                                         silhouette: body) {
+                        draw(piece, in: flipped(shoe.frame), mirrored: shoe.mirrored, on: ctx)
+                    }
+                    continue
+                }
+                guard let frame = GarmentLayout.frame(for: slot, pose: pose, bodyBounds: person.bounds,
                                                       garmentAspect: CGFloat(piece.width) / CGFloat(piece.height),
-                                                      view: view) else { continue }
-                ctx.interpolationQuality = .high
+                                                      view: view, silhouette: body) else { continue }
                 ctx.draw(piece, in: flipped(frame))
             }
         }
         return ctx.makeImage()
+    }
+
+    private static func draw(_ image: CGImage, in rect: CGRect, mirrored: Bool, on ctx: CGContext) {
+        guard mirrored else { return ctx.draw(image, in: rect) }
+        ctx.saveGState()
+        ctx.translateBy(x: rect.maxX + rect.minX, y: 0)
+        ctx.scaleBy(x: -1, y: 1)
+        ctx.draw(image, in: rect)
+        ctx.restoreGState()
     }
 }

@@ -20,8 +20,12 @@ actor CutoutCache {
     func cutout(for url: URL, key: String, allInstances: Bool) async throws -> Cutout {
         if let hit = memory[key] { return hit }
         let file = folder.appendingPathComponent("\(key).png")
+        // Accanto al PNG il numero di soggetti: un paio di scarpe (2) si
+        // disegna diverso da una scarpa sola (1)
+        let countFile = folder.appendingPathComponent("\(key).count")
         if let image = Self.load(file) {
-            let cached = Cutout(image: image, bounds: PersonCutout.opaqueBounds(image), instanceCount: 1)
+            let count = (try? String(contentsOf: countFile, encoding: .utf8)).flatMap(Int.init) ?? 1
+            let cached = Cutout(image: image, bounds: PersonCutout.opaqueBounds(image), instanceCount: count)
             memory[key] = cached
             return cached
         }
@@ -32,6 +36,7 @@ actor CutoutCache {
         }
         let result = try await PersonCutout.cutout(ImagePrep.downscaled(raw), allInstances: allInstances)
         Self.save(result.image, to: file)
+        try? String(result.instanceCount).write(to: countFile, atomically: true, encoding: .utf8)
         memory[key] = result
         return result
     }

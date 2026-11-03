@@ -97,3 +97,131 @@ final class AvatarModelTests: XCTestCase {
         XCTAssertNil(AvatarModel.garmentImageURL(broken, view: .front))
     }
 }
+
+/// Sagome sintetiche: rettangoli pieni su una maschera alfa.
+private func silhouette(width: Int, height: Int, blocks: [CGRect]) -> Silhouette {
+    var alpha = [UInt8](repeating: 0, count: width * height)
+    for block in blocks {
+        for y in Int(block.minY)..<Int(block.maxY) {
+            for x in Int(block.minX)..<Int(block.maxX) { alpha[y * width + x] = 255 }
+        }
+    }
+    return Silhouette(width: width, height: height, alpha: alpha)
+}
+
+final class SilhouetteTests: XCTestCase {
+    func testTrattoPienoDellaRiga() throws {
+        let s = silhouette(width: 100, height: 10, blocks: [CGRect(x: 20, y: 0, width: 30, height: 10),
+                                                             CGRect(x: 70, y: 0, width: 10, height: 10)])
+        let run = try XCTUnwrap(s.run(row: 5, near: 30, mergingGaps: 0))
+        XCTAssertEqual(run.lowerBound, 20)
+        XCTAssertEqual(run.upperBound, 49)
+        // Un braccio staccato di poco dal busto fa parte della sagoma da coprire
+        let merged = try XCTUnwrap(s.run(row: 5, near: 30, mergingGaps: 25))
+        XCTAssertEqual(merged.upperBound, 79)
+    }
+
+    func testPuntaDellaScarpa() {
+        // Tallone alto a destra, punta bassa a sinistra
+        let shoe = silhouette(width: 200, height: 100, blocks: [CGRect(x: 0, y: 60, width: 200, height: 40),
+                                                                 CGRect(x: 120, y: 10, width: 80, height: 50)])
+        XCTAssertTrue(shoe.toeOnLeft)
+    }
+}
+
+final class ShoeAndSilhouetteLayoutTests: XCTestCase {
+    // Persona alta 1000 px, caviglie distanti 120 px
+    private let pose = Pose(points: [
+        .nose: CGPoint(x: 300, y: 150), .neck: CGPoint(x: 300, y: 260),
+        .leftShoulder: CGPoint(x: 360, y: 300), .rightShoulder: CGPoint(x: 240, y: 300),
+        .leftHip: CGPoint(x: 340, y: 600), .rightHip: CGPoint(x: 260, y: 600),
+        .leftAnkle: CGPoint(x: 360, y: 1050), .rightAnkle: CGPoint(x: 240, y: 1050),
+    ])
+    private let body = CGRect(x: 100, y: 100, width: 400, height: 1000)
+    private let singleShoe = silhouette(width: 200, height: 100, blocks: [CGRect(x: 0, y: 60, width: 200, height: 40),
+                                                                          CGRect(x: 120, y: 10, width: 80, height: 50)])
+
+    func testUnaScarpaSolaVaSuOgniPiede() {
+        let shoes = GarmentLayout.shoeFrames(pose: pose, bodyBounds: body, shoe: singleShoe, pair: false,
+                                             view: .front, silhouette: nil)
+        XCTAssertEqual(shoes.count, 2)
+        let left = shoes.min { $0.frame.midX < $1.frame.midX }!
+        let right = shoes.max { $0.frame.midX < $1.frame.midX }!
+        // Ognuna lunga quanto un piede (~15% dell'altezza), non quanto i due piedi insieme
+        XCTAssertLessThan(left.frame.width, 0.2 * body.height)
+        XCTAssertLessThan(left.frame.midX, 300)
+        XCTAssertGreaterThan(right.frame.midX, 300)
+        // Punte verso fuori: la scarpa ha la punta a sinistra, quella di destra va specchiata
+        XCTAssertFalse(left.mirrored)
+        XCTAssertTrue(right.mirrored)
+        XCTAssertEqual(left.frame.maxY, body.maxY, accuracy: 10, "poggia a terra")
+    }
+
+    func testDiLatoLePuntaVersoDoveGuarda() {
+        var points = pose.points
+        points[.nose] = CGPoint(x: 340, y: 150) // guarda a destra
+        let shoes = GarmentLayout.shoeFrames(pose: Pose(points: points), bodyBounds: body, shoe: singleShoe,
+                                             pair: false, view: .side, silhouette: nil)
+        XCTAssertEqual(shoes.count, 2)
+        XCTAssertTrue(shoes.allSatisfy(\.mirrored), "punta a sinistra nella foto → specchiata per guardare a destra")
+    }
+
+    func testUnPaioRestaUnaSolaImmagine() {
+        let shoes = GarmentLayout.shoeFrames(pose: pose, bodyBounds: body, shoe: singleShoe, pair: true,
+                                             view: .front, silhouette: nil)
+        XCTAssertEqual(shoes.count, 1)
+        XCTAssertEqual(shoes[0].frame.midX, 300, accuracy: 10)
+    }
+
+    func testIlTopSiMisuraSulPettoNonSulPasso() throws {
+        // Di lato: il passo allarga il riquadro a 400 px, ma il busto è largo 160
+        let s = silhouette(width: 600, height: 1200, blocks: [
+            CGRect(x: 220, y: 100, width: 160, height: 550), // testa e busto
+            CGRect(x: 100, y: 650, width: 400, height: 450), // gambe divaricate
+        ])
+        let top = try XCTUnwrap(GarmentLayout.frame(for: "top", pose: pose, bodyBounds: body, garmentAspect: 0.75,
+                                                    view: .side, silhouette: s))
+        XCTAssertEqual(top.midX, 300, accuracy: 5)
+        XCTAssertGreaterThanOrEqual(top.width, 160)
+        XCTAssertLessThanOrEqual(top.width, 200)
+    }
+
+    func testGambeDivaricateDentroIPantaloni() throws {
+        // Caviglie a 260 px l'una dall'altra: i jeans (gambe unite) devono coprirle
+        var points = pose.points
+        points[.leftAnkle] = CGPoint(x: 430, y: 1050)
+        points[.rightAnkle] = CGPoint(x: 170, y: 1050)
+        let bottom = try XCTUnwrap(GarmentLayout.frame(for: "bottom", pose: Pose(points: points), bodyBounds: body,
+                                                       garmentAspect: 0.45, view: .front))
+        XCTAssertLessThan(bottom.minX, 170 - 20)
+        XCTAssertGreaterThan(bottom.maxX, 430 + 20)
+    }
+
+    func testPantaloniMaiGiganti() throws {
+        // Una falcata enorme non deve allargare i jeans oltre il corpo
+        var points = pose.points
+        points[.leftAnkle] = CGPoint(x: 900, y: 1050)
+        points[.rightAnkle] = CGPoint(x: 0, y: 1050)
+        let bottom = try XCTUnwrap(GarmentLayout.frame(for: "bottom", pose: Pose(points: points), bodyBounds: body,
+                                                       garmentAspect: 0.45, view: .back))
+        XCTAssertLessThanOrEqual(bottom.width, 0.35 * body.height)
+    }
+
+    func testLaVitaDeiPantaloniSopraLeAnche() throws {
+        // Il giunto dell'anca di Vision è sotto la cintura: la vita sale, così
+        // non resta scoperta la maglia tra top e pantaloni
+        let bottom = try XCTUnwrap(GarmentLayout.frame(for: "bottom", pose: pose, bodyBounds: body,
+                                                       garmentAspect: 0.45, view: .front))
+        XCTAssertLessThanOrEqual(bottom.minY, 600 - 0.08 * 300)
+    }
+
+    func testIPantaloniDiLatoSiMisuranoSuiFianchi() throws {
+        let s = silhouette(width: 600, height: 1200, blocks: [
+            CGRect(x: 220, y: 100, width: 160, height: 650),
+            CGRect(x: 100, y: 750, width: 400, height: 350),
+        ])
+        let bottom = try XCTUnwrap(GarmentLayout.frame(for: "bottom", pose: pose, bodyBounds: body,
+                                                       garmentAspect: 0.45, view: .side, silhouette: s))
+        XCTAssertLessThanOrEqual(bottom.width, 1.5 * 160)
+    }
+}
