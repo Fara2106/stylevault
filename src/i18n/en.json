@@ -68,7 +68,8 @@
   },
   "wardrobe": {
     "title": "My Wardrobe",
-    "subtitle": "{{count}} items",
+    "subtitle_one": "{{count}} item",
+    "subtitle_other": "{{count}} items",
     "allItems": "All",
     "favorites": "Favorites",
     "addItem": "Add item",

@@ -5,16 +5,23 @@
 
 ## Novità 2026-11-03 — giro di miglioramenti per iPhone + BACKEND CLOUD SPARITO
 
-**PROBLEMA APERTO GRAVE: il progetto Supabase non esiste più.** L'host
-`frukvktbmxndyzgivwxq.supabase.co` risponde NXDOMAIN dal 2026-08-03 (il
-keep-alive è passato da verde a rosso tra il 30/07 e il 03/08, poi GitHub ha
-fermato il cron). Il sito live è in modalità cloud → registrazione e login
-falliscono per chiunque. Va deciso da Lorenzo: ricreare un progetto Supabase
-(nuove chiavi nei secrets GitHub + migrazioni 001/002) oppure pubblicare in
-modalità locale (secrets vuoti) finché non c'è un backend.
+**Backend RIATTIVATO lo stesso giorno.** Il progetto Supabase
+`frukvktbmxndyzgivwxq` (org "lorefara97@gmail.com's Org") era IN PAUSA, non
+cancellato: da agosto l'host rispondeva NXDOMAIN (un progetto in pausa sparisce
+dal DNS) e il sito live non faceva entrare nessuno. Causa: il keep-alive aveva
+smesso di girare e GitHub l'ha messo in `disabled_inactivity` (repo fermo da 60
+giorni). Lorenzo ha fatto login nella dashboard, "Resume project" (online in
+~4 minuti, dati e foto intatti, stesse chiavi → niente secrets da cambiare),
+keep-alive riabilitato e lanciato a mano: verde. Verificato dal Chrome di
+Lorenzo: guardaroba caricato dal cloud con foto, nessun avviso.
+- Se ricapita: dashboard → progetto → "Resume project" (possibile entro la
+  data indicata lì; dopo si può solo scaricare il backup).
+- Nell'org "StyleVault" c'è un SECONDO progetto in pausa (`dqquxjahcl…`,
+  eu-north-1, vuoto): non è usato dall'app.
+- Google login: provider ancora spento (problema aperto dal 2026-07-09).
 
 Migliorie fatte (testate nel browser in viewport mobile e sul simulatore
-iPhone 18 Pro; NON ancora committate al momento della stesura):
+iPhone 18 Pro; commit `83be27a`, pubblicato):
 
 - **iPhone**: campi a 16px sui touch screen (prima Safari zoomava la pagina a
   ogni tocco su un campo e restava zoomata — verificato nel simulatore);

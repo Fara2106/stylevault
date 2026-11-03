@@ -68,7 +68,8 @@
   },
   "wardrobe": {
     "title": "Il Mio Guardaroba",
-    "subtitle": "{{count}} capi",
+    "subtitle_one": "{{count}} capo",
+    "subtitle_other": "{{count}} capi",
     "allItems": "Tutti",
     "favorites": "Preferiti",
     "addItem": "Aggiungi capo",
