@@ -28,6 +28,12 @@ toglieva). Testi del 18/07 tenuti, ripristinate solo le 8 chiavi model*.
   0,6 s; segmentazione 231 → 62 ms; colori armocromia invariati. Il primo
   uso resta ~1 min (download modelli). Multithread WASM NON possibile:
   GitHub Pages non manda gli header COOP/COEP. iPhone vero da provare.
+- **Spiegazione "prima volta"** (richiesta di Lorenzo): in "Su di te" e
+  nell'armocromia, solo al primo uso sul dispositivo, sotto il messaggio di
+  attesa compare "Prima volta: sto scaricando i modelli (~25/~20 MB), può
+  volerci un minuto… le prossime volte sarà molto più veloce". Flag
+  `sv_models_ready_tryon` / `_armocromia` in localStorage (`firstUse.js`, 2
+  test), messo dopo il primo giro riuscito.
 - Banco di prova in console: con il pannello browser NASCOSTO `img.decode()`
   non si risolve mai → usare `onload` e lanciare le misure in background
   (`window.__bench`), leggendole a parte.

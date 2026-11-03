@@ -10,6 +10,7 @@ import {
   buildWarpedLayers,
 } from '../../utils/modelImage';
 import { garmentPlacements } from '../../utils/modelComposer';
+import { modelsReady, markModelsReady } from '../../utils/firstUse';
 import './Avatar.css';
 
 /**
@@ -23,6 +24,9 @@ export default function ModelTryOn({ outfit, referencePhoto, height = 480 }) {
 
   // Persona: scontorno → landmark. status: loading | ready | no-figure | error
   const [personState, setPersonState] = useState({ status: 'loading' });
+  // Primo uso su questo dispositivo: si spiega che il download dei modelli
+  // (~25 MB) è lento solo stavolta.
+  const [firstRun] = useState(() => !modelsReady('tryon'));
 
   useEffect(() => {
     let cancelled = false;
@@ -36,6 +40,7 @@ export default function ModelTryOn({ outfit, referencePhoto, height = 480 }) {
           setPersonState({ status: 'no-figure' });
           return;
         }
+        markModelsReady('tryon');
         setPersonState({ status: 'ready', cutoutUrl, ...analyzed });
       } catch {
         if (!cancelled) setPersonState({ status: 'error' });
@@ -137,7 +142,12 @@ export default function ModelTryOn({ outfit, referencePhoto, height = 480 }) {
   }, [personState, assets]);
 
   if (personState.status === 'loading') {
-    return <p className="model-tryon__status sv-label">{t('tryon.modelPreparingPhoto')}</p>;
+    return (
+      <div className="model-tryon__status">
+        <p className="sv-label">{t('tryon.modelPreparingPhoto')}</p>
+        {firstRun && <p className="model-tryon__first-run">{t('tryon.modelFirstRun')}</p>}
+      </div>
+    );
   }
   if (personState.status === 'no-figure' || personState.status === 'error') {
     return (

@@ -10,6 +10,7 @@ import { getSeason } from '../../utils/armocromiaSeasons';
 import { buildShopLinks, buildShopLink, buildHomeLinks } from '../../utils/shopLinks';
 import { matchWardrobe } from '../../utils/armocromiaWardrobe';
 import { resizeImageFile } from '../../utils/imageUtils';
+import { modelsReady, markModelsReady } from '../../utils/firstUse';
 import './ArmocromiaPage.css';
 
 /**
@@ -34,10 +35,18 @@ export default function ArmocromiaPage() {
   const [verdict, setVerdict] = useState(armocromia || null);
   const [savedNow, setSavedNow] = useState(() => Boolean(armocromia));
 
+  // Primo uso su questo dispositivo: il download dei modelli (~20 MB) è
+  // lento solo stavolta, e lo si dice.
+  const [firstRun, setFirstRun] = useState(() => !modelsReady('armocromia'));
+
   const analyze = async (photoUrl) => {
     setPhase('analyzing');
     setFailed(false);
     const res = await analyzeFaceColors(photoUrl);
+    if (res) {
+      markModelsReady('armocromia');
+      setFirstRun(false);
+    }
     // Un campo che l'analisi non trova riparte dall'ultima correzione salvata:
     // chi ha già sistemato i colori a mano non deve rifarlo a ogni analisi.
     const saved = armocromia?.detected || {};
@@ -174,7 +183,12 @@ export default function ArmocromiaPage() {
       )}
 
       {phase === 'analyzing' && (
-        <p className="armocromia__status sv-label">{t('armocromia.ui.analyzing')}</p>
+        <div className="armocromia__status">
+          <p className="sv-label">{t('armocromia.ui.analyzing')}</p>
+          {firstRun && (
+            <p className="armocromia__first-run">{t('armocromia.ui.analyzingFirstRun')}</p>
+          )}
+        </div>
       )}
 
       {(phase === 'detected' || phase === 'result') && (

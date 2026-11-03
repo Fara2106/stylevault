@@ -1,6 +1,7 @@
 /* Armocromia: campioni colore, verdetto, combo outfit, make-up. */
 .armocromia__intro { display: flex; flex-direction: column; gap: var(--sv-space-3); }
-.armocromia__status { text-align: center; margin: var(--sv-space-5) auto; }
+.armocromia__status { text-align: center; margin: var(--sv-space-5) auto; max-width: 340px; }
+.armocromia__first-run { margin-top: var(--sv-space-2); font-size: 13px; line-height: 1.5; color: var(--sv-muted); }
 .armocromia__failed { color: var(--sv-error, #b3261e); font-size: 0.85rem; }
 
 .armocromia__pickers { display: flex; gap: var(--sv-space-3); margin: var(--sv-space-3) 0; }
