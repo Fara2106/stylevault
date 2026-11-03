@@ -17,6 +17,7 @@ struct AvatarRequest: Decodable, Equatable {
 /// Messaggi dal sito al nativo: { type, payload } sull'handler "svNative".
 enum BridgeMessage: Equatable {
     case openAvatar(AvatarRequest)
+    case openBodyPhotos
     case signOut
     case themeChanged(String)
 
@@ -33,6 +34,8 @@ enum BridgeMessage: Equatable {
                 return nil
             }
             return .openAvatar(request)
+        case "openBodyPhotos":
+            return .openBodyPhotos
         case "signOut":
             return .signOut
         case "themeChanged":

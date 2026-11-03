@@ -310,7 +310,8 @@
     "statsCostPerWear": "Costo per utilizzo",
     "statsWears": "{{count}} utilizzi",
     "statsNoData": "Le statistiche arrivano quando inizi a registrare gli outfit nel calendario",
-    "statsNever": "mai indossato"
+    "statsNever": "mai indossato",
+    "retakeBodyPhotos": "Rifai le foto del corpo"
   },
   "categories": {
     "all": "Tutti",

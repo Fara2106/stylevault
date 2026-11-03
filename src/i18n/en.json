@@ -310,7 +310,8 @@
     "statsCostPerWear": "Cost per wear",
     "statsWears": "{{count}} wears",
     "statsNoData": "Statistics appear once you start logging outfits in the calendar",
-    "statsNever": "never worn"
+    "statsNever": "never worn",
+    "retakeBodyPhotos": "Retake your body photos"
   },
   "categories": {
     "all": "All",
