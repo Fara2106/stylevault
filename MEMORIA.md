@@ -28,8 +28,12 @@ piano `docs/superpowers/plans/2026-11-03-app-ios.md`, registro decisioni
   `docs/verifiche/2026-11-03-app-ios/avatar-davanti-mac.png`.
 - **Simulatore condiviso** con altre sessioni (Fitness Hub, "Vocali"): non
   toccare le loro app.
-- **PRIMA di pubblicare/mergiare**: applicare la migrazione 003 (sennò la
-  sync impostazioni manda `theme` inesistente e fallisce anche lingua/città).
+- **Migrazione 003 APPLICATA** il 2026-11-03 (SQL Editor dal Chrome di
+  Lorenzo; verificato: theme/body_photos/photo_back_* → 200 via API). Il
+  branch ora si può pubblicare senza rompere la sync di lingua e città.
+- Xcode: Lorenzo è entrato col suo Apple ID; resta da scegliere il
+  "Personal Team" nel target e collegare l'iPhone (oggi collegato solo
+  l'iPad Pro "iPad di Lorenzo").
 - Revisione finale (revisore separato): 2 critici + 8 importanti CORRETTI
   (refresh token doppio, sessione al sito solo dopo 'ready', link esterni,
   avvio offline, 'Più tardi', conteggio persone, foto 48 MP, retro dei capi);
