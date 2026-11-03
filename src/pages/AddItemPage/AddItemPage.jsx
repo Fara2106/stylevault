@@ -27,6 +27,7 @@ const EMPTY_FORM = {
   warmthLevel: 2,
   price: '',
   photo: '',
+  photoBack: '',
   sourceUrl: '',
 };
 
@@ -36,6 +37,7 @@ export default function AddItemPage() {
   const [params] = useSearchParams();
   const { items, addItem, updateItem, addToWishlist } = useWardrobe();
   const fileInputRef = useRef(null);
+  const backInputRef = useRef(null);
 
   const editId = params.get('edit');
   const editingItem = editId ? items.find((i) => i.id === editId) : null;
@@ -89,6 +91,18 @@ export default function AddItemPage() {
       /* file non leggibile: nessun cambiamento */
     }
     e.target.value = '';
+  };
+
+  // Retro facoltativo: serve all'avatar dell'app per la vista di spalle
+  const handleBackUpload = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    try {
+      set('photoBack', await resizeImageFile(file, 600));
+    } catch {
+      /* file non leggibile: nessun cambiamento */
+    }
   };
 
   const analyzeLink = async () => {
@@ -243,6 +257,35 @@ export default function AddItemPage() {
           )}
         </div>
       )}
+
+      {/* Retro del capo (facoltativo) */}
+      <div className="add-item__back">
+        {form.photoBack && <img src={form.photoBack} alt="" className="add-item__back-thumb" />}
+        <div className="add-item__back-text">
+          <span className="sv-label">{t('addItem.photoBack')}</span>
+          <span className="add-item__back-hint">{t('addItem.photoBackHint')}</span>
+        </div>
+        <Button variant="secondary" size="sm" onClick={() => backInputRef.current?.click()}>
+          {form.photoBack ? t('addItem.changePhoto') : t('addItem.photoBackAdd')}
+        </Button>
+        {form.photoBack && (
+          <button
+            type="button"
+            className="add-item__back-remove"
+            onClick={() => set('photoBack', '')}
+            aria-label={t('addItem.photoBackRemove')}
+          >
+            <Icon name="close" size={14} />
+          </button>
+        )}
+        <input
+          ref={backInputRef}
+          type="file"
+          accept="image/*"
+          className="visually-hidden"
+          onChange={handleBackUpload}
+        />
+      </div>
 
       {/* Form */}
       <div className="add-item__form">

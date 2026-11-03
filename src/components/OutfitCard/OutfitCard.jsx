@@ -15,6 +15,7 @@ export default function OutfitCard({
   onSave,
   onWear,
   onTryOn,
+  tryOnLabel,
   saved = false,
 }) {
   const { t } = useTranslation();
@@ -90,7 +91,7 @@ export default function OutfitCard({
         {onTryOn && (
           <button className="outfit-card__action" onClick={() => onTryOn(outfit)}>
             <Icon name="user" size={15} />
-            {t('outfit.tryOn')}
+            {tryOnLabel || t('outfit.tryOn')}
           </button>
         )}
         {onSave && (

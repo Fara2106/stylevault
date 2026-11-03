@@ -208,3 +208,42 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--sv-space-3);
 }
+
+/* Retro del capo (facoltativo) */
+.add-item__back {
+  display: flex;
+  align-items: center;
+  gap: var(--sv-space-3);
+  margin: 0 0 var(--sv-space-5);
+  padding: var(--sv-space-3);
+  border: 1px dashed var(--sv-border-strong);
+  border-radius: var(--sv-radius-md);
+}
+
+.add-item__back-thumb {
+  width: 48px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: var(--sv-radius-sm);
+  border: 1px solid var(--sv-border);
+}
+
+.add-item__back-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.add-item__back-hint {
+  font-size: 12px;
+  color: var(--sv-muted);
+}
+
+.add-item__back-remove {
+  background: none;
+  border: none;
+  color: var(--sv-muted);
+  padding: var(--sv-space-1);
+}
+

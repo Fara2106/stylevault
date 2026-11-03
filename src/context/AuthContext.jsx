@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase, isSupabaseEnabled } from '../services/supabaseClient';
+import { installNativeHooks, postToNative } from '../utils/nativeBridge';
 
 const AuthContext = createContext(null);
 
@@ -86,6 +87,11 @@ export function AuthProvider({ children }) {
   // ── Sessione iniziale ──
   useEffect(() => {
     if (isSupabaseEnabled) {
+      // Nell'app iOS il login è nativo: la sessione arriva da lì
+      installNativeHooks({
+        setSession: (accessToken, refreshToken) =>
+          supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken }),
+      });
       supabase.auth.getSession().then(({ data }) => {
         setUser(mapSupabaseUser(data.session?.user));
         setIsLoading(false);
@@ -219,6 +225,7 @@ export function AuthProvider({ children }) {
     if (isSupabaseEnabled) {
       await supabase.auth.signOut();
       setUser(null);
+      postToNative('signOut');
       return;
     }
     setUser(null);

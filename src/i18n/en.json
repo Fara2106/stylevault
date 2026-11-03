@@ -130,7 +130,11 @@
     "linkSuccess": "Data extracted: review and complete",
     "added": "Item added",
     "nameRequired": "Give the item a name",
-    "categoryRequired": "Pick a category"
+    "categoryRequired": "Pick a category",
+    "photoBack": "Back photo",
+    "photoBackHint": "Optional: the app uses it to show the item from behind.",
+    "photoBackAdd": "Add",
+    "photoBackRemove": "Remove the back photo"
   },
   "outfit": {
     "title": "Outfit",
@@ -211,7 +215,8 @@
     "modelNoFigure": "I can't make out a full figure in the photo: use a standing, front-facing, full-body photo.",
     "modelError": "Couldn't prepare the photo: try again or change photo.",
     "modelNeedsPhoto": "Upload a full-body photo of yourself to start (it stays on your device).",
-    "modelNoOutfit": "First pick the items above: you'll see them on you here."
+    "modelNoOutfit": "First pick the items above: you'll see them on you here.",
+    "seeOnMe": "See it on me"
   },
   "avatar": {
     "referencePhoto": "Reference photo",

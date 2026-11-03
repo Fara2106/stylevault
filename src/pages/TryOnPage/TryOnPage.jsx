@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useProfile } from '../../context/ProfileContext';
 import { useWardrobe } from '../../context/WardrobeContext';
 import ModelTryOn from '../../components/Avatar/ModelTryOn';
+import { isNativeApp, postToNative, avatarPayload } from '../../utils/nativeBridge';
 import { Header, Button, Modal, Icon } from '../../components/common';
 import { CLOTHING_COLORS } from '../../utils/categories';
 import { resizeImageFile } from '../../utils/imageUtils';
@@ -335,6 +336,15 @@ export default function TryOnPage() {
 
           {!outfitHasItems(outfit) ? (
             <p className="tryon-page__photo-note">{t('tryon.modelNoOutfit')}</p>
+          ) : isNativeApp() ? (
+            // Nell'app l'avatar è nativo: 3 viste, scontorno di iOS
+            <Button
+              fullWidth
+              icon={<Icon name="user" size={15} />}
+              onClick={() => postToNative('openAvatar', avatarPayload(outfit))}
+            >
+              {t('tryon.seeOnMe')}
+            </Button>
           ) : !referencePhoto ? (
             <>
               <p className="tryon-page__photo-note">{t('tryon.modelNeedsPhoto')}</p>

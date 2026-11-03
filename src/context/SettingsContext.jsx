@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import i18n from '../i18n/i18n';
 import { resolveTheme, applyTheme } from '../utils/theme';
+import { postToNative } from '../utils/nativeBridge';
 
 const SettingsContext = createContext(null);
 
@@ -70,6 +71,8 @@ export function SettingsProvider({ children }) {
     const media = window.matchMedia?.('(prefers-color-scheme: dark)');
     const apply = () => applyTheme(resolveTheme(settings.theme, Boolean(media?.matches)));
     apply();
+    // Nell'app iOS anche le schermate native seguono la scelta
+    postToNative('themeChanged', { setting: settings.theme });
     if (settings.theme !== 'system' || !media) return undefined;
     media.addEventListener('change', apply);
     return () => media.removeEventListener('change', apply);

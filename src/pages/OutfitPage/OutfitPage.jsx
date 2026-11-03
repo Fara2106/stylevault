@@ -5,6 +5,7 @@ import { useWardrobe } from '../../context/WardrobeContext';
 import { useSettings } from '../../context/SettingsContext';
 import WeatherBadge from '../../components/WeatherBadge/WeatherBadge';
 import OutfitCard from '../../components/OutfitCard/OutfitCard';
+import { isNativeApp, postToNative, avatarPayload } from '../../utils/nativeBridge';
 import CitySearch from '../../components/CitySearch/CitySearch';
 import { Button, Icon } from '../../components/common';
 import { fetchForecastWithCache } from '../../services/weather';
@@ -136,6 +137,10 @@ export default function OutfitPage() {
   };
 
   const handleTryOn = (outfit) => {
+    if (isNativeApp()) {
+      postToNative('openAvatar', avatarPayload(outfit));
+      return;
+    }
     navigate('/tryon', { state: { outfit } });
   };
 
@@ -295,6 +300,7 @@ export default function OutfitPage() {
                 onSave={handleSave}
                 onWear={handleWear}
                 onTryOn={handleTryOn}
+                tryOnLabel={isNativeApp() ? t('tryon.seeOnMe') : undefined}
                 saved={!!savedFlags[outfit.id]}
               />
               {advice.length > 0 && (

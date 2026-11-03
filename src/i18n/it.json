@@ -130,7 +130,11 @@
     "linkSuccess": "Dati estratti: controlla e completa",
     "added": "Capo aggiunto",
     "nameRequired": "Dai un nome al capo",
-    "categoryRequired": "Scegli una categoria"
+    "categoryRequired": "Scegli una categoria",
+    "photoBack": "Foto del retro",
+    "photoBackHint": "Facoltativa: nell'app serve per vederti il capo di spalle.",
+    "photoBackAdd": "Aggiungi",
+    "photoBackRemove": "Togli la foto del retro"
   },
   "outfit": {
     "title": "Outfit",
@@ -211,7 +215,8 @@
     "modelNoFigure": "Non riesco a distinguere una figura intera nella foto: usa una foto in piedi, frontale, a figura intera.",
     "modelError": "Non riesco a preparare la foto: riprova o cambia foto.",
     "modelNeedsPhoto": "Carica una tua foto a figura intera per iniziare (resta sul tuo dispositivo).",
-    "modelNoOutfit": "Prima scegli i capi qui sopra: qui li vedrai addosso."
+    "modelNoOutfit": "Prima scegli i capi qui sopra: qui li vedrai addosso.",
+    "seeOnMe": "Vedilo addosso"
   },
   "avatar": {
     "referencePhoto": "Foto di riferimento",
