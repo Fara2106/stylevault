@@ -37,7 +37,26 @@ piano `docs/superpowers/plans/2026-11-03-app-ios.md`, registro decisioni
   (`00008160-000661061A200036`). Per la prova la build DEBUG carica il dev
   server del Mac in rete (`SITE_URL` in Secrets.xcconfig = IP del Mac,
   vite con `--host`), perché il sito pubblicato non ha ancora il ponte.
-  Bloccato su: Modalità sviluppatore da attivare sull'iPhone.
+  Modalità sviluppatore ATTIVA (verificata 2026-11-03 con `devicectl device
+  info details`). Se `devicectl` dice "connected (no DDI)" / errore 12040,
+  l'iPhone è bloccato: sbloccarlo e rilanciare `devicectl device info
+  ddiServices`. Build DEBUG per iPhone RIUSCITA e app INSTALLATA
+  (`it.faraoni.stylevault`); il primo avvio è stato negato finché Lorenzo
+  non autorizza lo sviluppatore (Impostazioni → Generali → VPN e gestione
+  dispositivi → Apple Development lorefara97@gmail.com → Autorizza).
+  Autorizzato: l'app ora parte sull'iPhone.
+- **Password dimenticata? nel login nativo** (richiesta di Lorenzo, la sua
+  email aveva già un account): link sotto la password → email di Supabase
+  con `redirect_to=stylevault://reset-password` → l'app si riapre
+  (`onOpenURL`, codice PKCE scambiato con `session(from:)`) → schermata
+  "Scegli una nuova password" (`NewPasswordView`) → si entra. Se si prova a
+  registrarsi con un'email già usata, il login passa da solo ad "Accedi".
+  Richiede `stylevault://**` tra le Redirect URLs di Supabase: AGGIUNTO il
+  2026-11-03 dal Chrome di Lorenzo (ora 3: localhost:5173/**,
+  fara2106.github.io/stylevault/**, stylevault://**). Vale anche per Google. 35 test iOS verdi.
+  PROVATO sull'iPhone il 2026-11-03: Lorenzo ha rifatto la password dal link
+  dell'email ed è entrato (checklist §8 punto 1 ok). NON ancora committato.
+  Test iOS: serve `CODE_SIGNING_ALLOWED=NO` (comando nel registro).
 - Revisione finale (revisore separato): 2 critici + 8 importanti CORRETTI
   (refresh token doppio, sessione al sito solo dopo 'ready', link esterni,
   avvio offline, 'Più tardi', conteggio persone, foto 48 MP, retro dei capi);

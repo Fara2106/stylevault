@@ -39,6 +39,8 @@ struct RootView: View {
                 Palette.bg.ignoresSafeArea()
             } else if auth.session == nil {
                 LoginView()
+            } else if auth.recovering {
+                NewPasswordView()
             } else if let missing = missingPhotos, !missing.isEmpty {
                 BodyPhotosView(views: missing) { missingPhotos = [] }
             } else {
@@ -46,6 +48,8 @@ struct RootView: View {
             }
         }
         .onChange(of: auth.session?.accessToken) { _, _ in syncSession() }
+        .onChange(of: auth.recovering) { _, _ in syncSession() }
+        .onOpenURL { url in Task { await auth.handle(url) } }
         .onChange(of: auth.session?.user.id) { _, _ in Task { await checkPhotos() } }
         .onAppear {
             web.onMessage = { message in
@@ -74,7 +78,7 @@ struct RootView: View {
     /// Al sito solo sessioni valide: una scaduta la rinnova prima il nativo
     /// (se la rinnovassero entrambi, Supabase chiuderebbe la sessione).
     private func syncSession() {
-        guard let session = auth.session, !session.isExpired else { return }
+        guard let session = auth.session, !session.isExpired, !auth.recovering else { return }
         web.injectSession(access: session.accessToken, refresh: session.refreshToken)
         if web.webView.url == nil { web.load() }
     }

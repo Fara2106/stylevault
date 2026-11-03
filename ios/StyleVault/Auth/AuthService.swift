@@ -20,7 +20,7 @@ enum Supa {
 
 /// Errori di login in forma leggibile, con gli stessi testi del sito (auth.errors.*).
 enum AuthErrorKind: Equatable {
-    case invalidCredentials, emailTaken, weakPassword, cancelled, unreachable
+    case invalidCredentials, emailTaken, weakPassword, samePassword, tooManyEmails, cancelled, unreachable
     case other(String)
 
     static func from(_ error: Error) -> AuthErrorKind {
@@ -32,6 +32,8 @@ enum AuthErrorKind: Equatable {
             case .invalidCredentials: return .invalidCredentials
             case .userAlreadyExists, .emailExists: return .emailTaken
             case .weakPassword: return .weakPassword
+            case .samePassword: return .samePassword
+            case .overEmailSendRateLimit: return .tooManyEmails
             default: return .other(message)
             }
         }
@@ -45,6 +47,8 @@ enum AuthErrorKind: Equatable {
         case .invalidCredentials: return "Email o password non corrette."
         case .emailTaken: return "Esiste già un account con questa email: prova ad accedere."
         case .weakPassword: return "La password deve avere almeno 6 caratteri."
+        case .samePassword: return "La nuova password deve essere diversa da quella vecchia."
+        case .tooManyEmails: return "Hai già chiesto un'email da poco: aspetta qualche minuto e riprova."
         case .unreachable: return "Il servizio online non risponde. Controlla la connessione e riprova."
         case .cancelled: return nil
         case let .other(text): return text
@@ -60,6 +64,10 @@ final class AuthService: ObservableObject {
     /// Il bottone Google compare solo se il provider è attivo su Supabase
     /// (come sul sito): spento, darebbe solo un errore.
     @Published private(set) var googleAvailable = false
+    /// Dopo il link dell'email di reset si ha già una sessione, ma si entra
+    /// solo dopo aver scelto la nuova password.
+    @Published private(set) var recovering = false
+    @Published private(set) var recoveryLinkFailed = false
 
     private let client: SupabaseClient
 
@@ -98,6 +106,33 @@ final class AuthService: ObservableObject {
         session = response.session
     }
 
+    nonisolated static func isRecoveryLink(_ url: URL) -> Bool {
+        url.scheme == AppConfig.recoveryCallback.scheme && url.host == AppConfig.recoveryCallback.host
+    }
+
+    func sendPasswordReset(email: String) async throws {
+        recoveryLinkFailed = false
+        try await client.auth.resetPasswordForEmail(email, redirectTo: AppConfig.recoveryCallback)
+    }
+
+    /// Il link dell'email riapre l'app con un codice (PKCE): si scambia con
+    /// una sessione. Un link scaduto o aperto su un altro telefono fallisce.
+    func handle(_ url: URL) async {
+        guard Self.isRecoveryLink(url) else { return }
+        recovering = true
+        do {
+            session = try await client.auth.session(from: url)
+        } catch {
+            recovering = false
+            recoveryLinkFailed = true
+        }
+    }
+
+    func updatePassword(_ password: String) async throws {
+        _ = try await client.auth.update(user: UserAttributes(password: password))
+        recovering = false
+    }
+
     func signInWithGoogle() async throws {
         session = try await client.auth.signInWithOAuth(
             provider: .google, redirectTo: AppConfig.authCallback
@@ -107,5 +142,6 @@ final class AuthService: ObservableObject {
     func signOut() async {
         try? await client.auth.signOut()
         session = nil
+        recovering = false
     }
 }

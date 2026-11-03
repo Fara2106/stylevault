@@ -38,6 +38,27 @@ final class AuthServiceTests: XCTestCase {
         XCTAssertEqual(AuthErrorKind.emailTaken.message,
                        "Esiste già un account con questa email: prova ad accedere.")
     }
+
+    func testNuovaPasswordUgualeAllaVecchia() {
+        XCTAssertEqual(AuthErrorKind.from(apiError(.samePassword)), .samePassword)
+        XCTAssertEqual(AuthErrorKind.samePassword.message,
+                       "La nuova password deve essere diversa da quella vecchia.")
+    }
+
+    func testTroppeEmailDiReset() {
+        XCTAssertEqual(AuthErrorKind.from(apiError(.overEmailSendRateLimit)), .tooManyEmails)
+    }
+}
+
+final class PasswordRecoveryTests: XCTestCase {
+    // Il link dell'email di reset riapre l'app su un indirizzo suo, diverso
+    // dal ritorno del login Google
+    func testLinkDelResetRiconosciuto() {
+        XCTAssertEqual(AppConfig.recoveryCallback.absoluteString, "stylevault://reset-password")
+        XCTAssertTrue(AuthService.isRecoveryLink(URL(string: "stylevault://reset-password?code=abc")!))
+        XCTAssertFalse(AuthService.isRecoveryLink(URL(string: "stylevault://auth-callback?code=abc")!))
+        XCTAssertFalse(AuthService.isRecoveryLink(URL(string: "https://example.com/reset-password?code=abc")!))
+    }
 }
 
 final class GoogleAvailabilityTests: XCTestCase {

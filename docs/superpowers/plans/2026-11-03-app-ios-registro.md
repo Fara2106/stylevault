@@ -70,3 +70,5 @@ Final: minor (deferred): M7 LoginPage web nell'app mostra Google (bloccato nelle
 Final: minor (deferred): M8 il vecchio 'light' diventa Sistema: dirlo a Mary
 Final: minor (deferred): M9 OfflineView fuori palette in tema scuro
 Final: minor (deferred): M10 errori .other mostrano il testo grezzo in inglese
+Device: Modalità sviluppatore attiva, app installata e avviata sull'iPhone di Lorenzo (dopo "Autorizza" in VPN e gestione dispositivi)
+Device: added "Password dimenticata?" nel login nativo — reset via email con redirect stylevault://reset-password (PKCE, onOpenURL → NewPasswordView); registrazione con email già usata → passa ad "Accedi"; AuthServiceTests samePassword/tooManyEmails/isRecoveryLink RED→GREEN, suite iOS 35/35 (CODE_SIGNING_ALLOWED=NO). Richiede stylevault://** tra le Redirect URLs di Supabase

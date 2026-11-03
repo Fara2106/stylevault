@@ -37,6 +37,10 @@ enum AppConfig {
     /// Redirect del login Google (schema URL registrato in project.yml).
     static let authCallback = URL(string: "stylevault://auth-callback")!
 
+    /// Dove riporta il link dell'email "Password dimenticata?" (va tra le
+    /// Redirect URLs di Supabase, come quello di Google).
+    static let recoveryCallback = URL(string: "stylevault://reset-password")!
+
     /// "Accedi con Apple" richiede l'Apple Developer Program a pagamento:
     /// resta spento finché Lorenzo non si iscrive.
     static let appleSignInEnabled = false

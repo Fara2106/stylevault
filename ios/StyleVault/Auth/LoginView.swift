@@ -9,6 +9,7 @@ struct LoginView: View {
     @State private var email = ""
     @State private var password = ""
     @State private var error: String?
+    @State private var notice: String?
     @State private var busy = false
 
     var body: some View {
@@ -33,8 +34,21 @@ struct LoginView: View {
                         .textContentType(registering ? .newPassword : .password)
                         .modifier(FieldStyle())
 
+                    if !registering {
+                        Button("Password dimenticata?", action: forgot)
+                            .font(.footnote).foregroundStyle(Palette.muted)
+                            .frame(maxWidth: .infinity, alignment: .trailing)
+                            .disabled(busy)
+                    }
+
                     if let error {
                         Text(error).font(.footnote).foregroundStyle(Palette.danger).multilineTextAlignment(.center)
+                    } else if auth.recoveryLinkFailed {
+                        Text("Il link non è più valido: chiedi una nuova email con «Password dimenticata?».")
+                            .font(.footnote).foregroundStyle(Palette.danger).multilineTextAlignment(.center)
+                    }
+                    if let notice {
+                        Text(notice).font(.footnote).foregroundStyle(Palette.ink).multilineTextAlignment(.center)
                     }
 
                     Button(action: submit) {
@@ -63,6 +77,7 @@ struct LoginView: View {
                 Button {
                     registering.toggle()
                     error = nil
+                    notice = nil
                 } label: {
                     Text(registering ? "Hai già un account? **Accedi**" : "Non hai un account? **Registrati**")
                         .font(.subheadline).foregroundStyle(Palette.muted)
@@ -86,19 +101,41 @@ struct LoginView: View {
         }
     } }
 
+    private func forgot() {
+        let address = email.trimmingCharacters(in: .whitespaces)
+        guard !address.isEmpty else {
+            notice = nil
+            error = "Scrivi la tua email qui sopra, poi tocca «Password dimenticata?»."
+            return
+        }
+        run { [self] in
+            try await auth.sendPasswordReset(email: address)
+            notice = "Ti ho mandato un'email a \(address): aprila su questo iPhone e tocca il link."
+        }
+    }
+
     private func google() { run { [auth] in try await auth.signInWithGoogle() } }
 
     private func run(_ work: @escaping () async throws -> Void) {
         error = nil
+        notice = nil
         busy = true
         Task {
             defer { busy = false }
-            do { try await work() } catch { self.error = AuthErrorKind.from(error).message }
+            do {
+                try await work()
+            } catch {
+                let kind = AuthErrorKind.from(error)
+                // Registrazione con un'email già usata: si passa ad "Accedi",
+                // dove c'è "Password dimenticata?".
+                if kind == .emailTaken { registering = false }
+                self.error = kind.message
+            }
         }
     }
 }
 
-private struct FieldStyle: ViewModifier {
+struct FieldStyle: ViewModifier {
     func body(content: Content) -> some View {
         content
             .font(.body)
