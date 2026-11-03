@@ -44,9 +44,25 @@ targets:
   StyleVaultTests:
     type: bundle.unit-test
     platform: iOS
-    sources: [StyleVaultTests]
+    sources:
+      - path: StyleVaultTests
+        excludes: [VisionTests.swift, Fixtures]
     dependencies:
       - target: StyleVault
+  # Vision (scontorno, posa) gira davvero solo su hardware Apple: i suoi test
+  # stanno su macOS, che ha le stesse API e il Neural Engine del Mac.
+  StyleVaultVisionTests:
+    type: bundle.unit-test
+    platform: macOS
+    deploymentTarget: "14.0"
+    sources:
+      - StyleVault/Vision
+      - StyleVaultTests/VisionTests.swift
+      - StyleVaultTests/Fixtures
+    settings:
+      base:
+        CODE_SIGN_IDENTITY: "-"
+        GENERATE_INFOPLIST_FILE: YES
 schemes:
   StyleVault:
     build:
@@ -54,3 +70,9 @@ schemes:
         StyleVault: all
     test:
       targets: [StyleVaultTests]
+  StyleVaultVisionTests:
+    build:
+      targets:
+        StyleVaultVisionTests: [test]
+    test:
+      targets: [StyleVaultVisionTests]
