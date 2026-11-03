@@ -11,7 +11,9 @@
 
 .login-page__lang {
   position: absolute;
-  top: var(--sv-space-4);
+  /* Sotto la barra di stato quando la pagina va a tutto schermo (app iOS,
+     web app dalla schermata Home) */
+  top: calc(env(safe-area-inset-top) + var(--sv-space-4));
   right: var(--sv-space-4);
 }
 

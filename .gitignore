@@ -23,3 +23,8 @@ dist-ssr
 *.sln
 *.sw?
 .superpowers/
+
+# App iOS
+ios/Config/Secrets.xcconfig
+ios/*.xcodeproj/
+ios/build/
