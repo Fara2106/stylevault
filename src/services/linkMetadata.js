@@ -47,7 +47,7 @@ async function viaMicrolink(url) {
   }
 
   return {
-    title: stripShopSuffix(data.data.title || '', data.data.publisher || ''),
+    title: data.data.title || '',
     // Niente ripiego sul logo del sito: come foto del capo è peggio di nessuna
     // foto (l'utente la carica a mano).
     image: data.data.image?.url || '',
@@ -70,14 +70,16 @@ async function viaEdgeFunction(url) {
  *   'link-metadata-limit' se il servizio gratuito ha finito le letture del giorno
  */
 export async function fetchLinkMetadata(url) {
+  let meta = null;
   if (isSupabaseEnabled) {
     try {
-      return await viaEdgeFunction(url);
+      meta = await viaEdgeFunction(url);
     } catch {
       // Funzione non deployata o shop ostile: si tenta comunque con microlink
     }
   }
-  return viaMicrolink(url);
+  if (!meta) meta = await viaMicrolink(url);
+  return { ...meta, title: stripShopSuffix(meta.title, meta.site) };
 }
 
 /** Validazione superficiale di un URL http(s). */

@@ -9,7 +9,9 @@ import './LoginPage.css';
 export default function LoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { login, register, loginWithGoogle, isLoading, isCloud } = useAuth();
+  const { login, register, loginWithGoogle, isLoading, isCloud, googleAvailable } = useAuth();
+  // Codice d'errore → messaggio tradotto; un messaggio sconosciuto resta com'è
+  const errorText = (code) => t(`auth.errors.${code}`, { defaultValue: code });
 
   const [mode, setMode] = useState('login'); // 'login' | 'register'
   const [name, setName] = useState('');
@@ -31,11 +33,7 @@ export default function LoginPage() {
     } else if (result.success) {
       navigate('/wardrobe', { replace: true });
     } else {
-      setError(
-        result.error === 'service-unreachable'
-          ? t('auth.serviceUnreachable')
-          : result.error
-      );
+      setError(errorText(result.error));
     }
   };
 
@@ -43,11 +41,7 @@ export default function LoginPage() {
     setError('');
     const result = await loginWithGoogle();
     if (!result.success && result.error !== 'not-available') {
-      setError(
-        result.error === 'service-unreachable'
-          ? t('auth.serviceUnreachable')
-          : result.error
-      );
+      setError(errorText(result.error));
     }
   };
 
@@ -110,7 +104,8 @@ export default function LoginPage() {
           {mode === 'login' ? t('auth.login') : t('auth.register')}
         </Button>
 
-        {isCloud ? (
+        {/* Google solo se il provider è attivo su Supabase (altrimenti dava errore) */}
+        {isCloud && googleAvailable && (
           <Button
             type="button"
             variant="secondary"
@@ -121,9 +116,8 @@ export default function LoginPage() {
           >
             {t('auth.google')}
           </Button>
-        ) : (
-          <p className="login-page__google-note">{t('auth.googleSoon')}</p>
         )}
+        {!isCloud && <p className="login-page__google-note">{t('auth.googleSoon')}</p>}
 
         <div className="sv-divider">
           <span className="sv-label">{t('common.or')}</span>

@@ -18,7 +18,18 @@ Lorenzo: guardaroba caricato dal cloud con foto, nessun avviso.
   data indicata lì; dopo si può solo scaricare il backup).
 - Nell'org "StyleVault" c'è un SECONDO progetto in pausa (`dqquxjahcl…`,
   eu-north-1, vuoto): non è usato dall'app.
-- Google login: provider ancora spento (problema aperto dal 2026-07-09).
+- Google login: provider ancora spento. Ora il bottone "Continua con
+  Google" compare SOLO se il provider risulta attivo (`/auth/v1/settings`):
+  basta attivarlo su Supabase e appare da solo. Il redirect dopo Google ora
+  torna a `/stylevault/` (prima puntava all'origin → 404 su GitHub Pages).
+- Edge Function `fetch-link-metadata` DEPLOYATA dalla dashboard (2026-11-03,
+  codice da `supabase/functions/`). Legge da sola gli shop senza anti-bot
+  (OVS, Zara, Calzedonia…) senza consumare la quota microlink; gli shop
+  protetti (Zalando, H&M, Uniqlo) rispondono 403 al server → l'app ripiega
+  su microlink (Zalando lì funziona, H&M no). La chiave del progetto è
+  `sb_publishable_…` (non JWT): la funzione accetta comunque le chiamate.
+- Errori di login/registrazione tradotti (codici `auth.errors.*`, anche
+  quelli inglesi di Supabase tipo "Invalid login credentials").
 
 Migliorie fatte (testate nel browser in viewport mobile e sul simulatore
 iPhone 18 Pro; commit `83be27a`, pubblicato):

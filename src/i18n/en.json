@@ -54,7 +54,16 @@
     "googleSoon": "Google sign-in arrives with the online version",
     "google": "Continue with Google",
     "checkEmail": "Check your email: we sent you a confirmation link",
-    "serviceUnreachable": "The online service isn't responding: after a period of inactivity it goes to sleep and needs a restart. Let Lorenzo know and try again in a few minutes — your data is safe."
+    "errors": {
+      "service-unreachable": "The online service isn't responding: after a period of inactivity it goes to sleep and must be resumed. Let Lorenzo know and try again in a few minutes — your data is safe.",
+      "missing-fields": "Please fill in all fields.",
+      "invalid-credentials": "Wrong email or password.",
+      "password-too-short": "The password must be at least 6 characters.",
+      "email-taken": "An account with this email already exists: try signing in.",
+      "email-not-confirmed": "Confirm your email first: open the link we sent you.",
+      "rate-limited": "Too many attempts: wait a few minutes and try again.",
+      "invalid-email": "This email doesn't look valid."
+    }
   },
   "onboarding": {
     "welcome": "Welcome to StyleVault",

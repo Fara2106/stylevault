@@ -22,6 +22,28 @@ function isUnreachable(error) {
   );
 }
 
+/**
+ * Errore Supabase → codice che la UI traduce (auth.errors.*). I messaggi
+ * originali sono in inglese tecnico ("Invalid login credentials"); un codice
+ * sconosciuto passa il messaggio grezzo come ultima risorsa.
+ */
+const SUPABASE_ERROR_CODES = {
+  invalid_credentials: 'invalid-credentials',
+  user_already_exists: 'email-taken',
+  email_exists: 'email-taken',
+  weak_password: 'password-too-short',
+  email_not_confirmed: 'email-not-confirmed',
+  over_email_send_rate_limit: 'rate-limited',
+  over_request_rate_limit: 'rate-limited',
+  validation_failed: 'invalid-email',
+  email_address_invalid: 'invalid-email',
+};
+
+function authError(error) {
+  if (isUnreachable(error)) return 'service-unreachable';
+  return SUPABASE_ERROR_CODES[error.code] || error.message;
+}
+
 /** Mappa l'utente Supabase nella forma usata dall'app. */
 function mapSupabaseUser(user) {
   if (!user) return null;
@@ -44,6 +66,22 @@ function mapSupabaseUser(user) {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  // Il bottone Google compare solo se il provider è davvero attivo su
+  // Supabase: prima compariva sempre e cliccarlo dava errore.
+  const [googleAvailable, setGoogleAvailable] = useState(false);
+
+  useEffect(() => {
+    if (!isSupabaseEnabled) return;
+    let alive = true;
+    const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    fetch(`${import.meta.env.VITE_SUPABASE_URL}/auth/v1/settings`, { headers: { apikey: key } })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((settings) => alive && setGoogleAvailable(Boolean(settings?.external?.google)))
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   // ── Sessione iniziale ──
   useEffect(() => {
@@ -73,7 +111,7 @@ export function AuthProvider({ children }) {
   // ── Login ──
   const login = useCallback(async (email, password) => {
     if (!email || !password) {
-      return { success: false, error: 'Email e password sono obbligatori' };
+      return { success: false, error: 'missing-fields' };
     }
 
     if (isSupabaseEnabled) {
@@ -81,10 +119,7 @@ export function AuthProvider({ children }) {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       setIsLoading(false);
       if (error) {
-        return {
-          success: false,
-          error: isUnreachable(error) ? 'service-unreachable' : error.message,
-        };
+        return { success: false, error: authError(error) };
       }
       return { success: true };
     }
@@ -98,7 +133,7 @@ export function AuthProvider({ children }) {
     if (existingUser) {
       if (existingUser.password !== password) {
         setIsLoading(false);
-        return { success: false, error: 'Password non corretta' };
+        return { success: false, error: 'invalid-credentials' };
       }
       const userData = {
         id: existingUser.id,
@@ -121,10 +156,10 @@ export function AuthProvider({ children }) {
   // ── Registrazione ──
   const register = useCallback(async (name, email, password) => {
     if (!name || !email || !password) {
-      return { success: false, error: 'Tutti i campi sono obbligatori' };
+      return { success: false, error: 'missing-fields' };
     }
     if (password.length < 6) {
-      return { success: false, error: 'La password deve avere almeno 6 caratteri' };
+      return { success: false, error: 'password-too-short' };
     }
 
     if (isSupabaseEnabled) {
@@ -136,10 +171,7 @@ export function AuthProvider({ children }) {
       });
       setIsLoading(false);
       if (error) {
-        return {
-          success: false,
-          error: isUnreachable(error) ? 'service-unreachable' : error.message,
-        };
+        return { success: false, error: authError(error) };
       }
       // Con la conferma email attiva non c'è ancora una sessione
       if (!data.session) return { success: true, needsConfirmation: true };
@@ -152,7 +184,7 @@ export function AuthProvider({ children }) {
     const registeredUsers = JSON.parse(localStorage.getItem('sv_registered_users') || '[]');
     if (registeredUsers.some((u) => u.email === email)) {
       setIsLoading(false);
-      return { success: false, error: 'Un account con questa email esiste già' };
+      return { success: false, error: 'email-taken' };
     }
 
     const newUser = { id: generateUserId(), name, email, password };
@@ -173,13 +205,11 @@ export function AuthProvider({ children }) {
     }
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin },
+      // Su GitHub Pages l'app vive in /stylevault/: l'origin da solo è un 404
+      options: { redirectTo: new URL(import.meta.env.BASE_URL, window.location.origin).href },
     });
     if (error) {
-      return {
-        success: false,
-        error: isUnreachable(error) ? 'service-unreachable' : error.message,
-      };
+      return { success: false, error: authError(error) };
     }
     return { success: true }; // il browser viene rediretto
   }, []);
@@ -200,6 +230,7 @@ export function AuthProvider({ children }) {
     isAuthenticated: !!user,
     isLoading,
     isCloud: isSupabaseEnabled,
+    googleAvailable,
     login,
     register,
     loginWithGoogle,

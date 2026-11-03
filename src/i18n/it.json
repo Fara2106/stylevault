@@ -54,7 +54,16 @@
     "googleSoon": "L'accesso con Google arriva con la versione online",
     "google": "Continua con Google",
     "checkEmail": "Controlla la tua email: ti abbiamo inviato un link di conferma",
-    "serviceUnreachable": "Il servizio online non risponde: dopo un periodo senza utilizzo va in pausa e va riattivato. Avvisa Lorenzo e riprova tra qualche minuto — i tuoi dati sono al sicuro."
+    "errors": {
+      "service-unreachable": "Il servizio online non risponde: dopo un periodo senza utilizzo va in pausa e va riattivato. Avvisa Lorenzo e riprova tra qualche minuto — i tuoi dati sono al sicuro.",
+      "missing-fields": "Compila tutti i campi.",
+      "invalid-credentials": "Email o password non corrette.",
+      "password-too-short": "La password deve avere almeno 6 caratteri.",
+      "email-taken": "Esiste già un account con questa email: prova ad accedere.",
+      "email-not-confirmed": "Conferma prima l'email: apri il link che ti abbiamo inviato.",
+      "rate-limited": "Troppi tentativi ravvicinati: aspetta qualche minuto e riprova.",
+      "invalid-email": "Questa email non sembra valida."
+    }
   },
   "onboarding": {
     "welcome": "Benvenuto in StyleVault",

@@ -1,15 +1,32 @@
+import { useTranslation } from 'react-i18next';
 import { CLOTHING_COLORS } from '../../utils/categories';
 import Icon from '../common/Icon';
 import './ClothingCard.css';
 
 export default function ClothingCard({ item, onFavorite, onClick }) {
+  const { t } = useTranslation();
   const getColorHex = (colorId) => {
     const found = CLOTHING_COLORS.find((c) => c.id === colorId);
     return found ? found.hex : '#ccc';
   };
 
   return (
-    <div className="clothing-card" onClick={() => onClick?.(item)}>
+    <div
+      className="clothing-card"
+      onClick={() => onClick?.(item)}
+      // Raggiungibile anche da tastiera / VoiceOver quando apre il dettaglio
+      {...(onClick && {
+        role: 'button',
+        tabIndex: 0,
+        onKeyDown: (e) => {
+          if (e.target !== e.currentTarget) return;
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onClick(item);
+          }
+        },
+      })}
+    >
       <div className="clothing-card__image-wrap">
         <img
           src={item.photo}
@@ -24,7 +41,8 @@ export default function ClothingCard({ item, onFavorite, onClick }) {
               e.stopPropagation();
               onFavorite(item.id);
             }}
-            aria-label="favorite"
+            aria-label={t('wardrobe.favorites')}
+            aria-pressed={Boolean(item.favorite)}
           >
             <Icon name="heart" size={16} strokeWidth={item.favorite ? 0 : 1.5} />
           </button>
