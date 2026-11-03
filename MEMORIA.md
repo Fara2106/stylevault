@@ -31,9 +31,13 @@ piano `docs/superpowers/plans/2026-11-03-app-ios.md`, registro decisioni
 - **Migrazione 003 APPLICATA** il 2026-11-03 (SQL Editor dal Chrome di
   Lorenzo; verificato: theme/body_photos/photo_back_* → 200 via API). Il
   branch ora si può pubblicare senza rompere la sync di lingua e città.
-- Xcode: Lorenzo è entrato col suo Apple ID; resta da scegliere il
-  "Personal Team" nel target e collegare l'iPhone (oggi collegato solo
-  l'iPad Pro "iPad di Lorenzo").
+- Xcode: Lorenzo è entrato col suo Apple ID; team "Lorenzo Faraoni
+  (Personal Team)" = `599MS2BZ63`, ora fisso in `ios/project.yml` (firma
+  automatica). iPhone di Lorenzo = iPhone 18 Pro Max
+  (`00008160-000661061A200036`). Per la prova la build DEBUG carica il dev
+  server del Mac in rete (`SITE_URL` in Secrets.xcconfig = IP del Mac,
+  vite con `--host`), perché il sito pubblicato non ha ancora il ponte.
+  Bloccato su: Modalità sviluppatore da attivare sull'iPhone.
 - Revisione finale (revisore separato): 2 critici + 8 importanti CORRETTI
   (refresh token doppio, sessione al sito solo dopo 'ready', link esterni,
   avvio offline, 'Più tardi', conteggio persone, foto 48 MP, retro dei capi);

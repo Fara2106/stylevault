@@ -20,10 +20,16 @@ enum AppConfig {
     }()
 
     /// Il sito dentro l'app. In DEBUG il dev server locale in modalità cloud
-    /// (npm run dev, porta 5181: il simulatore vede il Mac su localhost);
-    /// in Release il sito pubblicato.
+    /// (porta 5181): sul simulatore localhost; su un iPhone vero l'IP del Mac,
+    /// da SITE_URL in Secrets.xcconfig. In Release il sito pubblicato.
     #if DEBUG
-    static let siteURL = URL(string: "http://localhost:5181/")!
+    static let siteURL: URL = {
+        if let raw = Bundle.main.object(forInfoDictionaryKey: "SiteURL") as? String,
+           !raw.isEmpty, let url = URL(string: raw) {
+            return url
+        }
+        return URL(string: "http://localhost:5181/")!
+    }()
     #else
     static let siteURL = URL(string: "https://fara2106.github.io/stylevault/")!
     #endif

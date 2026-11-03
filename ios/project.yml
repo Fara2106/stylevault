@@ -10,6 +10,9 @@ packages:
     from: 2.0.0
 settings:
   base:
+    # Team personale di Lorenzo (Apple ID gratuito): firma automatica
+    DEVELOPMENT_TEAM: 599MS2BZ63
+    CODE_SIGN_STYLE: Automatic
     SWIFT_VERSION: "5.0"
     MARKETING_VERSION: "0.1.0"
     CURRENT_PROJECT_VERSION: "1"
@@ -29,10 +32,12 @@ targets:
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         SupabaseURL: $(SUPABASE_URL)
         SupabaseKey: $(SUPABASE_KEY)
+        SiteURL: $(SITE_URL)
         CFBundleURLTypes:
           - CFBundleURLSchemes: [stylevault]
         NSCameraUsageDescription: Per fare le foto del tuo corpo e dei capi.
         NSPhotoLibraryUsageDescription: Per scegliere le foto del tuo corpo e dei capi.
+        NSLocalNetworkUsageDescription: In sviluppo l'app carica StyleVault dal Mac sulla rete di casa.
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
     settings:
