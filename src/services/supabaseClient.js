@@ -11,4 +11,17 @@ const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 export const isSupabaseEnabled = Boolean(url && anonKey);
 
-export const supabase = isSupabaseEnabled ? createClient(url, anonKey) : null;
+/**
+ * Nell'app iOS la sessione la gestisce il login nativo e la passa al sito:
+ * se rinnovassero il token entrambi, il secondo userebbe un refresh token già
+ * consumato e Supabase chiuderebbe la sessione (utente buttato fuori).
+ */
+export function authOptions(native) {
+  return { autoRefreshToken: !native };
+}
+
+const insideApp = Boolean(globalThis.window?.webkit?.messageHandlers?.svNative);
+
+export const supabase = isSupabaseEnabled
+  ? createClient(url, anonKey, { auth: authOptions(insideApp) })
+  : null;

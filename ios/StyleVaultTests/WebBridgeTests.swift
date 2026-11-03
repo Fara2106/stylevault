@@ -26,6 +26,10 @@ final class WebBridgeTests: XCTestCase {
         )
     }
 
+    func testIlSitoEProntoARicevereLaSessione() {
+        XCTAssertEqual(BridgeMessage.parse(["type": "ready"]), .ready)
+    }
+
     func testMessaggiSconosciutiONonValidi() {
         XCTAssertNil(BridgeMessage.parse(["type": "boh"]))
         XCTAssertNil(BridgeMessage.parse("stringa"))

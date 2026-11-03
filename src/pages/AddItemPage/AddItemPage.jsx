@@ -272,7 +272,10 @@ export default function AddItemPage() {
           <button
             type="button"
             className="add-item__back-remove"
-            onClick={() => set('photoBack', '')}
+            onClick={() => {
+              set('photoBack', '');
+              set('photoBackPath', null);
+            }}
             aria-label={t('addItem.photoBackRemove')}
           >
             <Icon name="close" size={14} />

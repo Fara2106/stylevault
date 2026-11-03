@@ -5,10 +5,16 @@ import Supabase
 /// Client Supabase unico dell'app. La sessione resta nel Portachiavi
 /// (default di supabase-swift) e il login Google torna con stylevault://.
 enum Supa {
+    /// emitLocalSessionAsInitialSession: senza rete si entra lo stesso con la
+    /// sessione salvata (poi si rinnova in background) invece di finire sul login.
+    static let authOptions = SupabaseClientOptions.AuthOptions(
+        redirectToURL: AppConfig.authCallback, flowType: .pkce, emitLocalSessionAsInitialSession: true
+    )
+
     static let client = SupabaseClient(
         supabaseURL: AppConfig.supabaseURL,
         supabaseKey: AppConfig.supabaseKey,
-        options: .init(auth: .init(redirectToURL: AppConfig.authCallback, flowType: .pkce))
+        options: .init(auth: authOptions)
     )
 }
 

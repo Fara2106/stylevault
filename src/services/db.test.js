@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { rowToItem, itemToRow } from './db';
+import { rowToItem, itemToRow, stalePhotoPaths } from './db';
 
 const base = { name: 'Maglione', category: 'tops', colors: [] };
 
@@ -38,5 +38,20 @@ describe('rowToItem — retro del capo', () => {
     expect(rowToItem({ id: '1', ...base, photo_back_url: 'https://x/b.jpg' }, new Map()).photoBack)
       .toBe('https://x/b.jpg');
     expect(rowToItem({ id: '1', ...base }, new Map()).photoBack).toBe('');
+  });
+});
+
+describe('stalePhotoPaths — file da cancellare dopo una modifica', () => {
+  it('retro tolto o sostituito: il file vecchio va cancellato', () => {
+    expect(
+      stalePhotoPaths({ photoPath: 'u/a.jpg', photoBackPath: 'u/b.jpg' }, { photoPath: 'u/a.jpg', photoBackPath: null })
+    ).toEqual(['u/b.jpg']);
+    expect(
+      stalePhotoPaths({ photoPath: 'u/a.jpg', photoBackPath: 'u/b.jpg' }, { photoPath: 'u/c.jpg', photoBackPath: 'u/d.jpg' })
+    ).toEqual(['u/a.jpg', 'u/b.jpg']);
+  });
+
+  it('niente cambiato: niente da cancellare', () => {
+    expect(stalePhotoPaths({ photoPath: 'u/a.jpg', photoBackPath: null }, { photoPath: 'u/a.jpg' })).toEqual([]);
   });
 });

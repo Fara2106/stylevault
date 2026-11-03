@@ -9,8 +9,11 @@ enum GarmentLayout {
     static func frame(for slot: String, pose: Pose, bodyBounds: CGRect,
                       garmentAspect: CGFloat, view: BodyView) -> CGRect? {
         let p = pose.points
-        guard let shoulderY = mid(p[.leftShoulder], p[.rightShoulder])?.y,
-              let hipY = mid(p[.leftHip], p[.rightHip])?.y, hipY > shoulderY else { return nil }
+        // Senza spalle o fianchi (di lato/spalle Vision li perde) si usano le
+        // proporzioni medie sulla sagoma: spalle al 18%, fianchi al 50%.
+        let shoulderY = mid(p[.leftShoulder], p[.rightShoulder])?.y ?? bodyBounds.minY + 0.18 * bodyBounds.height
+        let hipY = mid(p[.leftHip], p[.rightHip])?.y ?? bodyBounds.minY + 0.5 * bodyBounds.height
+        guard hipY > shoulderY else { return nil }
         let ankle = mid(p[.leftAnkle], p[.rightAnkle])
             ?? CGPoint(x: bodyBounds.midX, y: bodyBounds.maxY - 0.03 * bodyBounds.height)
         let centerX = mid(p[.leftShoulder], p[.rightShoulder])?.x ?? bodyBounds.midX

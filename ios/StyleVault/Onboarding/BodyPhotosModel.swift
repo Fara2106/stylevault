@@ -38,9 +38,11 @@ enum PhotoCheck: Equatable {
 enum BodyPhotosModel {
     /// Una foto va bene se c'è una sola persona e si vede intera: spalle e
     /// caviglie sempre; di fronte anche il viso (di spalle non si vede).
-    static func validate(_ cutout: Cutout, pose: Pose?, view: BodyView) -> PhotoCheck {
-        if cutout.instanceCount == 0 { return .noPerson }
-        if cutout.instanceCount > 1 { return .multiplePeople }
+    /// - people: persone contate da Vision (i "soggetti" dello scontorno
+    ///   includono anche borse, sedie, piante: non bastano a dire "più persone").
+    static func validate(_ cutout: Cutout, pose: Pose?, view: BodyView, people: Int) -> PhotoCheck {
+        if cutout.instanceCount == 0 || people == 0 { return .noPerson }
+        if people > 1 { return .multiplePeople }
         guard let points = pose?.points else { return .notFullBody }
         let hasShoulder = points[.leftShoulder] != nil || points[.rightShoulder] != nil
         let hasAnkle = points[.leftAnkle] != nil || points[.rightAnkle] != nil

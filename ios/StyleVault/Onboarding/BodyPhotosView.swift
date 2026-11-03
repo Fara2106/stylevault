@@ -6,6 +6,8 @@ import SwiftUI
 /// sia una persona sola e intera, poi upload nel profilo.
 struct BodyPhotosView: View {
     let views: [BodyView]
+    /// "Più tardi" al primo accesso, "Chiudi" quando si rifanno dal Profilo
+    var leaveTitle = "Più tardi"
     let onDone: () -> Void
 
     @State private var index = 0
@@ -22,6 +24,13 @@ struct BodyPhotosView: View {
 
     var body: some View {
         VStack(spacing: 20) {
+            HStack {
+                Button(leaveTitle, action: onDone)
+                Spacer()
+                Button("Salta questa") { next() }
+            }
+            .font(.subheadline).foregroundStyle(Palette.muted)
+
             Text("\(index + 1) / \(views.count) — \(current.title.uppercased())")
                 .font(.caption.weight(.semibold)).tracking(2).foregroundStyle(Palette.muted)
             Text("Le tue foto").font(.display(32)).foregroundStyle(Palette.ink)
@@ -67,29 +76,33 @@ struct BodyPhotosView: View {
         .onChange(of: pickerItem) { _, item in
             guard let item else { return }
             Task {
-                if let data = try? await item.loadTransferable(type: Data.self), let image = UIImage(data: data) {
-                    await analyze(image)
+                if let data = try? await item.loadTransferable(type: Data.self),
+                   let photo = ImagePrep.decodedForAnalysis(data) {
+                    await analyze(photo)
                 }
                 pickerItem = nil
             }
         }
         .fullScreenCover(isPresented: $showCamera) {
-            CameraPicker { image in Task { await analyze(image) } }.ignoresSafeArea()
+            CameraPicker { image in
+                Task { if let photo = uprightCGImage(image) { await analyze(photo) } }
+            }
+            .ignoresSafeArea()
         }
     }
 
-    private func analyze(_ image: UIImage) async {
+    /// photo: già ridotta a 2048 px e dritta (decodedForAnalysis / uprightCGImage).
+    private func analyze(_ photo: CGImage) async {
         reset()
-        guard let raw = uprightCGImage(image) else { return }
         busy = true
         defer { busy = false }
-        let photo = ImagePrep.downscaled(raw)
         original = photo
         do {
             let cutout = try await PersonCutout.cutout(photo)
             let pose = try? await BodyPose.detect(photo)
+            let people = (try? await PersonCutout.peopleCount(photo)) ?? 1
             preview = cutout.image
-            check = BodyPhotosModel.validate(cutout, pose: pose, view: current)
+            check = BodyPhotosModel.validate(cutout, pose: pose, view: current, people: people)
         } catch CutoutError.noSubject {
             check = .noPerson
         } catch {
@@ -104,12 +117,16 @@ struct BodyPhotosView: View {
             defer { busy = false }
             do {
                 try await profile.saveBodyPhoto(jpeg, view: current)
-                reset()
-                if index + 1 < views.count { index += 1 } else { onDone() }
+                next()
             } catch {
                 self.error = "Non riesco a salvare la foto: controlla la connessione e riprova."
             }
         }
+    }
+
+    private func next() {
+        reset()
+        if index + 1 < views.count { index += 1 } else { onDone() }
     }
 
     private func reset() {

@@ -45,4 +45,7 @@ export function avatarPayload(outfit) {
 export function installNativeHooks({ setSession }) {
   if (!isNativeApp()) return;
   window.svNative = { setSession };
+  // Il nativo aspetta questo segnale per passare la sessione: prima la
+  // chiamata a setSession cadrebbe nel vuoto (React non ha ancora montato).
+  postToNative('ready');
 }

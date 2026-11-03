@@ -18,6 +18,7 @@ struct AvatarRequest: Decodable, Equatable {
 enum BridgeMessage: Equatable {
     case openAvatar(AvatarRequest)
     case openBodyPhotos
+    case ready
     case signOut
     case themeChanged(String)
 
@@ -36,6 +37,8 @@ enum BridgeMessage: Equatable {
             return .openAvatar(request)
         case "openBodyPhotos":
             return .openBodyPhotos
+        case "ready":
+            return .ready
         case "signOut":
             return .signOut
         case "themeChanged":

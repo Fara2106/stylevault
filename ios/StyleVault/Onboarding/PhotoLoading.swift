@@ -1,14 +1,16 @@
 import SwiftUI
 import UIKit
 
-/// UIImage → CGImage dritta: la fotocamera salva la rotazione nei metadati,
-/// Vision e l'upload vogliono i pixel già orientati.
-func uprightCGImage(_ image: UIImage) -> CGImage? {
-    if image.imageOrientation == .up, let cg = image.cgImage { return cg }
+/// Foto della fotocamera → CGImage dritta e già ridotta (lato lungo maxSide):
+/// si disegna direttamente alla misura finale, senza un bitmap a piena
+/// risoluzione in più (48 MP ≈ 190 MB).
+func uprightCGImage(_ image: UIImage, maxSide: CGFloat = 2048) -> CGImage? {
+    let scale = min(1, maxSide / max(image.size.width, image.size.height))
+    let size = CGSize(width: (image.size.width * scale).rounded(), height: (image.size.height * scale).rounded())
     let format = UIGraphicsImageRendererFormat()
     format.scale = 1
-    return UIGraphicsImageRenderer(size: image.size, format: format)
-        .image { _ in image.draw(in: CGRect(origin: .zero, size: image.size)) }
+    return UIGraphicsImageRenderer(size: size, format: format)
+        .image { _ in image.draw(in: CGRect(origin: .zero, size: size)) }
         .cgImage
 }
 

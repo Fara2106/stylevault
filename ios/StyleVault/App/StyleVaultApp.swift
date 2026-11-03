@@ -61,7 +61,7 @@ struct RootView: View {
         }
         .task { await checkPhotos() }
         .fullScreenCover(isPresented: $retakePhotos) {
-            BodyPhotosView(views: BodyView.allCases) { retakePhotos = false }
+            BodyPhotosView(views: BodyView.allCases, leaveTitle: "Chiudi") { retakePhotos = false }
                 .preferredColorScheme(ThemeStore.colorScheme(for: theme))
         }
         .fullScreenCover(item: $avatar) { session in
@@ -71,8 +71,10 @@ struct RootView: View {
         .preferredColorScheme(ThemeStore.colorScheme(for: theme))
     }
 
+    /// Al sito solo sessioni valide: una scaduta la rinnova prima il nativo
+    /// (se la rinnovassero entrambi, Supabase chiuderebbe la sessione).
     private func syncSession() {
-        guard let session = auth.session else { return }
+        guard let session = auth.session, !session.isExpired else { return }
         web.injectSession(access: session.accessToken, refresh: session.refreshToken)
         if web.webView.url == nil { web.load() }
     }

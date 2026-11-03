@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 import WebKit
 
 /// Tiene la WKWebView del sito e il suo stato: il ponte "svNative", la
@@ -19,6 +20,7 @@ final class WebViewStore: NSObject, ObservableObject {
         super.init()
         config.userContentController.add(WeakHandler(self), name: "svNative")
         webView.navigationDelegate = self
+        webView.uiDelegate = self
         webView.allowsBackForwardNavigationGestures = true
         // Le zone sicure le gestisce il CSS (env(safe-area-inset-*)): niente
         // rientri automatici della scroll view, sennò si sommano o spariscono
@@ -38,12 +40,26 @@ final class WebViewStore: NSObject, ObservableObject {
         pushSession()
     }
 
-    private func pushSession() {
-        guard let session else { return }
+    /// Chiamata quando il sito dice "ready": solo allora window.svNative esiste.
+    func pushSession() {
+        guard let session, Self.isSiteURL(webView.url) else { return }
         let args = [session.access, session.refresh]
             .map { "'\($0.replacingOccurrences(of: "'", with: "\\'"))'" }
             .joined(separator: ",")
         webView.evaluateJavaScript("window.svNative && window.svNative.setSession(\(args))")
+    }
+
+    /// Solo le pagine del sito ricevono la sessione e possono mandare messaggi.
+    nonisolated static func isSiteURL(_ url: URL?) -> Bool {
+        guard let url else { return false }
+        return url.scheme == AppConfig.siteURL.scheme && url.host == AppConfig.siteURL.host
+            && url.port == AppConfig.siteURL.port
+    }
+
+    /// Link http(s) fuori dal sito (negozi, ChatGPT, Gemini): si aprono in Safari.
+    nonisolated static func opensExternally(_ url: URL) -> Bool {
+        guard let scheme = url.scheme?.lowercased(), ["http", "https"].contains(scheme) else { return false }
+        return !isSiteURL(url)
     }
 
     /// Errori che significano "niente rete": mostrano la schermata offline.
@@ -56,9 +72,22 @@ final class WebViewStore: NSObject, ObservableObject {
     }
 }
 
-extension WebViewStore: WKNavigationDelegate {
-    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        pushSession()
+extension WebViewStore: WKNavigationDelegate, WKUIDelegate {
+    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction,
+                 decisionHandler: @escaping @MainActor (WKNavigationActionPolicy) -> Void) {
+        if let url = navigationAction.request.url, Self.opensExternally(url) {
+            UIApplication.shared.open(url)
+            decisionHandler(.cancel)
+        } else {
+            decisionHandler(.allow)
+        }
+    }
+
+    /// target="_blank" e window.open: WKWebView li ignora senza questo.
+    func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration,
+                 for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
+        if let url = navigationAction.request.url { UIApplication.shared.open(url) }
+        return nil
     }
 
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!,
@@ -78,7 +107,11 @@ private final class WeakHandler: NSObject, WKScriptMessageHandler {
 
     func userContentController(_ controller: WKUserContentController,
                                didReceive message: WKScriptMessage) {
-        guard let parsed = BridgeMessage.parse(message.body) else { return }
-        MainActor.assumeIsolated { store?.onMessage(parsed) }
+        guard message.frameInfo.isMainFrame, WebViewStore.isSiteURL(message.frameInfo.request.url),
+              let parsed = BridgeMessage.parse(message.body) else { return }
+        MainActor.assumeIsolated {
+            if parsed == .ready { store?.pushSession() }
+            store?.onMessage(parsed)
+        }
     }
 }

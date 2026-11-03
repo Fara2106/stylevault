@@ -1,8 +1,21 @@
 import CoreGraphics
+import Foundation
+import ImageIO
 
 /// Le foto della fotocamera (fino a 48 MP) si riducono prima di Vision e
 /// dell'upload: tempi e memoria restano sotto controllo.
 enum ImagePrep {
+    /// Decodifica già ridotta e raddrizzata (EXIF): niente bitmap da 48 MP in memoria.
+    static func decodedForAnalysis(_ data: Data, maxSide: Int = 2048) -> CGImage? {
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }
+        let options: [CFString: Any] = [
+            kCGImageSourceThumbnailMaxPixelSize: maxSide,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+        ]
+        return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
+    }
+
     static func downscaled(_ image: CGImage, maxSide: Int = 2048) -> CGImage {
         let longest = max(image.width, image.height)
         guard longest > maxSide else { return image }

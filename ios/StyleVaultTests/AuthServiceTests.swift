@@ -28,6 +28,11 @@ final class AuthServiceTests: XCTestCase {
         XCTAssertEqual(AuthErrorKind.from(URLError(.notConnectedToInternet)), .unreachable)
     }
 
+    // Review I3: senza rete si entra con la sessione salvata (offline), non sul login
+    func testAvvioConLaSessioneSalvata() {
+        XCTAssertTrue(Supa.authOptions.emitLocalSessionAsInitialSession)
+    }
+
     func testMessaggiComeSulSito() {
         XCTAssertEqual(AuthErrorKind.invalidCredentials.message, "Email o password non corrette.")
         XCTAssertEqual(AuthErrorKind.emailTaken.message,

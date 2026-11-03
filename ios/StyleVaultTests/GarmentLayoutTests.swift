@@ -46,6 +46,16 @@ final class GarmentLayoutTests: XCTestCase {
         XCTAssertGreaterThan(coat.maxY, top.maxY)
     }
 
+    // Review I8: di lato o di spalle Vision può non vedere spalle e fianchi:
+    // il capo si posiziona sulla sagoma invece di sparire in silenzio
+    func testSenzaSpalleEFianchiSiUsaLaSagoma() throws {
+        let partial = Pose(points: [.leftAnkle: CGPoint(x: 280, y: 1100)])
+        let top = try XCTUnwrap(GarmentLayout.frame(for: "top", pose: partial, bodyBounds: body,
+                                                    garmentAspect: 0.75, view: .side))
+        XCTAssertTrue(body.insetBy(dx: -60, dy: 0).contains(top))
+        XCTAssertLessThan(top.minY, body.midY)
+    }
+
     func testSlotSconosciuto() {
         XCTAssertNil(frame("accessories"))
     }

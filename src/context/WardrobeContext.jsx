@@ -321,7 +321,7 @@ export function WardrobeProvider({ children }) {
       setItems((prev) => {
         const target = prev.find((i) => i.id === id);
         if (isSupabaseEnabled && target) {
-          fireCloud(db.deleteItemRow(id, target.photoPath));
+          fireCloud(db.deleteItemRow(id, [target.photoPath, target.photoBackPath]));
         }
         return prev.filter((item) => item.id !== id);
       });
@@ -331,22 +331,36 @@ export function WardrobeProvider({ children }) {
 
   const updateItem = useCallback(
     (id, updates) => {
+      const before = items.find((item) => item.id === id);
       setItems((prev) =>
         prev.map((item) => (item.id === id ? { ...item, ...updates } : item))
       );
       if (isSupabaseEnabled && userId) {
         fireCloud(
-          db.updateItemRow(id, updates, userId).then((signedPhoto) => {
-            if (signedPhoto) {
-              setItems((prev) =>
-                prev.map((i) => (i.id === id ? { ...i, photo: signedPhoto } : i))
-              );
+          db.updateItemRow(id, updates, userId).then(async (saved) => {
+            // URL firmate e percorsi nuovi (anche del retro), poi via i file
+            // che non servono più (retro tolto o sostituito)
+            setItems((prev) =>
+              prev.map((i) =>
+                i.id === id
+                  ? {
+                      ...i,
+                      ...(saved.photo && { photo: saved.photo }),
+                      ...(saved.photoBack && { photoBack: saved.photoBack }),
+                      photoPath: saved.photoPath,
+                      photoBackPath: saved.photoBackPath,
+                    }
+                  : i
+              )
+            );
+            if (before) {
+              for (const path of db.stalePhotoPaths(before, saved)) await db.deletePhoto(path);
             }
           })
         );
       }
     },
-    [userId]
+    [items, userId]
   );
 
   const toggleFavorite = useCallback((id) => {
@@ -458,7 +472,7 @@ export function WardrobeProvider({ children }) {
     setWishlist((prev) => {
       const target = prev.find((w) => w.id === id);
       if (isSupabaseEnabled && target) {
-        fireCloud(db.deleteItemRow(id, target.photoPath, 'wishlist_items'));
+        fireCloud(db.deleteItemRow(id, [target.photoPath, target.photoBackPath], 'wishlist_items'));
       }
       return prev.filter((item) => item.id !== id);
     });

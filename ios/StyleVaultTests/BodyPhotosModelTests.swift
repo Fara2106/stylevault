@@ -22,24 +22,30 @@ final class BodyPhotosModelTests: XCTestCase {
 
     // Review Focus 1: mai salvare una foto senza persona o con più persone
     func testNessunaPersonaOPiuPersone() {
-        XCTAssertEqual(BodyPhotosModel.validate(cutout(instances: 0), pose: fullBody, view: .front), .noPerson)
-        XCTAssertEqual(BodyPhotosModel.validate(cutout(instances: 2), pose: fullBody, view: .front), .multiplePeople)
+        XCTAssertEqual(BodyPhotosModel.validate(cutout(instances: 0), pose: fullBody, view: .front, people: 1), .noPerson)
+        XCTAssertEqual(BodyPhotosModel.validate(cutout(instances: 1), pose: fullBody, view: .front, people: 0), .noPerson)
+        XCTAssertEqual(BodyPhotosModel.validate(cutout(instances: 2), pose: fullBody, view: .front, people: 2), .multiplePeople)
+    }
+
+    // Review I5: una borsa o una sedia in primo piano sono "soggetti", non persone
+    func testUnOggettoInPiuNonEUnaSecondaPersona() {
+        XCTAssertEqual(BodyPhotosModel.validate(cutout(instances: 2), pose: fullBody, view: .front, people: 1), .ok)
     }
 
     func testDavantiSenzaCavigliaNonEFiguraIntera() {
         var points = fullBody.points
         points[.leftAnkle] = nil
         points[.rightAnkle] = nil
-        XCTAssertEqual(BodyPhotosModel.validate(cutout(instances: 1), pose: Pose(points: points), view: .front),
+        XCTAssertEqual(BodyPhotosModel.validate(cutout(instances: 1), pose: Pose(points: points), view: .front, people: 1),
                        .notFullBody)
-        XCTAssertEqual(BodyPhotosModel.validate(cutout(instances: 1), pose: nil, view: .front), .notFullBody)
+        XCTAssertEqual(BodyPhotosModel.validate(cutout(instances: 1), pose: nil, view: .front, people: 1), .notFullBody)
     }
 
     func testDiSpalleIlVisoNonServe() {
         var points = fullBody.points
         points[.nose] = nil
-        XCTAssertEqual(BodyPhotosModel.validate(cutout(instances: 1), pose: Pose(points: points), view: .back), .ok)
-        XCTAssertEqual(BodyPhotosModel.validate(cutout(instances: 1), pose: fullBody, view: .front), .ok)
+        XCTAssertEqual(BodyPhotosModel.validate(cutout(instances: 1), pose: Pose(points: points), view: .back, people: 1), .ok)
+        XCTAssertEqual(BodyPhotosModel.validate(cutout(instances: 1), pose: fullBody, view: .front, people: 1), .ok)
     }
 
     func testChiHaGiaLaFotoDavantiScattaSoloLatoESpalle() {

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { avatarPayload, postToNative, isNativeApp } from './nativeBridge';
+import { avatarPayload, postToNative, isNativeApp, installNativeHooks } from './nativeBridge';
 
 const item = (id, category, extra = {}) => ({
   id,
@@ -53,5 +53,19 @@ describe('postToNative', () => {
     expect(isNativeApp()).toBe(true);
     expect(postToNative('themeChanged', { setting: 'dark' })).toBe(true);
     expect(postMessage).toHaveBeenCalledWith({ type: 'themeChanged', payload: { setting: 'dark' } });
+  });
+});
+
+describe('installNativeHooks', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('espone setSession e avvisa il nativo che è pronto a riceverla', () => {
+    const postMessage = vi.fn();
+    const win = { webkit: { messageHandlers: { svNative: { postMessage } } } };
+    vi.stubGlobal('window', win);
+    const setSession = vi.fn();
+    installNativeHooks({ setSession });
+    expect(win.svNative.setSession).toBe(setSession);
+    expect(postMessage).toHaveBeenCalledWith({ type: 'ready', payload: {} });
   });
 });

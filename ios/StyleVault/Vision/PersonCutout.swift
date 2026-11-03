@@ -43,6 +43,16 @@ enum PersonCutout {
         }.value
     }
 
+    /// Quante persone ci sono nella foto (corpo intero o parziale).
+    static func peopleCount(_ image: CGImage) async throws -> Int {
+        try await Task.detached(priority: .userInitiated) {
+            let request = VNDetectHumanRectanglesRequest()
+            request.upperBodyOnly = false
+            try VNImageRequestHandler(cgImage: image).perform([request])
+            return request.results?.count ?? 0
+        }.value
+    }
+
     /// Etichetta del soggetto con più pixel nella maschera a bassa risoluzione.
     private static func largestInstance(in observation: VNInstanceMaskObservation) -> Int {
         let mask = observation.instanceMask

@@ -34,6 +34,23 @@ final class VisionTests: XCTestCase {
         XCTAssertEqual(ImagePrep.downscaled(tiny).width, 300, "le immagini piccole restano com'erano")
     }
 
+    // Review I6: le foto da 48 MP si decodificano già ridotte e dritte
+    func testDecodificaRidottaDaJPEG() throws {
+        let big = solidImage(width: 6000, height: 4000)
+        let data = NSMutableData()
+        let dest = try XCTUnwrap(CGImageDestinationCreateWithData(data, "public.jpeg" as CFString, 1, nil))
+        CGImageDestinationAddImage(dest, big, nil)
+        XCTAssertTrue(CGImageDestinationFinalize(dest))
+        let decoded = try XCTUnwrap(ImagePrep.decodedForAnalysis(data as Data))
+        XCTAssertEqual(max(decoded.width, decoded.height), 2048)
+    }
+
+    // Review I5: conta le persone, non gli oggetti in primo piano
+    func testUnaSolaPersonaNellaFotoDiProva() async throws {
+        let people = try await PersonCutout.peopleCount(try fixture("persona"))
+        XCTAssertEqual(people, 1)
+    }
+
     func testScontornoDellaPersona() async throws {
         let start = Date()
         let cutout = try await PersonCutout.cutout(try fixture("persona"))

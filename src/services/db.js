@@ -179,13 +179,26 @@ export async function updateItemRow(id, updates, userId, table = 'items') {
   const row = itemToRow(prepared, userId);
   const { error } = await supabase.from(table).update(row).eq('id', id);
   if (error) throw error;
-  return prepared.photoPath ? await signedUrl(prepared.photoPath) : null;
+  return {
+    photo: prepared.photoPath ? await signedUrl(prepared.photoPath) : null,
+    photoBack: prepared.photoBackPath ? await signedUrl(prepared.photoBackPath) : null,
+    photoPath: prepared.photoPath || null,
+    photoBackPath: prepared.photoBackPath || null,
+  };
 }
 
-export async function deleteItemRow(id, photoPath, table = 'items') {
+/** Percorsi di foto (davanti e retro) presenti prima ma non dopo una modifica. */
+export function stalePhotoPaths(before, after) {
+  return [before.photoPath, before.photoBackPath].filter(
+    (path) => path && path !== after.photoPath && path !== after.photoBackPath
+  );
+}
+
+/** photoPaths: un percorso o un elenco (foto davanti e retro). */
+export async function deleteItemRow(id, photoPaths, table = 'items') {
   const { error } = await supabase.from(table).delete().eq('id', id);
   if (error) throw error;
-  await deletePhoto(photoPath);
+  for (const path of [photoPaths].flat().filter(Boolean)) await deletePhoto(path);
 }
 
 export async function setFavorite(id, favorite) {
@@ -277,7 +290,6 @@ export async function upsertProfile(userId, updates) {
   if ('defaultCity' in updates) row.default_city = updates.defaultCity;
   if ('onboarded' in updates) row.onboarded = updates.onboarded;
   if ('armocromia' in updates) row.armocromia = updates.armocromia ?? null;
-  if ('theme' in updates) row.theme = updates.theme;
 
   // bodyPhotos: { side?, back? } con dataURL (nuova foto) o null (rimossa).
   // Percorsi univoci come le altre foto: lo storage non permette di
@@ -317,6 +329,14 @@ export async function upsertProfile(userId, updates) {
 
   const { error } = await supabase.from('profiles').upsert(row);
   if (error) throw error;
+  // Il tema va a parte: senza la migrazione 003 la colonna non esiste e il
+  // suo errore non deve far perdere lingua, città e il resto.
+  if ('theme' in updates) {
+    const { error: themeError } = await supabase
+      .from('profiles')
+      .upsert({ id: userId, theme: updates.theme });
+    if (themeError) console.warn('Theme sync failed:', themeError.message);
+  }
   return row.reference_photo_path
     ? await signedUrl(row.reference_photo_path, 'profile-photos')
     : null;
