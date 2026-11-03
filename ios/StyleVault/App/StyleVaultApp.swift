@@ -31,6 +31,7 @@ struct RootView: View {
     @State private var missingPhotos: [BodyView]?
     @State private var retakePhotos = false
     @State private var avatar: AvatarSession?
+    @AppStorage(ThemeStore.key) private var theme = "system"
 
     var body: some View {
         Group {
@@ -52,6 +53,7 @@ struct RootView: View {
                 case .signOut: Task { await auth.signOut() }
                 case .openBodyPhotos: retakePhotos = true
                 case let .openAvatar(request): avatar = AvatarSession(request: request)
+                case let .themeChanged(setting): theme = setting
                 default: break
                 }
             }
@@ -60,10 +62,13 @@ struct RootView: View {
         .task { await checkPhotos() }
         .fullScreenCover(isPresented: $retakePhotos) {
             BodyPhotosView(views: BodyView.allCases) { retakePhotos = false }
+                .preferredColorScheme(ThemeStore.colorScheme(for: theme))
         }
         .fullScreenCover(item: $avatar) { session in
             AvatarView(request: session.request) { avatar = nil }
+                .preferredColorScheme(ThemeStore.colorScheme(for: theme))
         }
+        .preferredColorScheme(ThemeStore.colorScheme(for: theme))
     }
 
     private func syncSession() {

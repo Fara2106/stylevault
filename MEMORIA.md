@@ -3,6 +3,35 @@
 > File di ripartenza: se apri una nuova chat, leggi questo file per riprendere il lavoro
 > esattamente da dove eravamo. Va aggiornato a ogni avanzamento significativo.
 
+## Novità 2026-11-03 (sera) — APP iOS su branch `feat/app-ios` (non ancora su main)
+
+Richiesta di Lorenzo: app vera con Swift, «il telefono scontorna la persona
+e i capi, vanno sull'avatar… e si può girare», primo accesso con 3 foto
+(davanti/lato/spalle) che restano per account, Accedi con Apple/Google,
+selettore Chiaro·Scuro·Sistema (resta nell'app: Profilo, e le schermate
+native lo seguono). Account Apple a pagamento RIMANDATO («proviamolo in
+locale»). Spec `docs/superpowers/specs/2026-11-03-app-ios-design.md`,
+piano `docs/superpowers/plans/2026-11-03-app-ios.md`, registro decisioni
+in `.superpowers/sdd/2026-11-03-app-ios/progress.md`.
+
+- **Sito**: tema chiaro/scuro/sistema, campo "Foto del retro" nei capi,
+  ponte `nativeBridge.js` (nel browser non cambia nulla), migrazione 003.
+- **App** in `ios/` (XcodeGen: `cd ios && xcodegen generate`): WebView del
+  sito (DEBUG → dev server :5181, Release → sito pubblicato) + login nativo
+  (supabase-swift, Google solo se attivo, Apple dietro flag) + primo accesso
+  3 foto (Vision) + avatar in 3 viste (Vision + CoreGraphics, cache su
+  disco) + tema. Guida: `docs/ios-installazione.md`.
+- **Vision NON gira nel simulatore iOS 27** (mancano i pesi dei modelli): i
+  test Vision e il render dell'avatar girano nel target macOS
+  `StyleVaultVisionTests`. Render vero su Mac:
+  `docs/verifiche/2026-11-03-app-ios/avatar-davanti-mac.png`.
+- **Simulatore condiviso** con altre sessioni (Fitness Hub, "Vocali"): non
+  toccare le loro app.
+- **PRIMA di pubblicare/mergiare**: applicare la migrazione 003 (sennò la
+  sync impostazioni manda `theme` inesistente e fallisce anche lingua/città).
+- Da fare con Lorenzo: Apple ID in Xcode, installazione sull'iPhone,
+  login reale, Google OAuth; inglese delle schermate native (oggi solo IT).
+
 ## Novità 2026-11-03 (pomeriggio) — "Su di te" TORNA (persona scontornata vestita)
 
 Richiesta di Lorenzo: «vesti anche l'avatar, deve essere la persona
