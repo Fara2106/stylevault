@@ -6,6 +6,7 @@
  */
 
 import { RAIN_PROBABILITY_THRESHOLD } from './weatherThresholds';
+import { summarizeDay } from '../utils/dayParts';
 
 const GEOCODING_URL = 'https://geocoding-api.open-meteo.com/v1/search';
 const FORECAST_URL = 'https://api.open-meteo.com/v1/forecast';
@@ -62,9 +63,12 @@ export function mapWeatherCode(code) {
  * Converte il payload daily di Open-Meteo in oggetti-giorno usati da
  * WeatherBadge e generateOutfits.
  */
-export function parseForecastPayload(payload, cityLabel) {
+export function parseForecastPayload(payload, cityLabel, now = new Date()) {
   const d = payload?.daily;
   if (!d?.time?.length) return [];
+
+  const hoursByDate = groupHoursByDate(payload.hourly);
+  const placeNow = placeLocalNow(now, payload.utc_offset_seconds);
 
   return d.time.map((date, i) => {
     const mapped = mapWeatherCode(d.weather_code?.[i]);
@@ -89,8 +93,47 @@ export function parseForecastPayload(payload, cityLabel) {
       descriptionKey: mapped.descriptionKey,
       rain: mapped.rain || (precipProb != null && precipProb >= RAIN_PROBABILITY_THRESHOLD),
       snow: mapped.snow,
+      ...hourlySummary(hoursByDate.get(date), date === placeNow.date ? placeNow.hour : null),
     };
   });
+}
+
+/** Ore di Open-Meteo raggruppate per data locale ("2026-07-08T13:00"). */
+function groupHoursByDate(hourly) {
+  const byDate = new Map();
+  if (!hourly?.time?.length) return byDate;
+  hourly.time.forEach((time, i) => {
+    const [date, clock] = time.split('T');
+    if (!byDate.has(date)) byDate.set(date, []);
+    byDate.get(date).push({
+      hour: Number(clock?.slice(0, 2)),
+      apparent: hourly.apparent_temperature?.[i] ?? null,
+      precipProb: hourly.precipitation_probability?.[i] ?? null,
+      code: hourly.weather_code?.[i] ?? null,
+    });
+  });
+  return byDate;
+}
+
+/** Data e ora "adesso" nel fuso del luogo (non del telefono). */
+function placeLocalNow(now, utcOffsetSeconds = 0) {
+  const local = new Date(now.getTime() + (utcOffsetSeconds || 0) * 1000);
+  return { date: local.toISOString().slice(0, 10), hour: local.getUTCHours() };
+}
+
+/** Campi orari del giorno; nessuno se mancano le ore (cache vecchie, meteo manuale). */
+function hourlySummary(hours, nowHour) {
+  if (!hours?.length) return {};
+  const summary = summarizeDay(hours, { nowHour });
+  return {
+    ...(summary.temperature != null ? { temperature: summary.temperature } : {}),
+    parts: summary.parts.map((part) => {
+      const mapped = mapWeatherCode(part.code);
+      return { ...part, icon: mapped.icon, descriptionKey: mapped.descriptionKey };
+    }),
+    rainFrom: summary.rainFrom,
+    rainFromStart: summary.rainFromStart,
+  };
 }
 
 /**
@@ -112,15 +155,33 @@ export async function searchCities(query, language = 'it') {
   }));
 }
 
-const cacheKey = (city) =>
-  `${CACHE_PREFIX}${city.latitude.toFixed(2)}_${city.longitude.toFixed(2)}`;
+const cacheKey = (city, source = 'openmeteo') =>
+  `${CACHE_PREFIX}${source}_${city.latitude.toFixed(2)}_${city.longitude.toFixed(2)}`;
+
+/** Salva i giorni di una previsione (anche quelli arrivati dall'app, fonte 'apple'). */
+export function saveForecastToCache(city, source, days, fetchedAt = Date.now()) {
+  storage.set(cacheKey(city, source), JSON.stringify({ fetchedAt, cityName: city.name, days }));
+  return fetchedAt;
+}
+
+/** L'ultima previsione salvata per luogo e fonte, o null. */
+export function readForecastFromCache(city, source = 'openmeteo') {
+  const cached = storage.get(cacheKey(city, source));
+  if (!cached) return null;
+  try {
+    const { fetchedAt, days } = JSON.parse(cached);
+    return Array.isArray(days) ? { days, fetchedAt } : null;
+  } catch {
+    return null; // cache corrotta
+  }
+}
 
 /**
  * Previsione 7 giorni per una città {name, latitude, longitude}.
  * @returns {Promise<{days: object[], stale: boolean, fetchedAt: number}>}
  * @throws {Error} 'weather-unavailable' se rete e cache mancano entrambe
  */
-export async function fetchForecastWithCache(city) {
+export async function fetchForecastWithCache(city, { source = 'openmeteo' } = {}) {
   const params = new URLSearchParams({
     latitude: String(city.latitude),
     longitude: String(city.longitude),
@@ -134,6 +195,8 @@ export async function fetchForecastWithCache(city) {
       'wind_speed_10m_max',
       'uv_index_max',
     ].join(','),
+    // Ore per le fasce della giornata (mattina, pomeriggio, sera)
+    hourly: ['apparent_temperature', 'precipitation_probability', 'weather_code'].join(','),
     timezone: 'auto',
     forecast_days: '7',
   });
@@ -143,19 +206,11 @@ export async function fetchForecastWithCache(city) {
     if (!res.ok) throw new Error(`forecast-http-${res.status}`);
     const payload = await res.json();
     const days = parseForecastPayload(payload, city.name);
-    const fetchedAt = Date.now();
-    storage.set(cacheKey(city), JSON.stringify({ fetchedAt, cityName: city.name, days }));
+    const fetchedAt = saveForecastToCache(city, source, days);
     return { days, stale: false, fetchedAt };
   } catch (networkError) {
-    const cached = storage.get(cacheKey(city));
-    if (cached) {
-      try {
-        const { fetchedAt, days } = JSON.parse(cached);
-        return { days, stale: true, fetchedAt };
-      } catch {
-        /* cache corrotta: cade nel throw finale */
-      }
-    }
+    const cached = readForecastFromCache(city, source);
+    if (cached) return { ...cached, stale: true };
     throw new Error('weather-unavailable', { cause: networkError });
   }
 }

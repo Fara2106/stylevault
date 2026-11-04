@@ -164,3 +164,66 @@ describe('searchCities', () => {
     expect(await searchCities('xyzxyz', 'it')).toEqual([]);
   });
 });
+
+/** Payload con 2 giorni e 48 ore (percepita = ora del giorno). */
+const hourlyPayload = (utcOffsetSeconds) => ({
+  ...structuredClone(SAMPLE_PAYLOAD),
+  utc_offset_seconds: utcOffsetSeconds,
+  hourly: {
+    time: ['2026-07-08', '2026-07-09'].flatMap((d) =>
+      Array.from({ length: 24 }, (_, h) => `${d}T${String(h).padStart(2, '0')}:00`)
+    ),
+    apparent_temperature: Array.from({ length: 48 }, (_, i) => i % 24),
+    precipitation_probability: Array.from({ length: 48 }, () => 0),
+    weather_code: Array.from({ length: 48 }, () => 0),
+  },
+});
+
+describe('parseForecastPayload — ore', () => {
+  it('con hourly aggiunge fasce e usa la media 8–20', () => {
+    const now = new Date('2026-07-09T05:00:00Z'); // 06:00 sul posto
+    const days = parseForecastPayload(hourlyPayload(3600), 'Milano', now);
+    expect(days[1].temperature).toBe(13.5);
+    expect(days[1].parts).toHaveLength(3);
+    expect(days[1].parts[0].icon).toBe('sun');
+    expect(days[1].parts[0].descriptionKey).toBe('weather.clear');
+    expect(days[1].rainFrom).toBeNull();
+    expect(days[0].parts).toHaveLength(3);
+  });
+
+  it('il fuso del luogo decide le ore passate', () => {
+    const now = new Date('2026-07-08T20:00:00Z'); // 15:00 a New York
+    const days = parseForecastPayload(hourlyPayload(-18000), 'New York', now);
+    expect(days[0].parts[0].past).toBe(true);
+    expect(days[0].parts[1].past).toBe(false);
+    expect(days[0].temperature).toBe(17);
+    expect(days[1].parts.some((p) => p.past)).toBe(false);
+  });
+
+  it('senza hourly il giorno è come prima', () => {
+    const [today] = parseForecastPayload(SAMPLE_PAYLOAD, 'Milano');
+    expect(today).not.toHaveProperty('parts');
+    expect(today.temperature).toBeCloseTo((33.8 + 22.0) / 2, 5);
+  });
+});
+
+describe('fetchForecastWithCache — ore e fonte', () => {
+  const city = { name: 'Milano', latitude: 45.46, longitude: 9.19 };
+
+  beforeEach(() => {
+    _memoryStorage.clear();
+    vi.restoreAllMocks();
+  });
+
+  it('chiede i dati orari e mette la fonte nella chiave della cache', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => SAMPLE_PAYLOAD });
+    vi.stubGlobal('fetch', fetchMock);
+    await fetchForecastWithCache(city);
+    expect(fetchMock.mock.calls[0][0]).toContain(
+      'hourly=apparent_temperature%2Cprecipitation_probability%2Cweather_code'
+    );
+    expect([..._memoryStorage.keys()].some((k) => k.startsWith('sv_weather_openmeteo_'))).toBe(
+      true
+    );
+  });
+});
