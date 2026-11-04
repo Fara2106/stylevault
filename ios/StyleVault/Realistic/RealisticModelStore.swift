@@ -46,18 +46,46 @@ actor RealisticModelStore: RealisticModelPreparing {
     /// Spazio che serve in più dei byte scaricati (archivio + estratto + compilato).
     private static let spaceFactor = 2.5
 
+    /// Chi segue l'avanzamento di una preparazione; si toglie da solo se il chiamante annulla.
     private final class Observers: @unchecked Sendable {
         private let lock = NSLock()
-        private var list: [@Sendable (ModelStoreProgress) -> Void] = []
-        func add(_ f: @escaping @Sendable (ModelStoreProgress) -> Void) { lock.lock(); list.append(f); lock.unlock() }
-        func removeAll() { lock.lock(); list = []; lock.unlock() }
+        private var list: [UUID: @Sendable (ModelStoreProgress) -> Void] = [:]
+        func add(_ id: UUID, _ f: @escaping @Sendable (ModelStoreProgress) -> Void) { lock.lock(); list[id] = f; lock.unlock() }
+        func remove(_ id: UUID) { lock.lock(); list[id] = nil; lock.unlock() }
         func send(_ p: ModelStoreProgress) {
-            lock.lock(); let current = list; lock.unlock()
+            lock.lock(); let current = Array(list.values); lock.unlock()
             current.forEach { $0(p) }
         }
     }
-    private let observers = Observers()
-    private var inFlight: Task<Void, Error>?
+
+    /// Attesa di un chiamante: finisce con il risultato della preparazione oppure subito se annulla.
+    private final class Waiter: @unchecked Sendable {
+        private let lock = NSLock()
+        private var continuation: CheckedContinuation<Void, Error>?
+        private var result: Result<Void, Error>?
+        func wait() async throws {
+            try await withCheckedThrowingContinuation { (c: CheckedContinuation<Void, Error>) in
+                lock.lock()
+                if let result { lock.unlock(); c.resume(with: result) } else { continuation = c; lock.unlock() }
+            }
+        }
+        func finish(_ r: Result<Void, Error>) {
+            lock.lock()
+            guard result == nil else { lock.unlock(); return }
+            result = r
+            let c = continuation
+            continuation = nil
+            lock.unlock()
+            c?.resume(with: r)
+        }
+    }
+
+    private struct Run {
+        let id: UUID
+        let task: Task<Void, Error>
+        let observers: Observers
+    }
+    private var currentRun: Run?
 
     private let baseURL: URL
     private let folder: URL
@@ -134,27 +162,41 @@ actor RealisticModelStore: RealisticModelPreparing {
 
     /// Una sola preparazione alla volta: chi arriva mentre ne gira una si
     /// aggancia alla stessa (e ne riceve l'avanzamento), senza scrivere due volte gli stessi file.
+    /// Se un chiamante annulla smette subito di aspettare, ma la preparazione continua per gli altri.
     func prepare(progress: @escaping @Sendable (ModelStoreProgress) -> Void) async throws {
-        observers.add(progress)
-        if inFlight == nil {
-            let observers = self.observers
-            inFlight = Task { [weak self] in
-                try await self?.run { observers.send($0) }
-            }
+        let run = currentRun ?? startRun()
+        let observerID = UUID()
+        run.observers.add(observerID, progress)
+        let waiter = Waiter()
+        Task { waiter.finish(await run.task.result) }
+        try await withTaskCancellationHandler {
+            try await waiter.wait()
+        } onCancel: {
+            run.observers.remove(observerID)
+            waiter.finish(.failure(CancellationError()))
         }
-        guard let task = inFlight else { return }
-        do {
-            try await task.value
-        } catch {
-            finishPreparation()
-            throw error
-        }
-        finishPreparation()
     }
 
-    private func finishPreparation() {
-        inFlight = nil
-        observers.removeAll()
+    private func startRun() -> Run {
+        let id = UUID()
+        let observers = Observers()
+        let task = Task {
+            do {
+                try await self.run { observers.send($0) }
+            } catch {
+                self.finishRun(id)
+                throw error
+            }
+            self.finishRun(id)
+        }
+        let run = Run(id: id, task: task, observers: observers)
+        currentRun = run
+        return run
+    }
+
+    /// Solo la preparazione che finisce libera il posto, e solo se è ancora la sua.
+    private func finishRun(_ id: UUID) {
+        if currentRun?.id == id { currentRun = nil }
     }
 
     private func run(progress: @escaping @Sendable (ModelStoreProgress) -> Void) async throws {

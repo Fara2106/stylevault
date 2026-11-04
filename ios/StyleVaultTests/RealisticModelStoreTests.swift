@@ -13,11 +13,15 @@ final class FakeModelServer: URLProtocol, @unchecked Sendable {
     nonisolated(unsafe) static var interrupt: (name: String, count: Int)?
     nonisolated(unsafe) static var ignoreRange = false
     nonisolated(unsafe) static var rangeNotSatisfiable = false
+    /// Se valorizzato, le richieste di `gatedName` restano ferme finché non si fa `signal()`
+    nonisolated(unsafe) static var gate: DispatchSemaphore?
+    nonisolated(unsafe) static var gatedName = "Denoiser.aar"
     private static let lock = NSLock()
 
     static func reset() {
         lock.lock(); defer { lock.unlock() }
         files = [:]; requests = []; interrupt = nil; ignoreRange = false; rangeNotSatisfiable = false
+        gate = nil
     }
 
     override class func canInit(with request: URLRequest) -> Bool { true }
@@ -34,6 +38,7 @@ final class FakeModelServer: URLProtocol, @unchecked Sendable {
         if let i = interrupt, i.name == name { Self.interrupt = nil }
         Self.lock.unlock()
 
+        if name == Self.gatedName, let gate = Self.gate { _ = gate.wait(timeout: .now() + 20) }
         guard let body else {
             respond(status: 404, data: Data(), headers: [:]); return
         }
@@ -317,6 +322,77 @@ final class RealisticModelStoreTests: XCTestCase {
         XCTAssertEqual(ranges.count, 2)
         XCTAssertEqual(ranges[0], "bytes=3-")
         XCTAssertNil(ranges[1])
+        let ready = await store.isReady
+        XCTAssertTrue(ready)
+    }
+
+    /// Cambia hash e corpo di un archivio e aggiorna il manifest servito.
+    private func republish(_ name: String, marker: String) throws {
+        let data = try makeArchive(["Manifest.json": "{\"m\":\"\(marker)\"}", "Data/weights.bin": marker])
+        FakeModelServer.files[name] = data
+        var manifest = try XCTUnwrap(JSONSerialization.jsonObject(with: XCTUnwrap(FakeModelServer.files["models-manifest.json"])) as? [String: Any])
+        var files = try XCTUnwrap(manifest["files"] as? [[String: Any]])
+        let i = try XCTUnwrap(files.firstIndex { ($0["name"] as? String) == name })
+        files[i]["bytes"] = Int64(data.count); files[i]["sha256"] = sha(data)
+        manifest["files"] = files
+        FakeModelServer.files["models-manifest.json"] = try JSONSerialization.data(withJSONObject: manifest)
+    }
+
+    private func requestCount(_ name: String) -> Int {
+        FakeModelServer.requests.filter { $0.url?.lastPathComponent == name }.count
+    }
+
+    func testLateWaiterDoesNotClearNewRun() async throws {
+        try publish()
+        let store = makeStore()
+        // Prima preparazione con due chiamanti (A e B)
+        let a = Task { try await store.prepare { _ in } }
+        let b = Task { try await store.prepare { _ in } }
+        try await a.value
+        // Nuova versione di Denoiser: C avvia una seconda preparazione, ferma sul cancello
+        try republish("Denoiser.aar", marker: "v2")
+        FakeModelServer.gate = DispatchSemaphore(value: 0)
+        let events = Locked<[ModelStoreProgress]>([])
+        let c = Task { try await store.prepare { p in events.mutate { $0.append(p) } } }
+        // B torna solo ora (o è già tornato): non deve toccare la seconda preparazione
+        try await b.value
+        let d = Task { try await store.prepare { _ in } }
+        try await Task.sleep(nanoseconds: 300_000_000)
+        FakeModelServer.gate?.signal()
+        try await c.value
+        try await d.value
+        XCTAssertEqual(requestCount("Denoiser.aar"), 2, "una per preparazione, mai una terza")
+        XCTAssertEqual(requestCount("VAEDecoder.aar"), 1)
+        XCTAssertEqual(requestCount("Tokenizer.aar"), 1)
+        var lastDone: Int64 = -1, lastTotal: Int64 = 0
+        for case .downloading(let done, let total) in events.value { lastDone = done; lastTotal = total }
+        XCTAssertGreaterThan(lastTotal, 0)
+        XCTAssertEqual(lastDone, lastTotal)
+    }
+
+    func testCancelledCallerReturnsWhileDownloadContinues() async throws {
+        try publish()
+        FakeModelServer.gate = DispatchSemaphore(value: 0)
+        let store = makeStore()
+        let a = Task { try await store.prepare { _ in } }
+        let b = Task { try await store.prepare { _ in } }
+        // Aspetta che lo scarico sia partito (e fermo sul cancello)
+        for _ in 0..<100 where requestCount("Denoiser.aar") == 0 { try await Task.sleep(nanoseconds: 50_000_000) }
+        XCTAssertEqual(requestCount("Denoiser.aar"), 1)
+        let start = Date()
+        a.cancel()
+        do {
+            try await a.value
+            XCTFail("doveva essere annullato")
+        } catch {
+            XCTAssertTrue(error is CancellationError, "\(error)")
+        }
+        XCTAssertLessThan(Date().timeIntervalSince(start), 2, "deve smettere di aspettare subito")
+        FakeModelServer.gate?.signal()
+        try await b.value
+        for name in ["Denoiser.aar", "VAEDecoder.aar", "Tokenizer.aar"] {
+            XCTAssertEqual(requestCount(name), 1, name)
+        }
         let ready = await store.isReady
         XCTAssertTrue(ready)
     }
