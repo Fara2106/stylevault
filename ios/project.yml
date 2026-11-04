@@ -72,7 +72,68 @@ targets:
       base:
         CODE_SIGN_IDENTITY: "-"
         GENERATE_INFOPLIST_FILE: YES
+  # Prova tecnica dell'avatar realistico: misura i modelli Core ML di
+  # Mobile-VTON sull'iPhone. I .mlpackage (GB, licenza NC) non sono in git:
+  # si copiano in RealisticBench/Models da tools/avatar-realistico/out/
+  RealisticBench:
+    type: application
+    platform: iOS
+    deploymentTarget: "18.0"  # i modelli sono convertiti per iOS 18
+    # I modelli non vanno nel bundle: si copiano una volta in Documents/Models
+    # (vedi tools/avatar-realistico/README.md), così reinstallare è veloce
+    sources:
+      - path: RealisticBench
+        excludes: [Models]
+    entitlements:
+      path: RealisticBench/RealisticBench.entitlements
+      properties:
+        com.apple.developer.kernel.increased-memory-limit: true
+    info:
+      path: RealisticBench/Info.plist
+      properties:
+        CFBundleDisplayName: Bench
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: it.faraoni.stylevault.bench
+        TARGETED_DEVICE_FAMILY: "1,2"  # anche l'iPad di Lorenzo
+        COREML_CODEGEN_LANGUAGE: None
+  RealisticBenchTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources: [RealisticBenchTests]
+    dependencies:
+      - target: RealisticBench
+  # La generazione Swift di RealisticBench sul Mac (vedi GenerationMacTests)
+  RealisticBenchMacTests:
+    type: bundle.unit-test
+    platform: macOS
+    deploymentTarget: "15.0"
+    sources:
+      - RealisticBench/BenchMath.swift
+      - RealisticBench/BenchGenerator.swift
+      - RealisticBench/BenchRunner.swift
+      - RealisticBench/BenchEstimate.swift
+      - RealisticBenchMacTests
+    settings:
+      base:
+        CODE_SIGN_IDENTITY: "-"
+        GENERATE_INFOPLIST_FILE: YES
 schemes:
+  RealisticBenchMac:
+    build:
+      targets:
+        RealisticBenchMacTests: [test]
+    test:
+      targets: [RealisticBenchMacTests]
+  RealisticBench:
+    build:
+      targets:
+        RealisticBench: all
+    test:
+      targets: [RealisticBenchTests]
   StyleVault:
     build:
       targets:

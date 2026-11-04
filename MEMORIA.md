@@ -42,6 +42,12 @@ pubblicarla»). Scelte (Lorenzo: «fai tu»):
   "Verify JWT" acceso (il token utente passa). Email ARRIVATA nella
   casella di Lorenzo (Importanti, 19:14) con tipo, testo e info tecniche:
   verificato da lui. Nota: l'ora "Inviata" è in UTC. Committato su feat/app-ios.
+- Seconda prova (stessa sera, "Prova della sezione Feedback…"): "Delivered"
+  su resend.com/emails e arrivata a Lorenzo. **FEEDBACK CHIUSO.** Restano
+  solo, col suo ok: push di `feat/app-ios` (commit `e2a9211`) e una nuova
+  build sull'iPhone per allegare versione app, iOS e modello (DeviceInfo).
+  Attenzione: più sessioni lavorano qui in parallelo; prima di commit,
+  deploy o prove controllare `git log`, `git status` e questo file.
 
 ## Novità 2026-11-03 (sera) — APP iOS su branch `feat/app-ios` (non ancora su main)
 
@@ -162,6 +168,61 @@ piano `docs/superpowers/plans/2026-11-03-app-ios.md`, registro decisioni
   Core ML sul Mac, 6 bit, app di misura `RealisticBench` su 18 Pro Max e
   15 Pro, cancello). Il piano d'integrazione si scrive dopo il cancello.
   Test iOS: serve `CODE_SIGNING_ALLOWED=NO` (comando nel registro).
+- **Prova tecnica, avanzamento** (registro in
+  `.superpowers/sdd/2026-11-03-avatar-realistico-prova-tecnica/progress.md`,
+  script in `tools/avatar-realistico/`, uscite in `out/` ignorata da git):
+  Task 1 fatto: riferimento PyTorch in **fp16** (in fp32 il Mac da 16 GB va in
+  swap). Task 2 fatto: tutti e 7 i modelli convertiti in fp16 (~3,1 GB;
+  TextEncoder2 da solo 1,3 GB → candidato a restare fuori dall'iPhone) e
+  verificati contro il riferimento, coseno ≥ 0,99998. Correzioni:
+  ImageEncoder (bicubica di DINOv2 non supportata → posizioni precalcolate),
+  DenoiserGarment (feature 8–11 = stessi tensori delle 12–15: ne esce 24,
+  l'app ricopia le 12–15 nelle 8–11). Task 3 fatto: generazione intera
+  coi soli modelli Core ML (`coreml_pipeline.py`, non importa Mobile-VTON:
+  la lancia Claude) → PSNR 33 dB contro PyTorch, uguale a occhio. Sul Mac
+  usare `--units CPU_AND_GPU`: col Neural Engine il Mac da 16 GB va in swap.
+  Task 5 in corso: app `RealisticBench` (target XcodeGen, iOS 18, modelli
+  fp16 in `ios/RealisticBench/Models/`, ignorata) installata sul 18 Pro Max.
+  Limite Apple ID gratuito: max 3 app firmate sul telefono → Lorenzo ha
+  tolto un'app per far posto. Modelli copiati una volta in Documents/Models
+  (`devicectl device copy to … --domain-type appDataContainer`), app 336 KB;
+  entitlement `increased-memory-limit` (va anche con Apple ID gratuito) →
+  6,1 GB liberi. Avvio da Mac: `devicectl … launch it.faraoni.stylevault.bench
+  --units gpu|ane [--phases 2]`. **Risultati fp16 sul 18 Pro Max**:
+  Neural Engine = il Denoiser non si prepara (>50 min, interrotto); GPU =
+  10 passi VERI 109 s (UNet capo 2,3 s/passo, UNet prova 7,4 s/passo,
+  preparazione feature Swift 1,2 s/passo), picco 2,8 GB, primo avvio +70 s
+  di preparazione GPU → vista davanti ≈ 112 s: NON PASSA (soglia 60 s).
+  Attenzione: i tempi "a regime" con ingressi identici sono falsati
+  (Core ML ricicla): ora la stima usa 10 passi VERI.
+  Poi (stessa sera): ingressi riusati invece che ricreati → GPU fp16 30 s;
+  **modalità mista** (tutto su Neural Engine, Denoiser su GPU, `--units mix`)
+  → fp16 23 s, **6 bit 25 s, picco 2,4 GB: PASSA** (soglia 60 s). Primo
+  avvio dopo l'installazione: ~4 min di preparazione Neural Engine, una volta.
+  Task 4 fatto: 6 bit (palette k-means, gruppi di 16 canali) = 1,2 GB, tutti i
+  pezzi coseno ≥ 0,9976, immagine 31,8 dB. Notte 3→4/11 (Lorenzo dorme, "fai
+  tutto su Mac, domani iPhone e iPad"): generazione vera in RealisticBench
+  (`BenchGenerator`, `BenchMath` + 7 test; `--generate`, ingressi da
+  `export_bench_inputs.py`); verificata sul Mac col test macOS
+  `RealisticBenchMacTests` → immagine IDENTICA a quella Python (fp16 e 6 bit);
+  copia veloce delle uscite (vImage) → feature da 21 s a 0,75 s. Simulatori
+  inadatti su questo Mac (6 bit scompattato sulla CPU; swap finito → jetsam;
+  sul sim 18 Pro girano i test UI di Fitness Hub di un'altra sessione).
+  Seconda parte della notte ("prova tutto sul simulatore, hai tutta la
+  notte"): generazione con UNA rete grande alla volta (feature del capo dei
+  10 passi calcolate prima, fp16 su file mappati) → memoria dopo i passi da
+  2,5 a 1,17 GB, UNet capo sul Mac 0,25 s/passo invece di 3,8; immagine
+  identica. Simulatori: servono fp16 + `--units cpu` (il modo GPU del
+  simulatore manda in swap il Mac) → **generazione completa riuscita sul
+  simulatore iPhone 18 Pro Max (553 s) e su un iPad Pro 13" M5 creato
+  apposta e cancellato (603 s)**, immagini identiche tra loro, 33,0 dB da
+  PyTorch. Il sim iPad acceso è usato dalla sessione Vocali (test UI), il
+  sim 18 Pro da Fitness Hub: non usarli quando girano. Preparata la UNet di
+  prova a batch 1 (`Denoiser1`, `--split`): la conversione la lancia Lorenzo.
+  Resoconto: `docs/verifiche/2026-11-03-avatar-realistico/prova-tecnica.md`;
+  comandi per iPhone/iPad in `tools/avatar-realistico/README.md`. Domani:
+  18 Pro Max con `--generate`, iPad di Lorenzo, 15 Pro di Mary. NIENTE
+  committato dei Task 1–5 (aspetta l'ok di Lorenzo).
 - Revisione finale (revisore separato): 2 critici + 8 importanti CORRETTI
   (refresh token doppio, sessione al sito solo dopo 'ready', link esterni,
   avvio offline, 'Più tardi', conteggio persone, foto 48 MP, retro dei capi);
