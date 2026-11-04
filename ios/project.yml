@@ -52,6 +52,9 @@ targets:
     sources:
       - path: StyleVaultTests
         excludes: [VisionTests.swift, AvatarRenderTests.swift, Fixtures]
+      # Fixture dell'avatar realistico (tokenizzatore, capo): cartella come risorsa
+      - path: StyleVaultTests/Fixtures/realistic
+        type: folder
     dependencies:
       - target: StyleVault
   # Vision (scontorno, posa) gira davvero solo su hardware Apple: i suoi test

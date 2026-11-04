@@ -8,6 +8,16 @@ struct AvatarItem: Decodable, Equatable {
     let photo: String
     let name: String
     let photoBack: String?
+    /// Descrizione inglese breve del capo (es. "cream sweater"), per la didascalia
+    /// dell'avatar realistico. Assente nei payload più vecchi.
+    let descriptor: String?
+
+    init(id: String, category: String, slot: String, photo: String, name: String,
+         photoBack: String? = nil, descriptor: String? = nil) {
+        self.id = id; self.category = category; self.slot = slot
+        self.photo = photo; self.name = name
+        self.photoBack = photoBack; self.descriptor = descriptor
+    }
 }
 
 struct AvatarRequest: Decodable, Equatable {

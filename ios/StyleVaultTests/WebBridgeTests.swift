@@ -18,6 +18,19 @@ final class WebBridgeTests: XCTestCase {
         XCTAssertNil(request.items[0].photoBack)
     }
 
+    func testDescriptorOpzionaleNelPayload() {
+        func parse(_ extra: [String: Any]) -> AvatarItem? {
+            var item: [String: Any] = ["id": "1", "category": "tops", "slot": "top",
+                                       "photo": "https://x/a.jpg", "name": "Maglione"]
+            item.merge(extra) { $1 }
+            guard case let .openAvatar(request)? = BridgeMessage.parse(
+                ["type": "openAvatar", "payload": ["items": [item]]]) else { return nil }
+            return request.items.first
+        }
+        XCTAssertNil(parse([:])?.descriptor)
+        XCTAssertEqual(parse(["descriptor": "cream sweater"])?.descriptor, "cream sweater")
+    }
+
     func testMessaggiSemplici() {
         XCTAssertEqual(BridgeMessage.parse(["type": "signOut"]), .signOut)
         XCTAssertEqual(
