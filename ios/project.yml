@@ -89,6 +89,7 @@ targets:
         excludes: [Models]
       # Conti condivisi con l'app (stessa matematica della generazione)
       - path: StyleVault/Realistic/TryOnMath.swift
+      - path: StyleVault/Realistic/TryOnTensors.swift
     entitlements:
       path: RealisticBench/RealisticBench.entitlements
       properties:
@@ -118,6 +119,12 @@ targets:
     deploymentTarget: "15.0"
     sources:
       - StyleVault/Realistic/TryOnMath.swift
+      - StyleVault/Realistic/TryOnTensors.swift
+      - StyleVault/Realistic/TryOnInputs.swift
+      - StyleVault/Realistic/CLIPTokenizer.swift
+      - StyleVault/Realistic/GarmentCaption.swift
+      - StyleVault/Realistic/RealisticTryOn.swift
+      - StyleVault/Web/WebBridge.swift
       - RealisticBench/BenchGenerator.swift
       - RealisticBench/BenchRunner.swift
       - RealisticBench/BenchEstimate.swift
