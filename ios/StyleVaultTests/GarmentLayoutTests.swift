@@ -71,6 +71,26 @@ final class GarmentLayoutTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(top.width, 0.9 * 240)
         XCTAssertLessThanOrEqual(top.width, 1.3 * 240)
     }
+
+    // Zona dove il realistico si ridisegna sopra i pantaloni: dal collo alle ginocchia
+    func testRigheRealisticoDalColloAlleGinocchia() {
+        let withKnees = Pose(points: pose.points.merging([.leftKnee: CGPoint(x: 250, y: 840),
+                                                          .rightKnee: CGPoint(x: 350, y: 860)]) { a, _ in a })
+        let rows = GarmentLayout.overlayRows(pose: withKnees, bodyBounds: body)
+        XCTAssertEqual(rows.lowerBound, 264, accuracy: 1, "collo: spalle − 12% del busto")
+        XCTAssertEqual(rows.upperBound, 850, accuracy: 1, "ginocchia: media dei due punti")
+        XCTAssertGreaterThan(rows.lowerBound, 260, "il viso (sopra il collo) resta fuori")
+        XCTAssertLessThan(rows.upperBound, 1100, "i piedi restano fuori")
+    }
+
+    func testRigheRealisticoSenzaPosaUsanoLeProporzioni() {
+        // Senza punti: spalle al 18%, fianchi al 50%, caviglie in fondo; ginocchia a metà fianchi-caviglie
+        let rows = GarmentLayout.overlayRows(pose: Pose(points: [:]), bodyBounds: body)
+        let shoulder = 200 + 0.18 * 940, hip = 200 + 0.5 * 940
+        XCTAssertEqual(rows.lowerBound, shoulder - 0.12 * (hip - shoulder), accuracy: 1)
+        let ankle = 200 + 940 - 0.03 * 940
+        XCTAssertEqual(rows.upperBound, hip + 0.5 * (ankle - hip), accuracy: 1)
+    }
 }
 
 final class AvatarModelTests: XCTestCase {

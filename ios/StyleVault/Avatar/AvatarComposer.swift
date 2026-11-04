@@ -11,7 +11,11 @@ enum AvatarComposer {
 
     static let drawOrder = ["shoes", "bottom", "top", "outerwear"]
 
-    static func render(person: Cutout, pose: Pose, garments: [Garment], view: BodyView) -> CGImage? {
+    /// - overlay: immagine grande come `person` ridisegnata attraverso `mask`
+    ///   (scala di grigi, bianco = si vede) DOPO scarpe e pantaloni: la parte di
+    ///   sopra realistica che copre la vita dei pantaloni.
+    static func render(person: Cutout, pose: Pose, garments: [Garment], view: BodyView,
+                       overlay: (image: CGImage, mask: CGImage)? = nil) -> CGImage? {
         let width = person.image.width, height = person.image.height
         guard let ctx = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
                                   space: CGColorSpaceCreateDeviceRGB(),
@@ -54,6 +58,13 @@ enum AvatarComposer {
                                                       view: view, silhouette: body) else { continue }
                 ctx.draw(piece, in: flipped(frame))
             }
+        }
+        if let overlay {
+            let full = CGRect(x: 0, y: 0, width: width, height: height)
+            ctx.saveGState()
+            ctx.clip(to: full, mask: overlay.mask)
+            ctx.draw(overlay.image, in: full)
+            ctx.restoreGState()
         }
         return ctx.makeImage()
     }

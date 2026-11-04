@@ -51,7 +51,7 @@ targets:
     platform: iOS
     sources:
       - path: StyleVaultTests
-        excludes: [VisionTests.swift, AvatarRenderTests.swift, Fixtures]
+        excludes: [VisionTests.swift, AvatarRenderTests.swift, RealisticComposerTests.swift, Fixtures]
       # Fixture dell'avatar realistico (tokenizzatore, capo): cartella come risorsa
       - path: StyleVaultTests/Fixtures/realistic
         type: folder
@@ -67,9 +67,13 @@ targets:
       - StyleVault/Vision
       - StyleVault/Avatar/GarmentLayout.swift
       - StyleVault/Avatar/AvatarComposer.swift
+      - StyleVault/Avatar/CutoutCache.swift
+      - StyleVault/Avatar/RealisticComposer.swift
+      - StyleVault/Realistic/GarmentMask.swift
       - StyleVault/Onboarding/BodyPhotosModel.swift
       - StyleVaultTests/VisionTests.swift
       - StyleVaultTests/AvatarRenderTests.swift
+      - StyleVaultTests/RealisticComposerTests.swift
       - StyleVaultTests/Fixtures
     settings:
       base:

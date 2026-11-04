@@ -113,6 +113,21 @@ enum GarmentLayout {
         }
     }
 
+    /// Righe (pixel, origine in alto) dove la parte di sopra realistica si
+    /// ridisegna sopra il collage: dal collo (come `collarY` del top) alle
+    /// ginocchia. Viso e piedi restano fuori. Senza punti, le stesse
+    /// proporzioni di `frame`; ginocchia a metà tra fianchi e caviglie.
+    static func overlayRows(pose: Pose, bodyBounds: CGRect) -> ClosedRange<CGFloat> {
+        let p = pose.points
+        let shoulderY = mid(p[.leftShoulder], p[.rightShoulder])?.y ?? bodyBounds.minY + 0.18 * bodyBounds.height
+        var hipY = mid(p[.leftHip], p[.rightHip])?.y ?? bodyBounds.minY + 0.5 * bodyBounds.height
+        if hipY <= shoulderY { hipY = shoulderY + 0.32 * bodyBounds.height }
+        let ankleY = mid(p[.leftAnkle], p[.rightAnkle])?.y ?? bodyBounds.maxY - 0.03 * bodyBounds.height
+        let collarY = shoulderY - 0.12 * (hipY - shoulderY)
+        let kneeY = mid(p[.leftKnee], p[.rightKnee])?.y ?? hipY + 0.5 * max(ankleY - hipY, 0)
+        return collarY...max(kneeY, collarY)
+    }
+
     private static func mid(_ a: CGPoint?, _ b: CGPoint?) -> CGPoint? {
         switch (a, b) {
         case let (a?, b?): return CGPoint(x: (a.x + b.x) / 2, y: (a.y + b.y) / 2)
