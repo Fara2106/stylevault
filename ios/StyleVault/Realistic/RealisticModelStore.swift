@@ -111,8 +111,8 @@ actor RealisticModelStore: RealisticModelPreparing {
 
     private var manifestURL: URL { folder.appending(path: Self.manifestName) }
     private var downloadsURL: URL { folder.appending(path: "downloads", directoryHint: .isDirectory) }
-    private var compiledURL: URL { folder.appending(path: "compiled", directoryHint: .isDirectory) }
-    private var tokenizerURL: URL { folder.appending(path: Self.tokenizerName, directoryHint: .isDirectory) }
+    private nonisolated var compiledURL: URL { folder.appending(path: "compiled", directoryHint: .isDirectory) }
+    private nonisolated var tokenizerURL: URL { folder.appending(path: Self.tokenizerName, directoryHint: .isDirectory) }
 
     private func archiveURL(_ file: Manifest.File) -> URL { downloadsURL.appending(path: file.name) }
     private func partURL(_ file: Manifest.File) -> URL { downloadsURL.appending(path: file.name + ".part") }
@@ -144,13 +144,14 @@ actor RealisticModelStore: RealisticModelPreparing {
         return manifest.files.allSatisfy { Self.isValidName($0.name) && isDone($0) }
     }
 
-    /// `name` senza estensione, ad esempio "Denoiser".
-    func modelURL(_ name: String) -> URL? {
+    /// `name` senza estensione, ad esempio "Denoiser". `nonisolated`: legge solo
+    /// percorsi fissi e il disco, così il motore la chiama dalla sua closure sincrona.
+    nonisolated func modelURL(_ name: String) -> URL? {
         let url = compiledURL.appending(path: name + ".mlmodelc")
         return FileManager.default.fileExists(atPath: url.path) ? url : nil
     }
 
-    func tokenizerFiles() -> (vocab: URL, merges: URL)? {
+    nonisolated func tokenizerFiles() -> (vocab: URL, merges: URL)? {
         let vocab = tokenizerURL.appending(path: "vocab.json")
         let merges = tokenizerURL.appending(path: "merges.txt")
         let fm = FileManager.default

@@ -165,11 +165,11 @@ final class RealisticModelStoreTests: XCTestCase {
         try await store.prepare { _ in }
         let ready = await store.isReady
         XCTAssertTrue(ready)
-        let denoiser = await store.modelURL("Denoiser")
+        let denoiser = store.modelURL("Denoiser")
         XCTAssertEqual(denoiser?.lastPathComponent, "Denoiser.mlmodelc")
-        let missing = await store.modelURL("Altro")
+        let missing = store.modelURL("Altro")
         XCTAssertNil(missing)
-        let tok = await store.tokenizerFiles()
+        let tok = store.tokenizerFiles()
         XCTAssertEqual(try String(contentsOf: XCTUnwrap(tok).vocab), "{}")
         XCTAssertEqual(try String(contentsOf: XCTUnwrap(tok).merges), "a b")
         // Gli archivi estratti non restano
@@ -288,7 +288,7 @@ final class RealisticModelStoreTests: XCTestCase {
         try publish()
         let store = makeStore()
         try await store.prepare { _ in }
-        let oldOutputURL = await store.modelURL("Denoiser")
+        let oldOutputURL = store.modelURL("Denoiser")
         let oldOutput = try String(contentsOf: XCTUnwrap(oldOutputURL).appending(path: "Manifest.json"))
         // Nuova versione di Denoiser: altro corpo, altro hash
         let data = try makeArchive(["Manifest.json": "{\"m\":\"nuovo\"}", "Data/weights.bin": "xyz"])
@@ -303,7 +303,7 @@ final class RealisticModelStoreTests: XCTestCase {
         try await store.prepare { _ in }
         let archives = FakeModelServer.requests.compactMap { $0.url?.lastPathComponent }.filter { $0.hasSuffix(".aar") }
         XCTAssertEqual(archives, ["Denoiser.aar"])
-        let newOutputURL = await store.modelURL("Denoiser")
+        let newOutputURL = store.modelURL("Denoiser")
         let newOutput = try String(contentsOf: XCTUnwrap(newOutputURL).appending(path: "Manifest.json"))
         XCTAssertNotEqual(oldOutput, newOutput)
         XCTAssertTrue(newOutput.contains("nuovo"))
