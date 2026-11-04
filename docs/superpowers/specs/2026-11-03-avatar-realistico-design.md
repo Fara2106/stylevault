@@ -54,6 +54,9 @@ deformato riga per riga (preciso ma senza pieghe né volumi).
   sostituito (o licenziato dagli autori): per questo il motore realistico sta
   dietro un'interfaccia sola (`RealisticTryOn`), così si cambia modello o si
   passa a un servizio a pagamento senza toccare la schermata.
+  **Aggiornamento 2026-11-04 (Lorenzo):** l'app si pubblica **gratis** per
+  tutti. È compatibile con la licenza solo senza pubblicità, acquisti in-app o
+  abbonamenti, e con autori e licenza mostrati nell'app ("Crediti").
 - Il **sito** non cambia: la versione realistica esiste solo nell'app iOS.
 - Nessun servizio esterno, nessun costo a consumo.
 
