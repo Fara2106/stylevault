@@ -38,6 +38,9 @@ final class RealisticAvatarModel {
         let task: Task<Void, Never>
     }
     private var running: Run?
+    /// Il calcolo appena annullato: il motore si ferma solo tra una rete e l'altra
+    /// (anche secondi), quindi il prossimo aspetta che finisca. Mai due reti grandi insieme.
+    @ObservationIgnored private var draining: (id: UUID, task: Task<Void, Never>)?
 
     @ObservationIgnored private let store: RealisticModelPreparing?
     @ObservationIgnored private let cache: RealisticCache
@@ -94,7 +97,13 @@ final class RealisticAvatarModel {
     func start(_ view: BodyView, person: CGImage, garment: CGImage, item: AvatarItem, bodyKey: String) async {
         guard supported, running == nil, state[view] != .ready else { return }
         let id = UUID()
-        let task = Task { await run(view, id: id, person: person, garment: garment, item: item, bodyKey: bodyKey) }
+        let previous = draining?.task
+        // In attesa che il calcolo annullato si fermi: la barra parte da 0
+        if previous != nil { state[view] = .generating(0) }
+        let task = Task {
+            await previous?.value
+            await run(view, id: id, person: person, garment: garment, item: item, bodyKey: bodyKey)
+        }
         running = Run(view: view, id: id, task: task)
         // Se chi aspetta viene annullato (la schermata si chiude), si ferma anche il calcolo
         await withTaskCancellationHandler { await task.value } onCancel: { task.cancel() }
@@ -106,25 +115,38 @@ final class RealisticAvatarModel {
         guard let run = running else { return }
         running = nil
         run.task.cancel()
+        // Il suo task finisce solo dopo quello annullato prima (lo aspetta): basta ricordare l'ultimo
+        draining = (run.id, run.task)
         state[run.view] = .collage
+    }
+
+    /// Il risultato grezzo non serve più quando la vista composta è pronta (memoria):
+    /// lo stato resta `.ready`, riaprendo l'outfit si rilegge dal disco.
+    func releaseImage(_ view: BodyView) {
+        images[view] = nil
     }
 
     // MARK: - Lavoro
 
     private func run(_ view: BodyView, id: UUID, person: CGImage, garment: CGImage,
                      item: AvatarItem, bodyKey: String) async {
-        defer { if running?.id == id { running = nil } }
+        defer {
+            if running?.id == id { running = nil }
+            if draining?.id == id { draining = nil }
+        }
         do {
+            try checkCurrent(id)
             if let hit = await cache.image(item: item, view: view, bodyKey: bodyKey) {
-                try Task.checkCancellation()
+                try checkCurrent(id)
                 images[view] = hit
                 state[view] = .ready
                 return
             }
             let engine = try await readyEngine(view, id: id)
-            try Task.checkCancellation()
+            try checkCurrent(id)
             state[view] = .generating(0)
             await removeStaleWorkFoldersOnce()
+            try checkCurrent(id)
             let image = try await engine.generate(person: person, garment: garment, item: item) { [weak self] p in
                 Task { @MainActor in self?.generationProgress(p.fraction, view: view, id: id) }
             }
@@ -144,6 +166,8 @@ final class RealisticAvatarModel {
         if let engine { return engine }
         guard let makeEngine else { throw TryOnError.missingModel("Denoiser") }
         if let store, !(await store.isReady) {
+            // Annullato mentre si controllava: non lasciare la vista ferma su "Scarico…"
+            try checkCurrent(id)
             download = (0, 0)
             preparation = (0, 0)
             state[view] = .downloading(done: 0, total: 0)
@@ -155,6 +179,11 @@ final class RealisticAvatarModel {
         let made = try await makeEngine()
         engine = made
         return made
+    }
+
+    /// Questo lavoro è ancora quello in corso (non annullato né sostituito)?
+    private func checkCurrent(_ id: UUID) throws {
+        guard running?.id == id, !Task.isCancelled else { throw CancellationError() }
     }
 
     private func storeProgress(_ progress: ModelStoreProgress, view: BodyView, id: UUID) {

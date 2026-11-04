@@ -90,12 +90,16 @@ struct AvatarView: View {
             realistic.cancelAll()
         }
         .onChange(of: scenePhase) { _, phase in
-            inBackground = phase != .active
-            if phase != .active {
+            // Solo il background ferma il calcolo: .inactive (Centro di Controllo, notifiche) no
+            if phase == .background {
+                inBackground = true
                 // Niente calcolo in background: si ferma, il download dei modelli invece continua
                 if let busy = realistic.busyView ?? loadingInputs { interrupted = busy }
                 realistic.cancelAll()
-            } else if let view = interrupted, !loading {
+            } else if phase == .active {
+                inBackground = false
+            }
+            if phase == .active, let view = interrupted, !loading {
                 interrupted = nil
                 Task { await startRealistic(view) }
             }
@@ -137,6 +141,11 @@ struct AvatarView: View {
                     progressBar("Versione realistica…", fraction: nil)
                 }
 
+                // L'errore della vista davanti si vede anche dalle altre pagine
+                if selection != .front, case let .failed(message)? = realistic.state[.front] {
+                    Text("Davanti: \(message)").font(.footnote).foregroundStyle(Palette.muted)
+                        .multilineTextAlignment(.center)
+                }
                 if case let .failed(message)? = realistic.state[selection] {
                     Text(message).font(.footnote).foregroundStyle(Palette.muted).multilineTextAlignment(.center)
                     Button("Riprova") { Task { await startRealistic(selection) } }
@@ -218,6 +227,11 @@ struct AvatarView: View {
 
     private func showRealistic(_ view: BodyView, item: AvatarItem, bodyKey: String) async {
         guard let raw = realistic.images[view] else { return }
+        // Composta (o no) la vista, risultato grezzo e foto non servono più: riaprendo si rileggono dal disco
+        defer {
+            realistic.releaseImage(view)
+            originals[view] = nil
+        }
         guard let original = originals[view],
               let composed = try? await RealisticComposer.compose(
                   original: original, realistic: raw, garments: garments[view] ?? [], view: view,

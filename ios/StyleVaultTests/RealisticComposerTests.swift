@@ -65,6 +65,9 @@ final class RealisticComposerTests: XCTestCase {
                        "top e capospalla non si disegnano più col collage")
 
         let cache = CutoutCache(folder: folder)
+        // Gli scontorni realistici stanno solo su disco: si crea prima, così composizione e
+        // confronto leggono la stessa copia (il PNG riletto ha colori appena diversi da quello di Vision)
+        _ = try await cache.cutout(image: realistic, key: "realistic-test", allInstances: false)
         let composed = try await RealisticComposer.compose(original: original, realistic: realistic, garments: garments,
                                                            view: .front, key: "realistic-test", cache: cache)
         let image = try XCTUnwrap(composed)

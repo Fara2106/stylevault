@@ -44,7 +44,7 @@ actor CutoutCache {
         guard let image = Self.load(file(key)) else { return nil }
         let count = (try? String(contentsOf: countFile(key), encoding: .utf8)).flatMap(Int.init) ?? 1
         let cached = Cutout(image: image, bounds: PersonCutout.opaqueBounds(image), instanceCount: count)
-        memory[key] = cached
+        remember(cached, key)
         return cached
     }
 
@@ -52,8 +52,15 @@ actor CutoutCache {
         let result = try await PersonCutout.cutout(ImagePrep.downscaled(raw), allInstances: allInstances)
         Self.save(result.image, to: file(key))
         try? String(result.instanceCount).write(to: countFile(key), atomically: true, encoding: .utf8)
-        memory[key] = result
+        remember(result, key)
         return result
+    }
+
+    /// Gli scontorni del risultato realistico (`realistic-…`, fino a 2048 px, uno
+    /// per vista) restano solo su disco: la vista composta li ha già dentro.
+    private func remember(_ cutout: Cutout, _ key: String) {
+        guard !key.hasPrefix("realistic-") else { return }
+        memory[key] = cutout
     }
 
     private func file(_ key: String) -> URL { folder.appendingPathComponent("\(key).png") }

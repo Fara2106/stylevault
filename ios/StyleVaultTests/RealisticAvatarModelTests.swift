@@ -29,6 +29,30 @@ private final class FakeEngine: RealisticTryOn, @unchecked Sendable {
     }
 }
 
+/// Motore lento come quello vero: una "rete" non si interrompe a metà (attesa che
+/// ignora l'annullamento), si controlla solo tra una rete e l'altra. Conta quante
+/// generazioni girano insieme.
+private final class StubbornEngine: RealisticTryOn, @unchecked Sendable {
+    private let lock = NSLock()
+    private var active = 0, _maxActive = 0, _calls = 0
+    var maxActive: Int { lock.lock(); defer { lock.unlock() }; return _maxActive }
+    var calls: Int { lock.lock(); defer { lock.unlock() }; return _calls }
+
+    func generate(person: CGImage, garment: CGImage, item: AvatarItem,
+                  progress: @Sendable (TryOnProgress) -> Void) async throws -> CGImage {
+        lock.lock(); active += 1; _calls += 1; _maxActive = max(_maxActive, active); lock.unlock()
+        defer { lock.lock(); active -= 1; lock.unlock() }
+        for step in 1...3 {
+            await withCheckedContinuation { (c: CheckedContinuation<Void, Never>) in
+                DispatchQueue.global().asyncAfter(deadline: .now() + 0.15) { c.resume() }
+            }
+            try Task.checkCancellation()
+            progress(TryOnProgress(fraction: Double(step) / 3))
+        }
+        return RealisticAvatarModelTests.solid(person.width, person.height)
+    }
+}
+
 /// Store finto: conta le chiamate; se non è pronto, "scarica" e "prepara" in un attimo.
 private final class FakeStore: RealisticModelPreparing, @unchecked Sendable {
     private let lock = NSLock()
@@ -144,6 +168,30 @@ final class RealisticAvatarModelTests: XCTestCase {
         XCTAssertNil(cached)
         // Dopo l'annullamento si può ripartire
         XCTAssertFalse(m.isBusy)
+    }
+
+    func testRestartAfterCancelWaitsForTheStoppedEngine() async throws {
+        let engine = StubbornEngine()
+        let m = RealisticAvatarModel(engine: engine, store: FakeStore(ready: true), supported: true, cache: cache)
+        let first = Task { await start(m, .front) }
+        try await wait { isGenerating(m.state[.front]) && engine.calls == 1 }
+        m.cancelAll()
+        XCTAssertEqual(m.state[.front], .collage)
+        // Ripartenza immediata (ritorno dal background, "Riprova"): aspetta che la rete in corso finisca
+        await start(m, .front)
+        await first.value
+        XCTAssertEqual(m.state[.front], .ready)
+        XCTAssertEqual(engine.calls, 2)
+        XCTAssertEqual(engine.maxActive, 1, "mai due generazioni insieme")
+        XCTAssertFalse(m.isBusy)
+    }
+
+    func testReleaseImageKeepsReady() async {
+        let m = model(engine: FakeEngine())
+        await start(m, .front)
+        m.releaseImage(.front)
+        XCTAssertNil(m.images[.front])
+        XCTAssertEqual(m.state[.front], .ready)
     }
 
     func testOneGenerationAtATime() async throws {
