@@ -273,6 +273,15 @@ piano `docs/superpowers/plans/2026-11-03-app-ios.md`, registro decisioni
   `com.apple.developer.weatherkit: true`, poi `cd ios && xcodegen generate`;
   (3) `AppleWeather.isEnabled = true`; (4) prova sul telefono: scheda meteo
   con marchio "Meteo di Apple" e link "Fonti dei dati" (obbligatori per Apple).
+  Revisione finale (opus): 0 critici, 3 importanti CORRETTI (15525c3,
+  3298fb3): cache della posizione in chiave fissa `sv_weather_<fonte>_position`
+  (niente coordinate né storico); posizione nuova entro ~5 km ignorata
+  (`keepSamePlace`) così gli outfit non si rifanno; WeatherKit chiede le ore
+  da mezzanotte per 7 giorni (`hourlyRange`). 9 minori rimandati (elenco nel
+  messaggio finale a Lorenzo). Test: sito 268/268, iOS 130/130 (il target
+  test ora ha `GENERATE_INFOPLIST_FILE`). Build Debug installata sull'iPhone
+  il 04/11: **da provare da Lorenzo** (permesso posizione, posto vero,
+  striscia, consigli). Push e deploy del sito: solo col suo ok.
 - **Prova sull'iPhone (04/11)**: la build Release apre il sito PUBBLICATO,
   che non ha il ponte iOS (niente "Rifai le foto del corpo" né "Vedilo
   addosso") → si prova con la build Debug + `vite --host` :5181
