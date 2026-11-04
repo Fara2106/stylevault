@@ -1,6 +1,7 @@
 import CoreGraphics
 import Foundation
 import Observation
+import os
 
 /// A che punto è la versione realistica di una vista.
 enum RealisticState: Equatable {
@@ -200,13 +201,17 @@ final class RealisticAvatarModel {
                 state[view] = .ready
                 return
             }
+            let clock = ContinuousClock()
+            let prepareStart = clock.now
             let engine = try await readyEngine(view, id: id, allowsExpensiveNetwork: allowsExpensiveNetwork)
+            Self.log("modelli pronti per \(view) in \(Self.seconds(clock.now - prepareStart)) s")
             try checkCurrent(id)
             state[view] = startingState
             await removeStaleWorkFoldersOnce()
             try checkCurrent(id)
             // Se iOS chiude l'app durante il calcolo il segno resta: alla prossima apertura niente partenza da sola
             markInProgress(view)
+            let generateStart = clock.now
             let image: CGImage
             do {
                 image = try await engine.generate(person: person, garment: garment, item: item) { [weak self] p in
@@ -217,6 +222,7 @@ final class RealisticAvatarModel {
                 throw error
             }
             clearInProgress()
+            Self.log("vista \(view) generata in \(Self.seconds(clock.now - generateStart)) s")
             defaults.set(0, forKey: Keys.interruptions)
             defaults.set(true, forKey: Keys.warmed)
             try Task.checkCancellation()
@@ -225,6 +231,7 @@ final class RealisticAvatarModel {
             images[view] = image
             state[view] = .ready
         } catch {
+            Self.log("vista \(view) non generata: \(error)")
             await forgetBrokenModel(error)
             // Già rimesso a collage da cancelAll
             guard running?.id == id else { return }
@@ -236,6 +243,18 @@ final class RealisticAvatarModel {
                 state[view] = .failed(Self.message(for: error))
             }
         }
+    }
+
+    private nonisolated static let logger = Logger(subsystem: "it.faraoni.stylevault", category: "realistic")
+
+    /// Tempi ed errori nel registro di sistema e sulla console (per le prove sul telefono).
+    private nonisolated static func log(_ line: String) {
+        logger.info("\(line, privacy: .public)")
+        print("SVREAL \(line)")
+    }
+
+    private nonisolated static func seconds(_ d: Duration) -> String {
+        String(format: "%.1f", Double(d.components.seconds) + Double(d.components.attoseconds) / 1e18)
     }
 
     /// Un modello compilato che non si carica (o che manca) si toglie: con "Riprova" lo store lo rifà.
