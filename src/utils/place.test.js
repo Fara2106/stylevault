@@ -5,6 +5,7 @@ import {
   resolvePlace,
   getBrowserPosition,
   hasSavedPlaceChoice,
+  isSamePlace,
   _placeMemory,
 } from './place';
 
@@ -98,5 +99,13 @@ describe('getBrowserPosition', () => {
       timeout: 10000,
       maximumAge: 600000,
     });
+  });
+});
+
+describe('isSamePlace', () => {
+  it('stesso luogo entro un centesimo di grado', () => {
+    expect(isSamePlace({ latitude: 41.9, longitude: 12.5 }, { latitude: 41.904, longitude: 12.496 })).toBe(true);
+    expect(isSamePlace({ latitude: 41.9, longitude: 12.5 }, PARIGI)).toBe(false);
+    expect(isSamePlace(null, PARIGI)).toBe(false);
   });
 });

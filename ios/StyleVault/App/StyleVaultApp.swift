@@ -60,6 +60,10 @@ struct RootView: View {
                 case .openBodyPhotos: retakePhotos = true
                 case let .openAvatar(request): avatar = AvatarSession(request: request)
                 case let .themeChanged(setting): theme = setting
+                case let .requestForecast(request):
+                    Task {
+                        if let forecast = await AppleWeather.forecast(for: request) { web.pushForecast(forecast) }
+                    }
                 case .requestLocation:
                     Task {
                         if let place = await location.currentPlace() { web.pushLocation(place) }

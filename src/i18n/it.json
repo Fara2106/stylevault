@@ -449,7 +449,9 @@
       "morning": "Mattina",
       "afternoon": "Pomeriggio",
       "evening": "Sera"
-    }
+    },
+    "appleWeather": "Meteo di Apple",
+    "dataSources": "Fonti dei dati"
   },
   "armocromia": {
     "seasons": {

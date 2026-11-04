@@ -449,7 +449,9 @@
       "morning": "Morning",
       "afternoon": "Afternoon",
       "evening": "Evening"
-    }
+    },
+    "appleWeather": "Apple Weather",
+    "dataSources": "Data sources"
   },
   "armocromia": {
     "seasons": {

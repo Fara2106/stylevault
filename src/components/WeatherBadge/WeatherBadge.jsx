@@ -8,7 +8,7 @@ import './WeatherBadge.css';
  *            precipProb, icon (nome Icon), descriptionKey }
  * stale: true se i dati vengono dalla cache (mostra l'avviso).
  */
-export default function WeatherBadge({ weather, stale = false, staleTime = '' }) {
+export default function WeatherBadge({ weather, stale = false, staleTime = '', attribution = null }) {
   const { t } = useTranslation();
   if (!weather) return null;
 
@@ -47,6 +47,19 @@ export default function WeatherBadge({ weather, stale = false, staleTime = '' })
           </span>
         )}
       </div>
+      {/* Meteo di Apple: marchio e fonti legali obbligatori */}
+      {attribution?.legalURL && (
+        <a
+          className="weather-badge__attribution"
+          href={attribution.legalURL}
+          target="_blank"
+          rel="noreferrer"
+        >
+          <img className="weather-badge__mark weather-badge__mark--light" src={attribution.logoLight} alt={t('weather.appleWeather')} />
+          <img className="weather-badge__mark weather-badge__mark--dark" src={attribution.logoDark} alt={t('weather.appleWeather')} />
+          <span>{t('weather.dataSources')}</span>
+        </a>
+      )}
       {stale && (
         <p className="weather-badge__stale">{t('weather.staleNotice', { time: staleTime })}</p>
       )}

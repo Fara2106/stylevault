@@ -256,6 +256,23 @@ piano `docs/superpowers/plans/2026-11-03-app-ios.md`, registro decisioni
   categoria (fuori stagione), e lascia vuoto solo il pezzo che non c'è;
   `missingPieces()` → riquadro "Outfit incompleto, manca: …" nella card.
   Serve almeno un capo da indossare (soli accessori = niente). Test 231/231.
+- **Meteo della posizione (04/11)**, design `docs/superpowers/specs/2026-11-04-meteo-posizione-design.md`,
+  piano `docs/superpowers/plans/2026-11-04-meteo-posizione.md`: pagina Outfit
+  con "La mia posizione" (app: CoreLocation via `requestLocation` →
+  `svNative.setLocation`; browser: solo dopo il tocco) o città scelta a mano
+  (ricordata in localStorage `sv_outfit_place`, mai coordinate); Open-Meteo
+  orario → fasce mattina 8–12 / pomeriggio 12–17 / sera 17–20, temperatura
+  media 8–20 (oggi da adesso), consigli "a strati" (≥ 8°) e "pioggia dalle
+  HH"; striscia `DayStrip`. **Meteo di Apple PRONTO MA SPENTO**
+  (`ios/StyleVault/Weather/AppleWeather.swift`, `isEnabled = false`): l'app
+  converte WeatherKit nel formato Open-Meteo e lo manda con
+  `svNative.setForecast`. **Per accenderlo, quando Apple approva l'account
+  Developer**: (1) developer.apple.com → Identifiers → App ID
+  `it.faraoni.stylevault` → spunta WeatherKit (e in "Services" WeatherKit);
+  (2) in `ios/project.yml` entitlements aggiungi
+  `com.apple.developer.weatherkit: true`, poi `cd ios && xcodegen generate`;
+  (3) `AppleWeather.isEnabled = true`; (4) prova sul telefono: scheda meteo
+  con marchio "Meteo di Apple" e link "Fonti dei dati" (obbligatori per Apple).
 - **Prova sull'iPhone (04/11)**: la build Release apre il sito PUBBLICATO,
   che non ha il ponte iOS (niente "Rifai le foto del corpo" né "Vedilo
   addosso") → si prova con la build Debug + `vite --host` :5181

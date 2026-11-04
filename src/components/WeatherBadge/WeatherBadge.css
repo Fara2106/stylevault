@@ -65,3 +65,25 @@
   font-style: italic;
   color: var(--sv-accent-ink);
 }
+
+.weather-badge__attribution {
+  display: flex;
+  align-items: center;
+  gap: var(--sv-space-2);
+  margin-top: var(--sv-space-3);
+  font-size: 11px;
+  color: var(--sv-muted);
+}
+
+.weather-badge__mark {
+  height: 14px;
+}
+
+.weather-badge__mark--dark,
+:root[data-theme='dark'] .weather-badge__mark--light {
+  display: none;
+}
+
+:root[data-theme='dark'] .weather-badge__mark--dark {
+  display: inline;
+}

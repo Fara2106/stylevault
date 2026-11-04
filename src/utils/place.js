@@ -79,3 +79,9 @@ export function getBrowserPosition() {
     );
   });
 }
+
+/** Stesso luogo entro un centesimo di grado (~1 km): per abbinare le risposte dell'app. */
+export function isSamePlace(a, b) {
+  if (!isCity(a) || !isCity(b)) return false;
+  return Math.abs(a.latitude - b.latitude) <= 0.01 && Math.abs(a.longitude - b.longitude) <= 0.01;
+}

@@ -59,6 +59,12 @@ final class WebViewStore: NSObject, ObservableObject {
         webView.evaluateJavaScript(Self.callScript("setLocation", json: json))
     }
 
+    /// Passa al sito la previsione del Meteo di Apple (solo se acceso).
+    func pushForecast(_ forecast: AppleForecast) {
+        guard Self.isSiteURL(webView.url) else { return }
+        webView.evaluateJavaScript(Self.callScript("setForecast", json: forecast.json))
+    }
+
     /// Chiamata sicura a una funzione di window.svNative: il JSON è JavaScript
     /// valido, quindi niente escape a mano (nomi come "L'Aquila" arrivano intatti).
     /// Un sito vecchio senza quella funzione non dà errori.

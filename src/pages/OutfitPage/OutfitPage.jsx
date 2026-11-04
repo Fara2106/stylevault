@@ -11,6 +11,8 @@ import {
   avatarPayload,
   onNativeLocation,
   requestNativeLocation,
+  onNativeForecast,
+  requestNativeForecast,
 } from '../../utils/nativeBridge';
 import DayStrip from '../../components/DayStrip/DayStrip';
 import {
@@ -19,10 +21,15 @@ import {
   resolvePlace,
   getBrowserPosition,
   hasSavedPlaceChoice,
+  isSamePlace,
 } from '../../utils/place';
 import CitySearch from '../../components/CitySearch/CitySearch';
 import { Button, Icon } from '../../components/common';
-import { fetchForecastWithCache } from '../../services/weather';
+import {
+  fetchForecastWithCache,
+  parseForecastPayload,
+  saveForecastToCache,
+} from '../../services/weather';
 import { generateOutfits } from '../../utils/outfitAlgorithm';
 import { getOutfitAdvice } from '../../utils/outfitAdvice';
 import { OCCASIONS } from '../../utils/categories';
@@ -141,11 +148,28 @@ export default function OutfitPage() {
     setWeatherError(false);
     setForecast(null);
     setOutfits([]);
+    // Se arriva il Meteo di Apple, Open-Meteo (anche in ritardo o in errore) non lo tocca
+    let gotApple = false;
     fetchForecastWithCache(city)
-      .then((result) => alive && setForecast(result))
-      .catch(() => alive && setWeatherError(true));
+      .then((result) => alive && !gotApple && setForecast(result))
+      .catch(() => alive && !gotApple && setWeatherError(true));
+    // Nell'app: Meteo di Apple, se acceso (spento, l'app non risponde)
+    let stopApple = () => {};
+    if (isNativeApp()) {
+      stopApple = onNativeForecast((data) => {
+        if (!alive || data?.source !== 'apple' || !isSamePlace(data, city)) return;
+        gotApple = true;
+        const days = parseForecastPayload(data.payload, city.name);
+        if (!days.length) return;
+        const fetchedAt = saveForecastToCache(city, 'apple', days);
+        setWeatherError(false);
+        setForecast({ days, stale: false, fetchedAt, source: 'apple', attribution: data.attribution });
+      });
+      requestNativeForecast(city);
+    }
     return () => {
       alive = false;
+      stopApple();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cityKey]);
@@ -320,6 +344,7 @@ export default function OutfitPage() {
       {dayWeather && !weatherError && (
         <WeatherBadge
           weather={dayWeather}
+          attribution={forecast?.source === 'apple' ? forecast.attribution : null}
           stale={forecast?.stale}
           staleTime={
             forecast?.fetchedAt
