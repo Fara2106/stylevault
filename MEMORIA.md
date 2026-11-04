@@ -243,9 +243,13 @@ piano `docs/superpowers/plans/2026-11-03-app-ios.md`, registro decisioni
   riferimento Mac), composizione col collage + maschera, schermata con barre,
   crediti, elimina modelli, protezione da crash per memoria; il sito manda
   `descriptor`. Test: app 123/123, Mac motore 3/3. Manca Task 9 (telefoni):
-  serve prima la Release, e la VAE deriva da Stable Diffusion 3.5 Large →
-  licenza Stability AI Community: copia della licenza + Notice + "Powered by
-  Stability AI" nei Crediti, da decidere con Lorenzo.
+  i telefoni. Licenze (281ecaa): la VAE deriva da Stable Diffusion 3.5 Large
+  → licenza Stability AI Community + NOTICE.txt + "Powered by Stability AI"
+  nei Crediti; anche CLIP/OpenCLIP (MIT) e DINOv2 (Apache 2.0). **Release
+  `avatar-models-v1` PUBBLICATA (04/11)** su Fara2106/stylevault: 8 .aar +
+  manifest + licenze; controllati dimensioni di tutti, SHA di VAEDecoder e
+  Tokenizer scaricati dall'URL pubblico, ripresa con Range (206) attraverso
+  il redirect. Ogni cambio di modelli = nuovo tag (il manifest non è fissato).
 - Revisione finale (revisore separato): 2 critici + 8 importanti CORRETTI
   (refresh token doppio, sessione al sito solo dopo 'ready', link esterni,
   avvio offline, 'Più tardi', conteggio persone, foto 48 MP, retro dei capi);
