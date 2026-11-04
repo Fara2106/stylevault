@@ -27,6 +27,20 @@ final class WebViewStoreTests: XCTestCase {
         XCTAssertFalse(WebViewStore.opensExternally(URL(string: "about:blank")!))
     }
 
+    func testSegnalaApreLaPaginaFeedbackDelSito() {
+        XCTAssertEqual(WebViewStore.feedbackPath(siteURL: URL(string: "https://fara2106.github.io/stylevault/")!),
+                       "/stylevault/feedback?topic=avatar")
+        XCTAssertEqual(WebViewStore.feedbackPath(siteURL: URL(string: "http://localhost:5181/")!),
+                       "/feedback?topic=avatar")
+    }
+
+    func testScriptDiNavigazioneUsaLaHistoryDelSito() {
+        let script = WebViewStore.navigateScript(path: "/stylevault/feedback?topic=avatar")
+        XCTAssertTrue(script.contains("history.pushState"))
+        XCTAssertTrue(script.contains("popstate"))
+        XCTAssertTrue(script.contains("\"/stylevault/feedback?topic=avatar\""))
+    }
+
     func testAltriErroriNonSonoOffline() {
         // Navigazione annullata (es. un link cliccato due volte): non è offline
         XCTAssertFalse(WebViewStore.isOfflineError(NSError(domain: NSURLErrorDomain, code: NSURLErrorCancelled)))

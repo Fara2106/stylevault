@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { garmentLayers } from '../../utils/tryonComposer';
@@ -229,6 +230,11 @@ export default function ModelTryOn({ outfit, referencePhoto, height = 480 }) {
       {(garmentsLoading || warping) && (
         <p className="tryon__preparing sv-label">{t('avatar.preparingGarments')}</p>
       )}
+      {/* AI Act art. 50: la foto è elaborata con IA; risultato sbagliato → Feedback */}
+      <p className="model-tryon__ai">
+        <span>{t('avatar.aiLabel')}</span>
+        <Link to="/feedback?topic=avatar">{t('avatar.reportResult')}</Link>
+      </p>
     </div>
   );
 }

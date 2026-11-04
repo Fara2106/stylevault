@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Header, Button, Input, Icon } from '../../components/common';
 import {
@@ -43,8 +43,11 @@ const INFO_KEYS = {
 export default function FeedbackPage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  // "Segnala risultato" della prova vestiti (sito) o dell'avatar (app)
+  const topic = searchParams.get('topic');
   const [kind, setKind] = useState('bug');
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState(() => (topic === 'avatar' ? t('feedback.avatarPrefill') : ''));
   const [status, setStatus] = useState('idle'); // idle | sending | sent
   const [error, setError] = useState(null);
 

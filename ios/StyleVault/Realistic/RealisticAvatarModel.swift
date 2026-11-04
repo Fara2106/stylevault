@@ -44,6 +44,9 @@ final class RealisticAvatarModel {
     /// si è interrotta, né dopo `maxInterruptions` interruzioni di fila (finché una non riesce).
     let autoStartAllowed: Bool
     private(set) var isRemoving = false
+    /// L'utente ha detto sì al download dei modelli (Apple 4.2.3(ii)): senza,
+    /// la versione realistica non parte da sola e mostra "Scarica (1,3 GB)".
+    private(set) var downloadConsented: Bool
 
     static let maxInterruptions = 2
     /// Un id per avvio dell'app: il segno di "generazione in corso" di questo avvio non è un'interruzione.
@@ -53,6 +56,8 @@ final class RealisticAvatarModel {
         static let inProgress = "realistic.inProgress"
         static let interruptions = "realistic.interruptions"
         static let warmed = "realistic.warmed"
+        /// Sì al download dei modelli (1,3 GB): si chiede la prima volta, anche in Wi-Fi.
+        static let downloadConsented = "realistic.downloadConsented"
     }
 
     private struct Run {
@@ -100,6 +105,7 @@ final class RealisticAvatarModel {
             interrupted = true
         }
         wasInterrupted = interrupted
+        downloadConsented = defaults.bool(forKey: Keys.downloadConsented)
         autoStartAllowed = supported && !interrupted
             && defaults.integer(forKey: Keys.interruptions) < Self.maxInterruptions
     }
@@ -165,6 +171,12 @@ final class RealisticAvatarModel {
         state[run.view] = .collage
     }
 
+    /// "Scarica (1,3 GB)": il sì resta per le aperture seguenti.
+    func consentToDownload() {
+        downloadConsented = true
+        defaults.set(true, forKey: Keys.downloadConsented)
+    }
+
     /// "Elimina i modelli" (Crediti): aspetta un calcolo che si sta fermando, toglie i
     /// modelli e torna al collage. Il prossimo uso riscarica e riprepara il motore.
     func removeModels() async {
@@ -175,6 +187,9 @@ final class RealisticAvatarModel {
         engine = nil
         await store?.removeAll()
         defaults.removeObject(forKey: Keys.warmed)
+        // Il prossimo download (altri 1,3 GB) si richiede
+        defaults.removeObject(forKey: Keys.downloadConsented)
+        downloadConsented = false
         images.removeAll()
         if supported { for view in BodyView.allCases { state[view] = .collage } }
     }
@@ -391,6 +406,9 @@ final class RealisticAvatarModel {
     /// Sotto la barra quando lo scarico aspetta il permesso ("Scarica comunque").
     nonisolated static let networkConsentText =
         "Per la versione realistica servono 1,3 GB. Sei su rete cellulare o Risparmio dati."
+    /// Prima del primo download, anche in Wi-Fi.
+    nonisolated static let downloadConsentText =
+        "La versione realistica scarica 1,3 GB di modelli, una volta sola. Puoi eliminarli quando vuoi dai Crediti (i)."
     nonisolated static let interruptedText = "La versione realistica si è interrotta l'ultima volta."
 
     /// Avanzamento della barra 0…1; nil se non c'è nulla in corso.

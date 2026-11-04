@@ -82,6 +82,17 @@ struct LoginView: View {
                     Text(registering ? "Hai già un account? **Accedi**" : "Non hai un account? **Registrati**")
                         .font(.subheadline).foregroundStyle(Palette.muted)
                 }
+
+                // Privacy e supporto raggiungibili anche prima di entrare (Apple 5.1.1(i))
+                if registering {
+                    Text("Registrandoti confermi di aver letto l'informativa sulla privacy.")
+                        .font(.caption).foregroundStyle(Palette.muted).multilineTextAlignment(.center)
+                }
+                HStack(spacing: 20) {
+                    Link("Privacy", destination: AppConfig.privacyURL)
+                    Link("Supporto", destination: AppConfig.supportURL)
+                }
+                .font(.caption.weight(.semibold)).tint(Palette.muted)
             }
             .padding(.horizontal, 24)
         }

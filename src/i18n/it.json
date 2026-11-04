@@ -65,7 +65,8 @@
       "invalid-email": "Questa email non sembra valida.",
       "passwords-mismatch": "Le due password non coincidono.",
       "same-password": "La nuova password deve essere diversa da quella attuale.",
-      "reauthentication-needed": "Per sicurezza esci e rientra, poi cambia la password."
+      "reauthentication-needed": "Per sicurezza esci e rientra, poi cambia la password.",
+      "delete-failed": "Non sono riuscito a eliminare l’account: controlla la connessione e riprova. Se continua, scrivici dalla pagina Supporto."
     }
   },
   "onboarding": {
@@ -235,7 +236,9 @@
     "uploadReference": "Carica una tua foto",
     "referenceHint": "La caricherai in chat col prompt AI ed è la base dell'armocromia. Resta solo sul tuo dispositivo.",
     "removeReference": "Rimuovi foto",
-    "preparingGarments": "Preparo i capi..."
+    "preparingGarments": "Preparo i capi...",
+    "aiLabel": "Immagine elaborata con IA",
+    "reportResult": "Segnala risultato"
   },
   "advice": {
     "colorsHarmonious": "I colori si armonizzano bene tra loro",
@@ -340,7 +343,12 @@
     "changePassword": "Cambia password",
     "newPassword": "Nuova password",
     "confirmPassword": "Ripeti la nuova password",
-    "passwordChanged": "Password cambiata: dalla prossima volta accedi con quella nuova."
+    "passwordChanged": "Password cambiata: dalla prossima volta accedi con quella nuova.",
+    "deleteAccount": "Elimina account",
+    "deleteAccountTitle": "Eliminare l’account?",
+    "deleteAccountText": "Cancelliamo per sempre il tuo account con guardaroba, outfit, calendario, foto del corpo e dei capi e Armocromia. Non si può annullare.",
+    "deleteAccountConfirm": "Elimina per sempre",
+    "ownPhotoNotice": "Usa solo foto di te: caricandole confermi che ritraggono te, oppure una persona che ti ha dato il consenso."
   },
   "categories": {
     "all": "Tutti",
@@ -467,7 +475,8 @@
       "evening": "Sera"
     },
     "appleWeather": "Meteo di Apple",
-    "dataSources": "Fonti dei dati"
+    "dataSources": "Fonti dei dati",
+    "openMeteoCredit": "Dati meteo: Open-Meteo.com (CC BY 4.0)"
   },
   "armocromia": {
     "seasons": {
@@ -660,6 +669,13 @@
     "backToProfile": "Torna al Profilo",
     "errorFailed": "Invio non riuscito. Controlla la connessione e riprova.",
     "errorLimit": "Hai inviato molte segnalazioni di fila: riprova tra qualche minuto.",
-    "errorUnavailable": "Le segnalazioni funzionano solo con il cloud attivo."
+    "errorUnavailable": "Le segnalazioni funzionano solo con il cloud attivo.",
+    "avatarPrefill": "Segnalo un risultato della prova vestiti / avatar: "
+  },
+  "legal": {
+    "navLabel": "Privacy e supporto",
+    "privacyLink": "Privacy",
+    "supportLink": "Supporto",
+    "registerNotice": "Registrandoti confermi di aver letto l’informativa sulla privacy."
   }
 }

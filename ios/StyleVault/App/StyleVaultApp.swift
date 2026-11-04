@@ -86,7 +86,10 @@ struct RootView: View {
                 .preferredColorScheme(ThemeStore.colorScheme(for: theme))
         }
         .fullScreenCover(item: $avatar) { session in
-            AvatarView(request: session.request) { avatar = nil }
+            AvatarView(request: session.request, onClose: { avatar = nil }, onReport: {
+                avatar = nil
+                web.openFeedback()
+            })
                 .preferredColorScheme(ThemeStore.colorScheme(for: theme))
         }
         .preferredColorScheme(ThemeStore.colorScheme(for: theme))

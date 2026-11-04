@@ -317,6 +317,25 @@ piano `docs/superpowers/plans/2026-11-03-app-ios.md`, registro decisioni
   sola) riuscita; poi Lorenzo ha rifatto l'Armocromia e il 04/11 alle 15:08
   UTC il suo profilo ha `armocromia` = deep-winter (axes, season, detected,
   updatedAt, confidence). **Salvataggio confermato end-to-end.**
+- **Correzioni dell'audit (04/11, pomeriggio)**, stato nella sezione 0 del report.
+  Fatto:
+  - "Elimina account" nel Profilo → Edge Function `delete-account`, pubblicata
+    dalla dashboard come file unico con account.ts incollato. Cancella i file dei
+    2 bucket e poi l'utente; le tabelle si svuotano in cascata.
+  - Pagine pubbliche `/privacy`, `/supporto`, `/elimina-account`
+    (`src/pages/LegalPage/legalContent.js`, CONTACT_EMAIL da confermare con
+    Lorenzo); il deploy le copia come pagine vere.
+  - `PrivacyInfo.xcprivacy`.
+  - Rete locale/ATS solo in Debug (script postBuild in project.yml); SITE_URL
+    vuoto in Release.
+  - `fetch-link-metadata` solo per loggati e senza SSRF (guard.ts), ripubblicata.
+  - "Generato con IA" + "Segnala risultato" (app → /feedback?topic=avatar);
+    "Scarica (1,3 GB)" la prima volta.
+  - Open-Meteo citato; segnaposto senza picsum.
+
+  Test: sito 294, iOS 138, Deno 12. La cancellazione con un account vero la
+  prova Lorenzo. Dashboard: l'editor non rinomina il 2° file con il pane
+  nascosto → incollare un file solo.
 - **Audit di pubblicazione App Store (04/11)**, skill mobile-app-publishing:
   report in `docs/pubblicazione/2026-11-04-report-app-store.md`. 6 blocchi:
   Apple Developer Program a pagamento, cancellazione account (manca),

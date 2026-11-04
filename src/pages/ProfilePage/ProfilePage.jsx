@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { useSettings } from '../../context/SettingsContext';
@@ -9,6 +9,7 @@ import LanguageSwitch from '../../components/LanguageSwitch/LanguageSwitch';
 import ThemeSwitch from '../../components/ThemeSwitch/ThemeSwitch';
 import BodyPhotos from '../../components/BodyPhotos/BodyPhotos';
 import ChangePassword from '../../components/ChangePassword/ChangePassword';
+import DeleteAccount from '../../components/DeleteAccount/DeleteAccount';
 import { Button, Icon } from '../../components/common';
 import { CLOTHING_COLORS } from '../../utils/categories';
 import {
@@ -228,6 +229,13 @@ export default function ProfilePage() {
           {t('auth.logout')}
         </Button>
       </div>
+
+      {/* Privacy, supporto ed eliminazione account: obbligatori per gli store */}
+      <nav className="profile-page__legal" aria-label={t('legal.navLabel')}>
+        <Link to="/privacy">{t('legal.privacyLink')}</Link>
+        <Link to="/supporto">{t('legal.supportLink')}</Link>
+        <DeleteAccount />
+      </nav>
     </div>
   );
 }

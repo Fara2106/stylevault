@@ -1,0 +1,4 @@
+.delete-account__open { background: none; border: 0; padding: var(--sv-space-2); font: inherit;
+  font-size: 13px; color: var(--sv-error, #b3261e); text-decoration: underline; cursor: pointer; }
+.delete-account__text { margin: 0; line-height: 1.5; }
+.delete-account__error { margin: var(--sv-space-3) 0 0; font-size: 13px; color: var(--sv-error, #b3261e); }

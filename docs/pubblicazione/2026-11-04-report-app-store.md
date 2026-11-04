@@ -4,6 +4,30 @@ Data: 2026-11-04 · Store: App Store; Google Play escluso perché non esiste anc
 
 Audit fatto con la skill `mobile-app-publishing` (valori verificati il 2026-11-04) leggendo il codice, `ios/project.yml`, l'Info.plist, le migrazioni e le funzioni Supabase, e le impostazioni di login di Supabase. Non ho ancora fatto un archivio Release né una prova su TestFlight: senza Apple Developer Program a pagamento non si possono fare.
 
+## 0. Stato dopo le correzioni (2026-11-04, pomeriggio)
+
+Ricontrollato dopo le correzioni. Test: sito 294/294, iOS 138/138, funzioni Supabase 12/12. Prove fatte nel browser in modalità locale e sulle funzioni pubblicate.
+
+| Punto | Stato |
+|-------|-------|
+| Blocco 1, Apple Developer Program | **Aperto**: tocca a Lorenzo |
+| Blocco 2, cancellazione account | **Risolto nel codice**: Profilo → "Elimina account" (sito e app) e funzione `delete-account` pubblicata su Supabase (risponde 401 senza utente). Poi pagina pubblica `/elimina-account`. **Da provare con un account vero**: lo fa Lorenzo |
+| Blocco 3, privacy policy e supporto | **Risolto nel codice**: pagine pubbliche `/privacy`, `/supporto`, `/elimina-account` (IT/EN, HTTP 200 su Pages); link nel Profilo, nel login del sito e nel login nativo. Contatto `lorefara97@gmail.com` da confermare |
+| Blocco 4, Privacy Manifest | **Risolto**: `ios/StyleVault/Resources/PrivacyInfo.xcprivacy` (CA92.1, C617.1, E174.1, 6 tipi di dati, niente tracking), presente nel bundle |
+| Blocco 5, sito pubblicato indietro | **Aperto**: serve l'ok di Lorenzo per unire in `main` e pubblicare |
+| Blocco 6, rete locale ed ATS nella Release | **Risolto**: aggiunti solo in Debug da uno script; `SITE_URL` vuoto in Release. Verificato sugli Info.plist compilati |
+| Avviso 1, protezioni IA | **Risolto**: "Generato con IA" sulla versione realistica e "Immagine elaborata con IA" nella prova del sito; "Segnala risultato", che apre il Feedback già compilato; dichiarazione sulle foto (app, Profilo, primo accesso) |
+| Avviso 2, download da 1,3 GB | **Risolto**: "Scarica (1,3 GB)" alla prima volta, anche in Wi-Fi; dopo "Elimina i modelli" si richiede |
+| Avviso 3, @imgly AGPL | **Risolto**: crediti in `/supporto` con il link al sorgente; il repo è pubblico. Deve restare pubblico e allineato a ciò che è online |
+| Avviso 4, Open-Meteo | **Risolto**: "Dati meteo: Open-Meteo.com (CC BY 4.0)" sotto il meteo |
+| Avviso 8, `fetch-link-metadata` | **Risolto e pubblicato**: solo utenti loggati, link pubblici, redirect controllati (401 senza utente) |
+| Avviso 10, crittografia | **Risolto**: `ITSAppUsesNonExemptEncryption = NO` |
+| Avviso 11, versioni | **Risolto**: `$(MARKETING_VERSION)` e `$(CURRENT_PROJECT_VERSION)` (0.1.0, build 1) |
+| Avviso 14, segnaposto picsum | **Risolto**: segnaposto neutro con l'iniziale, salvato come JPEG |
+| Avvisi 5, 6, 7, 9, 12, 13, 15 | Aperti. Per il 9 i fornitori sono nella privacy policy; restano da fare le Privacy Labels in App Store Connect |
+
+Nota: un'altra sessione ha scritto `docs/superpowers/specs/2026-11-04-app-nativa-icloud-design.md` (app nativa con iCloud, senza sito e senza login). Se si fa, cancellazione account, funzioni Supabase e pagine del sito cambiano o spariscono; privacy policy, Privacy Manifest, protezioni IA e consenso al download restano.
+
 ## 1. Classificazione
 
 | Caratteristica | Presente | Capitolo applicato |

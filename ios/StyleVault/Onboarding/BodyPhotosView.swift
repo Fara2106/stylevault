@@ -5,6 +5,10 @@ import SwiftUI
 /// fotocamera o libreria, scontorno di iOS come anteprima, controllo che ci
 /// sia una persona sola e intera, poi upload nel profilo.
 struct BodyPhotosView: View {
+    /// Dichiarazione sulle foto (protezione delle immagini di persone).
+    nonisolated static let ownPhotoNotice =
+        "Usa solo foto di te: scattandole confermi che ritraggono te, oppure una persona che ti ha dato il consenso."
+
     let views: [BodyView]
     /// "Più tardi" al primo accesso, "Chiudi" quando si rifanno dal Profilo
     var leaveTitle = "Più tardi"
@@ -35,6 +39,8 @@ struct BodyPhotosView: View {
                 .font(.caption.weight(.semibold)).tracking(2).foregroundStyle(Palette.muted)
             Text("Le tue foto").font(.display(32)).foregroundStyle(Palette.ink)
             Text(current.guide).font(.subheadline).multilineTextAlignment(.center).foregroundStyle(Palette.muted)
+            // Le foto servono a vestire chi usa l'app: niente foto di altri senza consenso
+            Text(Self.ownPhotoNotice).font(.caption).multilineTextAlignment(.center).foregroundStyle(Palette.muted)
 
             ZStack {
                 RoundedRectangle(cornerRadius: 14).fill(Palette.surface)

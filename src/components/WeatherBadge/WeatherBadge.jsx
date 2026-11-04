@@ -60,6 +60,17 @@ export default function WeatherBadge({ weather, stale = false, staleTime = '', a
           <span>{t('weather.dataSources')}</span>
         </a>
       )}
+      {/* Open-Meteo: licenza CC BY 4.0, la fonte va citata */}
+      {!attribution?.legalURL && (
+        <a
+          className="weather-badge__attribution"
+          href="https://open-meteo.com/"
+          target="_blank"
+          rel="noreferrer"
+        >
+          <span>{t('weather.openMeteoCredit')}</span>
+        </a>
+      )}
       {stale && (
         <p className="weather-badge__stale">{t('weather.staleNotice', { time: staleTime })}</p>
       )}

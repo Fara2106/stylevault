@@ -89,6 +89,27 @@ final class WebViewStore: NSObject, ObservableObject {
             && url.port == AppConfig.siteURL.port
     }
 
+    /// "Segnala risultato" dell'avatar: la pagina Feedback del sito con l'argomento già scelto.
+    func openFeedback() {
+        guard Self.isSiteURL(webView.url) else { return }
+        webView.evaluateJavaScript(Self.navigateScript(path: Self.feedbackPath(siteURL: AppConfig.siteURL)))
+    }
+
+    /// Percorso della pagina Feedback sotto la base del sito (es. /stylevault/).
+    nonisolated static func feedbackPath(siteURL: URL) -> String {
+        var base = siteURL.path
+        if !base.hasSuffix("/") { base += "/" }
+        return base + "feedback?topic=avatar"
+    }
+
+    /// Cambio pagina senza ricaricare: React Router ascolta popstate.
+    nonisolated static func navigateScript(path: String) -> String {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .withoutEscapingSlashes
+        let quoted = (try? String(data: encoder.encode(path), encoding: .utf8)) ?? "\"/\""
+        return "history.pushState({}, '', \(quoted)); window.dispatchEvent(new PopStateEvent('popstate'));"
+    }
+
     /// Link http(s) fuori dal sito (negozi, ChatGPT, Gemini): si aprono in Safari.
     nonisolated static func opensExternally(_ url: URL) -> Bool {
         guard let scheme = url.scheme?.lowercased(), ["http", "https"].contains(scheme) else { return false }

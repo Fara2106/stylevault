@@ -80,6 +80,7 @@ export default function BodyPhotos() {
       <p className="body-photos__hint">
         {t(native ? 'profile.bodyPhotosHintApp' : 'profile.bodyPhotosHintWeb')}
       </p>
+      <p className="body-photos__hint">{t('profile.ownPhotoNotice')}</p>
       {failed && <p className="body-photos__error">{t('profile.bodyPhotoError')}</p>}
       {native && (
         <Button

@@ -14,6 +14,7 @@ import {
 import { resizeImageFile } from '../../utils/imageUtils';
 import { fetchLinkMetadata, isValidHttpUrl } from '../../services/linkMetadata';
 import './AddItemPage.css';
+import { makePlaceholderPhoto } from '../../utils/placeholderPhoto';
 
 const EMPTY_FORM = {
   name: '',
@@ -138,9 +139,8 @@ export default function AddItemPage() {
       ...form,
       name: form.name.trim(),
       price: form.price === '' ? null : Number(form.price),
-      photo:
-        form.photo ||
-        `https://picsum.photos/seed/${encodeURIComponent(form.name.trim())}/400/533`,
+      // Senza foto: segnaposto neutro con l'iniziale (non una foto a caso)
+      photo: form.photo || makePlaceholderPhoto(form.name.trim()),
     };
 
     if (editingItem) {

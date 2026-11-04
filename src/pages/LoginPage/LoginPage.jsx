@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { Button, Input } from '../../components/common';
@@ -134,6 +134,12 @@ export default function LoginPage() {
           {mode === 'login' ? t('auth.noAccount') : t('auth.hasAccount')}{' '}
           <strong>{mode === 'login' ? t('auth.register') : t('auth.login')}</strong>
         </button>
+
+        {mode === 'register' && <p className="login-page__legal-note">{t('legal.registerNotice')}</p>}
+        <nav className="login-page__legal" aria-label={t('legal.navLabel')}>
+          <Link to="/privacy">{t('legal.privacyLink')}</Link>
+          <Link to="/supporto">{t('legal.supportLink')}</Link>
+        </nav>
       </form>
     </div>
   );

@@ -42,3 +42,7 @@
   line-height: 1.5;
   color: var(--sv-muted);
 }
+
+.model-tryon__ai { display: flex; justify-content: center; gap: var(--sv-space-3, 12px); margin: 6px 0 0;
+  font-size: 12px; color: var(--sv-muted); }
+.model-tryon__ai a { color: var(--sv-muted); text-decoration: underline; }

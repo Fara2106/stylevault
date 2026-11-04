@@ -65,7 +65,8 @@
       "invalid-email": "This email doesn't look valid.",
       "passwords-mismatch": "The two passwords don't match.",
       "same-password": "The new password must be different from the current one.",
-      "reauthentication-needed": "For security, sign out and back in, then change the password."
+      "reauthentication-needed": "For security, sign out and back in, then change the password.",
+      "delete-failed": "I couldn't delete the account: check your connection and try again. If it keeps failing, contact us from the Support page."
     }
   },
   "onboarding": {
@@ -235,7 +236,9 @@
     "uploadReference": "Upload a photo of you",
     "referenceHint": "You'll upload it in the chat with the AI prompt and it powers the color analysis. It stays on your device only.",
     "removeReference": "Remove photo",
-    "preparingGarments": "Preparing the garments..."
+    "preparingGarments": "Preparing the garments...",
+    "aiLabel": "Image processed with AI",
+    "reportResult": "Report result"
   },
   "advice": {
     "colorsHarmonious": "The colors work well together",
@@ -340,7 +343,12 @@
     "changePassword": "Change password",
     "newPassword": "New password",
     "confirmPassword": "Repeat the new password",
-    "passwordChanged": "Password changed: use the new one next time you sign in."
+    "passwordChanged": "Password changed: use the new one next time you sign in.",
+    "deleteAccount": "Delete account",
+    "deleteAccountTitle": "Delete your account?",
+    "deleteAccountText": "We will permanently delete your account with your wardrobe, outfits, calendar, body and clothing photos and colour analysis. This cannot be undone.",
+    "deleteAccountConfirm": "Delete permanently",
+    "ownPhotoNotice": "Only use photos of yourself: by uploading them you confirm they show you, or someone who gave you their consent."
   },
   "categories": {
     "all": "All",
@@ -467,7 +475,8 @@
       "evening": "Evening"
     },
     "appleWeather": "Apple Weather",
-    "dataSources": "Data sources"
+    "dataSources": "Data sources",
+    "openMeteoCredit": "Weather data: Open-Meteo.com (CC BY 4.0)"
   },
   "armocromia": {
     "seasons": {
@@ -660,6 +669,13 @@
     "backToProfile": "Back to Profile",
     "errorFailed": "Sending failed. Check your connection and try again.",
     "errorLimit": "You've sent many reports in a row: try again in a few minutes.",
-    "errorUnavailable": "Reports only work with the cloud enabled."
+    "errorUnavailable": "Reports only work with the cloud enabled.",
+    "avatarPrefill": "Reporting a try-on / avatar result: "
+  },
+  "legal": {
+    "navLabel": "Privacy and support",
+    "privacyLink": "Privacy",
+    "supportLink": "Support",
+    "registerNotice": "By signing up you confirm you have read the privacy policy."
   }
 }

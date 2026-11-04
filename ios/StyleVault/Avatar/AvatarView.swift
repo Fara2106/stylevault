@@ -9,6 +9,8 @@ import SwiftUI
 struct AvatarView: View {
     let request: AvatarRequest
     let onClose: () -> Void
+    /// "Segnala risultato": chiude l'avatar e apre il Feedback del sito.
+    var onReport: () -> Void = {}
 
     @Environment(\.scenePhase) private var scenePhase
 
@@ -85,7 +87,8 @@ struct AvatarView: View {
         .task {
             await build()
             await restoreSaved()
-            if realistic.autoStartAllowed { await startRealistic(.front) }
+            // La prima volta si chiede prima di scaricare 1,3 GB (anche in Wi-Fi)
+            if realistic.autoStartAllowed, realistic.downloadConsented { await startRealistic(.front) }
         }
         .onDisappear {
             closed = true
@@ -115,6 +118,16 @@ struct AvatarView: View {
         if let image = images[view] {
             Image(decorative: image, scale: 1).resizable().scaledToFit()
                 .clipShape(RoundedRectangle(cornerRadius: 14))
+                // AI Act art. 50: la versione realistica è un'immagine generata
+                .overlay(alignment: .bottomLeading) {
+                    if realistic.state[view] == .ready {
+                        Text("Generato con IA")
+                            .font(.caption2.weight(.semibold)).foregroundStyle(.white)
+                            .padding(.horizontal, 8).padding(.vertical, 4)
+                            .background(.black.opacity(0.55), in: Capsule())
+                            .padding(10)
+                    }
+                }
         } else {
             VStack(spacing: 10) {
                 Image(systemName: view == .side ? "figure.walk" : "figure.stand")
@@ -149,6 +162,18 @@ struct AvatarView: View {
                 if selection != .front, case let .failed(message)? = realistic.state[.front] {
                     Text("Davanti: \(message)").font(.footnote).foregroundStyle(Palette.muted)
                         .multilineTextAlignment(.center)
+                }
+                // Prima volta: 1,3 GB solo dopo un sì, anche in Wi-Fi (Apple 4.2.3(ii))
+                if realistic.supported, !realistic.downloadConsented, !isBusy,
+                   realistic.state[.front] == .collage, photos[.front] != nil {
+                    Text(RealisticAvatarModel.downloadConsentText)
+                        .font(.footnote).foregroundStyle(Palette.muted).multilineTextAlignment(.center)
+                    Button("Scarica (1,3 GB)") {
+                        realistic.consentToDownload()
+                        selection = .front
+                        Task { await startRealistic(.front) }
+                    }
+                    .font(.footnote.weight(.semibold)).foregroundStyle(Palette.ink)
                 }
                 // Rete a consumo o Risparmio dati: si scarica solo col permesso
                 if let view = BodyView.allCases.first(where: { realistic.state[$0] == .needsNetworkConsent }) {
@@ -186,6 +211,11 @@ struct AvatarView: View {
                         generateButton("Genera di profilo", view: .side)
                         generateButton("Genera di spalle", view: .back)
                     }
+                }
+                // Risultato sbagliato o inappropriato: si segnala dal Feedback del sito
+                if realistic.state[selection] == .ready {
+                    Button("Segnala risultato", action: onReport)
+                        .font(.footnote.weight(.semibold)).foregroundStyle(Palette.muted)
                 }
             }
         }

@@ -187,3 +187,13 @@
   padding-top: var(--sv-space-4);
   border-top: 1px solid var(--sv-border);
 }
+
+.profile-page__legal {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sv-space-2) var(--sv-space-4);
+  font-size: 13px;
+}
+.profile-page__legal a { color: var(--sv-muted); padding: var(--sv-space-2); }

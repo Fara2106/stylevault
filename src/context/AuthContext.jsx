@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import { supabase, isSupabaseEnabled } from '../services/supabaseClient';
 import { installNativeHooks, postToNative } from '../utils/nativeBridge';
 import { checkNewPassword } from '../utils/passwordChange';
+import { forgetLocalData } from '../utils/accountCleanup';
 
 const AuthContext = createContext(null);
 
@@ -244,6 +245,35 @@ export function AuthProvider({ children }) {
     return { success: true };
   }, [user]);
 
+  // ── Eliminazione account (Profilo, sito e app): definitiva ──
+  const deleteAccount = useCallback(async () => {
+    if (isSupabaseEnabled) {
+      const { data, error } = await supabase.functions.invoke('delete-account', {
+        body: { confirm: 'DELETE' },
+      });
+      if (error || !data?.ok) {
+        return { success: false, error: error && isUnreachable(error) ? 'service-unreachable' : 'delete-failed' };
+      }
+      // L'utente non esiste più: si chiude solo la sessione di questo dispositivo
+      await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
+      forgetLocalData();
+      setUser(null);
+      postToNative('signOut');
+      return { success: true };
+    }
+
+    // Modalità locale (mock)
+    const registeredUsers = JSON.parse(localStorage.getItem('sv_registered_users') || '[]');
+    forgetLocalData();
+    // Gli altri account di prova di questo browser restano
+    localStorage.setItem(
+      'sv_registered_users',
+      JSON.stringify(registeredUsers.filter((u) => u.id !== user?.id))
+    );
+    setUser(null);
+    return { success: true };
+  }, [user]);
+
   // ── Logout ──
   const logout = useCallback(async () => {
     if (isSupabaseEnabled) {
@@ -266,6 +296,7 @@ export function AuthProvider({ children }) {
     register,
     loginWithGoogle,
     changePassword,
+    deleteAccount,
     logout,
   };
 

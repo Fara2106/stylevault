@@ -36,6 +36,9 @@ jobs:
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
       # Fallback SPA: i deep link (es. /stylevault/outfit) tornano all'app
       - run: cp dist/index.html dist/404.html
+      # Privacy, supporto ed eliminazione account: pagine vere (HTTP 200), non il
+      # 404 di ripiego, perché i loro indirizzi vanno in App Store Connect
+      - run: for p in privacy supporto elimina-account; do mkdir -p dist/$p && cp dist/index.html dist/$p/index.html; done
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

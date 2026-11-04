@@ -34,6 +34,11 @@ enum AppConfig {
     static let siteURL = URL(string: "https://fara2106.github.io/stylevault/")!
     #endif
 
+    /// Pagine pubbliche del sito pubblicato (anche in Debug: sono le stesse
+    /// indicate in App Store Connect).
+    static let privacyURL = URL(string: "https://fara2106.github.io/stylevault/privacy")!
+    static let supportURL = URL(string: "https://fara2106.github.io/stylevault/supporto")!
+
     /// Redirect del login Google (schema URL registrato in project.yml).
     static let authCallback = URL(string: "stylevault://auth-callback")!
 

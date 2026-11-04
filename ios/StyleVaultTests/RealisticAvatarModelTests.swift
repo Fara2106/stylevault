@@ -557,6 +557,28 @@ final class RealisticAvatarModelTests: XCTestCase {
         XCTAssertFalse(m.isBusy)
     }
 
+    // MARK: - Consenso al download (Apple 4.2.3(ii)): 1,3 GB solo dopo un sì, anche in Wi-Fi
+
+    func testDownloadNeedsConsentOnFirstUseAndIsRemembered() {
+        let m = model(engine: FakeEngine())
+        XCTAssertFalse(m.downloadConsented, "la prima volta si chiede, anche in Wi-Fi")
+        m.consentToDownload()
+        XCTAssertTrue(m.downloadConsented)
+        XCTAssertTrue(model(engine: FakeEngine()).downloadConsented, "il sì resta per le aperture seguenti")
+    }
+
+    func testRemoveModelsAsksConsentAgain() async {
+        let m = model(engine: FakeEngine(), store: FakeStore(ready: true))
+        m.consentToDownload()
+        await m.removeModels()
+        XCTAssertFalse(m.downloadConsented, "tolti i modelli, il prossimo download si richiede")
+        XCTAssertFalse(model(engine: FakeEngine()).downloadConsented)
+    }
+
+    func testDownloadConsentTextShowsSize() {
+        XCTAssertTrue(RealisticAvatarModel.downloadConsentText.contains("1,3 GB"))
+    }
+
     func testRemoveModelsIgnoredWhileGenerating() async throws {
         let store = FakeStore(ready: true)
         let m = model(engine: FakeEngine(delay: .milliseconds(400)), store: store)

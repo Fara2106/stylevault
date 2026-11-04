@@ -4,6 +4,7 @@ import { useAuth } from './context/AuthContext';
 import { useProfile } from './context/ProfileContext';
 import AppLayout from './components/AppLayout/AppLayout';
 import LoginPage from './pages/LoginPage/LoginPage';
+import LegalPage from './pages/LegalPage/LegalPage';
 import OnboardingPage from './pages/OnboardingPage/OnboardingPage';
 import WardrobePage from './pages/WardrobePage/WardrobePage';
 
@@ -71,6 +72,10 @@ export default function App() {
       <ScrollToTop />
       <Routes>
       <Route path="/login" element={<LoginPage />} />
+      {/* Pubbliche, senza login: i link vanno in App Store Connect */}
+      <Route path="/privacy" element={<LegalPage kind="privacy" />} />
+      <Route path="/supporto" element={<LegalPage kind="support" />} />
+      <Route path="/elimina-account" element={<LegalPage kind="deletion" />} />
       <Route
         path="/onboarding"
         element={

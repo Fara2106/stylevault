@@ -47,6 +47,7 @@ export default function OnboardingPage() {
         <p className="onboarding__intro">
           {step === 0 ? t('onboarding.stepPhotoHint') : t('onboarding.stepCityHint')}
         </p>
+        {step === 0 && <p className="onboarding__intro">{t('profile.ownPhotoNotice')}</p>}
       </header>
 
       {step === 0 ? (

@@ -43,13 +43,35 @@ targets:
         NSCameraUsageDescription: Per fare le foto del tuo corpo e dei capi.
         NSPhotoLibraryUsageDescription: Per scegliere le foto del tuo corpo e dei capi.
         NSLocationWhenInUseUsageDescription: Per mostrarti il meteo di dove sei e consigliarti cosa indossare.
-        NSLocalNetworkUsageDescription: In sviluppo l'app carica StyleVault dal Mac sulla rete di casa.
-        NSAppTransportSecurity:
-          NSAllowsLocalNetworking: true
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        # Solo HTTPS di sistema: niente domanda sulla crittografia a ogni build
+        ITSAppUsesNonExemptEncryption: false
+        # Rete locale ed eccezione ATS per il dev server del Mac: SOLO in Debug,
+        # le aggiunge lo script "Solo Debug: rete locale" qui sotto
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: it.faraoni.stylevault
         TARGETED_DEVICE_FAMILY: "1"
+        # Lo script Debug scrive nell'Info.plist già elaborato
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
+      configs:
+        # La Release carica il sito pubblicato: l'IP di casa non deve finirci
+        Release:
+          SITE_URL: ""
+    postBuildScripts:
+      - name: "Solo Debug: rete locale"
+        basedOnDependencyAnalysis: false
+        script: |
+          # Il dev server del Mac (vite --host) in rete locale: permesso e
+          # eccezione ATS solo nelle build Debug, mai nella Release inviata.
+          [ "$CONFIGURATION" = "Debug" ] || exit 0
+          PLIST="$TARGET_BUILD_DIR/$INFOPLIST_PATH"
+          /usr/libexec/PlistBuddy -c "Delete :NSLocalNetworkUsageDescription" "$PLIST" 2>/dev/null || true
+          /usr/libexec/PlistBuddy -c "Add :NSLocalNetworkUsageDescription string 'Solo in sviluppo: carica StyleVault dal Mac sulla rete di casa.'" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Delete :NSAppTransportSecurity" "$PLIST" 2>/dev/null || true
+          /usr/libexec/PlistBuddy -c "Add :NSAppTransportSecurity dict" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Add :NSAppTransportSecurity:NSAllowsLocalNetworking bool true" "$PLIST"
     dependencies:
       - package: Supabase
   StyleVaultTests:
