@@ -46,6 +46,19 @@ actor RealisticModelStore: RealisticModelPreparing {
     /// Spazio che serve in più dei byte scaricati (archivio + estratto + compilato).
     private static let spaceFactor = 2.5
 
+    private final class Observers: @unchecked Sendable {
+        private let lock = NSLock()
+        private var list: [@Sendable (ModelStoreProgress) -> Void] = []
+        func add(_ f: @escaping @Sendable (ModelStoreProgress) -> Void) { lock.lock(); list.append(f); lock.unlock() }
+        func removeAll() { lock.lock(); list = []; lock.unlock() }
+        func send(_ p: ModelStoreProgress) {
+            lock.lock(); let current = list; lock.unlock()
+            current.forEach { $0(p) }
+        }
+    }
+    private let observers = Observers()
+    private var inFlight: Task<Void, Error>?
+
     private let baseURL: URL
     private let folder: URL
     private let session: URLSession
@@ -119,7 +132,32 @@ actor RealisticModelStore: RealisticModelPreparing {
 
     // MARK: - Preparazione
 
+    /// Una sola preparazione alla volta: chi arriva mentre ne gira una si
+    /// aggancia alla stessa (e ne riceve l'avanzamento), senza scrivere due volte gli stessi file.
     func prepare(progress: @escaping @Sendable (ModelStoreProgress) -> Void) async throws {
+        observers.add(progress)
+        if inFlight == nil {
+            let observers = self.observers
+            inFlight = Task { [weak self] in
+                try await self?.run { observers.send($0) }
+            }
+        }
+        guard let task = inFlight else { return }
+        do {
+            try await task.value
+        } catch {
+            finishPreparation()
+            throw error
+        }
+        finishPreparation()
+    }
+
+    private func finishPreparation() {
+        inFlight = nil
+        observers.removeAll()
+    }
+
+    private func run(progress: @escaping @Sendable (ModelStoreProgress) -> Void) async throws {
         let fm = FileManager.default
         try fm.createDirectory(at: downloadsURL, withIntermediateDirectories: true)
         try fm.createDirectory(at: compiledURL, withIntermediateDirectories: true)
@@ -142,7 +180,7 @@ actor RealisticModelStore: RealisticModelPreparing {
         }
 
         let pending = manifest.files.filter { !isDone($0) }
-        let pendingBytes = pending.reduce(Int64(0)) { $0 + $1.bytes }
+        let pendingBytes = pending.reduce(Int64(0)) { $0 + max(0, $1.bytes - min(fileSize(partURL($1)), $1.bytes)) }
         let needed = Int64(Double(pendingBytes) * Self.spaceFactor)
         if !pending.isEmpty, freeSpace() < needed {
             throw ModelStoreError.notEnoughSpace(neededMB: Int((needed + 1_048_575) / 1_048_576))
@@ -204,7 +242,9 @@ actor RealisticModelStore: RealisticModelPreparing {
         } catch let error as ModelStoreError {
             throw error
         } catch {
-            if error is CancellationError { throw error }
+            if error is CancellationError || (error as? URLError)?.code == .cancelled && Task.isCancelled {
+                throw CancellationError()
+            }
             // Senza rete si può comunque finire con il manifest già salvato
             if let fallback { return fallback }
             throw ModelStoreError.network
@@ -229,6 +269,7 @@ actor RealisticModelStore: RealisticModelPreparing {
         var offset = fileSize(part)
         if offset > file.bytes { try? fm.removeItem(at: part); offset = 0 }
         if offset == file.bytes {
+            try? fm.removeItem(at: archive)
             try fm.moveItem(at: part, to: archive)
             return
         }

@@ -12,11 +12,12 @@ final class FakeModelServer: URLProtocol, @unchecked Sendable {
     /// Se valorizzato: il primo scarico di questo file si interrompe dopo `count` byte
     nonisolated(unsafe) static var interrupt: (name: String, count: Int)?
     nonisolated(unsafe) static var ignoreRange = false
+    nonisolated(unsafe) static var rangeNotSatisfiable = false
     private static let lock = NSLock()
 
     static func reset() {
         lock.lock(); defer { lock.unlock() }
-        files = [:]; requests = []; interrupt = nil; ignoreRange = false
+        files = [:]; requests = []; interrupt = nil; ignoreRange = false; rangeNotSatisfiable = false
     }
 
     override class func canInit(with request: URLRequest) -> Bool { true }
@@ -35,6 +36,9 @@ final class FakeModelServer: URLProtocol, @unchecked Sendable {
 
         guard let body else {
             respond(status: 404, data: Data(), headers: [:]); return
+        }
+        if Self.rangeNotSatisfiable, request.value(forHTTPHeaderField: "Range") != nil {
+            respond(status: 416, data: Data(), headers: [:]); return
         }
         var start = 0
         var status = 200
@@ -258,6 +262,63 @@ final class RealisticModelStoreTests: XCTestCase {
         XCTAssertGreaterThan(lastTotal, 0)
         XCTAssertEqual(lastDone, lastTotal)
         XCTAssertEqual(lastModels, 3)
+    }
+
+    func testConcurrentPrepareDownloadsOnce() async throws {
+        try publish()
+        let store = makeStore()
+        async let a: Void = store.prepare { _ in }
+        async let b: Void = store.prepare { _ in }
+        try await a
+        try await b
+        for name in ["Denoiser.aar", "VAEDecoder.aar", "Tokenizer.aar"] {
+            let count = FakeModelServer.requests.filter { $0.url?.lastPathComponent == name }.count
+            XCTAssertEqual(count, 1, name)
+        }
+        let ready = await store.isReady
+        XCTAssertTrue(ready)
+    }
+
+    func testManifestChangeRedownloads() async throws {
+        try publish()
+        let store = makeStore()
+        try await store.prepare { _ in }
+        let oldOutputURL = await store.modelURL("Denoiser")
+        let oldOutput = try String(contentsOf: XCTUnwrap(oldOutputURL).appending(path: "Manifest.json"))
+        // Nuova versione di Denoiser: altro corpo, altro hash
+        let data = try makeArchive(["Manifest.json": "{\"m\":\"nuovo\"}", "Data/weights.bin": "xyz"])
+        FakeModelServer.files["Denoiser.aar"] = data
+        var manifest = try XCTUnwrap(JSONSerialization.jsonObject(with: XCTUnwrap(FakeModelServer.files["models-manifest.json"])) as? [String: Any])
+        var files = try XCTUnwrap(manifest["files"] as? [[String: Any]])
+        let i = try XCTUnwrap(files.firstIndex { ($0["name"] as? String) == "Denoiser.aar" })
+        files[i]["bytes"] = Int64(data.count); files[i]["sha256"] = sha(data)
+        manifest["files"] = files
+        FakeModelServer.files["models-manifest.json"] = try JSONSerialization.data(withJSONObject: manifest)
+        FakeModelServer.requests = []
+        try await store.prepare { _ in }
+        let archives = FakeModelServer.requests.compactMap { $0.url?.lastPathComponent }.filter { $0.hasSuffix(".aar") }
+        XCTAssertEqual(archives, ["Denoiser.aar"])
+        let newOutputURL = await store.modelURL("Denoiser")
+        let newOutput = try String(contentsOf: XCTUnwrap(newOutputURL).appending(path: "Manifest.json"))
+        XCTAssertNotEqual(oldOutput, newOutput)
+        XCTAssertTrue(newOutput.contains("nuovo"))
+    }
+
+    func testRange416Restarts() async throws {
+        try publish(names: ["Denoiser"])
+        let store = makeStore()
+        // .part vecchio e più corto del file: il server risponde 416 alla Range
+        try FileManager.default.createDirectory(at: folder.appending(path: "downloads"), withIntermediateDirectories: true)
+        try Data([1, 2, 3]).write(to: folder.appending(path: "downloads/Denoiser.aar.part"))
+        FakeModelServer.rangeNotSatisfiable = true
+        try await store.prepare { _ in }
+        let ranges = FakeModelServer.requests.filter { $0.url?.lastPathComponent == "Denoiser.aar" }
+            .map { $0.value(forHTTPHeaderField: "Range") }
+        XCTAssertEqual(ranges.count, 2)
+        XCTAssertEqual(ranges[0], "bytes=3-")
+        XCTAssertNil(ranges[1])
+        let ready = await store.isReady
+        XCTAssertTrue(ready)
     }
 
     func testNomeNelManifestFuoriCartellaERifiutato() async throws {
