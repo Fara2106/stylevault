@@ -236,6 +236,16 @@ piano `docs/superpowers/plans/2026-11-03-app-ios.md`, registro decisioni
   Program (oggi Personal Team gratuito).
   Idea di Lorenzo: per ora Mobile-VTON coi crediti per farsi conoscere; in
   futuro un'IA nostra al suo posto (il motore sta dietro `RealisticTryOn`).
+  04/11 piano eseguito coi subagent, Task 1–8 fatti e revisionati, commit
+  locali e58a5ff..f187ad2 (NON pushati): pacchetto modelli (out/release, 8
+  .aar 1,27 GB), tokenizzatore CLIP, ingressi, store con download/ripresa/
+  SHA-256/consenso su rete cellulare, motore MobileVTONTryOn (45,9 dB dal
+  riferimento Mac), composizione col collage + maschera, schermata con barre,
+  crediti, elimina modelli, protezione da crash per memoria; il sito manda
+  `descriptor`. Test: app 123/123, Mac motore 3/3. Manca Task 9 (telefoni):
+  serve prima la Release, e la VAE deriva da Stable Diffusion 3.5 Large →
+  licenza Stability AI Community: copia della licenza + Notice + "Powered by
+  Stability AI" nei Crediti, da decidere con Lorenzo.
 - Revisione finale (revisore separato): 2 critici + 8 importanti CORRETTI
   (refresh token doppio, sessione al sito solo dopo 'ready', link esterni,
   avvio offline, 'Più tardi', conteggio persone, foto 48 MP, retro dei capi);
