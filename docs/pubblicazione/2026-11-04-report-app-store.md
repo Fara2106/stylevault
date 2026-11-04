@@ -4,6 +4,84 @@ Data: 2026-11-04 · Store: App Store; Google Play escluso perché non esiste anc
 
 Audit fatto con la skill `mobile-app-publishing` (valori verificati il 2026-11-04) leggendo il codice, `ios/project.yml`, l'Info.plist, le migrazioni e le funzioni Supabase, e le impostazioni di login di Supabase. Non ho ancora fatto un archivio Release né una prova su TestFlight: senza Apple Developer Program a pagamento non si possono fare.
 
+## 00. Stato alla sera del 2026-11-04, dopo la decisione dell'app nativa
+
+Lorenzo e Mary hanno deciso: si pubblica solo l'app nativa con iCloud (`docs/superpowers/specs/2026-11-04-app-nativa-icloud-design.md`). L'app ibrida resta in uso solo a loro due e **non va inviata ad Apple**.
+
+### App ibrida: cosa è cambiato rispetto al pomeriggio
+
+La tabella della sezione 0 non vale più per questi punti:
+
+- **Blocco 2 riaperto.** `delete-account` è stata cancellata da Supabase e risponde 404. Il pulsante "Elimina account" nel codice chiama quindi una funzione che non c'è.
+- **Blocco 3 riaperto.** Le pagine `/privacy`, `/supporto` e `/elimina-account` non sono online: GitHub Pages risponde 404, perché il sito non è mai stato ripubblicato. I link Privacy e Supporto del login nativo aprono quindi una pagina 404 (provato sul simulatore).
+- **Avviso 8 riaperto.** `fetch-link-metadata` è tornata alla versione di prima: chiunque abbia la chiave pubblica può usarla.
+- **Test.** Il resto è verificato: iOS 138/138 e RealisticBench 9/9 su iPhone 18 Pro e iPad Pro 11" (M5), sito 294/294, funzioni 7/7.
+
+### App nativa: il design contro le regole Apple
+
+**Risolti dal design:**
+- 5.1.1(v), cancellazione account, e account demo: non c'è login;
+- 4.2, "sito impacchettato";
+- backend in pausa durante la revisione;
+- rete locale e ATS;
+- AGPL di @imgly;
+- picsum, microlink e Resend.
+
+Restano validi il Privacy Manifest, la crittografia e le versioni.
+
+**Da sistemare nel design prima di partire**, in ordine di gravità:
+
+1. **[Licenze, grave] I dati di addestramento dell'avatar realistico sono "solo ricerca"**
+   - Mobile-VTON è addestrato su DressCode e VITON-HD (fonti: paper CVPR 2026, arXiv 2603.00947).
+   - La licenza di DressCode (github.com/aimagelab/dress-code, file LICENCE) ammette l'uso "only for the purposes of research, teaching and publication", "academic and non-commercial". Aggiunge che "any other works you make using the Dress Code Dataset" restano sotto gli stessi termini. Il dataset non viene dato alle aziende.
+   - VITON-HD è CC BY-NC 4.0, che per un'app gratuita va bene.
+   - Una pubblicazione sull'App Store non è ricerca né didattica, anche se l'app è gratuita. Apple non lo controlla in revisione, ma basta una segnalazione per far togliere l'app (5.2.1), e la responsabilità legale resta di Lorenzo.
+   - L'audit del mattino aveva controllato solo pesi e componenti, non i dati di addestramento.
+   - Scelte possibili:
+     - (a) prima versione senza avatar realistico, con l'avatar stilizzato e la prova dei vestiti attuali;
+     - (b) chiedere un permesso scritto ad AImageLab (Università di Modena e Reggio Emilia) e agli autori di Mobile-VTON;
+     - (c) un modello addestrato su dati con licenza commerciale.
+   - Consiglio (a) subito e (b) in parallelo. Con (a) spariscono dalla prima versione anche il download da 1,3 GB, l'entitlement di memoria e buona parte delle protezioni IA della fase 6.
+2. **[2.5.19 e 2.1] Import dei dati di oggi**
+   - Le due strade del design non vanno nella versione inviata:
+     - "Accedi per portare qui i tuoi dati": un login Supabase che il revisore non può usare, e che riporta i problemi dell'account demo e della cancellazione;
+     - un import nascosto "solo per voi due": è una funzione nascosta, vietata dalla regola 2.5.19 del 16/10/2026.
+   - Soluzione: usare **Esporta e importa**, già approvato. Uno script una tantum, lanciato da Lorenzo con le sue credenziali, scarica i dati da Supabase in uno zip nel formato dell'import. Poi Profilo → Importa sul telefono. Nell'app non arriva una riga di Supabase.
+   - Vale lo stesso per l'Armocromia, se la si rimanda: va tolta dalla build, non spenta con un interruttore da accendere dopo la revisione.
+3. **[2.1] L'app deve funzionare senza iCloud**
+   - Il dispositivo del revisore può non avere iCloud attivo.
+   - Con iCloud assente o pieno, SwiftData salva in locale e l'app mostra solo un avviso "sincronizzazione non attiva". Non deve mai bloccarsi o chiedere di accedere a iCloud.
+   - Prima dell'invio, lo schema CloudKit va promosso in Production (già scritto nel design).
+4. **[5.1.1(i), 1.5] Privacy policy e supporto online prima dell'invio**
+   - Oggi i due indirizzi danno 404.
+   - Il design prevede una pagina statica su GitHub Pages. Va tenuto lo stesso indirizzo `fara2106.github.io/stylevault/privacy` e `/supporto`, già scritto in `AppConfig`, oppure va aggiornato.
+   - Contatto: email da confermare.
+5. **[Privacy Labels] Cosa dichiarare nella nativa**
+   - **Dati in iCloud (database privato):** lo sviluppatore non può leggerli, quindi per la definizione di Apple non sono "raccolti". Va riconfermato rispondendo alle domande di App Store Connect.
+   - **Posizione a Open-Meteo:** è un terzo. Due strade:
+     - dichiarare "Posizione approssimativa", per la funzionalità dell'app e non collegata all'utente, e arrotondare le coordinate a 2 decimali (circa 1 km) prima di mandarle;
+     - usare solo WeatherKit.
+
+     In entrambi i casi, nominare Open-Meteo nella privacy policy.
+   - **Feedback via Mail:** l'utente scrive dalla sua app Mail, ma Lorenzo riceve email e testo. Dichiarare "Email" e "Assistenza clienti", non collegati al tracciamento, oppure valutare se rientra nella dichiarazione facoltativa di Apple (raccolta rara e facoltativa).
+   - **Privacy Manifest:** togliere email e nome; restano CA92.1, C617.1 ed E174.1, quest'ultimo solo se resta il download dei modelli.
+6. **[Storefront] Cina continentale**
+   - Se nella prova dei vestiti restano i link a ChatGPT e Gemini, o la dicitura "Powered by Stability AI", le regole cinesi sull'IA impongono di toglierli.
+   - Più semplice: escludere la Cina continentale in App Store Connect.
+7. **[2.4.1, screenshot] iPad**
+   - Il design è per iPhone e iPad, quindi `TARGETED_DEVICE_FAMILY "1,2"`, con un layout vero per iPad e screenshot iPad 13".
+   - Se l'invio slitta ad aprile 2027 o dopo, servono anche gli screenshot per iPhone Duo.
+8. **[App Store Connect]**
+   - questionario dell'età, con le domande sulle funzioni social (non ce ne sono);
+   - Accessibility Nutrition Labels, solo per ciò che è provato;
+   - stato DSA: con un'app gratuita e senza monetizzazione, probabilmente "non trader", ma decide Lorenzo;
+   - nome "StyleVault": non ho trovato app omonime sull'App Store; lo conferma App Store Connect alla creazione;
+   - categoria affollata (4.3(b)): nelle note per il revisore, spiegare cosa la distingue: outfit con meteo e fasce della giornata, Armocromia, analisi sul dispositivo.
+
+**Costi della nativa:** 99 USD l'anno per l'Apple Developer Program. Supabase si spegne dopo l'import, GitHub Pages è gratuito.
+
+**Blocco che resta:** l'iscrizione all'Apple Developer Program (blocco 1).
+
 ## 0. Stato dopo le correzioni (2026-11-04, pomeriggio)
 
 Ricontrollato dopo le correzioni. Test: sito 294/294, iOS 138/138, funzioni Supabase 12/12. Prove fatte nel browser in modalità locale e sulle funzioni pubblicate.

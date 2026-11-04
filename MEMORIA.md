@@ -348,6 +348,14 @@ piano `docs/superpowers/plans/2026-11-03-app-ios.md`, registro decisioni
     Le correzioni iOS restano utili anche nella versione nativa:
     Privacy Manifest, Debug/Release, etichetta IA, Segnala, dichiarazione
     foto, consenso al download.
+- **Audit Apple ripetuto 04/11 sera** → sezione 00 del report
+  `docs/pubblicazione/2026-11-04-report-app-store.md`. App ibrida: non si
+  invia (blocchi 2 e 3 riaperti). Nativa: **rischio licenze grave** — Mobile-VTON
+  è addestrato su DressCode (licenza solo ricerca/didattica, non commerciale)
+  → proposta: prima versione senza avatar realistico e richiesta di permesso
+  ad AImageLab. Import dei dati: niente login Supabase né import nascosto
+  (regola 2.5.19), usare Esporta/Importa con uno script lanciato da Lorenzo.
+  L'app deve funzionare senza iCloud. Pagine privacy/supporto ancora 404.
 - **Test completi 04/11 sera** (dopo il push di feat/app-ios, 1f1a28a):
   StyleVault 138/138 su iPhone 18 Pro e su iPad Pro 11" (M5)
   (B04B93AB-…, libero; l'iPad Pro 13" M5 acceso è della sessione Vocali);
