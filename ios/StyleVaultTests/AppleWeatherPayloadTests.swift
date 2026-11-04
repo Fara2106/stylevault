@@ -43,4 +43,16 @@ final class AppleWeatherPayloadTests: XCTestCase {
         let result = await AppleWeather.forecast(for: ForecastRequest(latitude: 41.9, longitude: 12.5, name: "Roma"))
         XCTAssertNil(result)
     }
+
+    func testOreDaInizioOggiPerSetteGiorni() {
+        // Senza un intervallo WeatherKit dà solo ~25 ore da adesso: domani a metà
+        // e nessuna ora per gli altri giorni.
+        let rome = TimeZone(identifier: "Europe/Rome")!
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = rome
+        let now = calendar.date(from: DateComponents(year: 2026, month: 11, day: 4, hour: 10, minute: 30))!
+        let range = AppleWeatherPayload.hourlyRange(now: now, zone: rome)
+        XCTAssertEqual(range.start, calendar.date(from: DateComponents(year: 2026, month: 11, day: 4)))
+        XCTAssertEqual(range.end, calendar.date(from: DateComponents(year: 2026, month: 11, day: 11)))
+    }
 }

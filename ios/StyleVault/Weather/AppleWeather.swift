@@ -20,9 +20,13 @@ enum AppleWeather {
         let location = CLLocation(latitude: request.latitude, longitude: request.longitude)
         do {
             let service = WeatherService.shared
-            let (daily, hourly) = try await service.weather(for: location, including: .daily, .hourly)
-            let attribution = try await service.attribution
             let zone = await timeZone(for: location)
+            let range = AppleWeatherPayload.hourlyRange(now: Date(), zone: zone)
+            let (daily, hourly) = try await service.weather(
+                for: location,
+                including: .daily, .hourly(startDate: range.start, endDate: range.end)
+            )
+            let attribution = try await service.attribution
             let payload = convert(daily: Array(daily.forecast.prefix(7)), hourly: hourly.forecast, zone: zone)
             let body: [String: Any] = [
                 "source": "apple",

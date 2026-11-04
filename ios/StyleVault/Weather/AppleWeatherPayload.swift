@@ -27,6 +27,16 @@ struct AppleHour: Equatable {
 /// legge con lo stesso parseForecastPayload (fasce, pioggia, consigli).
 enum AppleWeatherPayload {
     /// Condizione Apple → codice WMO usato dal sito per icona e descrizione.
+    /// Le ore da chiedere a WeatherKit: da mezzanotte di oggi (ora del luogo) per
+    /// 7 giorni. Senza intervallo WeatherKit dà solo ~25 ore da adesso.
+    static func hourlyRange(now: Date, zone: TimeZone) -> (start: Date, end: Date) {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = zone
+        let start = calendar.startOfDay(for: now)
+        let end = calendar.date(byAdding: .day, value: 7, to: start) ?? start.addingTimeInterval(7 * 86_400)
+        return (start, end)
+    }
+
     static func wmoCode(_ condition: WeatherCondition) -> Int {
         switch condition {
         case .clear, .mostlyClear: return 0

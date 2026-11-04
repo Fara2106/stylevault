@@ -63,6 +63,9 @@ targets:
         type: folder
     dependencies:
       - target: StyleVault
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
   # Vision (scontorno, posa) gira davvero solo su hardware Apple: i suoi test
   # stanno su macOS, che ha le stesse API e il Neural Engine del Mac.
   StyleVaultVisionTests:
