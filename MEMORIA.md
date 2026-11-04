@@ -317,6 +317,14 @@ piano `docs/superpowers/plans/2026-11-03-app-ios.md`, registro decisioni
   sola) riuscita; poi Lorenzo ha rifatto l'Armocromia e il 04/11 alle 15:08
   UTC il suo profilo ha `armocromia` = deep-winter (axes, season, detected,
   updatedAt, confidence). **Salvataggio confermato end-to-end.**
+- **"Cambia password" nel Profilo (04/11)**: pulsante sotto Impostazioni
+  (`components/ChangePassword`), apre nuova + ripeti → `changePassword` in
+  AuthContext → `supabase.auth.updateUser({ password })` (sito e app, stessa
+  sessione). Controllo in `utils/passwordChange.js` (min 6, coincidono);
+  errori nuovi tradotti: passwords-mismatch, same-password,
+  reauthentication-needed. Provato nel browser in modalità locale (errore se
+  diverse, poi "Password cambiata"); con Supabase vero lo prova Lorenzo
+  (deve cambiare la password che aveva scritto in chat). Test 285/285.
 - **Prova sull'iPhone (04/11)**: la build Release apre il sito PUBBLICATO,
   che non ha il ponte iOS (niente "Rifai le foto del corpo" né "Vedilo
   addosso") → si prova con la build Debug + `vite --host` :5181

@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase, isSupabaseEnabled } from '../services/supabaseClient';
 import { installNativeHooks, postToNative } from '../utils/nativeBridge';
+import { checkNewPassword } from '../utils/passwordChange';
 
 const AuthContext = createContext(null);
 
@@ -38,6 +39,8 @@ const SUPABASE_ERROR_CODES = {
   over_request_rate_limit: 'rate-limited',
   validation_failed: 'invalid-email',
   email_address_invalid: 'invalid-email',
+  same_password: 'same-password',
+  reauthentication_needed: 'reauthentication-needed',
 };
 
 function authError(error) {
@@ -220,6 +223,27 @@ export function AuthProvider({ children }) {
     return { success: true }; // il browser viene rediretto
   }, []);
 
+  // ── Cambio password (da loggati, nel Profilo: sito e app) ──
+  const changePassword = useCallback(async (password, confirm) => {
+    const invalid = checkNewPassword(password, confirm);
+    if (invalid) return { success: false, error: invalid };
+
+    if (isSupabaseEnabled) {
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) return { success: false, error: authError(error) };
+      return { success: true };
+    }
+
+    // Modalità locale (mock)
+    const registeredUsers = JSON.parse(localStorage.getItem('sv_registered_users') || '[]');
+    const me = registeredUsers.find((u) => u.id === user?.id);
+    if (me) {
+      me.password = password;
+      localStorage.setItem('sv_registered_users', JSON.stringify(registeredUsers));
+    }
+    return { success: true };
+  }, [user]);
+
   // ── Logout ──
   const logout = useCallback(async () => {
     if (isSupabaseEnabled) {
@@ -241,6 +265,7 @@ export function AuthProvider({ children }) {
     login,
     register,
     loginWithGoogle,
+    changePassword,
     logout,
   };
 

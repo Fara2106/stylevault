@@ -8,6 +8,7 @@ import CitySearch from '../../components/CitySearch/CitySearch';
 import LanguageSwitch from '../../components/LanguageSwitch/LanguageSwitch';
 import ThemeSwitch from '../../components/ThemeSwitch/ThemeSwitch';
 import BodyPhotos from '../../components/BodyPhotos/BodyPhotos';
+import ChangePassword from '../../components/ChangePassword/ChangePassword';
 import { Button, Icon } from '../../components/common';
 import { CLOTHING_COLORS } from '../../utils/categories';
 import {
@@ -103,6 +104,7 @@ export default function ProfilePage() {
           <span>{t('profile.theme')}</span>
           <ThemeSwitch />
         </div>
+        <ChangePassword />
       </section>
 
       {/* Feedback: segnalazioni per email a Lorenzo */}

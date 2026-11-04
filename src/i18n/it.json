@@ -62,7 +62,10 @@
       "email-taken": "Esiste già un account con questa email: prova ad accedere.",
       "email-not-confirmed": "Conferma prima l'email: apri il link che ti abbiamo inviato.",
       "rate-limited": "Troppi tentativi ravvicinati: aspetta qualche minuto e riprova.",
-      "invalid-email": "Questa email non sembra valida."
+      "invalid-email": "Questa email non sembra valida.",
+      "passwords-mismatch": "Le due password non coincidono.",
+      "same-password": "La nuova password deve essere diversa da quella attuale.",
+      "reauthentication-needed": "Per sicurezza esci e rientra, poi cambia la password."
     }
   },
   "onboarding": {
@@ -333,7 +336,11 @@
     "bodyPhotoError": "Non riesco a salvare la foto: controlla la connessione e riprova.",
     "retakeBodyPhotos": "Rifai le foto del corpo",
     "feedbackSection": "Aiutaci a migliorare",
-    "feedbackButton": "Segnala un problema o un'idea"
+    "feedbackButton": "Segnala un problema o un'idea",
+    "changePassword": "Cambia password",
+    "newPassword": "Nuova password",
+    "confirmPassword": "Ripeti la nuova password",
+    "passwordChanged": "Password cambiata: dalla prossima volta accedi con quella nuova."
   },
   "categories": {
     "all": "Tutti",
