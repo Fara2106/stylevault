@@ -8,6 +8,8 @@
  *   fatto in nativo vale anche per la WebView.
  */
 
+import { garmentDescriptor } from './tryOnPrompt';
+
 const handler = () => globalThis.window?.webkit?.messageHandlers?.svNative;
 
 /** true se il sito gira dentro l'app iOS. */
@@ -36,6 +38,7 @@ export function avatarPayload(outfit) {
       photo: item.photo,
       photoBack: item.photoBack || null,
       name: item.name,
+      descriptor: garmentDescriptor(item),
     };
   });
   return { items };

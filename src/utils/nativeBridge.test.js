@@ -27,6 +27,7 @@ describe('avatarPayload', () => {
       photo: 'https://x/t.jpg',
       photoBack: 'https://x/t-back.jpg',
       name: 'capo t',
+      descriptor: 'capo t',
     });
     expect(items[1].photoBack).toBeNull();
   });
@@ -35,6 +36,13 @@ describe('avatarPayload', () => {
     const { items } = avatarPayload({ top: item('d', 'dresses') });
     expect(items).toHaveLength(1);
     expect(items[0].slot).toBe('top');
+  });
+
+  it('manda la descrizione inglese del capo', () => {
+    const { items } = avatarPayload({
+      top: item('k', 'tops', { subcategory: 'sweater', colors: ['cream'] }),
+    });
+    expect(items[0].descriptor).toBe('cream sweater');
   });
 });
 
