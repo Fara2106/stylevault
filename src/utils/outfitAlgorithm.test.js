@@ -108,18 +108,77 @@ describe('generateOutfits — penalità ripetizione (options.recentWear)', () =>
 
 describe('generateOutfits — stagione dal giorno selezionato', () => {
   it('usa la data del meteo per la stagione, non quella odierna', () => {
-    // Capi solo invernali: con data di gennaio devono uscire outfit
-    const winter = [
-      mk('top1', 'tops', { season: 'winter', warmthLevel: 4 }),
-      mk('bottom1', 'bottoms', { season: 'winter', warmthLevel: 4 }),
-      mk('shoes1', 'shoes', { season: 'winter', warmthLevel: 4 }),
+    // Un capo per stagione: gennaio sceglie quelli invernali, luglio quelli estivi
+    const wardrobe = [
+      mk('topW', 'tops', { season: 'winter', warmthLevel: 4 }),
+      mk('bottomW', 'bottoms', { season: 'winter', warmthLevel: 4 }),
+      mk('shoesW', 'shoes', { season: 'winter', warmthLevel: 4 }),
+      mk('topS', 'tops', { season: 'summer', warmthLevel: 1 }),
+      mk('bottomS', 'bottoms', { season: 'summer', warmthLevel: 1 }),
+      mk('shoesS', 'shoes', { season: 'summer', warmthLevel: 1 }),
     ];
     const janWeather = { ...WEATHER, temperature: 2, date: '2027-01-15' };
-    const outfits = generateOutfits(winter, janWeather, 'all', 1);
-    expect(outfits.length).toBe(1);
+    const [jan] = generateOutfits(wardrobe, janWeather, 'all', 1);
+    expect([jan.top.id, jan.bottom.id, jan.shoes.id]).toEqual(['topW', 'bottomW', 'shoesW']);
 
-    // ...e con data di luglio non deve uscire nulla (capi winter, stagione summer)
-    const julWeather = { ...WEATHER, date: '2026-07-08' };
-    expect(generateOutfits(winter, julWeather, 'all', 1)).toEqual([]);
+    const julWeather = { ...WEATHER, temperature: 2, date: '2026-07-08' };
+    const [jul] = generateOutfits(wardrobe, julWeather, 'all', 1);
+    expect([jul.top.id, jul.bottom.id, jul.shoes.id]).toEqual(['topS', 'bottomS', 'shoesS']);
+  });
+});
+
+describe('generateOutfits — guardaroba incompleto', () => {
+  it('genera lo stesso senza pantaloni né scarpe e segna cosa manca', () => {
+    const outfits = generateOutfits([mk('top1', 'tops')], WEATHER, 'all', 3);
+    expect(outfits).toHaveLength(1);
+    expect(outfits[0].top.id).toBe('top1');
+    expect(outfits[0].bottom).toBeNull();
+    expect(outfits[0].shoes).toBeNull();
+    expect(outfits[0].missing).toEqual(['bottom', 'shoes']);
+  });
+
+  it('senza top segna il top mancante', () => {
+    const outfits = generateOutfits(
+      [mk('bottom1', 'bottoms'), mk('shoes1', 'shoes')],
+      WEATHER,
+      'all',
+      3
+    );
+    expect(outfits).toHaveLength(1);
+    expect(outfits[0].top).toBeNull();
+    expect(outfits[0].missing).toEqual(['top']);
+  });
+
+  it('un outfit completo non ha pezzi mancanti', () => {
+    const outfits = generateOutfits(baseWardrobe(), WEATHER, 'all', 3);
+    for (const o of outfits) expect(o.missing).toEqual([]);
+  });
+
+  it('con un abito non serve il pantalone', () => {
+    const outfits = generateOutfits(
+      [mk('dress1', 'dresses', { occasion: 'formal' }), mk('shoes1', 'shoes', { occasion: 'formal' })],
+      WEATHER,
+      'formal',
+      3
+    );
+    expect(outfits.length).toBeGreaterThan(0);
+    expect(outfits[0].top.id).toBe('dress1');
+    expect(outfits[0].missing).toEqual([]);
+  });
+
+  it('se di un pezzo ci sono solo capi di altra stagione usa quelli', () => {
+    const outfits = generateOutfits(
+      [mk('top1', 'tops'), mk('bottom1', 'bottoms'), mk('boots', 'shoes', { season: 'winter' })],
+      WEATHER,
+      'all',
+      3
+    );
+    expect(outfits[0].shoes.id).toBe('boots');
+    expect(outfits[0].bottom.id).toBe('bottom1');
+    expect(outfits[0].missing).toEqual([]);
+  });
+
+  it('con soli accessori non genera niente', () => {
+    expect(generateOutfits([mk('bag', 'accessories')], WEATHER, 'all', 3)).toEqual([]);
   });
 });

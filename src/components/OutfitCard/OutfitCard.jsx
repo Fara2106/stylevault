@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import Icon from '../common/Icon';
+import { missingPieces } from '../../utils/outfitAlgorithm';
 import './OutfitCard.css';
 
 /**
@@ -20,12 +21,15 @@ export default function OutfitCard({
 }) {
   const { t } = useTranslation();
 
+  const isDress = outfit.top?.category === 'dresses';
   const sections = [
-    { key: 'top', label: outfit.bottom ? t('outfit.top') : t('outfit.dress'), item: outfit.top },
-    outfit.bottom && { key: 'bottom', label: t('outfit.bottom'), item: outfit.bottom },
+    { key: 'top', label: isDress ? t('outfit.dress') : t('outfit.top'), item: outfit.top },
+    { key: 'bottom', label: t('outfit.bottom'), item: outfit.bottom },
     { key: 'shoes', label: t('outfit.shoes'), item: outfit.shoes },
-    outfit.outerwear && { key: 'outerwear', label: t('outfit.outerwear'), item: outfit.outerwear },
-  ].filter(Boolean);
+    { key: 'outerwear', label: t('outfit.outerwear'), item: outfit.outerwear },
+  ].filter((section) => section.item);
+  // Calcolato qui: vale anche per gli outfit salvati prima che esistesse "missing"
+  const missing = missingPieces(outfit);
 
   return (
     <div className="outfit-card sv-card">
@@ -45,6 +49,14 @@ export default function OutfitCard({
           </div>
         </div>
       </div>
+
+      {missing.length > 0 && (
+        <p className="outfit-card__missing">
+          {t('outfit.incomplete', {
+            pieces: missing.map((piece) => t(`outfit.missingPiece.${piece}`)).join(', '),
+          })}
+        </p>
+      )}
 
       <div className="outfit-card__items">
         {sections.map(({ key, label, item }) => {

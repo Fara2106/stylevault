@@ -250,6 +250,18 @@ piano `docs/superpowers/plans/2026-11-03-app-ios.md`, registro decisioni
   manifest + licenze; controllati dimensioni di tutti, SHA di VAEDecoder e
   Tokenizer scaricati dall'URL pubblico, ripresa con Range (206) attraverso
   il redirect. Ogni cambio di modelli = nuovo tag (il manifest non è fissato).
+- **Outfit anche con guardaroba incompleto** (04/11, richiesta di Lorenzo:
+  «generi lo stesso, basta un avviso»): `generateOutfits` riempie ogni pezzo
+  coi capi adatti a stagione/occasione, se non ce ne sono con quelli della
+  categoria (fuori stagione), e lascia vuoto solo il pezzo che non c'è;
+  `missingPieces()` → riquadro "Outfit incompleto, manca: …" nella card.
+  Serve almeno un capo da indossare (soli accessori = niente). Test 231/231.
+- **Prova sull'iPhone (04/11)**: la build Release apre il sito PUBBLICATO,
+  che non ha il ponte iOS (niente "Rifai le foto del corpo" né "Vedilo
+  addosso") → si prova con la build Debug + `vite --host` :5181
+  (`stylevault-cloud`); IP del Mac oggi 192.168.1.148 in Secrets.xcconfig.
+  Bench tolta dal telefono (limite 3 app). Release di sicuro solo dopo il
+  deploy del sito di feat/app-ios (decide Lorenzo).
 - Revisione finale (revisore separato): 2 critici + 8 importanti CORRETTI
   (refresh token doppio, sessione al sito solo dopo 'ready', link esterni,
   avvio offline, 'Più tardi', conteggio persone, foto 48 MP, retro dei capi);

@@ -222,6 +222,21 @@ function buildLockedSlots(lockedItems) {
  * @param {object} options - { lockedItems?: object[], recentWear?: {itemId, date}[], referenceDate?: string }
  * @returns {object[]} Array of outfit objects
  */
+/** Il capo più adatto al caldo/freddo del giorno, o uno qualsiasi; null se non ce n'è. */
+function pickFor(candidates, targetWarmth) {
+  if (candidates.length === 0) return null;
+  return pickRandom(pickBestByWarmth(candidates, targetWarmth)) || pickRandom(candidates);
+}
+
+/** Pezzi che mancano all'outfit, in ordine: top, bottom, shoes (con l'abito il bottom non serve). */
+export function missingPieces(outfit) {
+  const missing = [];
+  if (!outfit.top) missing.push('top');
+  if (!outfit.bottom && outfit.top?.category !== 'dresses') missing.push('bottom');
+  if (!outfit.shoes) missing.push('shoes');
+  return missing;
+}
+
 export function generateOutfits(items, weather, occasion = 'all', count = 3, options = {}) {
   if (!items || items.length === 0) return [];
 
@@ -241,10 +256,16 @@ export function generateOutfits(items, weather, occasion = 'all', count = 3, opt
   const seasonFiltered = items.filter((item) => matchesSeason(item, currentSeason));
   const filtered = seasonFiltered.filter((item) => matchesOccasion(item, occasion));
 
-  // Get items by category
-  const tops = filterByCategory(filtered, 'tops');
-  const bottoms = filterByCategory(filtered, 'bottoms');
-  const shoes = filterByCategory(filtered, 'shoes');
+  // Capi per categoria adatti a stagione e occasione; se non ce n'è nessuno,
+  // tutti quelli della categoria: meglio un outfit fuori stagione che nessuno
+  const pool = (category) => {
+    const fit = filterByCategory(filtered, category);
+    return fit.length > 0 ? fit : filterByCategory(items, category);
+  };
+  const tops = pool('tops');
+  const bottoms = pool('bottoms');
+  const shoes = pool('shoes');
+  const anyDresses = pool('dresses');
   const outerwear = filterByCategory(filtered, 'outerwear');
   const accessories = filterByCategory(filtered, 'accessories');
   const dresses = filterByCategory(filtered, 'dresses');
@@ -273,46 +294,30 @@ export function generateOutfits(items, weather, occasion = 'all', count = 3, opt
 
     // Decide: dress or top+bottom (un abito bloccato forza il percorso abito,
     // un top o bottom bloccato lo esclude)
+    // L'abito anche quando mancano top o pantaloni (meglio di un outfit a metà)
     const lockedDress = locked.top?.category === 'dresses' ? locked.top : null;
+    const missingSeparates = tops.length === 0 || bottoms.length === 0;
     const useDress =
       lockedDress != null ||
-      (canUseDress && !locked.bottom && !locked.top && Math.random() > 0.5 && dresses.length > 0);
+      (!locked.bottom &&
+        !locked.top &&
+        anyDresses.length > 0 &&
+        ((canUseDress && (Math.random() > 0.5 || missingSeparates)) ||
+          (tops.length === 0 && bottoms.length === 0)));
 
     if (useDress) {
-      const dress = lockedDress || pickRandom(pickBestByWarmth(dresses, targetWarmth));
+      const dress =
+        lockedDress || pickRandom(pickBestByWarmth(canUseDress ? dresses : anyDresses, targetWarmth));
       if (!dress) continue;
       outfit.top = dress; // dress takes the top slot
       outfit.bottom = null; // no bottom needed with a dress
     } else {
-      // Pick top
-      const top = locked.top || pickRandom(pickBestByWarmth(tops, targetWarmth));
-      if (!top && !canUseDress) continue; // Must have a top
-
-      // Pick bottom
-      const bottom = locked.bottom || pickRandom(pickBestByWarmth(bottoms, targetWarmth));
-      if (!bottom && !canUseDress) continue; // Must have bottoms
-
-      // If we couldn't find top or bottom and can't use dress, skip
-      if (!top || !bottom) continue;
-
-      outfit.top = top;
-      outfit.bottom = bottom;
+      // Top e pantaloni se ci sono: un pezzo mancante non blocca l'outfit
+      outfit.top = locked.top || pickFor(tops, targetWarmth);
+      outfit.bottom = locked.bottom || pickFor(bottoms, targetWarmth);
     }
 
-    // Pick shoes (required)
-    if (locked.shoes) {
-      outfit.shoes = locked.shoes;
-    } else {
-      const shoe = pickRandom(pickBestByWarmth(shoes, targetWarmth));
-      if (!shoe) {
-        // Try without warmth filter
-        const anyShoe = pickRandom(shoes.length > 0 ? shoes : filterByCategory(items, 'shoes'));
-        if (!anyShoe) continue;
-        outfit.shoes = anyShoe;
-      } else {
-        outfit.shoes = shoe;
-      }
-    }
+    outfit.shoes = locked.shoes || pickFor(shoes, targetWarmth);
 
     // Add outerwear if locked, or if needed (temp < 18 or rain)
     if (locked.outerwear) {
@@ -363,6 +368,10 @@ export function generateOutfits(items, weather, occasion = 'all', count = 3, opt
     }
 
     outfit.accessories = selectedAccessories.filter(Boolean);
+
+    // Almeno un capo da indossare (i soli accessori non fanno un outfit)
+    if (!outfit.top && !outfit.bottom && !outfit.shoes && !outfit.outerwear) continue;
+    outfit.missing = missingPieces(outfit);
 
     // Score the outfit
     outfit.weatherMatch = calculateWeatherMatch(outfit, targetWarmth, weather);

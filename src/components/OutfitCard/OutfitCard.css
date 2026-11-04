@@ -39,6 +39,15 @@
   color: var(--sv-ink-soft);
 }
 
+.outfit-card__missing {
+  margin: var(--sv-space-3) var(--sv-space-4) 0;
+  padding: var(--sv-space-2) var(--sv-space-3);
+  border-radius: var(--sv-radius-sm);
+  background: var(--sv-accent-soft);
+  color: var(--sv-accent-ink);
+  font-size: 0.85rem;
+}
+
 .outfit-card__items {
   padding: var(--sv-space-3) var(--sv-space-4);
   display: flex;
