@@ -4,6 +4,8 @@ import {
   parseForecastPayload,
   fetchForecastWithCache,
   searchCities,
+  saveForecastToCache,
+  readForecastFromCache,
   _memoryStorage,
 } from './weather';
 
@@ -225,5 +227,25 @@ describe('fetchForecastWithCache — ore e fonte', () => {
     expect([..._memoryStorage.keys()].some((k) => k.startsWith('sv_weather_openmeteo_'))).toBe(
       true
     );
+  });
+});
+
+describe('cache della posizione', () => {
+  beforeEach(() => _memoryStorage.clear());
+
+  it('la posizione si salva in una chiave fissa: niente coordinate né storico dei posti', () => {
+    const here = { name: 'La mia posizione', latitude: 45.4712, longitude: 9.1834, isPosition: true };
+    const there = { name: 'La mia posizione', latitude: 45.52, longitude: 9.25, isPosition: true };
+    saveForecastToCache(here, 'openmeteo', [{ date: '2026-11-04' }], 1);
+    saveForecastToCache(there, 'openmeteo', [{ date: '2026-11-05' }], 2);
+    const keys = [..._memoryStorage.keys()];
+    expect(keys).toEqual(['sv_weather_openmeteo_position']);
+    expect(keys.join()).not.toMatch(/45|9\./);
+    expect(readForecastFromCache(there, 'openmeteo').days[0].date).toBe('2026-11-05');
+  });
+
+  it('le città restano con la loro chiave', () => {
+    saveForecastToCache({ name: 'Parigi', latitude: 48.86, longitude: 2.35 }, 'openmeteo', [], 1);
+    expect([..._memoryStorage.keys()]).toEqual(['sv_weather_openmeteo_48.86_2.35']);
   });
 });

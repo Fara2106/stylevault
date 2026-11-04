@@ -63,7 +63,8 @@ export function savePlaceChoice(choice) {
  */
 export function resolvePlace({ choice, position, defaultCity }) {
   if (choice?.mode === 'city' && isCity(choice.city)) return { city: choice.city, kind: 'manual' };
-  if (isCity(position)) return { city: position, kind: 'position' };
+  // isPosition: la cache del meteo la salva senza coordinate (vedi weather.js)
+  if (isCity(position)) return { city: { ...position, isPosition: true }, kind: 'position' };
   return { city: defaultCity, kind: 'default' };
 }
 
@@ -80,8 +81,21 @@ export function getBrowserPosition() {
   });
 }
 
-/** Stesso luogo entro un centesimo di grado (~1 km): per abbinare le risposte dell'app. */
-export function isSamePlace(a, b) {
+/** Stesso luogo entro `tolerance` gradi (di base un centesimo, ~1 km): per abbinare le risposte dell'app. */
+export function isSamePlace(a, b, tolerance = 0.01) {
   if (!isCity(a) || !isCity(b)) return false;
-  return Math.abs(a.latitude - b.latitude) <= 0.01 && Math.abs(a.longitude - b.longitude) <= 0.01;
+  return (
+    Math.abs(a.latitude - b.latitude) <= tolerance && Math.abs(a.longitude - b.longitude) <= tolerance
+  );
+}
+
+/** Entro ~5 km il meteo è lo stesso: una posizione nuova così vicina non cambia luogo. */
+const SAME_WEATHER_DEGREES = 0.05;
+
+/**
+ * La posizione da tenere quando ne arriva una nuova: la vecchia se è quasi la
+ * stessa, così la pagina non ricarica il meteo né rifà gli outfit.
+ */
+export function keepSamePlace(prev, next) {
+  return isSamePlace(prev, next, SAME_WEATHER_DEGREES) ? prev : next;
 }

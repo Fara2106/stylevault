@@ -22,6 +22,7 @@ import {
   getBrowserPosition,
   hasSavedPlaceChoice,
   isSamePlace,
+  keepSamePlace,
 } from '../../utils/place';
 import CitySearch from '../../components/CitySearch/CitySearch';
 import { Button, Icon } from '../../components/common';
@@ -109,7 +110,9 @@ export default function OutfitPage() {
       const stop = onNativeLocation((loc) => {
         clearTimeout(timer);
         setPositionUnavailable(false);
-        setPosition({ ...loc, name: loc.name || t('outfit.myPosition') });
+        // L'app ripete l'ultima posizione e poi manda quella nuova: se è quasi la
+        // stessa si tiene la vecchia, così gli outfit già mostrati non cambiano
+        setPosition((prev) => keepSamePlace(prev, { ...loc, name: loc.name || t('outfit.myPosition') }));
       });
       requestNativeLocation();
       return () => {
@@ -120,7 +123,7 @@ export default function OutfitPage() {
     let alive = true;
     getBrowserPosition().then((coords) => {
       if (!alive) return;
-      if (coords) setPosition({ ...coords, name: t('outfit.myPosition') });
+      if (coords) setPosition((prev) => keepSamePlace(prev, { ...coords, name: t('outfit.myPosition') }));
       else setPositionUnavailable(true);
     });
     return () => {

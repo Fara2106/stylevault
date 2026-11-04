@@ -6,6 +6,7 @@ import {
   getBrowserPosition,
   hasSavedPlaceChoice,
   isSamePlace,
+  keepSamePlace,
   _placeMemory,
 } from './place';
 
@@ -53,7 +54,7 @@ describe('resolvePlace', () => {
 
   it('posizione quando c\'è', () => {
     expect(resolvePlace({ choice: { mode: 'position' }, position: ROMA, defaultCity: MILANO })).toEqual(
-      { city: ROMA, kind: 'position' }
+      { city: { ...ROMA, isPosition: true }, kind: 'position' }
     );
   });
 
@@ -107,5 +108,19 @@ describe('isSamePlace', () => {
     expect(isSamePlace({ latitude: 41.9, longitude: 12.5 }, { latitude: 41.904, longitude: 12.496 })).toBe(true);
     expect(isSamePlace({ latitude: 41.9, longitude: 12.5 }, PARIGI)).toBe(false);
     expect(isSamePlace(null, PARIGI)).toBe(false);
+  });
+});
+
+describe('keepSamePlace', () => {
+  it('tiene la posizione di prima se la nuova è a pochi km (stesso meteo, outfit intatti)', () => {
+    const prev = { name: 'Roma', latitude: 41.9, longitude: 12.5 };
+    expect(keepSamePlace(prev, { name: 'Roma', latitude: 41.93, longitude: 12.47 })).toBe(prev);
+  });
+
+  it('prende la nuova se è lontana o se prima non c\'era', () => {
+    const prev = { name: 'Roma', latitude: 41.9, longitude: 12.5 };
+    const far = { name: 'Tivoli', latitude: 41.96, longitude: 12.8 };
+    expect(keepSamePlace(prev, far)).toBe(far);
+    expect(keepSamePlace(null, far)).toBe(far);
   });
 });

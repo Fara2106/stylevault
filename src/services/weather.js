@@ -155,8 +155,12 @@ export async function searchCities(query, language = 'it') {
   }));
 }
 
+// La posizione del telefono ha una chiave sola, senza coordinate: niente storico
+// dei posti sul dispositivo e niente chiavi che crescono a ogni spostamento.
 const cacheKey = (city, source = 'openmeteo') =>
-  `${CACHE_PREFIX}${source}_${city.latitude.toFixed(2)}_${city.longitude.toFixed(2)}`;
+  city.isPosition
+    ? `${CACHE_PREFIX}${source}_position`
+    : `${CACHE_PREFIX}${source}_${city.latitude.toFixed(2)}_${city.longitude.toFixed(2)}`;
 
 /** Salva i giorni di una previsione (anche quelli arrivati dall'app, fonte 'apple'). */
 export function saveForecastToCache(city, source, days, fetchedAt = Date.now()) {
