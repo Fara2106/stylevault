@@ -313,6 +313,10 @@ piano `docs/superpowers/plans/2026-11-03-app-ios.md`, registro decisioni
   risultato si perde al ricaricamento. **APPLICATA il 04/11** con l'ok di
   Lorenzo (SQL Editor della dashboard nel browser pane); verificato: colonna
   `armocromia jsonb` presente e `select=armocromia` via API → 200.
+  Prova di salvataggio "come Lorenzo" con le regole d'accesso (annullata da
+  sola) riuscita; poi Lorenzo ha rifatto l'Armocromia e il 04/11 alle 15:08
+  UTC il suo profilo ha `armocromia` = deep-winter (axes, season, detected,
+  updatedAt, confidence). **Salvataggio confermato end-to-end.**
 - **Prova sull'iPhone (04/11)**: la build Release apre il sito PUBBLICATO,
   che non ha il ponte iOS (niente "Rifai le foto del corpo" né "Vedilo
   addosso") → si prova con la build Debug + `vite --host` :5181
