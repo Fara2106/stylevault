@@ -21,6 +21,11 @@ targets:
     type: application
     platform: iOS
     sources: [StyleVault]
+    # Avatar realistico: il calcolo sul telefono supera il limite di memoria standard
+    entitlements:
+      path: StyleVault/StyleVault.entitlements
+      properties:
+        com.apple.developer.kernel.increased-memory-limit: true
     configFiles:
       Debug: Config/Secrets.xcconfig
       Release: Config/Secrets.xcconfig
