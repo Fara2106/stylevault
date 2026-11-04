@@ -338,15 +338,21 @@ piano `docs/superpowers/plans/2026-11-03-app-ios.md`, registro decisioni
   - **Stop al lavoro su account e server** del sito. Quello già fatto resta:
     e944db0 (Elimina account, pagine /privacy /supporto /elimina-account,
     accountCleanup, guard di fetch-link-metadata) è committato.
-    `delete-account` e il nuovo `fetch-link-metadata` sono già pubblicati su
-    Supabase: lo erano prima della decisione. Se tenerli o toglierli lo decide
-    Lorenzo. Le correzioni iOS restano utili anche nella versione nativa:
+    **Supabase riportato a prima (04/11, su richiesta di Lorenzo)**:
+    `delete-account` cancellata dalla dashboard (ora risponde 404);
+    `fetch-link-metadata` ripubblicata nella versione di prima (e944db0^, senza
+    controllo dell'utente né guard.ts; con la chiave pubblica funziona).
+    ATTENZIONE: nel repo restano il codice di e944db0 (cartella delete-account,
+    guard.ts, pulsante "Elimina account" che chiama una funzione che non c'è
+    più). Non pubblicare il sito con quel codice senza decidere prima.
+    Le correzioni iOS restano utili anche nella versione nativa:
     Privacy Manifest, Debug/Release, etichetta IA, Segnala, dichiarazione
     foto, consenso al download.
 - **Correzioni dell'audit (04/11, pomeriggio)**, stato nella sezione 0 del report.
   Fatto:
   - "Elimina account" nel Profilo → Edge Function `delete-account`, pubblicata
-    dalla dashboard come file unico con account.ts incollato. Cancella i file dei
+    dalla dashboard come file unico con account.ts incollato (poi cancellata da
+    Supabase il 04/11, vedi sopra). Cancella i file dei
     2 bucket e poi l'utente; le tabelle si svuotano in cascata.
   - Pagine pubbliche `/privacy`, `/supporto`, `/elimina-account`
     (`src/pages/LegalPage/legalContent.js`, CONTACT_EMAIL da confermare con
@@ -354,7 +360,8 @@ piano `docs/superpowers/plans/2026-11-03-app-ios.md`, registro decisioni
   - `PrivacyInfo.xcprivacy`.
   - Rete locale/ATS solo in Debug (script postBuild in project.yml); SITE_URL
     vuoto in Release.
-  - `fetch-link-metadata` solo per loggati e senza SSRF (guard.ts), ripubblicata.
+  - `fetch-link-metadata` solo per loggati e senza SSRF (guard.ts), ripubblicata
+    (poi tolta il 04/11: su Supabase c'è di nuovo la versione di prima).
   - "Generato con IA" + "Segnala risultato" (app → /feedback?topic=avatar);
     "Scarica (1,3 GB)" la prima volta.
   - Open-Meteo citato; segnaposto senza picsum.
