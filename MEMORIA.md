@@ -317,6 +317,32 @@ piano `docs/superpowers/plans/2026-11-03-app-ios.md`, registro decisioni
   sola) riuscita; poi Lorenzo ha rifatto l'Armocromia e il 04/11 alle 15:08
   UTC il suo profilo ha `armocromia` = deep-winter (axes, season, detected,
   updatedAt, confidence). **Salvataggio confermato end-to-end.**
+- **DECISIONE 04/11 (Lorenzo e Mary): StyleVault diventa NATIVA con iCloud**.
+  Design: `docs/superpowers/specs/2026-11-04-app-nativa-icloud-design.md`
+  (scritto da un'altra sessione; NON committato, si committa con l'ok di Lorenzo).
+  - Prima la versione Apple (iPhone e iPad): SwiftUI + SwiftData/CloudKit,
+    niente login; sito e Supabase spenti alla fine.
+  - Android eventualmente dopo, app a sé con dati su Google Drive; le due non
+    si scambiano dati.
+  - Costruzione in parallelo su un ramo nuovo, 8 fasi; si pubblica una volta
+    sola, a lavoro completo. Fino ad allora resta l'app ibrida di oggi. Non si
+    migra una schermata alla volta (dati divisi tra Supabase e iCloud).
+  - Esporta/Importa (zip con JSON e foto) nel Profilo: per il cambio di
+    piattaforma e la portabilità GDPR.
+  - Armocromia: menu a tendina nel Profilo per scegliere la stagione a mano;
+    l'analisi Vision solo se affidabile.
+  - Lingue IT e EN da subito (String Catalog), poi FR, ES, PT, EN UK/USA;
+    °C/°F nelle Impostazioni, valore iniziale dalla regione del telefono.
+  - Fase 1 solo quando Lorenzo è accettato nell'Apple Developer Program
+    (avvisa lui). Import dei dati da Supabase: si decide all'inizio della fase 7.
+  - **Stop al lavoro su account e server** del sito. Quello già fatto resta:
+    e944db0 (Elimina account, pagine /privacy /supporto /elimina-account,
+    accountCleanup, guard di fetch-link-metadata) è committato.
+    `delete-account` e il nuovo `fetch-link-metadata` sono già pubblicati su
+    Supabase: lo erano prima della decisione. Se tenerli o toglierli lo decide
+    Lorenzo. Le correzioni iOS restano utili anche nella versione nativa:
+    Privacy Manifest, Debug/Release, etichetta IA, Segnala, dichiarazione
+    foto, consenso al download.
 - **Correzioni dell'audit (04/11, pomeriggio)**, stato nella sezione 0 del report.
   Fatto:
   - "Elimina account" nel Profilo → Edge Function `delete-account`, pubblicata
