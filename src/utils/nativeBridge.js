@@ -48,12 +48,14 @@ export function avatarPayload(outfit) {
 // per chi si iscrive dopo (la pagina Outfit può aprirsi dopo l'arrivo)
 const locationListeners = new Set();
 const forecastListeners = new Set();
+const bodyPhotosListeners = new Set();
 let lastLocation = null;
 
 /** Solo per i test. */
 export function _resetNativeListeners() {
   locationListeners.clear();
   forecastListeners.clear();
+  bodyPhotosListeners.clear();
   lastLocation = null;
 }
 
@@ -67,6 +69,8 @@ export function installNativeHooks({ setSession }) {
       locationListeners.forEach((cb) => cb(location));
     },
     setForecast: (forecast) => forecastListeners.forEach((cb) => cb(forecast)),
+    // Foto del corpo rifatte con la fotocamera dell'app: il profilo si ricarica
+    bodyPhotosChanged: () => bodyPhotosListeners.forEach((cb) => cb()),
   };
   // Il nativo aspetta questo segnale per passare la sessione: prima la
   // chiamata a setSession cadrebbe nel vuoto (React non ha ancora montato).
@@ -98,4 +102,18 @@ export function requestNativeForecast(city) {
     longitude: city.longitude,
     name: city.name,
   });
+}
+
+/**
+ * Apre la fotocamera dell'app per le foto del corpo: una sola vista
+ * ('front' | 'side' | 'back') o, senza vista, tutte e tre. false fuori dall'app.
+ */
+export function openNativeBodyPhotos(view) {
+  return postToNative('openBodyPhotos', view ? { view } : {});
+}
+
+/** L'app ha salvato foto del corpo nuove; restituisce la disiscrizione. */
+export function onNativeBodyPhotosChanged(cb) {
+  bodyPhotosListeners.add(cb);
+  return () => bodyPhotosListeners.delete(cb);
 }

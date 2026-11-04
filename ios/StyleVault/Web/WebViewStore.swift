@@ -59,6 +59,15 @@ final class WebViewStore: NSObject, ObservableObject {
         webView.evaluateJavaScript(Self.callScript("setLocation", json: json))
     }
 
+    /// Dopo le foto del corpo rifatte nell'app: il sito ricarica il profilo
+    /// (miniature nuove nel Profilo). Un sito vecchio non ha la funzione e non fa nulla.
+    nonisolated static let bodyPhotosChangedScript = callScript("bodyPhotosChanged", json: Data("{}".utf8))
+
+    func pushBodyPhotosChanged() {
+        guard Self.isSiteURL(webView.url) else { return }
+        webView.evaluateJavaScript(Self.bodyPhotosChangedScript)
+    }
+
     /// Passa al sito la previsione del Meteo di Apple (solo se acceso).
     func pushForecast(_ forecast: AppleForecast) {
         guard Self.isSiteURL(webView.url) else { return }

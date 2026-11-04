@@ -290,6 +290,19 @@ piano `docs/superpowers/plans/2026-11-03-app-ios.md`, registro decisioni
   https o localhost: nella build Debug via http dal Mac resta solo la cache
   HTTP). Barra nell'Armocromia durante la "prima volta". Verificato nel
   browser: 3 file salvati, al ricaricamento zero richieste di rete.
+- **"Le tue foto" nel Profilo (04/11)**: Lorenzo non vedeva le foto del corpo
+  nel sito e il pulsante "Rifai le foto del corpo" (solo app) andava e veniva.
+  Ora `src/components/BodyPhotos/` mostra sempre le 3 miniature (davanti =
+  reference_photo_path, lato/spalle = body_photos). Nell'app un tocco apre la
+  fotocamera nativa per QUELLA foto (`openBodyPhotos` con `{view}` →
+  `BridgeMessage.openBodyPhotos(BodyView?)`); alla chiusura l'app chiama
+  `svNative.bodyPhotosChanged()` e il sito rilegge il profilo. Nel browser un
+  tocco sceglie un file (1600 px) → `setBodyPhoto` in ProfileContext. Causa del
+  pulsante intermittente NON trovata: nei dati dell'app sull'iPhone la WebView
+  carica 192.168.1.148:5181 e il ponte svNative c'è (test
+  `testIlSitoVedeIlPonteSvNative`); ipotesi: a volte guardava il sito in Safari.
+  Verificato nel browser (locale); il salvataggio su Supabase dal browser e il
+  giro nell'app li deve provare Lorenzo. Test sito 281/281, iOS 133/133.
 - **Prova sull'iPhone (04/11)**: la build Release apre il sito PUBBLICATO,
   che non ha il ponte iOS (niente "Rifai le foto del corpo" né "Vedilo
   addosso") → si prova con la build Debug + `vite --host` :5181

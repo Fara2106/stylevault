@@ -10,6 +10,7 @@ import { useAuth } from './AuthContext';
 import { useSettings } from './SettingsContext';
 import { isSupabaseEnabled } from '../services/supabaseClient';
 import { fetchProfile, upsertProfile } from '../services/db';
+import { onNativeBodyPhotosChanged } from '../utils/nativeBridge';
 
 const ProfileContext = createContext(null);
 
@@ -157,6 +158,51 @@ export function ProfileProvider({ children }) {
     [userId]
   );
 
+  // Rilegge dal cloud solo le foto del corpo (URL firmate nuove)
+  const refreshPhotos = useCallback(async () => {
+    if (!isSupabaseEnabled || !userId) return;
+    try {
+      const remote = await fetchProfile(userId);
+      if (remote) {
+        setProfile((prev) => ({
+          ...prev,
+          referencePhoto: remote.referencePhoto,
+          bodyPhotos: remote.bodyPhotos,
+        }));
+      }
+    } catch (e) {
+      console.warn('Body photos reload failed:', e);
+    }
+  }, [userId]);
+
+  // Foto rifatte con la fotocamera dell'app: le miniature si aggiornano
+  useEffect(() => onNativeBodyPhotosChanged(() => refreshPhotos()), [refreshPhotos]);
+
+  /**
+   * Una foto del corpo dal browser: 'front' è la foto di riferimento, 'side'
+   * e 'back' stanno in body_photos. Si vede subito; se il salvataggio
+   * fallisce torna quella di prima e la Promise viene rifiutata.
+   */
+  const setBodyPhoto = useCallback(
+    async (view, dataUrl) => {
+      setProfile((prev) =>
+        view === 'front'
+          ? { ...prev, referencePhoto: dataUrl }
+          : { ...prev, bodyPhotos: { ...(prev.bodyPhotos || {}), [view]: dataUrl } }
+      );
+      if (!isSupabaseEnabled || !userId) return;
+      try {
+        await upsertProfile(
+          userId,
+          view === 'front' ? { referencePhoto: dataUrl } : { bodyPhotos: { [view]: dataUrl } }
+        );
+      } finally {
+        await refreshPhotos();
+      }
+    },
+    [userId, refreshPhotos]
+  );
+
   const completeOnboarding = useCallback(() => {
     setProfile((prev) => ({ ...prev, onboarded: true }));
     persistCloud({ onboarded: true });
@@ -177,6 +223,7 @@ export function ProfileProvider({ children }) {
     bodyPhotos: profile.bodyPhotos || { side: null, back: null },
     profileLoading,
     setReferencePhoto,
+    setBodyPhoto,
     completeOnboarding,
     setArmocromia,
   };

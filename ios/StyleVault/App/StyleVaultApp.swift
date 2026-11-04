@@ -29,7 +29,7 @@ struct RootView: View {
     @EnvironmentObject private var auth: AuthService
     @ObservedObject var web: WebViewStore
     @State private var missingPhotos: [BodyView]?
-    @State private var retakePhotos = false
+    @State private var retake: RetakeSession?
     @State private var avatar: AvatarSession?
     /// Posizione per il meteo (una richiesta alla volta, solo quando il sito la chiede)
     @State private var location = LocationProvider()
@@ -44,7 +44,10 @@ struct RootView: View {
             } else if auth.recovering {
                 NewPasswordView()
             } else if let missing = missingPhotos, !missing.isEmpty {
-                BodyPhotosView(views: missing) { missingPhotos = [] }
+                BodyPhotosView(views: missing) {
+                    missingPhotos = []
+                    web.pushBodyPhotosChanged()
+                }
             } else {
                 WebContainerView(store: web)
             }
@@ -57,7 +60,8 @@ struct RootView: View {
             web.onMessage = { message in
                 switch message {
                 case .signOut: Task { await auth.signOut() }
-                case .openBodyPhotos: retakePhotos = true
+                case let .openBodyPhotos(view):
+                    retake = RetakeSession(views: view.map { [$0] } ?? BodyView.allCases)
                 case let .openAvatar(request): avatar = AvatarSession(request: request)
                 case let .themeChanged(setting): theme = setting
                 case let .requestForecast(request):
@@ -74,8 +78,11 @@ struct RootView: View {
             syncSession()
         }
         .task { await checkPhotos() }
-        .fullScreenCover(isPresented: $retakePhotos) {
-            BodyPhotosView(views: BodyView.allCases, leaveTitle: "Chiudi") { retakePhotos = false }
+        .fullScreenCover(item: $retake) { session in
+            BodyPhotosView(views: session.views, leaveTitle: "Chiudi") {
+                retake = nil
+                web.pushBodyPhotosChanged()
+            }
                 .preferredColorScheme(ThemeStore.colorScheme(for: theme))
         }
         .fullScreenCover(item: $avatar) { session in
@@ -100,6 +107,12 @@ struct RootView: View {
         let existing = (try? await ProfileService().loadBodyPhotos()) ?? [.front: AppConfig.siteURL, .side: AppConfig.siteURL, .back: AppConfig.siteURL]
         missingPhotos = BodyPhotosModel.needsOnboarding(existing: existing)
     }
+}
+
+/// Un "rifai le foto" chiesto dal sito: una vista o tutte.
+struct RetakeSession: Identifiable {
+    let id = UUID()
+    let views: [BodyView]
 }
 
 /// Un'apertura dell'avatar (ogni outfit è una nuova sessione).

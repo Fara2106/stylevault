@@ -34,7 +34,8 @@ struct ForecastRequest: Decodable, Equatable {
 /// Messaggi dal sito al nativo: { type, payload } sull'handler "svNative".
 enum BridgeMessage: Equatable {
     case openAvatar(AvatarRequest)
-    case openBodyPhotos
+    /// Rifare le foto del corpo: una vista sola o, con nil, tutte e tre
+    case openBodyPhotos(BodyView?)
     case ready
     case signOut
     case themeChanged(String)
@@ -57,7 +58,7 @@ enum BridgeMessage: Equatable {
             }
             return .openAvatar(request)
         case "openBodyPhotos":
-            return .openBodyPhotos
+            return .openBodyPhotos((payload["view"] as? String).flatMap(BodyView.init(rawValue:)))
         case "ready":
             return .ready
         case "signOut":

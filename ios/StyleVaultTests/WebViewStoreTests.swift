@@ -1,3 +1,4 @@
+import WebKit
 import XCTest
 @testable import StyleVault
 
@@ -43,6 +44,23 @@ final class WebViewStoreTests: XCTestCase {
         let back = try JSONDecoder().decode([String: AnyDecodable].self, from: Data(json.utf8))
         XCTAssertEqual(back["name"]?.string, "L'Aquila")
     }
+
+    /// Il sito si riconosce "dentro l'app" da window.webkit.messageHandlers.svNative:
+    /// senza, nasconde "Rifai le foto del corpo", il meteo del telefono e l'avatar.
+    @MainActor
+    func testIlSitoVedeIlPonteSvNative() async throws {
+        let store = WebViewStore()
+        let loaded = expectation(description: "pagina caricata")
+        let delegate = LoadWaiter { loaded.fulfill() }
+        store.webView.navigationDelegate = delegate
+        store.webView.loadHTMLString("<html><body>ok</body></html>", baseURL: AppConfig.siteURL)
+        await fulfillment(of: [loaded], timeout: 10)
+        let kind = try await store.webView.evaluateJavaScript(
+            "typeof (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.svNative)"
+        ) as? String
+        XCTAssertEqual(kind, "object")
+        withExtendedLifetime(delegate) {}
+    }
 }
 
 /// Solo per leggere un JSON qualsiasi nei test.
@@ -51,4 +69,10 @@ private struct AnyDecodable: Decodable {
     init(from decoder: Decoder) throws {
         string = try? decoder.singleValueContainer().decode(String.self)
     }
+}
+
+private final class LoadWaiter: NSObject, WKNavigationDelegate {
+    let done: () -> Void
+    init(done: @escaping () -> Void) { self.done = done }
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) { done() }
 }

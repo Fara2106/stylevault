@@ -7,7 +7,7 @@ import { useWardrobe } from '../../context/WardrobeContext';
 import CitySearch from '../../components/CitySearch/CitySearch';
 import LanguageSwitch from '../../components/LanguageSwitch/LanguageSwitch';
 import ThemeSwitch from '../../components/ThemeSwitch/ThemeSwitch';
-import { isNativeApp, postToNative } from '../../utils/nativeBridge';
+import BodyPhotos from '../../components/BodyPhotos/BodyPhotos';
 import { Button, Icon } from '../../components/common';
 import { CLOTHING_COLORS } from '../../utils/categories';
 import {
@@ -79,18 +79,12 @@ export default function ProfilePage() {
         >
           {t('armocromia.ui.profileCard')}
         </Button>
-        {/* Solo nell'app iOS: le 3 foto del corpo per l'avatar */}
-        {isNativeApp() && (
-          <Button
-            fullWidth
-            variant="secondary"
-            icon={<Icon name="camera" size={15} />}
-            onClick={() => postToNative('openBodyPhotos')}
-          >
-            {t('profile.retakeBodyPhotos')}
-          </Button>
-        )}
       </section>
+
+      {/* Le 3 foto del corpo: miniature e "rifai", nel sito e nell'app */}
+      <div className="profile-page__section">
+        <BodyPhotos />
+      </div>
 
       {/* Impostazioni */}
       <section className="profile-page__section">

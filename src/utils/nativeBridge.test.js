@@ -8,6 +8,8 @@ import {
   onNativeForecast,
   requestNativeLocation,
   requestNativeForecast,
+  openNativeBodyPhotos,
+  onNativeBodyPhotosChanged,
   _resetNativeListeners,
 } from './nativeBridge';
 
@@ -138,5 +140,39 @@ describe('posizione e previsione dall\'app', () => {
       type: 'requestForecast',
       payload: { latitude: 41.9, longitude: 12.5, name: 'Roma' },
     });
+  });
+});
+
+describe('foto del corpo dall\'app', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    _resetNativeListeners();
+  });
+
+  it('apre la fotocamera dell\'app per una sola foto, o per tutte', () => {
+    const postMessage = vi.fn();
+    vi.stubGlobal('window', { webkit: { messageHandlers: { svNative: { postMessage } } } });
+    expect(openNativeBodyPhotos('side')).toBe(true);
+    expect(postMessage).toHaveBeenLastCalledWith({ type: 'openBodyPhotos', payload: { view: 'side' } });
+    openNativeBodyPhotos();
+    expect(postMessage).toHaveBeenLastCalledWith({ type: 'openBodyPhotos', payload: {} });
+  });
+
+  it('fuori dall\'app non apre niente', () => {
+    vi.stubGlobal('window', {});
+    expect(openNativeBodyPhotos('front')).toBe(false);
+  });
+
+  it('l\'app avvisa quando le foto sono cambiate', () => {
+    const win = { webkit: { messageHandlers: { svNative: { postMessage: vi.fn() } } } };
+    vi.stubGlobal('window', win);
+    installNativeHooks({ setSession: vi.fn() });
+    const cb = vi.fn();
+    const stop = onNativeBodyPhotosChanged(cb);
+    win.svNative.bodyPhotosChanged();
+    expect(cb).toHaveBeenCalledTimes(1);
+    stop();
+    win.svNative.bodyPhotosChanged();
+    expect(cb).toHaveBeenCalledTimes(1);
   });
 });

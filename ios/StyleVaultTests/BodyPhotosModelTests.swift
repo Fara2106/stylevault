@@ -86,6 +86,21 @@ final class BodyPhotosModelTests: XCTestCase {
     }
 
     func testIlSitoChiedeDiRifareLeFoto() {
-        XCTAssertEqual(BridgeMessage.parse(["type": "openBodyPhotos"]), .openBodyPhotos)
+        // Senza vista (sito vecchio o pulsante generale): tutte e tre
+        XCTAssertEqual(BridgeMessage.parse(["type": "openBodyPhotos"]), .openBodyPhotos(nil))
+        XCTAssertEqual(BridgeMessage.parse(["type": "openBodyPhotos", "payload": ["view": "boh"]]),
+                       .openBodyPhotos(nil))
+    }
+
+    func testIlSitoChiedeDiRifareUnaFotoSola() {
+        XCTAssertEqual(BridgeMessage.parse(["type": "openBodyPhotos", "payload": ["view": "side"]]),
+                       .openBodyPhotos(.side))
+        XCTAssertEqual(BridgeMessage.parse(["type": "openBodyPhotos", "payload": ["view": "front"]]),
+                       .openBodyPhotos(.front))
+    }
+
+    func testDopoLeFotoIlSitoRicaricaIlProfilo() {
+        XCTAssertEqual(WebViewStore.bodyPhotosChangedScript,
+                       "window.svNative && window.svNative.bodyPhotosChanged && window.svNative.bodyPhotosChanged({})")
     }
 }
