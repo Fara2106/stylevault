@@ -28,14 +28,15 @@ Non-commercial use only. Anyone redistributing or adapting these models must cre
 
 ## Componenti di terze parti / Third-party components
 
-I pacchetti contengono anche componenti che Mobile-VTON riusa da altri progetti. Origine e licenza qui sotto sono ricavate **solo dai file locali** del checkpoint (`config.json`, `model_index.json`) e dal README del repository; dove non sono dichiarate, sono segnate "da verificare prima della Release". La licenza CC BY-NC-SA 4.0 del README del repository dichiara di coprire "codice e checkpoint" di Mobile-VTON nel suo insieme.
+I pacchetti contengono anche componenti che Mobile-VTON riusa da altri progetti. Le loro licenze sono incluse nella Release / The packages also contain components Mobile-VTON reuses from other projects; their licenses are included in this release.
 
-| Componente / Component | Origine dichiarata localmente / Origin stated locally | Licenza / License |
+| Componente / Component | Origine / Origin | Licenza / License |
 |---|---|---|
-| Tokenizzatore CLIP (`vocab.json`, `merges.txt`; identici in `tokenizer` e `tokenizer_2`) | classe `CLIPTokenizer` (transformers); nessuna origine né licenza nei file | da verificare prima della Release / to verify before release |
-| Codificatore di testo 1 (`TextEncoder`) | `CLIPTextModelWithProjection`, 12 strati, dimensione 768; `_name_or_path` è solo un percorso locale dell'autore | da verificare prima della Release / to verify before release |
-| Codificatore di testo 2 (`TextEncoder2`) | `CLIPTextModelWithProjection`, 32 strati, dimensione 1280; `_name_or_path` è solo un percorso locale dell'autore | da verificare prima della Release / to verify before release |
-| Codificatore d'immagine (`ImageEncoder`) | DINOv2 (`model_type: dinov2`, `_name_or_path: ../dinov2_base`); non è indicata la fonte | da verificare prima della Release / to verify before release |
-| VAE (`VAEEncoder`, `VAEDecoder`) | `AutoencoderKL`; `_name_or_path` indica `stable-diffusion-3.5-large` (percorso locale dell'autore) | da verificare prima della Release (la licenza di Stable Diffusion 3.5 non è nei file locali) / to verify before release |
+| VAE (`VAEEncoder`, `VAEDecoder`) | Stable Diffusion 3.5 Large (`_name_or_path`), tramite Mobile-VTON | Stability AI Community License — `STABILITY-AI-COMMUNITY-LICENSE.md`, `NOTICE.txt` |
+| Codificatori di testo (`TextEncoder` CLIP ViT-L/14, `TextEncoder2` OpenCLIP ViT-bigG/14) | architettura e dimensioni (768, 1280) dei codificatori di Stable Diffusion 3.5; in origine OpenAI CLIP e OpenCLIP | Stability AI Community License (via SD 3.5), MIT — `CLIP-LICENSE.txt`, `OPEN_CLIP-LICENSE.txt` |
+| Tokenizzatore CLIP (`vocab.json`, `merges.txt`) | OpenAI CLIP | MIT — `CLIP-LICENSE.txt` |
+| Codificatore d'immagine (`ImageEncoder`) | DINOv2 base (Meta) | Apache 2.0 — `DINOV2-LICENSE.txt` |
 
-The packages also contain components that Mobile-VTON reuses from other projects. Origin and license above come **only from local files** (checkpoint `config.json` and `model_index.json`, repository README). Where they are not stated locally they are marked "to verify before release"; no license has been assumed. The repository README states that the code and checkpoints of Mobile-VTON as a whole are under CC BY-NC-SA 4.0, and thanks IP-Adapter and IDM-VTON (for code and DensePose data, not model weights).
+**Powered by Stability AI.** This Stability AI Model is licensed under the Stability AI Community License, Copyright © Stability AI Ltd. All Rights Reserved. Vedi / see `NOTICE.txt` per le modifiche / for the changes made.
+
+Uso / use: StyleVault è un'app gratuita, senza pubblicità né acquisti, e usa questi modelli solo a fini non commerciali / StyleVault is a free app with no ads or purchases and uses these models for non-commercial purposes only.

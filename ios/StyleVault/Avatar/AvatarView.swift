@@ -356,9 +356,14 @@ private struct CreditsSheet: View {
                 .foregroundStyle(Palette.ink)
             Text("Licenza CC BY-NC-SA 4.0, solo uso non commerciale. Modelli convertiti in Core ML e compressi a 6 bit.")
                 .foregroundStyle(Palette.muted)
+            Text("Powered by Stability AI")
+                .font(.subheadline.weight(.semibold)).foregroundStyle(Palette.ink)
+            Text("This Stability AI Model is licensed under the Stability AI Community License, Copyright © Stability AI Ltd. All Rights Reserved. Componenti anche da OpenAI CLIP, OpenCLIP (MIT) e DINOv2 (Apache 2.0).")
+                .font(.footnote).foregroundStyle(Palette.muted)
             VStack(alignment: .leading, spacing: 10) {
                 Link("Mobile-VTON su GitHub", destination: URL(string: "https://github.com/tmllab/2026_CVPR_Mobile-VTON")!)
                 Link("Licenza CC BY-NC-SA 4.0", destination: URL(string: "https://creativecommons.org/licenses/by-nc-sa/4.0/")!)
+                Link("Stability AI Community License", destination: URL(string: "https://stability.ai/community-license-agreement")!)
                 Link("Licenze dei componenti",
                      destination: URL(string: "https://github.com/Fara2106/stylevault/releases/tag/avatar-models-v1")!)
             }

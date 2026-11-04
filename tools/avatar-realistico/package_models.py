@@ -49,6 +49,8 @@ def main():
             shutil.copyfile(Path(args.weights) / "tokenizer" / f, Path(tmp) / f)
         archive(Path(tmp), REL / "Tokenizer.aar")
     shutil.copyfile(HERE / "MODELS-LICENSE.md", REL / "MODELS-LICENSE.md")
+    for lic in sorted((HERE / "licenses").iterdir()):
+        shutil.copyfile(lic, REL / lic.name)
     files = []
     for p in sorted(REL.glob("*.aar")):
         files.append({"name": p.name, "bytes": p.stat().st_size, "sha256": sha256(p)})
