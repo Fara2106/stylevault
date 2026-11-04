@@ -5,6 +5,8 @@
  *   (se la rete manca si usa l'ultima previsione salvata, marcata stale)
  */
 
+import { RAIN_PROBABILITY_THRESHOLD } from './weatherThresholds';
+
 const GEOCODING_URL = 'https://geocoding-api.open-meteo.com/v1/search';
 const FORECAST_URL = 'https://api.open-meteo.com/v1/forecast';
 const CACHE_PREFIX = 'sv_weather_';
@@ -55,8 +57,6 @@ export function mapWeatherCode(code) {
   return entry('cloud', 'weather.cloudy');
 }
 
-/** Sopra questa probabilità di pioggia trattiamo il giorno come piovoso. */
-const RAIN_PROBABILITY_THRESHOLD = 45;
 
 /**
  * Converte il payload daily di Open-Meteo in oggetti-giorno usati da
