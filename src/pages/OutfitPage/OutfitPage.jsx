@@ -5,7 +5,21 @@ import { useWardrobe } from '../../context/WardrobeContext';
 import { useSettings } from '../../context/SettingsContext';
 import WeatherBadge from '../../components/WeatherBadge/WeatherBadge';
 import OutfitCard from '../../components/OutfitCard/OutfitCard';
-import { isNativeApp, postToNative, avatarPayload } from '../../utils/nativeBridge';
+import {
+  isNativeApp,
+  postToNative,
+  avatarPayload,
+  onNativeLocation,
+  requestNativeLocation,
+} from '../../utils/nativeBridge';
+import DayStrip from '../../components/DayStrip/DayStrip';
+import {
+  loadPlaceChoice,
+  savePlaceChoice,
+  resolvePlace,
+  getBrowserPosition,
+  hasSavedPlaceChoice,
+} from '../../utils/place';
 import CitySearch from '../../components/CitySearch/CitySearch';
 import { Button, Icon } from '../../components/common';
 import { fetchForecastWithCache } from '../../services/weather';
@@ -28,18 +42,44 @@ const outfitItems = (outfit) =>
   [outfit.top, outfit.bottom, outfit.shoes, outfit.outerwear, ...(outfit.accessories || [])]
     .filter(Boolean);
 
+/** I consigli portano la chiave della fascia ("morning"): qui diventa "la mattina". */
+const translatePart = (t) => (params) =>
+  params && (params.coldPart || params.warmPart)
+    ? {
+        ...params,
+        coldPart: t(`weather.part.${params.coldPart}`),
+        warmPart: t(`weather.part.${params.warmPart}`),
+      }
+    : params;
+
 export default function OutfitPage() {
   const { t, i18n } = useTranslation();
+  const adviceParams = translatePart(t);
   const navigate = useNavigate();
   const { items, outfitHistory, saveOutfit, savedOutfits, logOutfit } = useWardrobe();
   const { defaultCity } = useSettings();
 
-  const initialCity =
+  const startCity =
     defaultCity && typeof defaultCity === 'object' && defaultCity.latitude != null
       ? defaultCity
       : FALLBACK_CITY;
 
-  const [city, setCity] = useState(initialCity);
+  // Luogo: la mia posizione (di partenza) o una città scelta a mano (viaggi).
+  // Finché la posizione non arriva si usa la città predefinita: niente attese.
+  const [placeChoice, setPlaceChoice] = useState(loadPlaceChoice);
+  const [position, setPosition] = useState(null);
+  const [positionUnavailable, setPositionUnavailable] = useState(false);
+  // Nel browser la posizione si chiede solo dopo un tocco su "La mia posizione"
+  // (anche in una visita precedente); nell'app sempre, il permesso lo gestisce iOS
+  const [positionAllowed, setPositionAllowed] = useState(
+    () => isNativeApp() || hasSavedPlaceChoice()
+  );
+  const { city, kind: placeKind } = resolvePlace({
+    choice: placeChoice,
+    position,
+    defaultCity: startCity,
+  });
+  const cityKey = `${city.latitude},${city.longitude},${city.name}`;
   const [forecast, setForecast] = useState(null); // {days, stale, fetchedAt}
   const [weatherError, setWeatherError] = useState(false);
   const [manual, setManual] = useState({ temperature: 20, rain: false });
@@ -50,18 +90,65 @@ export default function OutfitPage() {
   const [savedFlags, setSavedFlags] = useState({});
   const [wornMsg, setWornMsg] = useState('');
 
-  // Previsione al cambio città
+  // Posizione: nell'app la chiede al telefono, nel browser alla geolocalizzazione
+  // (il permesso il browser lo chiede solo dopo il tocco su "La mia posizione")
+  const wantsPosition = placeChoice.mode === 'position' && positionAllowed;
+  useEffect(() => {
+    if (!wantsPosition) return undefined;
+    setPositionUnavailable(false);
+    if (isNativeApp()) {
+      // Un'app vecchia non risponde: dopo un po' lo si dice, senza bloccare
+      const timer = setTimeout(() => setPositionUnavailable(true), 15000);
+      const stop = onNativeLocation((loc) => {
+        clearTimeout(timer);
+        setPositionUnavailable(false);
+        setPosition({ ...loc, name: loc.name || t('outfit.myPosition') });
+      });
+      requestNativeLocation();
+      return () => {
+        clearTimeout(timer);
+        stop();
+      };
+    }
+    let alive = true;
+    getBrowserPosition().then((coords) => {
+      if (!alive) return;
+      if (coords) setPosition({ ...coords, name: t('outfit.myPosition') });
+      else setPositionUnavailable(true);
+    });
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wantsPosition]);
+
+  const chooseCity = (picked) => {
+    const choice = { mode: 'city', city: picked };
+    savePlaceChoice(choice);
+    setPlaceChoice(choice);
+  };
+
+  const chooseMyPosition = () => {
+    const choice = { mode: 'position' };
+    savePlaceChoice(choice);
+    setPlaceChoice(choice);
+    setPositionAllowed(true);
+  };
+
+  // Previsione al cambio di luogo (gli outfit vecchi erano per un altro meteo)
   useEffect(() => {
     let alive = true;
     setWeatherError(false);
     setForecast(null);
+    setOutfits([]);
     fetchForecastWithCache(city)
       .then((result) => alive && setForecast(result))
       .catch(() => alive && setWeatherError(true));
     return () => {
       alive = false;
     };
-  }, [city]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cityKey]);
 
   // Meteo del giorno selezionato (reale o manuale)
   const dayWeather = useMemo(() => {
@@ -167,7 +254,27 @@ export default function OutfitPage() {
       </header>
 
       <div className="outfit-page__controls">
-        <CitySearch value={city} onSelect={setCity} compact />
+        <div className="outfit-page__place">
+          <div className="outfit-page__place-search">
+            <CitySearch value={city} onSelect={chooseCity} compact />
+          </div>
+          <button
+            className={`outfit-page__day outfit-page__day--plain ${placeKind === 'position' ? 'outfit-page__day--active' : ''}`}
+            onClick={chooseMyPosition}
+          >
+            {t('outfit.myPosition')}
+          </button>
+        </div>
+        {placeKind === 'manual' && (
+          <p className="outfit-page__place-note">
+            {city.name} · {t('outfit.chosenByHand')}
+          </p>
+        )}
+        {wantsPosition && placeKind === 'default' && positionUnavailable && (
+          <p className="outfit-page__place-note">
+            {t('outfit.positionUnavailable', { city: city.name })}
+          </p>
+        )}
 
         <div className="outfit-page__days">
           {dayLabels.map((label, i) => (
@@ -224,6 +331,7 @@ export default function OutfitPage() {
           }
         />
       )}
+      {dayWeather && !weatherError && <DayStrip parts={dayWeather.parts} />}
       {weatherError && (
         <div className="outfit-page__manual sv-card">
           <p className="outfit-page__manual-title">{t('outfit.manualWeather')}</p>
@@ -308,7 +416,7 @@ export default function OutfitPage() {
                   <span className="sv-label">{t('outfit.adviceTitle')}</span>
                   <ul>
                     {advice.slice(0, 4).map((a, i) => (
-                      <li key={i}>{t(a.key, a.params)}</li>
+                      <li key={i}>{t(a.key, adviceParams(a.params))}</li>
                     ))}
                   </ul>
                 </div>

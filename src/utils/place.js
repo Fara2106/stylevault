@@ -45,6 +45,11 @@ export function loadPlaceChoice() {
   return POSITION;
 }
 
+/** true se l'utente ha già scelto (nel browser la posizione si chiede solo allora). */
+export function hasSavedPlaceChoice() {
+  return read() != null;
+}
+
 export function savePlaceChoice(choice) {
   const clean =
     choice?.mode === 'city' && isCity(choice.city) ? { mode: 'city', city: choice.city } : POSITION;

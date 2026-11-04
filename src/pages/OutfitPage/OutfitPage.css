@@ -25,6 +25,24 @@
   margin-bottom: var(--sv-space-4);
 }
 
+.outfit-page__place {
+  display: flex;
+  gap: var(--sv-space-2);
+  align-items: center;
+}
+
+.outfit-page__place-search {
+  flex: 1;
+  min-width: 0;
+}
+
+.outfit-page__place-note {
+  margin-top: calc(-1 * var(--sv-space-2));
+  font-size: 12px;
+  font-style: italic;
+  color: var(--sv-muted);
+}
+
 .outfit-page__days,
 .outfit-page__occasions {
   display: flex;
@@ -49,6 +67,10 @@
   color: var(--sv-muted);
   transition: all var(--sv-transition);
   text-transform: capitalize;
+}
+
+.outfit-page__day--plain {
+  text-transform: none;
 }
 
 .outfit-page__day--active {

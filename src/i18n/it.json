@@ -184,7 +184,10 @@
     "manualWeather": "Meteo non disponibile: imposta tu le condizioni",
     "manualTemp": "Temperatura (°C)",
     "manualRain": "Pioggia prevista",
-    "wornToday": "Outfit registrato per {{date}}"
+    "wornToday": "Outfit registrato per {{date}}",
+    "myPosition": "La mia posizione",
+    "positionUnavailable": "Posizione non disponibile: uso {{city}}",
+    "chosenByHand": "scelta a mano"
   },
   "tryon": {
     "title": "Prova outfit",

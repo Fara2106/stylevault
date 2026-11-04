@@ -4,6 +4,7 @@ import {
   savePlaceChoice,
   resolvePlace,
   getBrowserPosition,
+  hasSavedPlaceChoice,
   _placeMemory,
 } from './place';
 
@@ -16,6 +17,12 @@ describe('scelta del luogo', () => {
 
   it('di partenza è la mia posizione', () => {
     expect(loadPlaceChoice()).toEqual({ mode: 'position' });
+  });
+
+  it('sa se la scelta è stata fatta (nel browser si chiede la posizione solo allora)', () => {
+    expect(hasSavedPlaceChoice()).toBe(false);
+    savePlaceChoice({ mode: 'position' });
+    expect(hasSavedPlaceChoice()).toBe(true);
   });
 
   it('salva e rilegge una città scelta a mano', () => {

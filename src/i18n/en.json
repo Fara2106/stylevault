@@ -184,7 +184,10 @@
     "manualWeather": "Weather unavailable: set the conditions yourself",
     "manualTemp": "Temperature (°C)",
     "manualRain": "Rain expected",
-    "wornToday": "Outfit logged for {{date}}"
+    "wornToday": "Outfit logged for {{date}}",
+    "myPosition": "My location",
+    "positionUnavailable": "Location unavailable: using {{city}}",
+    "chosenByHand": "chosen manually"
   },
   "tryon": {
     "title": "Try On Outfit",
