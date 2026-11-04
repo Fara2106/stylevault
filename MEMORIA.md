@@ -348,6 +348,16 @@ piano `docs/superpowers/plans/2026-11-03-app-ios.md`, registro decisioni
     Le correzioni iOS restano utili anche nella versione nativa:
     Privacy Manifest, Debug/Release, etichetta IA, Segnala, dichiarazione
     foto, consenso al download.
+- **Test completi 04/11 sera** (dopo il push di feat/app-ios, 1f1a28a):
+  StyleVault 138/138 su iPhone 18 Pro e su iPad Pro 11" (M5)
+  (B04B93AB-…, libero; l'iPad Pro 13" M5 acceso è della sessione Vocali);
+  RealisticBench 9/9 su entrambi dopo aver aggiunto GENERATE_INFOPLIST_FILE a
+  RealisticBenchTests in project.yml (senza, xcodebuild non firmava il
+  bundle); sito vitest 294/294 e build ok; funzioni Deno 7/7. Nei simulatori:
+  login nativo ok su iPhone e iPad (su iPad gira in modalità iPhone,
+  TARGETED_DEVICE_FAMILY "1"). I link Privacy/Supporto aprono
+  fara2106.github.io/stylevault/privacy|supporto che danno **404** (pagine non
+  ancora pubblicate). Giro da loggati non fatto: serve un account vero.
 - **Correzioni dell'audit (04/11, pomeriggio)**, stato nella sezione 0 del report.
   Fatto:
   - "Elimina account" nel Profilo → Edge Function `delete-account`, pubblicata

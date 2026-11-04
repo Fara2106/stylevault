@@ -147,6 +147,9 @@ targets:
     sources: [RealisticBenchTests]
     dependencies:
       - target: RealisticBench
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
   # La generazione Swift di RealisticBench sul Mac (vedi GenerationMacTests)
   RealisticBenchMacTests:
     type: bundle.unit-test
