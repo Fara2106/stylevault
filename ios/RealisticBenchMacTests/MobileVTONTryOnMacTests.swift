@@ -100,16 +100,22 @@ final class MobileVTONTryOnMacTests: XCTestCase {
     func testProgressReachesOne() async throws {
         let s = try setup()
         defer { try? FileManager.default.removeItem(at: s.workDir) }
-        let fractions = Box<[Double]>([])
+        let events = Box<[TryOnProgress]>([])
         let image = try await s.engine.generate(person: s.person, garment: s.garment, item: s.item) { p in
-            fractions.mutate { $0.append(p.fraction) }
+            events.mutate { $0.append(p) }
         }
         XCTAssertEqual(image.width, s.person.width); XCTAssertEqual(image.height, s.person.height)
-        let f = fractions.get
+        let e = events.get
+        let f = e.map(\.fraction), loaded = e.map(\.loaded)
         XCTAssertEqual(f.last, 1)
         XCTAssertEqual(f, f.sorted(), "l'avanzamento non deve mai scendere")
-        XCTAssertEqual(f.count, Set(f).count, "ogni aggiornamento deve far avanzare")
-        XCTAssertEqual(f.count, 1 + 10 + 10 + 1)   // fase 1, capo ×10, prova ×10, decoder
+        XCTAssertEqual(loaded, loaded.sorted())
+        XCTAssertEqual(loaded.last, TryOnProgress.modelCount)
+        for (a, b) in zip(e, e.dropFirst()) {
+            XCTAssertTrue(b.fraction > a.fraction || b.loaded > a.loaded, "ogni aggiornamento deve far avanzare")
+        }
+        // fase 1, capo ×10, prova ×10, decoder, più una per ogni rete caricata
+        XCTAssertEqual(e.count, 1 + 10 + 10 + 1 + TryOnProgress.modelCount)
     }
 
     func testCancellationStopsBetweenSteps() async throws {

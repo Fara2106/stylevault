@@ -10,9 +10,14 @@ enum RealisticState: Equatable {
     case preparing(done: Int, total: Int)
     /// Frazione 0…1 dei passi del calcolo.
     case generating(Double)
+    /// Prima generazione sul telefono: Core ML prepara le reti per il Neural Engine
+    /// (minuti). done/total reti caricate, fraction dei passi del calcolo.
+    case warming(done: Int, total: Int, fraction: Double)
     case ready
     /// Messaggio breve; resta il collage.
     case failed(String)
+    /// Rete a consumo o Risparmio dati: si scarica solo dopo "Scarica comunque".
+    case needsNetworkConsent
     /// Dispositivo senza abbastanza memoria (o simulatore): solo collage.
     case unsupported
 }
@@ -28,9 +33,26 @@ final class RealisticAvatarModel {
     private(set) var images = [BodyView: CGImage]()
 
     let supported: Bool
-    /// Una generazione gira (o scarica): i pulsanti delle altre viste sono spenti.
-    var isBusy: Bool { running != nil }
+    /// Una generazione gira (o scarica), o si stanno togliendo i modelli: i pulsanti sono spenti.
+    var isBusy: Bool { running != nil || isRemoving }
     var busyView: BodyView? { running?.view }
+    /// L'ultima generazione è stata interrotta da una chiusura dell'app (memoria):
+    /// la vista davanti non parte da sola, c'è "Riprova".
+    let wasInterrupted: Bool
+    /// La vista davanti può partire da sola all'apertura: no se l'ultima generazione
+    /// si è interrotta, né dopo `maxInterruptions` interruzioni di fila (finché una non riesce).
+    let autoStartAllowed: Bool
+    private(set) var isRemoving = false
+
+    static let maxInterruptions = 2
+    /// Un id per avvio dell'app: il segno di "generazione in corso" di questo avvio non è un'interruzione.
+    static let launch = UUID()
+
+    enum Keys {
+        static let inProgress = "realistic.inProgress"
+        static let interruptions = "realistic.interruptions"
+        static let warmed = "realistic.warmed"
+    }
 
     private struct Run {
         let view: BodyView
@@ -39,13 +61,16 @@ final class RealisticAvatarModel {
     }
     private var running: Run?
     /// Il calcolo appena annullato: il motore si ferma solo tra una rete e l'altra
-    /// (anche secondi), quindi il prossimo aspetta che finisca. Mai due reti grandi insieme.
-    @ObservationIgnored private var draining: (id: UUID, task: Task<Void, Never>)?
+    /// (anche secondi), quindi il prossimo aspetta che finisca. Mai due reti grandi insieme,
+    /// anche riaprendo subito la schermata (statico: vale per tutte le istanze).
+    private static var draining: (id: UUID, task: Task<Void, Never>)?
 
     @ObservationIgnored private let store: RealisticModelPreparing?
     @ObservationIgnored private let cache: RealisticCache
     @ObservationIgnored private let makeEngine: (@Sendable () async throws -> RealisticTryOn)?
     @ObservationIgnored private var engine: RealisticTryOn?
+    @ObservationIgnored private let defaults: UserDefaults
+    @ObservationIgnored private let launch: UUID
     /// Ultimi valori del download e della preparazione (lo store li alterna file per file).
     @ObservationIgnored private var download: (done: Int64, total: Int64) = (0, 0)
     @ObservationIgnored private var preparation: (done: Int, total: Int) = (0, 0)
@@ -53,20 +78,36 @@ final class RealisticAvatarModel {
     private static var cleanedWorkFolders = false
 
     /// - makeEngine: crea il motore quando i modelli sono pronti (dopo `store.prepare`).
+    /// - defaults, launch: dove resta il segno di "generazione in corso" e l'avvio attuale (i test li cambiano).
     init(store: RealisticModelPreparing?, supported: Bool, cache: RealisticCache = .shared,
+         defaults: UserDefaults = .standard, launch: UUID = RealisticAvatarModel.launch,
          makeEngine: (@Sendable () async throws -> RealisticTryOn)?) {
         self.store = store
         self.supported = supported
         self.cache = cache
+        self.defaults = defaults
+        self.launch = launch
         self.makeEngine = makeEngine
         let initial: RealisticState = supported ? .collage : .unsupported
         state = Dictionary(uniqueKeysWithValues: BodyView.allCases.map { ($0, initial) })
+        // Il segno di un avvio precedente vuol dire che iOS ha chiuso l'app durante il calcolo
+        var interrupted = false
+        if supported, let marker = defaults.dictionary(forKey: Keys.inProgress),
+           marker["launch"] as? String != launch.uuidString {
+            defaults.removeObject(forKey: Keys.inProgress)
+            defaults.set(defaults.integer(forKey: Keys.interruptions) + 1, forKey: Keys.interruptions)
+            interrupted = true
+        }
+        wasInterrupted = interrupted
+        autoStartAllowed = supported && !interrupted
+            && defaults.integer(forKey: Keys.interruptions) < Self.maxInterruptions
     }
 
     /// Con un motore già fatto (i test usano un finto).
     convenience init(engine: RealisticTryOn?, store: RealisticModelPreparing?, supported: Bool,
-                     cache: RealisticCache = .shared) {
-        self.init(store: store, supported: supported, cache: cache,
+                     cache: RealisticCache = .shared, defaults: UserDefaults = .standard,
+                     launch: UUID = RealisticAvatarModel.launch) {
+        self.init(store: store, supported: supported, cache: cache, defaults: defaults, launch: launch,
                   makeEngine: engine.map { engine in { @Sendable in engine } })
     }
 
@@ -94,15 +135,18 @@ final class RealisticAvatarModel {
 
     /// Genera la vista (o la prende dalla cache). Ignorato se un'altra gira già
     /// o se è già pronta. Ritorna a lavoro finito o annullato.
-    func start(_ view: BodyView, person: CGImage, garment: CGImage, item: AvatarItem, bodyKey: String) async {
-        guard supported, running == nil, state[view] != .ready else { return }
+    /// - allowsExpensiveNetwork: true solo dopo "Scarica comunque" (rete a consumo o Risparmio dati).
+    func start(_ view: BodyView, person: CGImage, garment: CGImage, item: AvatarItem, bodyKey: String,
+               allowsExpensiveNetwork: Bool = false) async {
+        guard supported, running == nil, !isRemoving, state[view] != .ready else { return }
         let id = UUID()
-        let previous = draining?.task
+        let previous = Self.draining?.task
         // In attesa che il calcolo annullato si fermi: la barra parte da 0
-        if previous != nil { state[view] = .generating(0) }
+        if previous != nil { state[view] = startingState }
         let task = Task {
             await previous?.value
-            await run(view, id: id, person: person, garment: garment, item: item, bodyKey: bodyKey)
+            await run(view, id: id, person: person, garment: garment, item: item, bodyKey: bodyKey,
+                      allowsExpensiveNetwork: allowsExpensiveNetwork)
         }
         running = Run(view: view, id: id, task: task)
         // Se chi aspetta viene annullato (la schermata si chiude), si ferma anche il calcolo
@@ -116,8 +160,22 @@ final class RealisticAvatarModel {
         running = nil
         run.task.cancel()
         // Il suo task finisce solo dopo quello annullato prima (lo aspetta): basta ricordare l'ultimo
-        draining = (run.id, run.task)
+        Self.draining = (run.id, run.task)
         state[run.view] = .collage
+    }
+
+    /// "Elimina i modelli" (Crediti): aspetta un calcolo che si sta fermando, toglie i
+    /// modelli e torna al collage. Il prossimo uso riscarica e riprepara il motore.
+    func removeModels() async {
+        guard running == nil, !isRemoving else { return }
+        isRemoving = true
+        defer { isRemoving = false }
+        await Self.draining?.task.value
+        engine = nil
+        await store?.removeAll()
+        defaults.removeObject(forKey: Keys.warmed)
+        images.removeAll()
+        if supported { for view in BodyView.allCases { state[view] = .collage } }
     }
 
     /// Il risultato grezzo non serve più quando la vista composta è pronta (memoria):
@@ -129,10 +187,10 @@ final class RealisticAvatarModel {
     // MARK: - Lavoro
 
     private func run(_ view: BodyView, id: UUID, person: CGImage, garment: CGImage,
-                     item: AvatarItem, bodyKey: String) async {
+                     item: AvatarItem, bodyKey: String, allowsExpensiveNetwork: Bool) async {
         defer {
             if running?.id == id { running = nil }
-            if draining?.id == id { draining = nil }
+            if Self.draining?.id == id { Self.draining = nil }
         }
         do {
             try checkCurrent(id)
@@ -142,27 +200,73 @@ final class RealisticAvatarModel {
                 state[view] = .ready
                 return
             }
-            let engine = try await readyEngine(view, id: id)
+            let engine = try await readyEngine(view, id: id, allowsExpensiveNetwork: allowsExpensiveNetwork)
             try checkCurrent(id)
-            state[view] = .generating(0)
+            state[view] = startingState
             await removeStaleWorkFoldersOnce()
             try checkCurrent(id)
-            let image = try await engine.generate(person: person, garment: garment, item: item) { [weak self] p in
-                Task { @MainActor in self?.generationProgress(p.fraction, view: view, id: id) }
+            // Se iOS chiude l'app durante il calcolo il segno resta: alla prossima apertura niente partenza da sola
+            markInProgress(view)
+            let image: CGImage
+            do {
+                image = try await engine.generate(person: person, garment: garment, item: item) { [weak self] p in
+                    Task { @MainActor in self?.generationProgress(p, view: view, id: id) }
+                }
+            } catch {
+                clearInProgress()
+                throw error
             }
+            clearInProgress()
+            defaults.set(0, forKey: Keys.interruptions)
+            defaults.set(true, forKey: Keys.warmed)
             try Task.checkCancellation()
             await cache.store(image, item: item, view: view, bodyKey: bodyKey)
             guard running?.id == id else { return }
             images[view] = image
             state[view] = .ready
         } catch {
+            await forgetBrokenModel(error)
             // Già rimesso a collage da cancelAll
             guard running?.id == id else { return }
-            state[view] = Task.isCancelled || error is CancellationError ? .collage : .failed(Self.message(for: error))
+            if Task.isCancelled || error is CancellationError {
+                state[view] = .collage
+            } else if case ModelStoreError.expensiveNetwork = error {
+                state[view] = .needsNetworkConsent
+            } else {
+                state[view] = .failed(Self.message(for: error))
+            }
         }
     }
 
-    private func readyEngine(_ view: BodyView, id: UUID) async throws -> RealisticTryOn {
+    /// Un modello compilato che non si carica (o che manca) si toglie: con "Riprova" lo store lo rifà.
+    private func forgetBrokenModel(_ error: Error) async {
+        switch error {
+        case TryOnError.loadFailed(let name):
+            engine = nil
+            await store?.invalidate(name)
+        case TryOnError.missingModel:
+            engine = nil
+        default:
+            break
+        }
+    }
+
+    /// Prima barra del calcolo: la prima volta in assoluto è la preparazione del motore.
+    private var startingState: RealisticState {
+        defaults.bool(forKey: Keys.warmed)
+            ? .generating(0) : .warming(done: 0, total: TryOnProgress.modelCount, fraction: 0)
+    }
+
+    private func markInProgress(_ view: BodyView) {
+        defaults.set(["view": view.rawValue, "at": Date().timeIntervalSince1970, "launch": launch.uuidString],
+                     forKey: Keys.inProgress)
+    }
+
+    private func clearInProgress() {
+        defaults.removeObject(forKey: Keys.inProgress)
+    }
+
+    private func readyEngine(_ view: BodyView, id: UUID, allowsExpensiveNetwork: Bool) async throws -> RealisticTryOn {
         if let engine { return engine }
         guard let makeEngine else { throw TryOnError.missingModel("Denoiser") }
         if let store, !(await store.isReady) {
@@ -171,7 +275,7 @@ final class RealisticAvatarModel {
             download = (0, 0)
             preparation = (0, 0)
             state[view] = .downloading(done: 0, total: 0)
-            try await store.prepare { [weak self] p in
+            try await store.prepare(allowsExpensiveNetwork: allowsExpensiveNetwork) { [weak self] p in
                 Task { @MainActor in self?.storeProgress(p, view: view, id: id) }
             }
             try Task.checkCancellation()
@@ -202,9 +306,20 @@ final class RealisticAvatarModel {
             : .preparing(done: preparation.done, total: preparation.total)
     }
 
-    private func generationProgress(_ fraction: Double, view: BodyView, id: UUID) {
-        guard running?.id == id, case let .generating(old)? = state[view], fraction > old else { return }
-        state[view] = .generating(min(fraction, 1))
+    /// Gli aggiornamenti arrivano in Task separati (ordine non garantito): la barra non torna mai indietro.
+    private func generationProgress(_ progress: TryOnProgress, view: BodyView, id: UUID) {
+        guard running?.id == id else { return }
+        let fraction = min(max(progress.fraction, 0), 1)
+        switch state[view] {
+        case let .generating(old)?:
+            if fraction > old { state[view] = .generating(fraction) }
+        case let .warming(done, total, old)?:
+            let loaded = min(max(progress.loaded, done), total)
+            let f = max(fraction, old)
+            if loaded != done || f != old { state[view] = .warming(done: loaded, total: total, fraction: f) }
+        default:
+            return
+        }
     }
 
     private func removeStaleWorkFoldersOnce() async {
@@ -247,10 +362,17 @@ final class RealisticAvatarModel {
                              : "Preparo i modelli, solo la prima volta…"
         case let .generating(fraction):
             return "Versione realistica… \(percent(fraction))%"
+        case let .warming(done, total, _):
+            return "Preparo il motore, solo la prima volta… \(done)/\(total)"
         default:
             return nil
         }
     }
+
+    /// Sotto la barra quando lo scarico aspetta il permesso ("Scarica comunque").
+    nonisolated static let networkConsentText =
+        "Per la versione realistica servono 1,3 GB. Sei su rete cellulare o Risparmio dati."
+    nonisolated static let interruptedText = "La versione realistica si è interrotta l'ultima volta."
 
     /// Avanzamento della barra 0…1; nil se non c'è nulla in corso.
     nonisolated static func fraction(for state: RealisticState) -> Double? {
@@ -258,6 +380,9 @@ final class RealisticAvatarModel {
         case let .downloading(done, total): return total > 0 ? Double(done) / Double(total) : 0
         case let .preparing(done, total): return total > 0 ? Double(done) / Double(total) : 0
         case let .generating(fraction): return fraction
+        // Metà reti caricate, metà passi: tutte e due non scendono mai, la barra arriva a 1
+        case let .warming(done, total, fraction):
+            return total > 0 ? (Double(done) / Double(total) + fraction) / 2 : fraction
         default: return nil
         }
     }
@@ -270,6 +395,12 @@ final class RealisticAvatarModel {
             return "Non riesco a scaricare i modelli: controlla la connessione."
         case ModelStoreError.corrupted:
             return "Il download dei modelli non è riuscito."
+        case ModelStoreError.compileFailed:
+            return "I modelli non funzionano su questo iPhone: serve iOS 18."
+        case ModelStoreError.expensiveNetwork:
+            return networkConsentText
+        case TryOnError.loadFailed:
+            return "Un modello non si carica: con Riprova lo riscarico."
         default:
             return "La versione realistica non è riuscita: resta il collage."
         }

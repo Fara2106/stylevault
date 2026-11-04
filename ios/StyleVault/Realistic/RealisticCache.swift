@@ -3,11 +3,15 @@ import Foundation
 import ImageIO
 import UniformTypeIdentifiers
 
-/// Viste realistiche già calcolate (Caches/realistic/<capo>-<vista>-<corpo>-v1.png):
+/// Viste realistiche già calcolate (Caches/realistic/<capo>-<vista>-<corpo>-<impronta>.png):
 /// riaprendo lo stesso outfit compaiono subito. La chiave è il capo usato, la
-/// vista e la foto del corpo (`bodyKey`, la stessa chiave dello scontorno):
-/// se si rifanno le foto o si cambia capo, si rigenera.
+/// vista, la foto del corpo (`bodyKey`, la stessa chiave dello scontorno) e
+/// un'impronta di foto del capo, descrizione e versione dei modelli: se cambia
+/// una di queste cose si rigenera.
 actor RealisticCache {
+    /// Da cambiare quando cambiano i modelli della Release o i parametri del calcolo.
+    static let modelVersion = "\(RealisticModelStore.release)-p1"
+
     static let shared = RealisticCache(
         folder: FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
             .appending(path: "realistic", directoryHint: .isDirectory))
@@ -43,12 +47,28 @@ actor RealisticCache {
     }
 
     private func url(item: AvatarItem, view: BodyView, bodyKey: String) -> URL {
-        folder.appending(path: "\(Self.safe(item.id))-\(view.rawValue)-\(Self.safe(bodyKey))-v1.png")
+        folder.appending(path: Self.key(item: item, view: view, bodyKey: bodyKey) + ".png")
+    }
+
+    /// Nome del file (senza estensione).
+    static func key(item: AvatarItem, view: BodyView, bodyKey: String) -> String {
+        "\(safe(item.id))-\(view.rawValue)-\(safe(bodyKey))-\(fingerprint(item: item, view: view))"
     }
 
     /// Chiave dello scontorno del risultato in CutoutCache (`realistic-…`).
     static func cutoutKey(item: AvatarItem, view: BodyView, bodyKey: String) -> String {
-        "realistic-\(safe(item.id))-\(view.rawValue)-\(safe(bodyKey))-v1"
+        "realistic-" + key(item: item, view: view, bodyKey: bodyKey)
+    }
+
+    /// Impronta breve della foto del capo usata per la vista (la parte stabile
+    /// dell'indirizzo, come `CutoutCache.key`), della descrizione e della versione dei modelli.
+    static func fingerprint(item: AvatarItem, view: BodyView) -> String {
+        let photo = AvatarModel.garmentImageURL(item, view: view).map { url in
+            url.host.map { $0 + url.path } ?? url.absoluteString
+        } ?? ""
+        let text = [photo, item.descriptor ?? "", modelVersion].joined(separator: "\n")
+        let hash = text.unicodeScalars.reduce(UInt64(5381)) { ($0 &* 33) &+ UInt64($1.value) }
+        return String(hash, radix: 36)
     }
 
     /// Solo lettere, cifre, "-" e "_": gli id sono UUID, ma non ci si fida.

@@ -2,8 +2,15 @@ import CoreGraphics
 import CoreML
 import Foundation
 
-/// Avanzamento vero della generazione, da 0 a 1.
-struct TryOnProgress: Equatable { let fraction: Double }
+/// Avanzamento vero della generazione: `fraction` da 0 a 1 (mai indietro, finisce a 1)
+/// e quante delle `modelCount` reti sono già caricate. Al primo uso caricare una rete
+/// prepara il Neural Engine e dura minuti: ogni rete caricata manda un aggiornamento.
+struct TryOnProgress: Equatable {
+    /// Reti che il motore carica in una generazione.
+    static let modelCount = 7
+    let fraction: Double
+    var loaded: Int = 0
+}
 
 protocol RealisticTryOn: Sendable {
     /// person e garment come arrivano (qualsiasi proporzione); il risultato ha la dimensione di person.
@@ -12,10 +19,12 @@ protocol RealisticTryOn: Sendable {
 }
 
 enum TryOnError: LocalizedError {
-    case missingModel(String), missingOutput(String), image, tokenizer
+    /// loadFailed: il modello compilato c'è ma Core ML non lo carica (file rovinato).
+    case missingModel(String), loadFailed(String), missingOutput(String), image, tokenizer
     var errorDescription: String? {
         switch self {
         case .missingModel(let n): "Manca il modello \(n)"
+        case .loadFailed(let n): "Il modello \(n) non si carica"
         case .missingOutput(let n): "Il modello non ha dato \(n)"
         case .image: "Immagine non valida"
         case .tokenizer: "Tokenizzatore non caricato"
@@ -59,8 +68,16 @@ struct MobileVTONTryOn: RealisticTryOn {
     func generatePadded(person: CGImage, garment: CGImage, item: AvatarItem,
                         progress: @Sendable (TryOnProgress) -> Void) async throws
         -> (result: CGImage, content: CGRect) {
-        var percent = 0
-        func advance(_ by: Int) { percent += by; progress(TryOnProgress(fraction: Double(percent) / 100)) }
+        var percent = 0, loaded = 0
+        func send() { progress(TryOnProgress(fraction: Double(percent) / 100, loaded: loaded)) }
+        func advance(_ by: Int) { percent += by; send() }
+        /// Carica una rete e lo dice (la barra non resta ferma mentre Core ML la prepara).
+        func load(_ name: String, _ units: MLComputeUnits) async throws -> MLModel {
+            let model = try await self.load(name, units)
+            loaded += 1
+            send()
+            return model
+        }
 
         let (personPadded, content) = TryOnInputs.pad3x4(person)
         let garmentPadded = TryOnInputs.pad3x4(garment).image
@@ -78,8 +95,8 @@ struct MobileVTONTryOn: RealisticTryOn {
         let texts = [GarmentCaption.negative, GarmentCaption.person(item), GarmentCaption.cloth(item)]
         let prompt: [Float], promptCloth: [Float]
         do {
-            let l = try await hidden("TextEncoder", pad: "<|endoftext|>", texts)
-            let g = try await hidden("TextEncoder2", pad: "!", texts)
+            let l = try await hidden(load("TextEncoder", units), pad: "<|endoftext|>", texts)
+            let g = try await hidden(load("TextEncoder2", units), pad: "!", texts)
             func text(_ i: Int) -> [Float] {
                 TryOnMath.textEmbedding(l[i].values, lDim: l[i].dim, g[i].values, gDim: g[i].dim,
                                         tokens: l[i].tokens, width: Self.textWidth, zeroTokens: 256)
@@ -212,7 +229,12 @@ struct MobileVTONTryOn: RealisticTryOn {
         guard let url = models(name) else { throw TryOnError.missingModel(name) }
         let config = MLModelConfiguration()
         config.computeUnits = units
-        return try await MLModel.load(contentsOf: url, configuration: config)
+        do {
+            return try await MLModel.load(contentsOf: url, configuration: config)
+        } catch {
+            try Task.checkCancellation()
+            throw TryOnError.loadFailed(name)
+        }
     }
 
     private func predict(_ model: MLModel, _ values: [String: MLMultiArray]) async throws -> MLFeatureProvider {
@@ -233,11 +255,10 @@ struct MobileVTONTryOn: RealisticTryOn {
     }
 
     /// Penultimo strato nascosto di un codificatore di testo, per ogni testo.
-    private func hidden(_ model: String, pad: String, _ texts: [String]) async throws
+    private func hidden(_ m: MLModel, pad: String, _ texts: [String]) async throws
         -> [(values: [Float], tokens: Int, dim: Int)] {
         guard let tok = try? CLIPTokenizer(vocab: tokenizer.vocab, merges: tokenizer.merges, padToken: pad)
         else { throw TryOnError.tokenizer }
-        let m = try await load(model, units)
         var out: [(values: [Float], tokens: Int, dim: Int)] = []
         for text in texts {
             let ids = try MLMultiArray(shape: [1, 77], dataType: .int32)

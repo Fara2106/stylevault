@@ -4,6 +4,8 @@ import SwiftUI
 /// dito tra davanti, lato e spalle. Sui telefoni che reggono il calcolo, la
 /// vista davanti diventa da sola la versione realistica (Mobile-VTON); lato e
 /// spalle si generano a richiesta. Pantaloni e scarpe restano del collage.
+/// Se l'ultima generazione si è interrotta (iOS ha chiuso l'app) la vista
+/// davanti aspetta "Riprova" invece di partire da sola.
 struct AvatarView: View {
     let request: AvatarRequest
     let onClose: () -> Void
@@ -83,7 +85,7 @@ struct AvatarView: View {
         .task {
             await build()
             await restoreSaved()
-            await startRealistic(.front)
+            if realistic.autoStartAllowed { await startRealistic(.front) }
         }
         .onDisappear {
             closed = true
@@ -104,7 +106,9 @@ struct AvatarView: View {
                 Task { await startRealistic(view) }
             }
         }
-        .sheet(isPresented: $showCredits) { CreditsSheet() }
+        .sheet(isPresented: $showCredits) {
+            CreditsSheet(realistic: realistic, inputsLoading: loadingInputs != nil) { await removeModels() }
+        }
     }
 
     @ViewBuilder private func page(_ view: BodyView) -> some View {
@@ -132,7 +136,7 @@ struct AvatarView: View {
         if realisticItem != nil {
             VStack(spacing: 10) {
                 if !realistic.supported {
-                    Text("La versione realistica richiede iPhone 15 Pro o successivo")
+                    Text(RealisticSupport.requirement)
                         .font(.footnote).foregroundStyle(Palette.muted).multilineTextAlignment(.center)
                 } else if let busy = realistic.busyView, let state = realistic.state[busy],
                           let text = RealisticAvatarModel.text(for: state) {
@@ -145,6 +149,28 @@ struct AvatarView: View {
                 if selection != .front, case let .failed(message)? = realistic.state[.front] {
                     Text("Davanti: \(message)").font(.footnote).foregroundStyle(Palette.muted)
                         .multilineTextAlignment(.center)
+                }
+                // Rete a consumo o Risparmio dati: si scarica solo col permesso
+                if let view = BodyView.allCases.first(where: { realistic.state[$0] == .needsNetworkConsent }) {
+                    Text(RealisticAvatarModel.networkConsentText)
+                        .font(.footnote).foregroundStyle(Palette.muted).multilineTextAlignment(.center)
+                    Button("Scarica comunque") {
+                        selection = view
+                        Task { await startRealistic(view, allowsExpensiveNetwork: true) }
+                    }
+                    .font(.footnote.weight(.semibold)).foregroundStyle(Palette.ink)
+                    .disabled(isBusy)
+                }
+                // L'ultima volta iOS ha chiuso l'app durante il calcolo: si riparte solo a mano
+                if !realistic.autoStartAllowed, realistic.state[.front] == .collage, photos[.front] != nil,
+                   !isBusy, interrupted == nil {
+                    Text(RealisticAvatarModel.interruptedText)
+                        .font(.footnote).foregroundStyle(Palette.muted).multilineTextAlignment(.center)
+                    Button("Riprova") {
+                        selection = .front
+                        Task { await startRealistic(.front) }
+                    }
+                    .font(.footnote.weight(.semibold)).foregroundStyle(Palette.ink)
                 }
                 if case let .failed(message)? = realistic.state[selection] {
                     Text(message).font(.footnote).foregroundStyle(Palette.muted).multilineTextAlignment(.center)
@@ -194,7 +220,7 @@ struct AvatarView: View {
     }
 
     /// Prende la vista salvata o la genera, poi la compone col collage al posto di quella di prima.
-    private func startRealistic(_ view: BodyView) async {
+    private func startRealistic(_ view: BodyView, allowsExpensiveNetwork: Bool = false) async {
         guard realistic.supported, failure == nil, !closed, let item = realisticItem, let url = photos[view],
               !isBusy, realistic.state[view] != .ready else { return }
         let bodyKey = CutoutCache.key("body-\(view.rawValue)", url)
@@ -209,8 +235,19 @@ struct AvatarView: View {
             return
         }
         originals[view] = inputs.person
-        await realistic.start(view, person: inputs.person, garment: inputs.garment, item: item, bodyKey: bodyKey)
+        await realistic.start(view, person: inputs.person, garment: inputs.garment, item: item, bodyKey: bodyKey,
+                              allowsExpensiveNetwork: allowsExpensiveNetwork)
         await showRealistic(view, item: item, bodyKey: bodyKey)
+    }
+
+    /// "Elimina i modelli": tolti i modelli si torna al collage in tutte le viste.
+    private func removeModels() async {
+        guard !isBusy else { return }
+        interrupted = nil
+        await realistic.removeModels()
+        notices.removeAll()
+        originals.removeAll()
+        await build()
     }
 
     /// Le viste già generate (riaprendo lo stesso outfit) compaiono subito, senza calcolo.
@@ -296,8 +333,14 @@ struct AvatarView: View {
 }
 
 /// Autori e licenza di Mobile-VTON: la licenza CC BY-NC-SA 4.0 chiede di mostrarli.
+/// In fondo si possono togliere i modelli scaricati (1,3 GB).
 private struct CreditsSheet: View {
+    let realistic: RealisticAvatarModel
+    let inputsLoading: Bool
+    let onRemove: () async -> Void
+
     @Environment(\.dismiss) private var dismiss
+    @State private var confirmRemove = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -321,6 +364,23 @@ private struct CreditsSheet: View {
             }
             .font(.subheadline.weight(.semibold)).tint(Palette.accent)
             Spacer()
+            if realistic.supported {
+                // Spento mentre si scarica o si calcola (e mentre si tolgono)
+                Button("Elimina i modelli (1,3 GB)", role: .destructive) { confirmRemove = true }
+                    .font(.subheadline.weight(.semibold))
+                    .disabled(realistic.isBusy || inputsLoading)
+                    .confirmationDialog("Eliminare i modelli della versione realistica?",
+                                        isPresented: $confirmRemove, titleVisibility: .visible) {
+                        Button("Elimina", role: .destructive) {
+                            Task {
+                                await onRemove()
+                                dismiss()
+                            }
+                        }
+                    } message: {
+                        Text("Si libera 1,3 GB. La prossima volta si riscaricano.")
+                    }
+            }
         }
         .font(.subheadline)
         .padding(20)

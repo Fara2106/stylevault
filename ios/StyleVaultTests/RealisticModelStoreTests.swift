@@ -9,8 +9,13 @@ import XCTest
 final class FakeModelServer: URLProtocol, @unchecked Sendable {
     nonisolated(unsafe) static var files: [String: Data] = [:]
     nonisolated(unsafe) static var requests: [URLRequest] = []
-    /// Se valorizzato: il primo scarico di questo file si interrompe dopo `count` byte
+    /// Se valorizzato: i primi `interruptTimes` scarichi di questo file si interrompono dopo `count` byte
     nonisolated(unsafe) static var interrupt: (name: String, count: Int)?
+    nonisolated(unsafe) static var interruptTimes = 1
+    /// Errori di rete da dare alle prossime richieste di un file, uno per richiesta
+    nonisolated(unsafe) static var failures: [String: [URLError.Code]] = [:]
+    /// Rete a consumo: le richieste che non la permettono falliscono come fa iOS
+    nonisolated(unsafe) static var expensive = false
     nonisolated(unsafe) static var ignoreRange = false
     nonisolated(unsafe) static var rangeNotSatisfiable = false
     /// Se valorizzato, le richieste di `gatedName` restano ferme finché non si fa `signal()`
@@ -21,7 +26,7 @@ final class FakeModelServer: URLProtocol, @unchecked Sendable {
     static func reset() {
         lock.lock(); defer { lock.unlock() }
         files = [:]; requests = []; interrupt = nil; ignoreRange = false; rangeNotSatisfiable = false
-        gate = nil
+        gate = nil; interruptTimes = 1; failures = [:]; expensive = false
     }
 
     override class func canInit(with request: URLRequest) -> Bool { true }
@@ -35,8 +40,24 @@ final class FakeModelServer: URLProtocol, @unchecked Sendable {
         let body = Self.files[name]
         let interrupt = Self.interrupt
         let ignoreRange = Self.ignoreRange
-        if let i = interrupt, i.name == name { Self.interrupt = nil }
+        if let i = interrupt, i.name == name {
+            Self.interruptTimes -= 1
+            if Self.interruptTimes <= 0 { Self.interrupt = nil }
+        }
+        var failure: URLError.Code?
+        if var list = Self.failures[name], !list.isEmpty { failure = list.removeFirst(); Self.failures[name] = list }
+        let expensive = Self.expensive
         Self.lock.unlock()
+
+        if expensive, !request.allowsExpensiveNetworkAccess {
+            client?.urlProtocol(self, didFailWithError: URLError(.notConnectedToInternet, userInfo: [
+                NSURLErrorNetworkUnavailableReasonKey: URLError.NetworkUnavailableReason.expensive.rawValue]))
+            return
+        }
+        if let failure {
+            client?.urlProtocol(self, didFailWithError: URLError(failure))
+            return
+        }
 
         if name == Self.gatedName, let gate = Self.gate { _ = gate.wait(timeout: .now() + 20) }
         guard let body else {
@@ -144,17 +165,37 @@ final class RealisticModelStoreTests: XCTestCase {
         return out
     }
 
-    private func makeStore(freeSpace: @escaping @Sendable () -> Int64 = { Int64.max }) -> RealisticModelStore {
-        RealisticModelStore(baseURL: baseURL, folder: folder, session: makeSession(),
-                            freeSpace: freeSpace, compile: fakeCompile)
+    /// Attese chieste dallo store prima di riprovare (nessuna attesa vera).
+    private let sleeps = Locked<[Duration]>([])
+
+    private func makeStore(freeSpace: @escaping @Sendable () -> Int64 = { Int64.max },
+                           compile: (@Sendable (URL) async throws -> URL)? = nil,
+                           retryDelays: [Duration] = [.seconds(1), .seconds(3)]) -> RealisticModelStore {
+        let sleeps = sleeps
+        return RealisticModelStore(baseURL: baseURL, folder: folder, session: makeSession(),
+                                   freeSpace: freeSpace, compile: compile ?? fakeCompile,
+                                   retryDelays: retryDelays, sleep: { d in sleeps.mutate { $0.append(d) } })
+    }
+
+    private func archiveExists(_ name: String) -> Bool {
+        FileManager.default.fileExists(atPath: folder.appending(path: "downloads/\(name)").path)
     }
 
     // MARK: - Test
 
     func testUnsupportedDevices() {
-        XCTAssertFalse(RealisticSupport.isSupported(physicalMemory: 6_000_000_000, isSimulator: false))
-        XCTAssertFalse(RealisticSupport.isSupported(physicalMemory: 8_000_000_000, isSimulator: true))
-        XCTAssertTrue(RealisticSupport.isSupported(physicalMemory: 8_000_000_000, isSimulator: false))
+        XCTAssertFalse(RealisticSupport.isSupported(physicalMemory: 6_000_000_000, isSimulator: false, hasIOS18: true))
+        XCTAssertFalse(RealisticSupport.isSupported(physicalMemory: 8_000_000_000, isSimulator: true, hasIOS18: true))
+        XCTAssertTrue(RealisticSupport.isSupported(physicalMemory: 8_000_000_000, isSimulator: false, hasIOS18: true))
+    }
+
+    func testIOS17NonSupportato() {
+        // 8 GB su iOS 17: i modelli non si compilerebbero, niente scarico
+        XCTAssertFalse(RealisticSupport.isSupported(physicalMemory: 8_000_000_000, isSimulator: false, hasIOS18: false))
+        XCTAssertEqual(RealisticSupport.requirement, "La versione realistica richiede iPhone 15 Pro o successivo con iOS 18")
+        #if targetEnvironment(simulator)
+        XCTAssertFalse(RealisticSupport.current)
+        #endif
     }
 
     func testPreparazioneCompletaEIsReady() async throws {
@@ -195,7 +236,8 @@ final class RealisticModelStoreTests: XCTestCase {
 
     func testResumesAfterInterruption() async throws {
         let entries = try publish(names: ["Denoiser"])
-        let store = makeStore()
+        // Senza nuovi tentativi: si riprende alla preparazione seguente
+        let store = makeStore(retryDelays: [])
         let full = try XCTUnwrap(FakeModelServer.files["Denoiser.aar"])
         FakeModelServer.interrupt = ("Denoiser.aar", full.count / 2)
         do {
@@ -223,7 +265,8 @@ final class RealisticModelStoreTests: XCTestCase {
         let store = makeStore()
         let full = try XCTUnwrap(FakeModelServer.files["Denoiser.aar"])
         FakeModelServer.interrupt = ("Denoiser.aar", full.count / 3)
-        _ = try? await store.prepare { _ in }
+        let first = makeStore(retryDelays: [])
+        _ = try? await first.prepare { _ in }
         FakeModelServer.ignoreRange = true
         try await store.prepare { _ in }
         let ready = await store.isReady
@@ -411,6 +454,185 @@ final class RealisticModelStoreTests: XCTestCase {
             // Non ha scaricato niente
             XCTAssertFalse(FakeModelServer.requests.contains { $0.url?.lastPathComponent == "Denoiser.aar" })
         }
+    }
+
+    // MARK: - M2: nuovi tentativi
+
+    func testInterruzioneRiprovataSubitoDaDoveEraArrivata() async throws {
+        try publish(names: ["Denoiser"])
+        let full = try XCTUnwrap(FakeModelServer.files["Denoiser.aar"])
+        FakeModelServer.interrupt = ("Denoiser.aar", full.count / 2)
+        let store = makeStore()
+        try await store.prepare { _ in }
+        let ready = await store.isReady
+        XCTAssertTrue(ready, "una sola preparazione basta")
+        let ranges = FakeModelServer.requests.filter { $0.url?.lastPathComponent == "Denoiser.aar" }
+            .map { $0.value(forHTTPHeaderField: "Range") }
+        XCTAssertEqual(ranges, [nil, "bytes=\(full.count / 2)-"])
+        XCTAssertEqual(sleeps.value, [.seconds(1)])
+    }
+
+    func testTimeoutRiprovatoDueVoltePoiErrore() async throws {
+        try publish(names: ["Denoiser"])
+        FakeModelServer.failures["Denoiser.aar"] = [.timedOut, .networkConnectionLost, .timedOut]
+        let store = makeStore()
+        do {
+            try await store.prepare { _ in }
+            XCTFail("doveva fallire")
+        } catch {
+            XCTAssertEqual(error as? ModelStoreError, .network)
+        }
+        XCTAssertEqual(requestCount("Denoiser.aar"), 3, "il primo tentativo e altri due")
+        XCTAssertEqual(sleeps.value, [.seconds(1), .seconds(3)])
+        // Al terzo tentativo va: riesce
+        FakeModelServer.failures["Denoiser.aar"] = [.timedOut, .timedOut]
+        sleeps.mutate { $0 = [] }
+        try await store.prepare { _ in }
+        let ready = await store.isReady
+        XCTAssertTrue(ready)
+    }
+
+    func testErroreNonPassaggeroNonRiprovato() async throws {
+        try publish(names: ["Denoiser"])
+        FakeModelServer.failures["Denoiser.aar"] = [.cannotDecodeRawData]
+        let store = makeStore()
+        do {
+            try await store.prepare { _ in }
+            XCTFail("doveva fallire")
+        } catch {
+            XCTAssertEqual(error as? ModelStoreError, .network)
+        }
+        XCTAssertEqual(requestCount("Denoiser.aar"), 1)
+        XCTAssertEqual(sleeps.value, [])
+    }
+
+    // MARK: - I4: rete a consumo
+
+    func testReteAConsumoChiedeIlPermessoPoiScarica() async throws {
+        try publish(names: ["Denoiser"])
+        FakeModelServer.expensive = true
+        let store = makeStore()
+        do {
+            try await store.prepare { _ in }
+            XCTFail("doveva fermarsi")
+        } catch {
+            XCTAssertEqual(error as? ModelStoreError, .expensiveNetwork)
+        }
+        XCTAssertFalse(FakeModelServer.requests.contains { $0.allowsExpensiveNetworkAccess || $0.allowsConstrainedNetworkAccess },
+                       "lo scarico automatico non usa rete a consumo né Risparmio dati")
+        XCTAssertEqual(sleeps.value, [], "non è un errore passeggero")
+        // "Scarica comunque"
+        try await store.prepare(allowsExpensiveNetwork: true) { _ in }
+        let ready = await store.isReady
+        XCTAssertTrue(ready)
+        let allowed = FakeModelServer.requests.filter { $0.allowsExpensiveNetworkAccess && $0.allowsConstrainedNetworkAccess }
+        XCTAssertFalse(allowed.isEmpty)
+    }
+
+    func testReteAConsumoDopoIlManifestSalvato() async throws {
+        // Manifest già salvato da una volta precedente, archivio da scaricare: serve comunque il permesso
+        try publish(names: ["Denoiser"])
+        FakeModelServer.failures["Denoiser.aar"] = [.cannotDecodeRawData]
+        _ = try? await makeStore().prepare { _ in }
+        FakeModelServer.expensive = true
+        do {
+            try await makeStore().prepare { _ in }
+            XCTFail("doveva fermarsi")
+        } catch {
+            XCTAssertEqual(error as? ModelStoreError, .expensiveNetwork)
+        }
+    }
+
+    // MARK: - M1: disco pieno
+
+    func testRiconosceDiscoPieno() {
+        XCTAssertTrue(RealisticModelStore.isOutOfSpace(NSError(domain: NSCocoaErrorDomain, code: NSFileWriteOutOfSpaceError)))
+        XCTAssertTrue(RealisticModelStore.isOutOfSpace(POSIXError(.ENOSPC)))
+        XCTAssertTrue(RealisticModelStore.isOutOfSpace(NSError(domain: NSCocoaErrorDomain, code: NSFileWriteUnknownError,
+                                                               userInfo: [NSUnderlyingErrorKey: POSIXError(.ENOSPC)])))
+        XCTAssertFalse(RealisticModelStore.isOutOfSpace(URLError(.timedOut)))
+        XCTAssertFalse(RealisticModelStore.isOutOfSpace(POSIXError(.EACCES)))
+    }
+
+    func testDiscoPienoInCompilazioneTieneLArchivio() async throws {
+        try publish(names: ["Denoiser"])
+        let full: @Sendable (URL) async throws -> URL = { _ in throw POSIXError(.ENOSPC) }
+        do {
+            try await makeStore(compile: full).prepare { _ in }
+            XCTFail("doveva fallire")
+        } catch {
+            guard case .notEnoughSpace(let mb)? = error as? ModelStoreError else { return XCTFail("\(error)") }
+            XCTAssertGreaterThan(mb, 0)
+        }
+        XCTAssertTrue(archiveExists("Denoiser.aar"), "l'archivio verificato resta")
+        // Liberato lo spazio si riprende senza riscaricare
+        try await makeStore().prepare { _ in }
+        XCTAssertEqual(requestCount("Denoiser.aar"), 1)
+        let ready = await makeStore().isReady
+        XCTAssertTrue(ready)
+    }
+
+    // MARK: - I1: compilazione fallita
+
+    func testCompilazioneFallitaTogleLArchivio() async throws {
+        try publish(names: ["Denoiser"])
+        let broken: @Sendable (URL) async throws -> URL = { _ in throw NSError(domain: "com.apple.CoreML", code: 0) }
+        do {
+            try await makeStore(compile: broken).prepare { _ in }
+            XCTFail("doveva fallire")
+        } catch {
+            XCTAssertEqual(error as? ModelStoreError, .compileFailed("Denoiser"))
+        }
+        XCTAssertFalse(archiveExists("Denoiser.aar"), "l'archivio non deve restare per sempre")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: folder.appending(path: "Denoiser.mlpackage").path))
+    }
+
+    // MARK: - M3: modello rovinato
+
+    func testInvalidateTogleIlModelloCompilato() async throws {
+        try publish()
+        let store = makeStore()
+        try await store.prepare { _ in }
+        await store.invalidate("Denoiser")
+        await store.invalidate("../compiled")   // nomi strani: niente
+        let ready = await store.isReady
+        XCTAssertFalse(ready)
+        XCTAssertNil(store.modelURL("Denoiser"))
+        XCTAssertNotNil(store.modelURL("VAEDecoder"))
+        FakeModelServer.requests = []
+        try await store.prepare { _ in }
+        let archives = FakeModelServer.requests.compactMap { $0.url?.lastPathComponent }.filter { $0.hasSuffix(".aar") }
+        XCTAssertEqual(archives, ["Denoiser.aar"], "si rifà solo quello")
+        let again = await store.isReady
+        XCTAssertTrue(again)
+    }
+
+    // MARK: - M5: elimina i modelli
+
+    func testRemoveAllTogleTutto() async throws {
+        try publish()
+        let store = makeStore()
+        try await store.prepare { _ in }
+        await store.removeAll()
+        XCTAssertFalse(FileManager.default.fileExists(atPath: folder.path))
+        let ready = await store.isReady
+        XCTAssertFalse(ready)
+        XCTAssertNil(store.tokenizerFiles())
+    }
+
+    func testRemoveAllFermaLoScaricoInCorso() async throws {
+        try publish()
+        FakeModelServer.gate = DispatchSemaphore(value: 0)
+        let store = makeStore()
+        let run = Task { try await store.prepare { _ in } }
+        for _ in 0..<100 where requestCount("Denoiser.aar") == 0 { try await Task.sleep(nanoseconds: 20_000_000) }
+        let removal = Task { await store.removeAll() }
+        // removeAll ha già annullato lo scarico fermo sul cancello: ora lo si lascia andare
+        try await Task.sleep(nanoseconds: 200_000_000)
+        FakeModelServer.gate?.signal()
+        await removal.value
+        do { try await run.value; XCTFail("doveva essere fermato") } catch {}
+        XCTAssertFalse(FileManager.default.fileExists(atPath: folder.path))
     }
 }
 
