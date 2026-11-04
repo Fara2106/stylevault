@@ -303,6 +303,14 @@ piano `docs/superpowers/plans/2026-11-03-app-ios.md`, registro decisioni
   `testIlSitoVedeIlPonteSvNative`); ipotesi: a volte guardava il sito in Safari.
   Verificato nel browser (locale); il salvataggio su Supabase dal browser e il
   giro nell'app li deve provare Lorenzo. Test sito 281/281, iOS 133/133.
+- **Controllo dati su Supabase (04/11, dashboard, sola lettura)**: account di
+  Lorenzo a posto: 3 capi (3 foto nello storage), 1 voce di calendario, foto
+  davanti/lato/spalle salvate e presenti nello storage, it / Roma / light.
+  **MANCA la colonna `profiles.armocromia`**: la migrazione 002 NON è applicata
+  su questo progetto (frukvktbmxndyzgivwxq), anche se le note di luglio la
+  danno per fatta (forse era un progetto precedente). Effetto: salvare
+  l'Armocromia dal sito fallisce (l'upsert del profilo va in errore) e il
+  risultato si perde al ricaricamento. Applicarla solo con l'ok di Lorenzo.
 - **Prova sull'iPhone (04/11)**: la build Release apre il sito PUBBLICATO,
   che non ha il ponte iOS (niente "Rifai le foto del corpo" né "Vedilo
   addosso") → si prova con la build Debug + `vite --host` :5181
