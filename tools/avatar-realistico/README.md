@@ -23,6 +23,8 @@ conversione, come da piano
 | `coreml_pipeline.py` | generazione intera con i modelli Core ML, tempo per pezzo e PSNR contro `reference.png` — non importa Mobile-VTON; sul Mac usare `--units CPU_AND_GPU` |
 | `palettize.py` | compressione a 6 bit (palette k-means per gruppi di 16 canali) in `out/coreml-6bit/`; serve scikit-learn |
 | `export_bench_inputs.py` | ingressi veri della coppia di prova per `RealisticBench --generate` in `out/bench-inputs/` |
+| `export_tokenizer_cases.py` | casi di prova del tokenizzatore, `cloth-pixels.bin` e `cloth.jpg` per i test Swift in `ios/StyleVaultTests/Fixtures/realistic/` |
+| `package_models.py` | un `.aar` per modello a 6 bit + `Tokenizer.aar`, `models-manifest.json` e `MODELS-LICENSE.md` in `out/release/` (per la Release `avatar-models-v1`) |
 
 ## RealisticBench sull'iPhone / iPad
 
