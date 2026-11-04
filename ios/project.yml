@@ -42,6 +42,7 @@ targets:
           - CFBundleURLSchemes: [stylevault]
         NSCameraUsageDescription: Per fare le foto del tuo corpo e dei capi.
         NSPhotoLibraryUsageDescription: Per scegliere le foto del tuo corpo e dei capi.
+        NSLocationWhenInUseUsageDescription: Per mostrarti il meteo di dove sei e consigliarti cosa indossare.
         NSLocalNetworkUsageDescription: In sviluppo l'app carica StyleVault dal Mac sulla rete di casa.
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true

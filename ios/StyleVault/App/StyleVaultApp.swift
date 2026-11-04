@@ -31,6 +31,8 @@ struct RootView: View {
     @State private var missingPhotos: [BodyView]?
     @State private var retakePhotos = false
     @State private var avatar: AvatarSession?
+    /// Posizione per il meteo (una richiesta alla volta, solo quando il sito la chiede)
+    @State private var location = LocationProvider()
     @AppStorage(ThemeStore.key) private var theme = "system"
 
     var body: some View {
@@ -58,6 +60,10 @@ struct RootView: View {
                 case .openBodyPhotos: retakePhotos = true
                 case let .openAvatar(request): avatar = AvatarSession(request: request)
                 case let .themeChanged(setting): theme = setting
+                case .requestLocation:
+                    Task {
+                        if let place = await location.currentPlace() { web.pushLocation(place) }
+                    }
                 default: break
                 }
             }

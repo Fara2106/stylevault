@@ -48,4 +48,16 @@ final class WebBridgeTests: XCTestCase {
         XCTAssertNil(BridgeMessage.parse("stringa"))
         XCTAssertNil(BridgeMessage.parse(["type": "openAvatar", "payload": ["items": "no"]]))
     }
+
+    func testRequestLocation() {
+        XCTAssertEqual(BridgeMessage.parse(["type": "requestLocation"]), .requestLocation)
+    }
+
+    func testRequestForecast() {
+        let body: [String: Any] = ["type": "requestForecast",
+                                   "payload": ["latitude": 41.9, "longitude": 12.5, "name": "Roma"]]
+        XCTAssertEqual(BridgeMessage.parse(body),
+                       .requestForecast(ForecastRequest(latitude: 41.9, longitude: 12.5, name: "Roma")))
+        XCTAssertNil(BridgeMessage.parse(["type": "requestForecast", "payload": ["longitude": 12.5]]))
+    }
 }

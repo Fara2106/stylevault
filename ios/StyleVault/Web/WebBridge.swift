@@ -24,6 +24,13 @@ struct AvatarRequest: Decodable, Equatable {
     let items: [AvatarItem]
 }
 
+/// Luogo di cui il sito chiede la previsione (Meteo di Apple).
+struct ForecastRequest: Decodable, Equatable {
+    let latitude: Double
+    let longitude: Double
+    let name: String?
+}
+
 /// Messaggi dal sito al nativo: { type, payload } sull'handler "svNative".
 enum BridgeMessage: Equatable {
     case openAvatar(AvatarRequest)
@@ -31,6 +38,10 @@ enum BridgeMessage: Equatable {
     case ready
     case signOut
     case themeChanged(String)
+    /// Il sito vuole la posizione del telefono (risposta: svNative.setLocation)
+    case requestLocation
+    /// Il sito vuole la previsione del luogo (risposta: svNative.setForecast, se acceso)
+    case requestForecast(ForecastRequest)
 
     static func parse(_ body: Any) -> BridgeMessage? {
         guard let dict = body as? [String: Any], let type = dict["type"] as? String else {
@@ -51,6 +62,13 @@ enum BridgeMessage: Equatable {
             return .ready
         case "signOut":
             return .signOut
+        case "requestLocation":
+            return .requestLocation
+        case "requestForecast":
+            guard let latitude = (payload["latitude"] as? NSNumber)?.doubleValue,
+                  let longitude = (payload["longitude"] as? NSNumber)?.doubleValue else { return nil }
+            return .requestForecast(ForecastRequest(latitude: latitude, longitude: longitude,
+                                                    name: payload["name"] as? String))
         case "themeChanged":
             guard let setting = payload["setting"] as? String else { return nil }
             return .themeChanged(setting)

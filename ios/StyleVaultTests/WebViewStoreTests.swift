@@ -31,4 +31,24 @@ final class WebViewStoreTests: XCTestCase {
         XCTAssertFalse(WebViewStore.isOfflineError(NSError(domain: NSURLErrorDomain, code: NSURLErrorCancelled)))
         XCTAssertFalse(WebViewStore.isOfflineError(NSError(domain: "altro", code: -1009)))
     }
+
+    func testCallScriptConApici() throws {
+        let place = PlacePayload(latitude: 42.35, longitude: 13.4, name: "L'Aquila")
+        let script = WebViewStore.callScript("setLocation", json: try JSONEncoder().encode(place))
+        XCTAssertTrue(script.hasPrefix("window.svNative && window.svNative.setLocation && window.svNative.setLocation("))
+        XCTAssertTrue(script.hasSuffix(")"))
+        // L'argomento è JSON valido, apostrofo compreso
+        let start = script.index(script.firstIndex(of: "{")!, offsetBy: 0)
+        let json = String(script[start..<script.index(before: script.endIndex)])
+        let back = try JSONDecoder().decode([String: AnyDecodable].self, from: Data(json.utf8))
+        XCTAssertEqual(back["name"]?.string, "L'Aquila")
+    }
+}
+
+/// Solo per leggere un JSON qualsiasi nei test.
+private struct AnyDecodable: Decodable {
+    let string: String?
+    init(from decoder: Decoder) throws {
+        string = try? decoder.singleValueContainer().decode(String.self)
+    }
 }

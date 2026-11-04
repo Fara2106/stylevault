@@ -53,6 +53,20 @@ final class WebViewStore: NSObject, ObservableObject {
         webView.evaluateJavaScript("window.svNative && window.svNative.setSession(\(args))")
     }
 
+    /// Passa al sito la posizione del telefono.
+    func pushLocation(_ place: PlacePayload) {
+        guard Self.isSiteURL(webView.url), let json = try? JSONEncoder().encode(place) else { return }
+        webView.evaluateJavaScript(Self.callScript("setLocation", json: json))
+    }
+
+    /// Chiamata sicura a una funzione di window.svNative: il JSON è JavaScript
+    /// valido, quindi niente escape a mano (nomi come "L'Aquila" arrivano intatti).
+    /// Un sito vecchio senza quella funzione non dà errori.
+    nonisolated static func callScript(_ function: String, json: Data) -> String {
+        let argument = String(decoding: json, as: UTF8.self)
+        return "window.svNative && window.svNative.\(function) && window.svNative.\(function)(\(argument))"
+    }
+
     /// Solo le pagine del sito ricevono la sessione e possono mandare messaggi.
     nonisolated static func isSiteURL(_ url: URL?) -> Bool {
         guard let url else { return false }
