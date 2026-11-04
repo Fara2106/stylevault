@@ -310,7 +310,9 @@ piano `docs/superpowers/plans/2026-11-03-app-ios.md`, registro decisioni
   su questo progetto (frukvktbmxndyzgivwxq), anche se le note di luglio la
   danno per fatta (forse era un progetto precedente). Effetto: salvare
   l'Armocromia dal sito fallisce (l'upsert del profilo va in errore) e il
-  risultato si perde al ricaricamento. Applicarla solo con l'ok di Lorenzo.
+  risultato si perde al ricaricamento. **APPLICATA il 04/11** con l'ok di
+  Lorenzo (SQL Editor della dashboard nel browser pane); verificato: colonna
+  `armocromia jsonb` presente e `select=armocromia` via API → 200.
 - **Prova sull'iPhone (04/11)**: la build Release apre il sito PUBBLICATO,
   che non ha il ponte iOS (niente "Rifai le foto del corpo" né "Vedilo
   addosso") → si prova con la build Debug + `vite --host` :5181
