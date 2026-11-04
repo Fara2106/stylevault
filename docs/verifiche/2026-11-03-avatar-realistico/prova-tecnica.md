@@ -14,6 +14,7 @@ color crema, 10 passi, seed 42, guida 2,5.
 | La qualità regge? | **Sì**: fp16 a 33,0 dB, 6 bit a 31,8 dB contro PyTorch, uguali a occhio |
 | Quanto pesa? | 3,1 GB in fp16, **1,2 GB a 6 bit** (obiettivo del design: ~1 GB) |
 | Sta nei 60 s sul 18 Pro Max? | **Sì: 25 s** misurati a 6 bit in modalità mista (~21 s attesi con la copia veloce della notte) |
+| E la generazione vera? | **18 Pro Max 21,4 s, iPad Pro M4 36,3 s** a modelli pronti; stessa immagine del Mac |
 | Sta nei 90 s sul 15 Pro di Mary? | **Da misurare** (serve il telefono) |
 | Memoria | picco 2,4 GB a 6 bit (con `increased-memory-limit`: 6,1 GB disponibili sul 18 Pro Max) |
 | Primo avvio | ~3,7 min di preparazione per il Neural Engine, una volta dopo l'installazione |
@@ -132,10 +133,30 @@ decoder, una rete alla volta) funziona su iOS e iPadOS 27.2 e dà la stessa imma
 del Mac. I **tempi** non contano: il simulatore usa solo la CPU del Mac, niente Neural
 Engine né GPU del telefono.
 
+## Generazione vera sui dispositivi (04/11)
+
+6 bit, modalità mista, `--generate`, stessa coppia di prova. Seconda esecuzione
+= modelli già preparati (il caso normale dopo la prima volta).
+
+| | iPhone 18 Pro Max | iPad Pro 13" M4 |
+|---|---|---|
+| Testi + capo + VAE (con caricamento) | 0,97 s | 3,25 s |
+| UNet del capo, 10 passi | 2,40 s | 3,42 s |
+| UNet di prova, 10 passi (GPU) | 16,86 s | 28,73 s |
+| Feature e ingressi | 0,60 s | 0,42 s |
+| Decoder | 0,14 s | 0,15 s |
+| **Totale** | **21,4 s** | **36,3 s** |
+| Prima generazione dopo l'installazione | — | 86,6 s |
+| Memoria dopo i passi | 532 MB | 225 MB |
+
+Immagini: `iphone-vero-6bit.png` e `ipad-vero-6bit.png`, a 52,7 dB da quella
+del Mac (6 bit), 31,9 dB dal modello originale e 61 dB tra loro: stessa immagine.
+La copia veloce porta il 18 Pro Max da 25 a 21,4 s. Sull'iPad la UNet di prova
+sulla GPU è più lenta (2,9 s a passo contro 1,7).
+
 ## Da fare prima della decisione
 
-1. **iPhone 18 Pro Max**: generazione vera (`--generate`) e misura con la copia veloce.
-2. **iPad di Lorenzo**: stessa prova (va registrato nel team al primo collegamento).
+1. ~~iPhone 18 Pro Max~~ e ~~iPad di Lorenzo~~: fatti (sopra).
 3. **iPhone 15 Pro di Mary** (8 GB): misura e generazione, 6 bit, modalità mista —
    è il caso più stretto per memoria.
 4. **UNet di prova a batch 1** (`Denoiser1`, guida in due chiamate: metà attivazioni,

@@ -221,8 +221,12 @@ piano `docs/superpowers/plans/2026-11-03-app-ios.md`, registro decisioni
   prova a batch 1 (`Denoiser1`, `--split`): la conversione la lancia Lorenzo.
   Resoconto: `docs/verifiche/2026-11-03-avatar-realistico/prova-tecnica.md`;
   comandi per iPhone/iPad in `tools/avatar-realistico/README.md`. Domani:
-  18 Pro Max con `--generate`, iPad di Lorenzo, 15 Pro di Mary. NIENTE
-  committato dei Task 1–5 (aspetta l'ok di Lorenzo).
+  18 Pro Max con `--generate`, iPad di Lorenzo, 15 Pro di Mary.
+  Commit c9e5430 + 14438dd (ok di Lorenzo, non pushati). 04/11 dispositivi
+  veri, 6 bit mista, `--generate`: **18 Pro Max 21,4 s** a modelli pronti,
+  **iPad Pro 13" M4 36,3 s** (primo avvio 86,6 s); immagini a 52,7 dB da
+  quella del Mac e 61 dB tra loro (`iphone-vero-6bit.png`, `ipad-vero-6bit.png`).
+  Resta il 15 Pro di Mary e la decisione del Task 6.
 - Revisione finale (revisore separato): 2 critici + 8 importanti CORRETTI
   (refresh token doppio, sessione al sito solo dopo 'ready', link esterni,
   avvio offline, 'Più tardi', conteggio persone, foto 48 MP, retro dei capi);
