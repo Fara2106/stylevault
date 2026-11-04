@@ -132,3 +132,55 @@ describe('getOutfitAdvice — ripetizione e occasione', () => {
     );
   });
 });
+
+const partsOf = (temps, past = [false, false, false]) =>
+  ['morning', 'afternoon', 'evening'].map((key, i) => ({
+    key,
+    temperature: temps[i],
+    code: 0,
+    precipProb: 0,
+    past: past[i],
+  }));
+
+describe('getOutfitAdvice — giornata ora per ora', () => {
+  it('strati con 9° la mattina e 19° il pomeriggio', () => {
+    const advice = getOutfitAdvice(outfitOf(), weatherOf({ parts: partsOf([9.2, 19.4, 15]) }));
+    const layers = advice.find((a) => a.key === 'advice.layers');
+    expect(layers.params).toEqual({ cold: 9, coldPart: 'morning', warm: 19, warmPart: 'afternoon' });
+  });
+
+  it('niente strati sotto gli 8°', () => {
+    const advice = getOutfitAdvice(outfitOf(), weatherOf({ parts: partsOf([12, 19.9, 15]) }));
+    expect(keys(advice)).not.toContain('advice.layers');
+  });
+
+  it('le fasce passate non contano', () => {
+    const advice = getOutfitAdvice(
+      outfitOf(),
+      weatherOf({ parts: partsOf([2, 15, 12], [true, false, false]) })
+    );
+    expect(keys(advice)).not.toContain('advice.layers');
+  });
+
+  it('pioggia dalle 18', () => {
+    const advice = getOutfitAdvice(
+      outfitOf(),
+      weatherOf({ parts: partsOf([15, 18, 16]), rainFrom: 18, rainFromStart: false })
+    );
+    expect(advice.find((a) => a.key === 'advice.rainLater').params).toEqual({ hour: '18:00' });
+  });
+
+  it('pioggia dal mattino: vale il consiglio di sempre', () => {
+    const advice = getOutfitAdvice(
+      outfitOf(),
+      weatherOf({ parts: partsOf([15, 18, 16]), rainFrom: 8, rainFromStart: true })
+    );
+    expect(keys(advice)).not.toContain('advice.rainLater');
+  });
+
+  it('giorno senza parts', () => {
+    const advice = getOutfitAdvice(outfitOf(), weatherOf({ rainFrom: 18 }));
+    expect(keys(advice)).not.toContain('advice.layers');
+    expect(keys(advice)).not.toContain('advice.rainLater');
+  });
+});

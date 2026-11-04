@@ -67,6 +67,14 @@ export function getOutfitAdvice(outfit, weather, context = {}) {
     advice.push({ key: 'advice.perfectWarmth' });
   }
 
+  // ── La giornata ora per ora ─────────────────────────────
+  const layers = layersAdvice(weather.parts);
+  if (layers) advice.push(layers);
+  if (weather.parts && weather.rainFrom != null && !weather.rainFromStart) {
+    const hour = `${String(weather.rainFrom).padStart(2, '0')}:00`;
+    advice.push({ key: 'advice.rainLater', params: { hour } });
+  }
+
   // ── Pioggia / vento / sole ──────────────────────────────
   if (weather.rain) {
     if (outfit.shoes && OPEN_SHOES.has(outfit.shoes.subcategory)) {
@@ -102,4 +110,24 @@ export function getOutfitAdvice(outfit, weather, context = {}) {
   }
 
   return advice;
+}
+
+/** Almeno 8° tra la fascia più fredda e la più calda ancora da vivere → a strati. */
+const LAYERS_MIN_SPREAD = 8;
+
+function layersAdvice(parts) {
+  const upcoming = (parts || []).filter((p) => !p.past && p.temperature != null);
+  if (upcoming.length < 2) return null;
+  const cold = upcoming.reduce((a, b) => (b.temperature < a.temperature ? b : a));
+  const warm = upcoming.reduce((a, b) => (b.temperature > a.temperature ? b : a));
+  if (warm.temperature - cold.temperature < LAYERS_MIN_SPREAD) return null;
+  return {
+    key: 'advice.layers',
+    params: {
+      cold: Math.round(cold.temperature),
+      coldPart: cold.key,
+      warm: Math.round(warm.temperature),
+      warmPart: warm.key,
+    },
+  };
 }

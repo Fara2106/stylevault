@@ -152,7 +152,11 @@
     "noOutfits": "No outfits generated",
     "noItemsForOutfit": "Add at least one piece to wear: a top, trousers, shoes or a dress.",
     "incomplete": "Incomplete outfit, missing: {{pieces}}. Add these to your wardrobe to complete it.",
-    "missingPiece": {"top": "top", "bottom": "trousers or skirt", "shoes": "shoes"},
+    "missingPiece": {
+      "top": "top",
+      "bottom": "trousers or skirt",
+      "shoes": "shoes"
+    },
     "outfitScore": "Score",
     "weatherMatch": "Weather",
     "colorMatch": "Colors",
@@ -240,7 +244,9 @@
     "wornRecently": "You wore this recently: logged on {{date}}",
     "elevated": "The outerwear elevates the look: fits formal occasions too",
     "uvHigh": "Strong sun: sunglasses and a hat are good allies",
-    "windStrong": "Strong wind: avoid flowy pieces"
+    "windStrong": "Strong wind: avoid flowy pieces",
+    "layers": "Dress in layers: {{cold}}° {{coldPart}}, {{warm}}° {{warmPart}}.",
+    "rainLater": "Rain likely from {{hour}}: take an umbrella."
   },
   "itemDetail": {
     "title": "Item detail",
@@ -430,7 +436,17 @@
     "drizzle": "Drizzle",
     "thunderstorm": "Thunderstorm",
     "staleNotice": "Weather from {{time}} (no connection)",
-    "error": "Weather unavailable right now"
+    "error": "Weather unavailable right now",
+    "part": {
+      "morning": "in the morning",
+      "afternoon": "in the afternoon",
+      "evening": "in the evening"
+    },
+    "partTitle": {
+      "morning": "Morning",
+      "afternoon": "Afternoon",
+      "evening": "Evening"
+    }
   },
   "armocromia": {
     "seasons": {

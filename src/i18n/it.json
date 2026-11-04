@@ -152,7 +152,11 @@
     "noOutfits": "Nessun outfit generato",
     "noItemsForOutfit": "Aggiungi almeno un capo da indossare: un top, dei pantaloni, delle scarpe o un abito.",
     "incomplete": "Outfit incompleto, manca: {{pieces}}. Aggiungi questi capi al guardaroba per completarlo.",
-    "missingPiece": {"top": "parte di sopra", "bottom": "pantaloni o gonna", "shoes": "scarpe"},
+    "missingPiece": {
+      "top": "parte di sopra",
+      "bottom": "pantaloni o gonna",
+      "shoes": "scarpe"
+    },
     "outfitScore": "Punteggio",
     "weatherMatch": "Meteo",
     "colorMatch": "Colori",
@@ -240,7 +244,9 @@
     "wornRecently": "L'hai già indossato di recente: registrato il {{date}}",
     "elevated": "Il capospalla eleva il look: adatto anche a occasioni formali",
     "uvHigh": "Sole forte: occhiali da sole e cappello sono buoni alleati",
-    "windStrong": "Vento forte: evita capi svolazzanti"
+    "windStrong": "Vento forte: evita capi svolazzanti",
+    "layers": "A strati: {{cold}}° {{coldPart}}, {{warm}}° {{warmPart}}.",
+    "rainLater": "Pioggia probabile dalle {{hour}}: porta l'ombrello."
   },
   "itemDetail": {
     "title": "Dettaglio capo",
@@ -430,7 +436,17 @@
     "drizzle": "Pioviggine",
     "thunderstorm": "Temporale",
     "staleNotice": "Meteo di {{time}} (nessuna connessione)",
-    "error": "Meteo non disponibile in questo momento"
+    "error": "Meteo non disponibile in questo momento",
+    "part": {
+      "morning": "la mattina",
+      "afternoon": "il pomeriggio",
+      "evening": "la sera"
+    },
+    "partTitle": {
+      "morning": "Mattina",
+      "afternoon": "Pomeriggio",
+      "evening": "Sera"
+    }
   },
   "armocromia": {
     "seasons": {
