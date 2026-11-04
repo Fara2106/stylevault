@@ -26,6 +26,8 @@ conversione, come da piano
 | `export_tokenizer_cases.py` | casi di prova del tokenizzatore, `cloth-pixels.bin` e `cloth.jpg` per i test Swift in `ios/StyleVaultTests/Fixtures/realistic/` |
 | `package_models.py` | un `.aar` per modello a 6 bit + `Tokenizer.aar`, `models-manifest.json` e `MODELS-LICENSE.md` in `out/release/` (per la Release `avatar-models-v1`) |
 
+Ogni `.aar` di un modello contiene il contenuto del `.mlpackage` senza la cartella: si estrae con `mkdir X.mlpackage && aa extract -i X.aar -d X.mlpackage`.
+
 ## RealisticBench sull'iPhone / iPad
 
 App di misura in `ios/RealisticBench` (target XcodeGen, iOS 18, iPhone e iPad). I

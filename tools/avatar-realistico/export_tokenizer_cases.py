@@ -13,6 +13,7 @@ import shutil
 import sys
 from pathlib import Path
 
+import numpy as np
 from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -45,6 +46,13 @@ def main():
                        return_tensors="np").input_ids[0].tolist() for t in toks)
         assert len(ids) == len(ids2) == 77
         cases.append({"text": text, "ids": ids, "ids2": ids2})
+    # la coppia di prova deve dare gli stessi id usati dal banco di prova (int32 LE)
+    bench = common.OUT / "bench-inputs"
+    for case, name in zip(cases[:3], ("negative", "caption", "caption_cloth")):
+        for key, prefix in (("ids", "ids"), ("ids2", "ids2")):
+            atteso = np.fromfile(bench / f"{prefix}_{name}.bin", dtype="<i4").tolist()
+            if case[key] != atteso:
+                sys.exit(f"ERRORE: {key} del caso '{name}' diverso da {prefix}_{name}.bin")
     (FIXTURES / "tokenizer-cases.json").write_text(json.dumps(cases, ensure_ascii=False, indent=1) + "\n")
     shutil.copyfile(common.OUT / "bench-inputs/cloth_pixels.bin", FIXTURES / "cloth-pixels.bin")
     common.fit_3x4(Image.open(common.CLOTH)).save(FIXTURES / "cloth.jpg", quality=95)

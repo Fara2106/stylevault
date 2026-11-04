@@ -25,10 +25,21 @@ def archive(src: Path, dst: Path):
     subprocess.run(["/usr/bin/aa", "archive", "-d", str(src), "-o", str(dst)], check=True)
 
 
+def sha256(path: Path) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        while chunk := f.read(1 << 20):
+            h.update(chunk)
+    return h.hexdigest()
+
+
 def main():
     a = argparse.ArgumentParser()
     a.add_argument("weights")
     args = a.parse_args()
+    mancanti = [n for n in MODELS if not (OUT / "coreml-6bit" / f"{n}.mlpackage").is_dir()]
+    if mancanti:
+        raise SystemExit(f"Mancano in out/coreml-6bit/: {', '.join(m + '.mlpackage' for m in mancanti)}")
     shutil.rmtree(REL, ignore_errors=True)
     REL.mkdir(parents=True)
     for name in MODELS:
@@ -40,7 +51,7 @@ def main():
     shutil.copyfile(HERE / "MODELS-LICENSE.md", REL / "MODELS-LICENSE.md")
     files = []
     for p in sorted(REL.glob("*.aar")):
-        files.append({"name": p.name, "bytes": p.stat().st_size, "sha256": hashlib.sha256(p.read_bytes()).hexdigest()})
+        files.append({"name": p.name, "bytes": p.stat().st_size, "sha256": sha256(p)})
     (REL / "models-manifest.json").write_text(json.dumps({"version": 1, "files": files}, indent=1) + "\n")
     for f in files:
         print(f"{f['name']:24} {f['bytes'] / 1e6:9.1f} MB")
