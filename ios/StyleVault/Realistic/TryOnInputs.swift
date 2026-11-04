@@ -12,6 +12,8 @@ enum TryOnInputs {
     // MARK: - Decodifica con EXIF
 
     /// Decodifica una foto applicando l'orientamento EXIF (un CGImage non ce l'ha).
+    /// Il risultato è un'immagine decodificata dall'origine; i colori vengono poi convertiti in sRGB
+    /// quando si disegna nei buffer RGBA8 sotto.
     static func image(from data: Data) -> CGImage? {
         guard let source = CGImageSourceCreateWithData(data as CFData, nil),
               CGImageSourceGetCount(source) > 0,
@@ -43,8 +45,6 @@ enum TryOnInputs {
         rw = max(1, min(width, rw)); rh = max(1, min(height, rh))
         let x = (width - rw) / 2, y = (height - rh) / 2
         let ctx = makeContext(width: width, height: height)
-        ctx.setFillColor(red: 1, green: 1, blue: 1, alpha: 1)
-        ctx.fill(CGRect(x: 0, y: 0, width: width, height: height))
         ctx.interpolationQuality = .high
         // CoreGraphics ha l'origine in basso: si capovolge la y.
         ctx.draw(image, in: CGRect(x: x, y: height - y - rh, width: rw, height: rh))
@@ -53,20 +53,24 @@ enum TryOnInputs {
 
     /// Ritaglia il risultato (768×1024) sul rettangolo della foto e lo riporta alla dimensione di partenza.
     static func unpad(_ result: CGImage, content: CGRect, to size: CGSize) -> CGImage {
-        let sx = Double(result.width) / Double(width), sy = Double(result.height) / Double(height)
-        let rect = CGRect(x: content.minX * sx, y: content.minY * sy,
-                          width: content.width * sx, height: content.height * sy).integral
-        let cropped = result.cropping(to: rect) ?? result
+        // Si disegna tutto il risultato con scala e traslazione che portano `content` (non arrotondato)
+        // esattamente su tutto il bersaglio: niente ritaglio a pixel interi, quindi niente scarto.
         let ctx = makeContext(width: max(1, Int(size.width)), height: max(1, Int(size.height)))
         ctx.interpolationQuality = .high
-        ctx.draw(cropped, in: CGRect(x: 0, y: 0, width: ctx.width, height: ctx.height))
+        let sx = Double(ctx.width) / Double(content.width), sy = Double(ctx.height) / Double(content.height)
+        let fullW = Double(width) * sx, fullH = Double(height) * sy
+        let x = -Double(content.minX) * sx
+        let y = -(Double(height) - Double(content.maxY)) * sy   // origine in basso
+        ctx.draw(result, in: CGRect(x: x, y: y, width: fullW, height: fullH))
         return ctx.makeImage()!
     }
 
     // MARK: - Tensori
 
     /// Python `to_model`: (pixel / 127,5 − 1), CHW, RGB, da un'immagine già 768×1024. [3, 1024, 768].
+    /// Le immagini trasparenti vengono composte su bianco.
     static func modelTensor(_ image: CGImage) -> [Float] {
+        precondition(image.width == width && image.height == height, "modelTensor vuole 768×1024")
         let ctx = makeContext(width: width, height: height)
         ctx.interpolationQuality = .high
         ctx.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
@@ -97,6 +101,7 @@ enum TryOnInputs {
     /// diffusers `FlowMatchEulerDiscreteScheduler`: `shifted(s) = shift·s / (1 + (shift−1)·s)`,
     /// `t_i = linspace(1, shifted(1/1000), steps)`, `sigma_i = shifted(t_i)` più lo 0 finale, `timesteps = sigma·1000`.
     static func schedule(steps: Int, shift: Double) -> (timesteps: [Double], sigmas: [Double]) {
+        precondition(steps >= 2, "servono almeno 2 passi")
         func shifted(_ s: Double) -> Double { shift * s / (1 + (shift - 1) * s) }
         let start = 1.0, end = shifted(1.0 / 1000.0)
         var sigmas = (0..<steps).map { i -> Double in
@@ -111,6 +116,7 @@ enum TryOnInputs {
     // MARK: - Rumore
 
     /// Gaussiana N(0,1) riproducibile: SplitMix64 + Box–Muller.
+    /// Il flusso NON è quello di torch: è voluto, serve solo che sia stabile a parità di seed.
     static func noise(count: Int, seed: UInt64) -> [Float] {
         var state = seed
         func next() -> UInt64 {
@@ -135,8 +141,12 @@ enum TryOnInputs {
     // MARK: - Utilità
 
     private static func makeContext(width: Int, height: Int) -> CGContext {
-        CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4,
-                  space: srgb, bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)!
+        let ctx = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4,
+                            space: srgb, bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)!
+        // Sfondo bianco: le immagini trasparenti (ritagli di capi) si compongono su bianco.
+        ctx.setFillColor(red: 1, green: 1, blue: 1, alpha: 1)
+        ctx.fill(CGRect(x: 0, y: 0, width: width, height: height))
+        return ctx
     }
 
     /// Legge un RGBA8 (riga 0 = alto) e lo mette in piani R, G, B.

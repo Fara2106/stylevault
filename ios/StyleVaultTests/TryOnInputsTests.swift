@@ -113,4 +113,64 @@ final class TryOnInputsTests: XCTestCase {
         XCTAssertEqual(image.height, 40)
         XCTAssertNil(TryOnInputs.image(from: Data([1, 2, 3])))
     }
+
+    // MARK: - Trasparenza e allineamento
+
+    private func transparent(_ w: Int, _ h: Int) -> CGImage {
+        let ctx = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: 0,
+                            space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+        ctx.clear(CGRect(x: 0, y: 0, width: w, height: h))
+        return ctx.makeImage()!
+    }
+
+    func testTransparentImageBecomesWhite() {
+        let img = transparent(768, 1024)
+        let t = TryOnInputs.modelTensor(img)
+        for i in stride(from: 0, to: t.count, by: 997) { XCTAssertEqual(t[i], 1, accuracy: 0.01) }
+        let d = TryOnInputs.dinoPixels(img)
+        let mean: [Float] = [0.485, 0.456, 0.406], std: [Float] = [0.229, 0.224, 0.225]
+        for ch in 0..<3 {
+            XCTAssertEqual(d[ch * 224 * 224 + 5000], (1 - mean[ch]) / std[ch], accuracy: 0.02)
+        }
+        let p = TryOnInputs.pad3x4(transparent(600, 1200))
+        XCTAssertEqual(TryOnInputs.modelTensor(p.image)[512 * 768 + 384], 1, accuracy: 0.01)
+    }
+
+    /// Foto grigia con un quadrato rosso; ritorna il baricentro del rosso.
+    private func markerCentroid(_ image: CGImage) -> (Double, Double)? {
+        let w = image.width, h = image.height
+        let ctx = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: w * 4,
+                            space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                            bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)!
+        ctx.draw(image, in: CGRect(x: 0, y: 0, width: w, height: h))
+        let p = ctx.data!.assumingMemoryBound(to: UInt8.self)
+        var sx = 0.0, sy = 0.0, n = 0.0
+        for y in 0..<h { for x in 0..<w {
+            let o = y * w * 4 + x * 4
+            if p[o] > 190 && p[o + 1] < 100 { sx += Double(x); sy += Double(y); n += 1 }
+        } }
+        return n > 0 ? (sx / n, sy / n) : nil
+    }
+
+    private func checkAlignment(w: Int, h: Int, marker: CGRect, file: StaticString = #filePath, line: UInt = #line) throws {
+        let ctx = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: 0,
+                            space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                            bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)!
+        ctx.setFillColor(gray: 0.5, alpha: 1); ctx.fill(CGRect(x: 0, y: 0, width: w, height: h))
+        ctx.setFillColor(red: 1, green: 0, blue: 0, alpha: 1)
+        ctx.fill(CGRect(x: marker.minX, y: CGFloat(h) - marker.maxY, width: marker.width, height: marker.height))
+        let padded = TryOnInputs.pad3x4(ctx.makeImage()!)
+        let back = TryOnInputs.unpad(padded.image, content: padded.content, to: CGSize(width: w, height: h))
+        XCTAssertEqual(back.width, w, file: file, line: line)
+        XCTAssertEqual(back.height, h, file: file, line: line)
+        let c = try XCTUnwrap(markerCentroid(back), file: file, line: line)
+        XCTAssertEqual(c.0, Double(marker.midX), accuracy: 2, file: file, line: line)
+        XCTAssertEqual(c.1, Double(marker.midY), accuracy: 2, file: file, line: line)
+    }
+
+    func testPadUnpadKeepsAlignment() throws {
+        try checkAlignment(w: 1536, h: 2048, marker: CGRect(x: 1000, y: 300, width: 120, height: 120))
+        try checkAlignment(w: 2048, h: 1024, marker: CGRect(x: 1500, y: 200, width: 120, height: 120))
+    }
 }
