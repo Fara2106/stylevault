@@ -1,10 +1,11 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useProfile } from '../../context/ProfileContext';
 import { useWardrobe } from '../../context/WardrobeContext';
 import { Header, Button, Icon } from '../../components/common';
-import { analyzeFaceColors } from '../../utils/faceColorAnalysis';
+import { analyzeFaceColors, ARMOCROMIA_DOWNLOADS } from '../../utils/faceColorAnalysis';
+import { downloadFraction, onModelProgress } from '../../utils/modelDownload';
 import { classifySeason } from '../../utils/armocromiaClassifier';
 import { getSeason } from '../../utils/armocromiaSeasons';
 import { buildShopLinks, buildShopLink, buildHomeLinks } from '../../utils/shopLinks';
@@ -38,6 +39,21 @@ export default function ArmocromiaPage() {
   // Primo uso su questo dispositivo: il download dei modelli (~20 MB) è
   // lento solo stavolta, e lo si dice.
   const [firstRun, setFirstRun] = useState(() => !modelsReady('armocromia'));
+
+  // Barra del download dei modelli, solo mentre si scaricano la prima volta
+  const [downloaded, setDownloaded] = useState(0);
+  const showDownload = phase === 'analyzing' && firstRun;
+  useEffect(() => {
+    if (!showDownload) return undefined;
+    const update = () => {
+      const fraction = downloadFraction(ARMOCROMIA_DOWNLOADS);
+      setDownloaded(fraction);
+      // Scaricati e conservati: la "prima volta" è passata anche se la foto non va
+      if (fraction >= 1) markModelsReady('armocromia');
+    };
+    update();
+    return onModelProgress(update);
+  }, [showDownload]);
 
   const analyze = async (photoUrl) => {
     setPhase('analyzing');
@@ -185,6 +201,25 @@ export default function ArmocromiaPage() {
       {phase === 'analyzing' && (
         <div className="armocromia__status">
           <p className="sv-label">{t('armocromia.ui.analyzing')}</p>
+          {showDownload && downloaded < 1 && (
+            <div className="armocromia__download">
+              <div
+                className="armocromia__download-bar"
+                role="progressbar"
+                aria-label={t('armocromia.ui.downloadingModels')}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={Math.round(downloaded * 100)}
+              >
+                <span style={{ width: `${Math.round(downloaded * 100)}%` }} />
+              </div>
+              <p className="armocromia__download-label">
+                {t('armocromia.ui.downloadingModelsPercent', {
+                  percent: Math.round(downloaded * 100),
+                })}
+              </p>
+            </div>
+          )}
           {firstRun && (
             <p className="armocromia__first-run">{t('armocromia.ui.analyzingFirstRun')}</p>
           )}

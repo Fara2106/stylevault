@@ -572,6 +572,8 @@
       "usePhoto": "Analizza la foto del profilo",
       "uploadPhoto": "Carica una foto",
       "analyzing": "Analizzo i tuoi colori…",
+      "downloadingModels": "Download dei modelli di analisi",
+      "downloadingModelsPercent": "Scarico i modelli di analisi: {{percent}}%",
       "analyzingFirstRun": "Prima volta: sto scaricando i modelli di analisi (circa 20 MB), può volerci un minuto. Il telefono li conserva: le prossime volte sarà molto più veloce.",
       "analysisFailed": "Non sono riuscito a leggere i colori dalla foto. Puoi impostarli a mano qui sotto.",
       "detectedTitle": "Colori trovati — tocca per correggere",

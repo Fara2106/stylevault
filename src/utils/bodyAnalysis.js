@@ -14,6 +14,8 @@
  * storto: il chiamante deve degradare con grazia alla pipeline senza ML.
  */
 
+import { fetchModel } from './modelDownload';
+
 const VISION_VERSION = '0.10.35';
 const WASM_URL = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${VISION_VERSION}/wasm`;
 const SEGMENTER_MODEL_URL =
@@ -46,28 +48,54 @@ export async function createVisionTask(Task, fileset, options) {
   }
 }
 
+/**
+ * Dimensioni attese dei file (decompressi) per la barra del primo uso.
+ * Il motore WASM arriva compresso (~3 MB in rete) ma si legge decompresso.
+ */
+export const MODEL_FILES = {
+  wasm: { key: 'vision-wasm', bytes: 11153617 },
+  segmenter: { key: 'selfie-multiclass', bytes: 16371837 },
+  pose: { key: 'pose-lite', bytes: 5777746 },
+};
+
 let visionPromise = null;
-const getVision = () => {
+/** MediaPipe e il suo motore WASM, scaricato una volta con l'avanzamento. */
+export const getVision = () => {
   if (!visionPromise) {
-    visionPromise = import('@mediapipe/tasks-vision').then(async (mp) => ({
-      mp,
-      fileset: await mp.FilesetResolver.forVisionTasks(WASM_URL),
-    }));
+    visionPromise = import('@mediapipe/tasks-vision')
+      .then(async (mp) => {
+        const fileset = await mp.FilesetResolver.forVisionTasks(WASM_URL);
+        const { key, bytes } = MODEL_FILES.wasm;
+        const wasm = await fetchModel(key, fileset.wasmBinaryPath, bytes);
+        const blob = new Blob([wasm], { type: 'application/wasm' });
+        return { mp, fileset: { ...fileset, wasmBinaryPath: URL.createObjectURL(blob) } };
+      })
+      .catch((error) => {
+        visionPromise = null; // rete caduta: al prossimo tentativo si riprova
+        throw error;
+      });
   }
   return visionPromise;
 };
 
+const modelBuffer = (file, url) => fetchModel(file.key, url, file.bytes);
+
 let segmenterPromise = null;
 const getSegmenter = () => {
   if (!segmenterPromise) {
-    segmenterPromise = getVision().then(({ mp, fileset }) =>
+    segmenterPromise = getVision().then(async ({ mp, fileset }) =>
       createVisionTask(mp.ImageSegmenter, fileset, {
-        baseOptions: { modelAssetPath: SEGMENTER_MODEL_URL },
+        baseOptions: {
+          modelAssetBuffer: await modelBuffer(MODEL_FILES.segmenter, SEGMENTER_MODEL_URL),
+        },
         runningMode: 'IMAGE',
         outputCategoryMask: true,
         outputConfidenceMasks: false,
       })
-    );
+    ).catch((error) => {
+      segmenterPromise = null; // rete caduta: al prossimo tentativo si riprova
+      throw error;
+    });
   }
   return segmenterPromise;
 };
@@ -75,13 +103,16 @@ const getSegmenter = () => {
 let posePromise = null;
 const getPose = () => {
   if (!posePromise) {
-    posePromise = getVision().then(({ mp, fileset }) =>
+    posePromise = getVision().then(async ({ mp, fileset }) =>
       createVisionTask(mp.PoseLandmarker, fileset, {
-        baseOptions: { modelAssetPath: POSE_MODEL_URL },
+        baseOptions: { modelAssetBuffer: await modelBuffer(MODEL_FILES.pose, POSE_MODEL_URL) },
         runningMode: 'IMAGE',
         numPoses: 1,
       })
-    );
+    ).catch((error) => {
+      posePromise = null; // rete caduta: al prossimo tentativo si riprova
+      throw error;
+    });
   }
   return posePromise;
 };

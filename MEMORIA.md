@@ -282,6 +282,14 @@ piano `docs/superpowers/plans/2026-11-03-app-ios.md`, registro decisioni
   test ora ha `GENERATE_INFOPLIST_FILE`). Build Debug installata sull'iPhone
   il 04/11: **da provare da Lorenzo** (permesso posizione, posto vero,
   striscia, consigli). Push e deploy del sito: solo col suo ok.
+- **Barra di download dei modelli di analisi (04/11)**: `src/utils/modelDownload.js`
+  scarica i file MediaPipe (motore WASM 11,2 MB decompresso, segmentatore
+  16,4 MB, viso 3,8 MB, posa 5,8 MB) leggendo i byte → `downloadFraction()`;
+  MediaPipe li riceve già pronti (`modelAssetBuffer`, WASM da blob URL).
+  Restano sul dispositivo in Cache Storage `sv-models-v1` (sito e app; serve
+  https o localhost: nella build Debug via http dal Mac resta solo la cache
+  HTTP). Barra nell'Armocromia durante la "prima volta". Verificato nel
+  browser: 3 file salvati, al ricaricamento zero richieste di rete.
 - **Prova sull'iPhone (04/11)**: la build Release apre il sito PUBBLICATO,
   che non ha il ponte iOS (niente "Rifai le foto del corpo" né "Vedilo
   addosso") → si prova con la build Debug + `vite --host` :5181

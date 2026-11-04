@@ -7,11 +7,22 @@
  * Ogni pezzo che fallisce diventa null; se cade tutto → null totale:
  * la UI parte dalla correzione manuale.
  */
-import { segmentBody, SEG_FACE_SKIN, SEG_HAIR, createVisionTask } from './bodyAnalysis';
+import {
+  segmentBody,
+  SEG_FACE_SKIN,
+  SEG_HAIR,
+  createVisionTask,
+  getVision,
+  MODEL_FILES,
+} from './bodyAnalysis';
 import { representativeColor, maskedPixels } from './colorSampling';
+import { fetchModel } from './modelDownload';
 
-const VISION_VERSION = '0.10.35';
-const WASM_URL = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${VISION_VERSION}/wasm`;
+const FACE_MODEL = { key: 'face-landmarker', bytes: 3758596 };
+
+/** I file che l'analisi dei colori scarica al primo uso (per la barra). */
+export const ARMOCROMIA_DOWNLOADS = [MODEL_FILES.wasm, MODEL_FILES.segmenter, FACE_MODEL];
+
 const FACE_MODEL_URL =
   'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task';
 
@@ -27,14 +38,20 @@ const MIN_REGION_PIXELS = 150;
 let landmarkerPromise = null;
 const getFaceLandmarker = () => {
   if (!landmarkerPromise) {
-    landmarkerPromise = import('@mediapipe/tasks-vision').then(async (mp) => {
-      const fileset = await mp.FilesetResolver.forVisionTasks(WASM_URL);
-      return createVisionTask(mp.FaceLandmarker, fileset, {
-        baseOptions: { modelAssetPath: FACE_MODEL_URL },
-        runningMode: 'IMAGE',
-        numFaces: 1,
+    landmarkerPromise = getVision()
+      .then(async ({ mp, fileset }) =>
+        createVisionTask(mp.FaceLandmarker, fileset, {
+          baseOptions: {
+            modelAssetBuffer: await fetchModel(FACE_MODEL.key, FACE_MODEL_URL, FACE_MODEL.bytes),
+          },
+          runningMode: 'IMAGE',
+          numFaces: 1,
+        })
+      )
+      .catch((error) => {
+        landmarkerPromise = null; // rete caduta: al prossimo tentativo si riprova
+        throw error;
       });
-    });
   }
   return landmarkerPromise;
 };

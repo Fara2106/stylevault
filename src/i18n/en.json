@@ -572,6 +572,8 @@
       "usePhoto": "Analyze profile photo",
       "uploadPhoto": "Upload a photo",
       "analyzing": "Reading your colors…",
+      "downloadingModels": "Downloading the analysis models",
+      "downloadingModelsPercent": "Downloading the analysis models: {{percent}}%",
       "analyzingFirstRun": "First time: I'm downloading the analysis models (about 20 MB), it may take a minute. Your phone keeps them: next time it'll be much faster.",
       "analysisFailed": "I couldn't read colors from the photo. You can set them by hand below.",
       "detectedTitle": "Detected colors — tap to correct",

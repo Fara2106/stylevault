@@ -2,6 +2,13 @@
 .armocromia__intro { display: flex; flex-direction: column; gap: var(--sv-space-3); }
 .armocromia__status { text-align: center; margin: var(--sv-space-5) auto; max-width: 340px; }
 .armocromia__first-run { margin-top: var(--sv-space-2); font-size: 13px; line-height: 1.5; color: var(--sv-muted); }
+.armocromia__download { margin-top: var(--sv-space-3); }
+.armocromia__download-bar { height: 6px; border-radius: 999px; overflow: hidden;
+  background: var(--sv-border, rgba(127, 127, 127, 0.25)); }
+.armocromia__download-bar span { display: block; height: 100%; border-radius: inherit;
+  background: var(--sv-accent, currentColor); transition: width 0.2s ease-out; }
+.armocromia__download-label { margin-top: 6px; font-size: 12px; color: var(--sv-muted);
+  font-variant-numeric: tabular-nums; }
 .armocromia__failed { color: var(--sv-error, #b3261e); font-size: 0.85rem; }
 
 .armocromia__pickers { display: flex; gap: var(--sv-space-3); margin: var(--sv-space-3) 0; }
