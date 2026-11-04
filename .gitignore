@@ -28,3 +28,8 @@ dist-ssr
 ios/Config/Secrets.xcconfig
 ios/*.xcodeproj/
 ios/build/
+
+# Avatar realistico: uscite degli script e modelli Core ML (GB, licenza NC)
+tools/avatar-realistico/out/
+ios/RealisticBench/Models/
+__pycache__/
