@@ -1,5 +1,15 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { avatarPayload, postToNative, isNativeApp, installNativeHooks } from './nativeBridge';
+import {
+  avatarPayload,
+  postToNative,
+  isNativeApp,
+  installNativeHooks,
+  onNativeLocation,
+  onNativeForecast,
+  requestNativeLocation,
+  requestNativeForecast,
+  _resetNativeListeners,
+} from './nativeBridge';
 
 const item = (id, category, extra = {}) => ({
   id,
@@ -75,5 +85,58 @@ describe('installNativeHooks', () => {
     installNativeHooks({ setSession });
     expect(win.svNative.setSession).toBe(setSession);
     expect(postMessage).toHaveBeenCalledWith({ type: 'ready', payload: {} });
+  });
+});
+
+describe('posizione e previsione dall\'app', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    _resetNativeListeners();
+  });
+
+  const nativeWindow = () => {
+    const postMessage = vi.fn();
+    const win = { webkit: { messageHandlers: { svNative: { postMessage } } } };
+    vi.stubGlobal('window', win);
+    installNativeHooks({ setSession: vi.fn() });
+    return { win, postMessage };
+  };
+
+  it('setLocation arriva a chi è iscritto', () => {
+    const { win } = nativeWindow();
+    const cb = vi.fn();
+    onNativeLocation(cb);
+    win.svNative.setLocation({ latitude: 41.9, longitude: 12.5, name: 'Roma' });
+    expect(cb).toHaveBeenCalledWith({ latitude: 41.9, longitude: 12.5, name: 'Roma' });
+  });
+
+  it('chi si iscrive dopo riceve l\'ultima posizione', () => {
+    const { win } = nativeWindow();
+    win.svNative.setLocation({ latitude: 41.9, longitude: 12.5, name: 'Roma' });
+    const cb = vi.fn();
+    const stop = onNativeLocation(cb);
+    expect(cb).toHaveBeenCalledWith({ latitude: 41.9, longitude: 12.5, name: 'Roma' });
+    stop();
+    win.svNative.setLocation({ latitude: 1, longitude: 2, name: 'Altro' });
+    expect(cb).toHaveBeenCalledTimes(1);
+  });
+
+  it('setForecast arriva a chi è iscritto', () => {
+    const { win } = nativeWindow();
+    const cb = vi.fn();
+    onNativeForecast(cb);
+    win.svNative.setForecast({ source: 'apple', payload: {} });
+    expect(cb).toHaveBeenCalledWith({ source: 'apple', payload: {} });
+  });
+
+  it('le richieste vanno al nativo', () => {
+    const { postMessage } = nativeWindow();
+    requestNativeLocation();
+    expect(postMessage).toHaveBeenCalledWith({ type: 'requestLocation', payload: {} });
+    requestNativeForecast({ name: 'Roma', latitude: 41.9, longitude: 12.5, country: 'IT' });
+    expect(postMessage).toHaveBeenCalledWith({
+      type: 'requestForecast',
+      payload: { latitude: 41.9, longitude: 12.5, name: 'Roma' },
+    });
   });
 });

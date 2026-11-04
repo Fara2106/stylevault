@@ -44,11 +44,58 @@ export function avatarPayload(outfit) {
   return { items };
 }
 
+// Chi ascolta posizione e previsione mandate dall'app; l'ultima posizione resta
+// per chi si iscrive dopo (la pagina Outfit può aprirsi dopo l'arrivo)
+const locationListeners = new Set();
+const forecastListeners = new Set();
+let lastLocation = null;
+
+/** Solo per i test. */
+export function _resetNativeListeners() {
+  locationListeners.clear();
+  forecastListeners.clear();
+  lastLocation = null;
+}
+
 /** Espone al nativo le funzioni che può chiamare nella pagina. */
 export function installNativeHooks({ setSession }) {
   if (!isNativeApp()) return;
-  window.svNative = { setSession };
+  window.svNative = {
+    setSession,
+    setLocation: (location) => {
+      lastLocation = location;
+      locationListeners.forEach((cb) => cb(location));
+    },
+    setForecast: (forecast) => forecastListeners.forEach((cb) => cb(forecast)),
+  };
   // Il nativo aspetta questo segnale per passare la sessione: prima la
   // chiamata a setSession cadrebbe nel vuoto (React non ha ancora montato).
   postToNative('ready');
+}
+
+/** Posizione del telefono {latitude, longitude, name}; restituisce la disiscrizione. */
+export function onNativeLocation(cb) {
+  locationListeners.add(cb);
+  if (lastLocation) cb(lastLocation);
+  return () => locationListeners.delete(cb);
+}
+
+/** Previsione dall'app {payload, source, attribution}; restituisce la disiscrizione. */
+export function onNativeForecast(cb) {
+  forecastListeners.add(cb);
+  return () => forecastListeners.delete(cb);
+}
+
+/** Chiede all'app la posizione (un'app vecchia ignora il messaggio). */
+export function requestNativeLocation() {
+  return postToNative('requestLocation');
+}
+
+/** Chiede all'app la previsione del luogo (Meteo di Apple, se acceso). */
+export function requestNativeForecast(city) {
+  return postToNative('requestForecast', {
+    latitude: city.latitude,
+    longitude: city.longitude,
+    name: city.name,
+  });
 }
