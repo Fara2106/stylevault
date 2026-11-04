@@ -3,7 +3,7 @@ import Foundation
 /// I conti della generazione che non sono reti neurali, come in
 /// tryon_pipeline_full_cat.py e tools/avatar-realistico/coreml_pipeline.py.
 /// Tensori come [Float] piatti in ordine C (ultimo asse più veloce).
-enum BenchMath {
+enum TryOnMath {
     // Normalizzazione dei latenti del VAE
     static let vaeScale: Float = 1.5305
     static let vaeShift: Float = 0.0609

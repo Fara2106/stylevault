@@ -87,6 +87,8 @@ targets:
     sources:
       - path: RealisticBench
         excludes: [Models]
+      # Conti condivisi con l'app (stessa matematica della generazione)
+      - path: StyleVault/Realistic/TryOnMath.swift
     entitlements:
       path: RealisticBench/RealisticBench.entitlements
       properties:
@@ -115,7 +117,7 @@ targets:
     platform: macOS
     deploymentTarget: "15.0"
     sources:
-      - RealisticBench/BenchMath.swift
+      - StyleVault/Realistic/TryOnMath.swift
       - RealisticBench/BenchGenerator.swift
       - RealisticBench/BenchRunner.swift
       - RealisticBench/BenchEstimate.swift

@@ -92,7 +92,7 @@ enum BenchGenerator {
         let clipL = try await hidden("TextEncoder", "ids"), clipG = try await hidden("TextEncoder2", "ids2")
         func text(_ name: String) -> [Float] {
             let l = clipL[name]!, g = clipG[name]!
-            return BenchMath.textEmbedding(l.values, lDim: l.dim, g.values, gDim: g.dim,
+            return TryOnMath.textEmbedding(l.values, lDim: l.dim, g.values, gDim: g.dim,
                                            tokens: l.tokens, width: 4096, zeroTokens: 256)
         }
         let prompt = text("negative") + text("caption")
@@ -113,10 +113,10 @@ enum BenchGenerator {
             let vae = try await load("VAEEncoder")
             func latent(_ name: String) async throws -> [Float] {
                 let m = try output(await predict(vae, ["image": inputs.array(name)]), "moments")
-                return BenchMath.vaeLatent(moments: BenchRunner.floats(m), channels: latentChannels, plane: plane)
+                return TryOnMath.vaeLatent(moments: BenchRunner.floats(m), channels: latentChannels, plane: plane)
             }
             let person = try await latent("person"), cloth = try await latent("cloth")
-            return (BenchMath.stackHeight(top: person, bottom: cloth, channels: latentChannels, plane: plane), cloth)
+            return (TryOnMath.stackHeight(top: person, bottom: cloth, channels: latentChannels, plane: plane), cloth)
         }()
         seconds.append(("testi + capo + VAE (con caricamento)", Date().timeIntervalSince(t0)))
         log("fase 1: \(fmt(seconds.last!.1)) s — memoria \(fmt(MemorySampler.footprintMB())) MB")
@@ -170,7 +170,7 @@ enum BenchGenerator {
         // Fase 2b: la UNet di prova, passo per passo
         t0 = Date()
         var latents = try BenchRunner.floats(inputs.array("noise"))
-        latents = BenchMath.stackHeight(top: latents, bottom: latents, channels: latentChannels, plane: plane)
+        latents = TryOnMath.stackHeight(top: latents, bottom: latents, channels: latentChannels, plane: plane)
         var dTime = 0.0, glue = 0.0
         let split = BenchRunner.splitGuidance && BenchRunner.modelURL("Denoiser1") != nil
         try await {
@@ -237,7 +237,7 @@ enum BenchGenerator {
                     : try BenchRunner.floats(output(await predict(denoiser, cond), "noise_pred"))
                 dTime += Date().timeIntervalSince(s0)
                 let dt = Float(inputs.sigmas[i + 1] - inputs.sigmas[i])
-                BenchMath.eulerStep(&latents, noisePred: noisePred, guidance: inputs.guidance, dt: dt)
+                TryOnMath.eulerStep(&latents, noisePred: noisePred, guidance: inputs.guidance, dt: dt)
                 log("passo \(i + 1)/\(steps) — \(fmt(Date().timeIntervalSince(t0))) s")
             }
         }()
@@ -249,10 +249,10 @@ enum BenchGenerator {
         // Fase 3: decoder
         t0 = Date()
         let decoder = try await load("VAEDecoder")
-        let person = BenchMath.personLatent(latents, channels: latentChannels, rows: rows, cols: cols)
+        let person = TryOnMath.personLatent(latents, channels: latentChannels, rows: rows, cols: cols)
         let decoded = try output(await predict(decoder, ["latents": array(person, [1, latentChannels, rows, cols])]), "image")
         let height = decoded.shape[2].intValue, width = decoded.shape[3].intValue
-        let image = try cgImage(BenchMath.rgba(BenchRunner.floats(decoded), width: width, height: height),
+        let image = try cgImage(TryOnMath.rgba(BenchRunner.floats(decoded), width: width, height: height),
                                 width: width, height: height)
         seconds.append(("decoder (con caricamento)", Date().timeIntervalSince(t0)))
         let png = try save(image)
