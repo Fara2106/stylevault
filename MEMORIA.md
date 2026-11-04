@@ -317,6 +317,15 @@ piano `docs/superpowers/plans/2026-11-03-app-ios.md`, registro decisioni
   sola) riuscita; poi Lorenzo ha rifatto l'Armocromia e il 04/11 alle 15:08
   UTC il suo profilo ha `armocromia` = deep-winter (axes, season, detected,
   updatedAt, confidence). **Salvataggio confermato end-to-end.**
+- **Audit di pubblicazione App Store (04/11)**, skill mobile-app-publishing:
+  report in `docs/pubblicazione/2026-11-04-report-app-store.md`. 6 blocchi:
+  Apple Developer Program a pagamento, cancellazione account (manca),
+  privacy policy + supporto (mancano), PrivacyInfo.xcprivacy (CA92.1,
+  C617.1, E174.1), sito pubblicato indietro (61 commit), rete locale/ATS
+  "In sviluppo" nella Release. 15 avvisi (etichetta "Generato con IA" +
+  segnala, download 1,3 GB senza chiedere sul Wi-Fi, @imgly AGPL, Open-Meteo
+  senza attribuzione, fetch-link-metadata senza JWT, ecc.). Google Play
+  escluso: niente app Android.
 - **"Cambia password" nel Profilo (04/11)**: pulsante sotto Impostazioni
   (`components/ChangePassword`), apre nuova + ripeti → `changePassword` in
   AuthContext → `supabase.auth.updateUser({ password })` (sito e app, stessa
