@@ -770,6 +770,17 @@ Con Lorenzo:
 
 Expected: passano tutti e 5, e in Profilo non compare nulla di doppio.
 
+- [ ] **Step 2b: Provare il blocco**
+
+Con Lorenzo, sull'iPhone:
+1. attivare il blocco nel Profilo: chiede Face ID;
+2. mandare l'app in background e tornare: chiede Face ID, e nel selettore delle app il contenuto non si vede;
+3. annullare Face ID: l'app resta bloccata, con il tasto Sblocca;
+4. sbagliare Face ID fino al codice: il codice del dispositivo sblocca;
+5. sull'iPad il blocco resta spento, perché non si sincronizza.
+
+Expected: passano tutti e 5.
+
 - [ ] **Step 3: Provare senza rete e senza doppioni**
 
 1. mettere l'iPad in modalità aereo, cambiare città e riattivare la rete: il cambio arriva sull'iPhone;
@@ -796,6 +807,83 @@ Expected: Core e nativa verdi, ibrida 138/138.
 ```bash
 git add MEMORIA.md docs/verifiche/2026-11-05-nativa-fase-1
 git commit -m "docs(nativa): esito della prova tra iPhone e iPad"
+```
+
+---
+
+### Task 10: Blocco con Face ID
+
+Aggiunto il 2026-11-05, dopo la decisione 7 del design. Si esegue prima del Task 9.
+
+**Files:**
+- Create: `ios/StyleVaultNative/App/AppLock.swift`
+- Create: `ios/StyleVaultNative/App/LockView.swift`
+- Modify: `ios/StyleVaultNative/App/StyleVaultNativeApp.swift`
+- Modify: `ios/StyleVaultNative/Profile/ProfileView.swift`
+- Modify: `ios/StyleVaultNative/Info.plist`
+- Modify: `tools/nativa/strings-native.json`, `tools/nativa/export-strings.mjs`
+- Modify: `ios/StyleVaultNative/Resources/Localizable.xcstrings`, `InfoPlist.xcstrings`, generati
+- Create: `ios/StyleVaultNativeTests/AppLockTests.swift`
+- Modify: `ios/StyleVaultNativeUITests/ProfileFlowTests.swift`
+
+**Interfaces:**
+- Produces:
+  - `enum AuthOutcome: Equatable { case success, failed, unavailable }`
+  - `protocol DeviceAuthenticating { var isAvailable: Bool { get }; func authenticate(reason: String) async -> AuthOutcome }`
+  - `struct SystemAuthenticator: DeviceAuthenticating`, con `LAPolicy.deviceOwnerAuthentication`: Face ID o Touch ID, poi il codice del dispositivo
+  - `@MainActor @Observable final class AppLock { private(set) var isEnabled: Bool; private(set) var isLocked: Bool; private(set) var isObscured: Bool; var canEnable: Bool { get }; init(defaults: UserDefaults, authenticator: DeviceAuthenticating); func setEnabled(_ value: Bool, reason: String) async; func unlock(reason: String) async; func sceneDidChange(to phase: ScenePhase) }`
+
+**Regole.**
+- La scelta sta in `UserDefaults`, chiave `native.lock.enabled`: vale per il dispositivo e non passa da iCloud.
+- All'avvio l'app è bloccata se il blocco è attivo.
+- Si blocca in `.background`, non in `.inactive`: il foglio di Face ID porta la scena in `.inactive`, e bloccare lì creerebbe un ciclo.
+- `isObscured` è vero se il blocco è attivo e la scena non è `.active`: copre i dati nel selettore delle app senza bloccare.
+- Attivare e disattivare richiede un'autenticazione riuscita. Se fallisce, il valore resta com'era.
+- `.unavailable` durante `unlock`, per esempio perché il codice è stato tolto: l'app si sblocca e il blocco si spegne. **L'utente non deve mai restare chiuso fuori dai suoi dati.**
+- Una seconda `unlock` mentre la prima è in corso non apre un altro foglio.
+- `LockView` chiede Face ID una volta quando compare, non in ciclo. Se la persona annulla resta il tasto Sblocca.
+
+**Testi.**
+
+| Chiave | Italiano | Inglese |
+|---|---|---|
+| `native.lock.toggle` | Blocca l'app | Lock the app |
+| `native.lock.footer` | All'apertura chiede Face ID, Touch ID o il codice del dispositivo. Vale solo su questo dispositivo. | Asks for Face ID, Touch ID or your device passcode when opened. Applies to this device only. |
+| `native.lock.unavailable` | Imposta un codice sul dispositivo per usare il blocco. | Set a device passcode to use the lock. |
+| `native.lock.title` | StyleVault è bloccata | StyleVault is locked |
+| `native.lock.unlock` | Sblocca | Unlock |
+| `native.lock.reason` | Sblocca StyleVault | Unlock StyleVault |
+| `NSFaceIDUsageDescription`, in `InfoPlist.xcstrings` | Serve per sbloccare l'app, se attivi il blocco nel Profilo. | Used to unlock the app when you turn on the lock in Profile. |
+
+- [ ] **Step 1: Scrivere i test che falliscono**
+
+`AppLockTests`, con un autenticatore finto e un `UserDefaults(suiteName:)` dedicato. Un test per ogni riga delle regole:
+`testSpentoNonBlocca`, `testAttivoBloccaAllAvvio`, `testAttivareRichiedeAutenticazione`, `testAttivareFallitoRestaSpento`, `testDisattivareRichiedeAutenticazione`, `testInattivoNonBloccaMaCopre`, `testBackgroundBlocca`, `testAnnullareLasciaBloccato`, `testSenzaCodiceSiSbloccaESiSpegne`, `testDueUnlockInsiemeChiedonoUnaVolta`, `testLaSceltaSopravviveAlRiavvio`.
+
+Run: il comando di test del Task 3.
+Expected: FAIL, i tipi non esistono.
+
+- [ ] **Step 2: Scrivere blocco e schermate**
+
+- `AppLock` si crea una volta nell'`App`, come `SyncMonitor`, e passa dall'ambiente SwiftUI.
+- `LockView` copre tutta la finestra con `Palette.bg`, con identificatore `lock-screen`. Compare se `isLocked` o `isObscured`. Il tasto Sblocca si vede solo se `isLocked`.
+- In `ProfileView`, nella sezione `profile.settings` dopo il tema: interruttore `native.lock.toggle`, identificatore `lock-toggle`, con il testo `native.lock.footer`. Se `canEnable` è falso l'interruttore è disattivato e il testo diventa `native.lock.unavailable`.
+- In `#if DEBUG`, l'argomento `-SVFakeLock` usa un autenticatore che riesce sempre, per i test UI. Il simulatore non ha Face ID registrato.
+
+- [ ] **Step 3: Aggiungere il test UI**
+
+`testBloccoConAutenticatoreFinto`: con `-SVMemoryStore -SVFakeLock` si attiva l'interruttore, si rilancia l'app senza cancellare i dati, compare `lock-screen`, si tocca Sblocca e si vedono le tab.
+
+- [ ] **Step 4: Verificare**
+
+Run: `node tools/nativa/export-strings.mjs`, poi il comando di test del Task 3, poi lo stesso con l'iPad del Task 8.
+Expected: `** TEST SUCCEEDED **` su entrambi. `Info.plist` dell'app costruita contiene `NSFaceIDUsageDescription`.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add ios/StyleVaultNative ios/StyleVaultNativeTests ios/StyleVaultNativeUITests tools/nativa
+git commit -m "feat(nativa): blocco facoltativo con Face ID"
 ```
 
 ---

@@ -18,7 +18,16 @@ Lorenzo; il telefono di Mary non c'è.
 - Il design ora contiene le correzioni dell'audit: l'import passa da Esporta e
   importa, l'app deve funzionare senza iCloud.
 - Piano della fase 1 scritto: `docs/superpowers/plans/2026-11-05-app-nativa-fase-1.md`
-  (9 task, ramo `feat/app-nativa`). Non ancora eseguito.
+  (9 task, ramo `feat/app-nativa`, solo locale). Esecuzione con subagent in corso:
+  Task 1-8 chiusi: catalogo e ricerca città nel pacchetto `ios/StyleVaultCore`, target
+  `StyleVaultNative`, modelli SwiftData, apertura dello store, Profilo unico, stato
+  iCloud, tab, testi it/en, schermata Profilo. Suite verde su simulatore iPhone e iPad,
+  mai provata su dispositivo vero. Il Task 9 si fa con Lorenzo: il primo build su
+  dispositivo crea il container iCloud, che non si cancella.
+- **Login valutato e scartato (2026-11-05):** Lorenzo ha chiesto Apple, Google e password nella
+  nativa, poi ha deciso di no: i dati restano su iCloud, personali, e su App Store ognuno ha
+  già i suoi. Al loro posto un blocco facoltativo con Face ID nel Profilo, Task 10 del piano,
+  da eseguire prima del Task 9 (design, decisione 7).
 
 ## Novità 2026-11-05 (notte) — Prova tecnica FASHN VTON (branch `feat/app-ios`)
 

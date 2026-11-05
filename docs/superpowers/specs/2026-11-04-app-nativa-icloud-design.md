@@ -22,7 +22,7 @@ Il risparmio economico è marginale (oggi Supabase è gratuito): non è il motiv
   - prova dei vestiti e avatar stilizzato (già nativi in gran parte), senza avatar realistico;
   - foto del corpo, tema chiaro e scuro, lingua.
 - Dati in **SwiftData con sincronizzazione CloudKit** (database privato dell'utente): stessi dati su iPhone e iPad dello stesso Apple ID, funziona offline.
-- **Nessun login.**
+- **Nessun login.** Ognuno vede i dati del proprio Apple ID. Blocco facoltativo con Face ID, Touch ID o codice del dispositivo.
 - Stessi risultati del sito per gli algoritmi: outfit, armonia dei colori, meteo e fasce della giornata, statistiche. I test del sito vengono tradotti in test Swift con gli stessi casi.
 
 ## Non obiettivi
@@ -146,6 +146,7 @@ Stima indicativa: le fasi 2, 3 e 5 sono le più pesanti, perché hanno più logi
 4. **Si parte dopo l'iscrizione all'Apple Developer Program.** Lorenzo avvisa quando è accettato.
 5. **Import dei dati di oggi:** con Esporta e importa, vedi "Migrazione dei dati di oggi". Era da decidere all'avvio della fase 7, ma l'audit ha escluso le altre due strade.
 6. **Prima versione senza avatar realistico (2026-11-05).** Mobile-VTON è addestrato su DressCode, che ha una licenza solo ricerca. Il codice va tolto dalla build, non nascosto con un interruttore (regola 2.5.19). Spariscono anche il download da 1,3 GB e l'entitlement `increased-memory-limit`. Il codice resta nella storia di git e il motore sta dietro `RealisticTryOn`, quindi può tornare in un aggiornamento, se arriva il permesso di AImageLab o se FASHN VTON regge sul telefono e l'origine dei suoi dati è chiarita (`tools/avatar-fashn/README.md`).
+7. **Niente login, blocco facoltativo con Face ID (2026-11-05).** Lorenzo ha valutato l'accesso con Apple, Google e password e l'ha scartato: i dati restano su iCloud, personali e legati all'Apple ID, quindi su App Store ognuno ha già i suoi. Un login avrebbe richiesto un servizio di account sempre acceso, con guardaroba e foto del corpo degli utenti a carico suo, più account demo e cancellazione dell'account. Il Profilo offre invece un blocco facoltativo: vale per il singolo dispositivo, non si sincronizza e non può mai chiudere fuori la persona, perché dopo Face ID resta il codice del dispositivo.
 
 ## Proposte aggiunte
 
