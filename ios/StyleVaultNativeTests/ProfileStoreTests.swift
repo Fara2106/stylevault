@@ -49,4 +49,29 @@ import SwiftData
         let b = Profile(); b.updatedAt = date
         XCTAssertEqual(ProfileStore.survivor(of: [a, b])?.id, ProfileStore.survivor(of: [b, a])?.id)
     }
+
+    func testUnProfiloNuovoPerdeControUnoPiuVecchioMaModificato() throws {
+        let c = try context()
+        // Primo avvio su un dispositivo dove iCloud non ha ancora consegnato nulla.
+        let created = try ProfileStore.current(in: c)
+        // Poi arriva quello vero, più vecchio ma modificato dall'utente.
+        let real = Profile(); real.cityName = "Bari"; real.theme = "dark"
+        real.updatedAt = Date(timeIntervalSince1970: 1_700_000_000)
+        c.insert(real); try c.save()
+        let kept = try ProfileStore.current(in: c)
+        XCTAssertEqual(kept.id, real.id)
+        XCTAssertEqual(kept.cityName, "Bari")
+        XCTAssertEqual(kept.theme, "dark")
+        XCTAssertNotEqual(kept.id, created.id)
+        XCTAssertEqual(try count(c), 1)
+    }
+
+    func testDueCreazioniSuDueDispositiviConvergonoSulloStessoRecord() throws {
+        let c = try context()
+        let first = try ProfileStore.current(in: c)
+        XCTAssertEqual(first.updatedAt, Date(timeIntervalSince1970: 0))
+        // Il secondo dispositivo ha creato il suo, anch'esso mai modificato.
+        let second = Profile(); second.updatedAt = Date(timeIntervalSince1970: 0)
+        XCTAssertEqual(ProfileStore.survivor(of: [first, second])?.id, ProfileStore.survivor(of: [second, first])?.id)
+    }
 }

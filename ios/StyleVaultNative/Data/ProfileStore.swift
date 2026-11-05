@@ -12,6 +12,9 @@ import SwiftData
         let all = try context.fetch(FetchDescriptor<Profile>())
         guard let keeper = survivor(of: all) else {
             let profile = Profile()
+            // Mai modificato: perde sempre contro un Profilo vero che iCloud consegna dopo.
+            // Epoca e non `.distantPast`, per restare in un intervallo di date sicuro per CloudKit.
+            profile.updatedAt = Date(timeIntervalSince1970: 0)
             context.insert(profile)
             try context.save()
             return profile
