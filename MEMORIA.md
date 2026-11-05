@@ -32,7 +32,9 @@ Piano: `docs/superpowers/plans/2026-11-05-app-nativa-fase-2.md`, eseguito in ses
   `CFBundleVersion` più alto in `ios/StyleVaultNative/Info.plist`.
 - Login dell'ibrida (05/11, richiesta di Lorenzo): Accedi con Apple scritto e attivo, nativo, Supabase con
   Client ID `it.faraoni.stylevault` e nessun segreto; installato sull'iPhone, mai provato col login vero.
-  Google: codice pronto, manca il client OAuth e il segreto, che inserisce Lorenzo.
+  Google: codice pronto, progetto Google Cloud `stylevault-513821`, schermata di accesso in modalità test e
+  client web creato. Manca il provider su Supabase con ID e segreto, che inserisce Lorenzo. In pausa: il
+  05/11 Lorenzo ha dato la precedenza alla nativa.
 - Login della nativa: Lorenzo l'ha chiesto il 05/11, rovescia la decisione 7 del design; da progettare,
   niente codice finché non approva il design.
 - Nota per i test UI: `isHittable` è vero anche oltre il bordo dello schermo o sotto la tastiera; con la
