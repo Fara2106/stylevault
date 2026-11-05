@@ -18,7 +18,10 @@ Parser escluso (licenza solo ricerca), non serve senza maschere.
 - Tutto in `tools/avatar-fashn/` (README con numeri e confronto). Pesi e modelli
   fuori da git, nello scratchpad e in `out/`: un riavvio cancella lo scratchpad.
 - **Sempre con `guard.sh`**: una generazione senza limiti ha fatto riavviare il Mac.
-- Il consiglio resta: prima versione senza avatar realistico. Decide Lorenzo.
+- **Deciso da Lorenzo (05/11): la prima versione nativa esce SENZA avatar
+  realistico.** Scritto nel design (decisione 6): codice fuori dalla build, non
+  nascosto; via download da 1,3 GB, entitlement di memoria ed E174.1. Può tornare
+  in un aggiornamento col permesso di AImageLab o con FASHN. L'app ibrida non cambia.
 
 ## Novità 2026-11-03 (sera tardi) — FEEDBACK per email (branch `feat/app-ios`)
 

@@ -47,7 +47,8 @@ Restano validi il Privacy Manifest, la crittografia e le versioni.
      - Il suo parser ha una licenza solo ricerca ed è escluso: senza maschere non serve.
      - Provato sul Mac M1 Pro: 3 min 40 s a immagine in Core ML sulla GPU, 704 MB a 6 bit, 38,3 dB rispetto al modello fp16. Il capo è giusto, i dettagli fini meno.
      - **Non provato su iPhone e iPad.** Richiede 59 passaggi contro i 10 passi di Mobile-VTON, e le pose non sono ancora portate sul dispositivo. Dati in `tools/avatar-fashn/README.md`.
-     - Il consiglio non cambia: (a) per la prima versione. FASHN entra solo se la misura sul telefono e la risposta sui dati vanno bene.
+     - FASHN entra solo se la misura sul telefono e la risposta sui dati vanno bene.
+   - **Deciso il 05/11: Lorenzo ha scelto (a).** Prima versione senza avatar realistico, scritto nel design (decisione 6).
 2. **[2.5.19 e 2.1] Import dei dati di oggi**
    - Le due strade del design non vanno nella versione inviata:
      - "Accedi per portare qui i tuoi dati": un login Supabase che il revisore non può usare, e che riporta i problemi dell'account demo e della cancellazione;
@@ -70,9 +71,9 @@ Restano validi il Privacy Manifest, la crittografia e le versioni.
 
      In entrambi i casi, nominare Open-Meteo nella privacy policy.
    - **Feedback via Mail:** l'utente scrive dalla sua app Mail, ma Lorenzo riceve email e testo. Dichiarare "Email" e "Assistenza clienti", non collegati al tracciamento, oppure valutare se rientra nella dichiarazione facoltativa di Apple (raccolta rara e facoltativa).
-   - **Privacy Manifest:** togliere email e nome; restano CA92.1, C617.1 ed E174.1, quest'ultimo solo se resta il download dei modelli.
+   - **Privacy Manifest:** togliere email e nome; restano CA92.1 e C617.1. E174.1 si toglie se non resta nessun download, come previsto senza avatar realistico.
 6. **[Storefront] Cina continentale**
-   - Se nella prova dei vestiti restano i link a ChatGPT e Gemini, o la dicitura "Powered by Stability AI", le regole cinesi sull'IA impongono di toglierli.
+   - Se nella prova dei vestiti restano i link a ChatGPT e Gemini, le regole cinesi sull'IA impongono di toglierli. La dicitura "Powered by Stability AI" esce con l'avatar realistico.
    - Più semplice: escludere la Cina continentale in App Store Connect.
 7. **[2.4.1, screenshot] iPad**
    - Il design è per iPhone e iPad, quindi `TARGETED_DEVICE_FAMILY "1,2"`, con un layout vero per iPad e screenshot iPad 13".

@@ -19,7 +19,7 @@ Il risparmio economico è marginale (oggi Supabase è gratuito): non è il motiv
   - outfit del giorno con meteo e posizione, outfit salvati;
   - calendario con lo storico di cosa si è indossato, e statistiche;
   - Armocromia;
-  - prova dei vestiti e avatar (già nativi in gran parte);
+  - prova dei vestiti e avatar stilizzato (già nativi in gran parte), senza avatar realistico;
   - foto del corpo, tema chiaro e scuro, lingua.
 - Dati in **SwiftData con sincronizzazione CloudKit** (database privato dell'utente): stessi dati su iPhone e iPad dello stesso Apple ID, funziona offline.
 - **Nessun login.**
@@ -30,6 +30,7 @@ Il risparmio economico è marginale (oggi Supabase è gratuito): non è il motiv
 - Android e versione web: chi non ha un dispositivo Apple resta fuori. Da confermare con Mary, vedi le domande.
 - Condivisione di guardaroba o outfit tra persone diverse: CloudKit condiviso si può aggiungere dopo.
 - Un nuovo design: si porta lo stile attuale (Palette, font, schermate) in SwiftUI.
+- Avatar realistico nella prima versione: vedi la decisione 6.
 
 ## Anti-obiettivi (cose che renderebbero il lavoro un fallimento)
 
@@ -72,7 +73,7 @@ Quindi l'app nativa si costruisce **in parallelo**, una fase alla volta, su un r
 - **Meteo:** WeatherKit se attivo, altrimenti Open-Meteo chiamato direttamente dall'app. Posizione con CoreLocation (già nativa).
 - **Link dei negozi:** `LPMetadataProvider` (LinkPresentation) sul telefono al posto di microlink.io e della Edge Function.
 - **Feedback:** `MFMailComposeViewController` verso l'indirizzo di Lorenzo, con il ripiego "copia testo" se Mail non è configurata. Nessun server.
-- **Avatar realistico e Mobile-VTON:** resta com'è (download dalla Release GitHub, crediti, licenze).
+- **Avatar realistico e Mobile-VTON:** fuori dalla prima versione (decisione 6). La cartella `Realistic`, il consenso al download, i crediti e la scritta "Powered by Stability AI" di `AvatarView` non entrano nella build. L'app ibrida che usano Lorenzo e Mary resta com'è.
 
 ## Cosa sparisce
 
@@ -113,11 +114,11 @@ Dopo un periodo concordato si spegne Supabase e il codice di import va tolto in 
 3. **Outfit:** porting di algoritmo, consigli, armonia, meteo e fasce della giornata, posizione o città, outfit incompleto con avviso, outfit salvati.
 4. **Calendario e statistiche:** storico degli outfit indossati e statistiche del Profilo.
 5. **Armocromia:** analisi del viso con Vision, stagioni, consigli sul guardaroba. Va verificato che i risultati siano vicini a quelli di MediaPipe, perché i punti del viso sono diversi.
-6. **Prova vestiti e avatar:** collegare gli schermi nativi che già esistono ai dati SwiftData invece che al ponte con il sito. Etichetta "Generato con IA" e "Segnala".
+6. **Prova vestiti e avatar stilizzato:** collegare gli schermi nativi che già esistono ai dati SwiftData invece che al ponte con il sito. Etichetta "Generato con IA" e "Segnala" solo se nell'app resta un'immagine generata.
 7. **Import dei dati di oggi**, poi rimozione di WebView, Supabase e login.
 8. **Pubblicazione:**
    - pagina privacy e supporto;
-   - Privacy Manifest (già fatto) aggiornato: niente email e nome, foto solo in iCloud;
+   - Privacy Manifest (già fatto) aggiornato: niente email e nome, foto solo in iCloud, niente E174.1 se non resta nessun download;
    - audit `mobile-app-publishing` ripetuto, TestFlight, invio.
 
 Stima indicativa: le fasi 2, 3 e 5 sono le più pesanti, perché hanno più logica da portare. In tutto alcune settimane di lavoro a sessioni.
@@ -141,6 +142,7 @@ Stima indicativa: le fasi 2, 3 e 5 sono le più pesanti, perché hanno più logi
 3. **Lingue:** italiano e inglese da subito, con String Catalog (`Localizable.xcstrings`, `InfoPlist.xcstrings`). In futuro francese, spagnolo, portoghese, inglese UK e inglese USA. Per l'inglese USA servono anche i gradi Fahrenheit e le unità locali (`Measurement` e `formatted()` di sistema), non solo le parole. Le unità si **regolano nelle Impostazioni dell'app** (temperatura °C/°F, ed eventuali misure), con il valore iniziale preso dalla regione del telefono.
 4. **Si parte dopo l'iscrizione all'Apple Developer Program.** Lorenzo avvisa quando è accettato.
 5. **Import dei dati di oggi:** da decidere all'avvio della fase 7.
+6. **Prima versione senza avatar realistico (2026-11-05).** Mobile-VTON è addestrato su DressCode, che ha una licenza solo ricerca. Il codice va tolto dalla build, non nascosto con un interruttore (regola 2.5.19). Spariscono anche il download da 1,3 GB e l'entitlement `increased-memory-limit`. Il codice resta nella storia di git e il motore sta dietro `RealisticTryOn`, quindi può tornare in un aggiornamento, se arriva il permesso di AImageLab o se FASHN VTON regge sul telefono e l'origine dei suoi dati è chiarita (`tools/avatar-fashn/README.md`).
 
 ## Proposte aggiunte
 
