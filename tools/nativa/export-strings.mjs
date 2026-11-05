@@ -12,10 +12,24 @@ const outDir = resolve(here, '../../ios/StyleVaultNative/Resources');
 
 const GROUPS = ['nav', 'categories', 'subcategories', 'seasons', 'occasions', 'colors'];
 const PROFILE_KEYS = ['settings', 'defaultCity', 'language', 'theme', 'themeLight', 'themeDark', 'themeSystem'];
+const PICKED = {
+  wardrobe: ['title', 'emptyState', 'emptyAction', 'deleteConfirm', 'searchPlaceholder', 'tabWardrobe', 'tabWishlist'],
+  wishlist: ['title', 'subtitle', 'bought', 'emptyState', 'emptyAction', 'moveToWardrobe', 'openLink'],
+  addItem: [
+    'title', 'photo', 'link', 'uploadPhoto', 'takePhoto', 'pasteLink', 'analyzeLink', 'itemName', 'category',
+    'subcategory', 'brand', 'size', 'colors', 'season', 'occasion', 'warmth', 'photoHint', 'changePhoto', 'price',
+    'destination', 'toWardrobe', 'toWishlist', 'linkLoading', 'linkError', 'linkSuccess', 'nameRequired',
+    'categoryRequired', 'photoBack', 'photoBackHint', 'photoBackAdd', 'photoBackRemove',
+    'warmthLevels.1', 'warmthLevels.2', 'warmthLevels.3', 'warmthLevels.4', 'warmthLevels.5',
+  ],
+  itemDetail: ['title', 'openShop', 'deleteItem'],
+  common: ['save', 'cancel', 'delete', 'edit', 'close', 'all', 'favorites', 'noResults', 'optional'],
+};
 
 const wanted = [];
 for (const g of GROUPS) for (const k of Object.keys(site.it[g])) wanted.push(`${g}.${k}`);
 for (const k of PROFILE_KEYS) wanted.push(`profile.${k}`);
+for (const [g, keys] of Object.entries(PICKED)) for (const k of keys) wanted.push(`${g}.${k}`);
 
 const lookup = (lang, key) => key.split('.').reduce((o, p) => o?.[p], site[lang]);
 const entries = {};
@@ -30,12 +44,18 @@ for (const [key, v] of Object.entries(extra)) {
   entries[key] = v;
 }
 
+// Un testo è una stringa, oppure { one, other } per il plurale.
+const unit = (value) => ({ stringUnit: { state: 'translated', value } });
+const localization = (value) => (typeof value === 'string'
+  ? unit(value)
+  : { variations: { plural: Object.fromEntries(Object.entries(value).map(([form, text]) => [form, unit(text)])) } });
+
 const catalog = (map) => ({
   sourceLanguage: 'it',
   strings: Object.fromEntries(
     Object.keys(map).sort().map((key) => [key, {
       extractionState: 'manual',
-      localizations: Object.fromEntries(['it', 'en'].map((lang) => [lang, { stringUnit: { state: 'translated', value: map[key][lang] } }])),
+      localizations: Object.fromEntries(['it', 'en'].map((lang) => [lang, localization(map[key][lang])])),
     }]),
   ),
   version: '1.0',
@@ -46,6 +66,7 @@ const write = (name, data) => writeFileSync(resolve(outDir, name), JSON.stringif
 write('Localizable.xcstrings', catalog(entries));
 write('InfoPlist.xcstrings', catalog({
   CFBundleDisplayName: { it: 'SV Nativa', en: 'SV Nativa' },
+  NSCameraUsageDescription: { it: 'Per fotografare i tuoi capi.', en: 'To take photos of your clothes.' },
   NSFaceIDUsageDescription: {
     it: "Serve per sbloccare l'app, se attivi il blocco nel Profilo.",
     en: 'Used to unlock the app when you turn on the lock in Profile.',

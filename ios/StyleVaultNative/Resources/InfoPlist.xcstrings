@@ -18,6 +18,23 @@
         }
       }
     },
+    "NSCameraUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Per fotografare i tuoi capi."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To take photos of your clothes."
+          }
+        }
+      }
+    },
     "NSFaceIDUsageDescription": {
       "extractionState": "manual",
       "localizations": {

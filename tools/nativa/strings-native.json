@@ -22,5 +22,20 @@
   },
   "native.lock.title": { "it": "StyleVault è bloccata", "en": "StyleVault is locked" },
   "native.lock.unlock": { "it": "Sblocca", "en": "Unlock" },
-  "native.lock.reason": { "it": "Sblocca StyleVault", "en": "Unlock StyleVault" }
+  "native.lock.reason": { "it": "Sblocca StyleVault", "en": "Unlock StyleVault" },
+  "native.wardrobe.count %lld": {
+    "it": { "one": "%lld capo", "other": "%lld capi" },
+    "en": { "one": "%lld item", "other": "%lld items" }
+  },
+  "native.form.priceInvalid": { "it": "Scrivi il prezzo in numeri", "en": "Enter the price as a number" },
+  "native.form.photoError": { "it": "Non riesco a leggere questa foto", "en": "This photo could not be read" },
+  "native.form.discard.title": { "it": "Scartare le modifiche?", "en": "Discard your changes?" },
+  "native.form.discard.confirm": { "it": "Scarta", "en": "Discard" },
+  "native.form.discard.keep": { "it": "Continua a modificare", "en": "Keep editing" },
+  "native.category.new": { "it": "Nuova categoria", "en": "New category" },
+  "native.category.name": { "it": "Nome della categoria", "en": "Category name" },
+  "native.category.delete": { "it": "Elimina categoria", "en": "Delete category" },
+  "native.category.inUse": { "it": "Prima sposta i capi in un'altra categoria", "en": "Move the items to another category first" },
+  "native.detail.photoBack": { "it": "Retro", "en": "Back" },
+  "native.detail.cutout": { "it": "Scontorno", "en": "Cutout" }
 }
