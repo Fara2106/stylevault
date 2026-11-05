@@ -193,6 +193,7 @@ targets:
     info:
       path: StyleVaultNative/Info.plist
       properties:
+        NSFaceIDUsageDescription: Serve per sbloccare l'app, se attivi il blocco nel Profilo.
         CFBundleDisplayName: SV Nativa
         CFBundleLocalizations: [it, en]
         UILaunchScreen: {}

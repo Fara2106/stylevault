@@ -10,5 +10,17 @@
   "native.comingSoon": { "it": "In arrivo", "en": "Coming soon" },
   "native.language.system": { "it": "Si cambia nelle Impostazioni", "en": "Change it in Settings" },
   "native.city.search": { "it": "Cerca una città", "en": "Search for a city" },
-  "native.city.none": { "it": "Nessuna città trovata", "en": "No city found" }
+  "native.city.none": { "it": "Nessuna città trovata", "en": "No city found" },
+  "native.lock.toggle": { "it": "Blocca l'app", "en": "Lock the app" },
+  "native.lock.footer": {
+    "it": "All'apertura chiede Face ID, Touch ID o il codice del dispositivo. Vale solo su questo dispositivo.",
+    "en": "Asks for Face ID, Touch ID or your device passcode when opened. Applies to this device only."
+  },
+  "native.lock.unavailable": {
+    "it": "Imposta un codice sul dispositivo per usare il blocco.",
+    "en": "Set a device passcode to use the lock."
+  },
+  "native.lock.title": { "it": "StyleVault è bloccata", "en": "StyleVault is locked" },
+  "native.lock.unlock": { "it": "Sblocca", "en": "Unlock" },
+  "native.lock.reason": { "it": "Sblocca StyleVault", "en": "Unlock StyleVault" }
 }

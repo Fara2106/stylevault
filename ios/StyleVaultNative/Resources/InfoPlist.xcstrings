@@ -17,6 +17,23 @@
           }
         }
       }
+    },
+    "NSFaceIDUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serve per sbloccare l'app, se attivi il blocco nel Profilo."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Used to unlock the app when you turn on the lock in Profile."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -630,6 +630,108 @@
         }
       }
     },
+    "native.lock.footer": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All'apertura chiede Face ID, Touch ID o il codice del dispositivo. Vale solo su questo dispositivo."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Asks for Face ID, Touch ID or your device passcode when opened. Applies to this device only."
+          }
+        }
+      }
+    },
+    "native.lock.reason": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sblocca StyleVault"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock StyleVault"
+          }
+        }
+      }
+    },
+    "native.lock.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "StyleVault è bloccata"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "StyleVault is locked"
+          }
+        }
+      }
+    },
+    "native.lock.toggle": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blocca l'app"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lock the app"
+          }
+        }
+      }
+    },
+    "native.lock.unavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imposta un codice sul dispositivo per usare il blocco."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set a device passcode to use the lock."
+          }
+        }
+      }
+    },
+    "native.lock.unlock": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sblocca"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock"
+          }
+        }
+      }
+    },
     "native.sync.off": {
       "extractionState": "manual",
       "localizations": {

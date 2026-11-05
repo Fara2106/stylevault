@@ -30,6 +30,29 @@ final class ProfileFlowTests: XCTestCase {
         picker.buttons["Scuro"].tap()
         XCTAssertTrue(picker.buttons["Scuro"].isSelected)
     }
+    /// Il blocco resta acceso tra un lancio e l'altro: per questo `-SVFakeLock` usa una suite dedicata,
+    /// azzerata solo dal primo lancio (`-SVFakeLockReset`). Gli altri test non vedono mai il blocco.
+    func testBloccoConAutenticatoreFinto() {
+        let first = XCUIApplication()
+        first.launchArguments = ["-SVMemoryStore", "-SVFakeLock", "-SVFakeLockReset", "-AppleLanguages", "(it)"]
+        first.launch()
+        tab(first, "Profilo").tap()
+        let toggle = first.switches["lock-toggle"]
+        XCTAssertTrue(toggle.waitForExistence(timeout: 5))
+        toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        // L'autenticazione è asincrona: l'interruttore passa a acceso solo dopo.
+        let on = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == '1'"), object: toggle)
+        XCTAssertEqual(XCTWaiter().wait(for: [on], timeout: 5), .completed)
+        first.terminate()
+
+        let second = XCUIApplication()
+        second.launchArguments = ["-SVMemoryStore", "-SVFakeLock", "-AppleLanguages", "(it)"]
+        second.launch()
+        XCTAssertTrue(second.descendants(matching: .any)["lock-screen"].waitForExistence(timeout: 5))
+        second.buttons["Sblocca"].tap()
+        XCTAssertTrue(tab(second, "Profilo").waitForExistence(timeout: 5))
+        XCTAssertFalse(second.descendants(matching: .any)["lock-screen"].exists)
+    }
     private func launch(language: String) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = ["-SVMemoryStore", "-AppleLanguages", "(\(language))"]

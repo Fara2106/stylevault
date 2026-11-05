@@ -44,5 +44,11 @@ const catalog = (map) => ({
 mkdirSync(outDir, { recursive: true });
 const write = (name, data) => writeFileSync(resolve(outDir, name), JSON.stringify(data, null, 2) + '\n');
 write('Localizable.xcstrings', catalog(entries));
-write('InfoPlist.xcstrings', catalog({ CFBundleDisplayName: { it: 'SV Nativa', en: 'SV Nativa' } }));
+write('InfoPlist.xcstrings', catalog({
+  CFBundleDisplayName: { it: 'SV Nativa', en: 'SV Nativa' },
+  NSFaceIDUsageDescription: {
+    it: "Serve per sbloccare l'app, se attivi il blocco nel Profilo.",
+    en: 'Used to unlock the app when you turn on the lock in Profile.',
+  },
+}));
 console.log(`Scritti ${Object.keys(entries).length} testi in ${outDir}`);

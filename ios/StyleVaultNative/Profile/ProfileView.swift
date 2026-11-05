@@ -3,6 +3,7 @@ import SwiftUI
 
 struct ProfileView: View {
     @Environment(\.modelContext) private var context
+    @Environment(AppLock.self) private var lock
     @Query private var profiles: [Profile]
 
     var body: some View {
@@ -22,7 +23,7 @@ struct ProfileView: View {
 
     private func settings(for profile: Profile) -> some View {
         Form {
-            Section("profile.settings") {
+            Section {
                 NavigationLink {
                     CitySearchView { city in
                         ProfileStore.update(profiles, in: context) { $0.apply(city: city) }
@@ -48,6 +49,18 @@ struct ProfileView: View {
                 }
                 .pickerStyle(.segmented)
                 .accessibilityIdentifier("theme-picker")
+                Toggle("native.lock.toggle", isOn: Binding(
+                    get: { lock.isEnabled },
+                    set: { value in
+                        Task { await lock.setEnabled(value, reason: String(localized: "native.lock.reason")) }
+                    }
+                ))
+                .disabled(!lock.canEnable && !lock.isEnabled)
+                .accessibilityIdentifier("lock-toggle")
+            } header: {
+                Text("profile.settings")
+            } footer: {
+                Text(lock.canEnable || lock.isEnabled ? "native.lock.footer" : "native.lock.unavailable")
             }
         }
         .scrollContentBackground(.hidden)

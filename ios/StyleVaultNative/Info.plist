@@ -27,6 +27,8 @@
 	<string>1</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Serve per sbloccare l'app, se attivi il blocco nel Profilo.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
