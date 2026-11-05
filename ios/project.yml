@@ -10,7 +10,7 @@ packages:
     from: 2.0.0
 settings:
   base:
-    # Team personale di Lorenzo (Apple ID gratuito): firma automatica
+    # Apple Developer Program di Lorenzo (attivo dal 2026-11-05): firma automatica
     DEVELOPMENT_TEAM: 599MS2BZ63
     CODE_SIGN_STYLE: Automatic
     SWIFT_VERSION: "5.0"

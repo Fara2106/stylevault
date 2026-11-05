@@ -87,7 +87,9 @@ Restano validi il Privacy Manifest, la crittografia e le versioni.
 
 **Costi della nativa:** 99 USD l'anno per l'Apple Developer Program. Supabase si spegne dopo l'import, GitHub Pages è gratuito.
 
-**Blocco che resta:** l'iscrizione all'Apple Developer Program (blocco 1).
+**Blocco 1 chiuso il 05/11:** Lorenzo è nell'Apple Developer Program, come Individuale, con lo stesso Team ID `599MS2BZ63`. Sullo store il venditore è il suo nome e cognome. Restano da fare l'app in App Store Connect e la dichiarazione DSA.
+
+Le correzioni qui sopra sono riportate nel design (sezione "Correzioni dall'audit").
 
 ## 0. Stato dopo le correzioni (2026-11-04, pomeriggio)
 
@@ -95,7 +97,7 @@ Ricontrollato dopo le correzioni. Test: sito 294/294, iOS 138/138, funzioni Supa
 
 | Punto | Stato |
 |-------|-------|
-| Blocco 1, Apple Developer Program | **Aperto**: tocca a Lorenzo |
+| Blocco 1, Apple Developer Program | **Risolto il 05/11**: programma attivo, Team ID `599MS2BZ63`. Restano App Store Connect e DSA |
 | Blocco 2, cancellazione account | **Risolto nel codice**: Profilo → "Elimina account" (sito e app) e funzione `delete-account` pubblicata su Supabase (risponde 401 senza utente). Poi pagina pubblica `/elimina-account`. **Da provare con un account vero**: lo fa Lorenzo |
 | Blocco 3, privacy policy e supporto | **Risolto nel codice**: pagine pubbliche `/privacy`, `/supporto`, `/elimina-account` (IT/EN, HTTP 200 su Pages); link nel Profilo, nel login del sito e nel login nativo. Contatto `lorefara97@gmail.com` da confermare |
 | Blocco 4, Privacy Manifest | **Risolto**: `ios/StyleVault/Resources/PrivacyInfo.xcprivacy` (CA92.1, C617.1, E174.1, 6 tipi di dati, niente tracking), presente nel bundle |

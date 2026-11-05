@@ -89,13 +89,15 @@ Una sola pagina statica su GitHub Pages con la **privacy policy** e il **support
 
 ## Migrazione dei dati di oggi
 
-Lorenzo ha 3 capi con foto, 1 voce di calendario, le foto del corpo e l'Armocromia; Mary ha i suoi dati. Al primo avvio dell'app nativa, una sola volta: "Hai già usato StyleVault? Accedi per portare qui i tuoi dati". L'app:
+Lorenzo ha 3 capi con foto, 1 voce di calendario, le foto del corpo e l'Armocromia; Mary ha i suoi dati.
 
-- si collega a Supabase con il login di oggi, l'ultima volta;
-- scarica capi, outfit, calendario, profilo e foto;
-- li scrive in SwiftData.
+Si passa da **Esporta e importa**, nient'altro:
 
-Dopo un periodo concordato si spegne Supabase e il codice di import va tolto in una versione successiva. Alternativa più semplice, se i dati sono pochi: un'esportazione una tantum fatta da Lorenzo e un import nascosto solo per voi due, da togliere prima dell'invio.
+- uno script una tantum, lanciato da Lorenzo con le sue credenziali, scarica capi, outfit, calendario, profilo e foto da Supabase in uno zip nel formato dell'import;
+- sul telefono: Profilo → Importa;
+- nell'app non arriva una riga di Supabase.
+
+Le due strade pensate prima sono escluse dall'audit: un login Supabase nell'app riporta l'account demo e la cancellazione dell'account, e un import nascosto è vietato dalla regola 2.5.19. Dopo l'import di Lorenzo e Mary si spegne Supabase.
 
 ## Fasi (ognuna con i suoi test e una prova sul telefono)
 
@@ -115,9 +117,10 @@ Dopo un periodo concordato si spegne Supabase e il codice di import va tolto in 
 4. **Calendario e statistiche:** storico degli outfit indossati e statistiche del Profilo.
 5. **Armocromia:** analisi del viso con Vision, stagioni, consigli sul guardaroba. Va verificato che i risultati siano vicini a quelli di MediaPipe, perché i punti del viso sono diversi.
 6. **Prova vestiti e avatar stilizzato:** collegare gli schermi nativi che già esistono ai dati SwiftData invece che al ponte con il sito. Etichetta "Generato con IA" e "Segnala" solo se nell'app resta un'immagine generata.
-7. **Import dei dati di oggi**, poi rimozione di WebView, Supabase e login.
+7. **Esporta e importa**, script di esportazione da Supabase, import dei dati di oggi, poi rimozione di WebView, Supabase e login.
 8. **Pubblicazione:**
-   - pagina privacy e supporto;
+   - pagina privacy e supporto, online prima dell'invio;
+   - schema CloudKit promosso in Production;
    - Privacy Manifest (già fatto) aggiornato: niente email e nome, foto solo in iCloud, niente E174.1 se non resta nessun download;
    - audit `mobile-app-publishing` ripetuto, TestFlight, invio.
 
@@ -125,7 +128,7 @@ Stima indicativa: le fasi 2, 3 e 5 sono le più pesanti, perché hanno più logi
 
 ## Prerequisiti
 
-- **Apple Developer Program a pagamento**: serve per CloudKit, oltre che per pubblicare. Il container iCloud si crea sull'App ID.
+- **Apple Developer Program a pagamento: attivo dal 2026-11-05**, Team ID `599MS2BZ63`, come Individuale. Il container iCloud si crea sull'App ID.
 - In Debug CloudKit usa l'ambiente "Development". Prima dell'invio lo schema va promosso a "Production" dalla CloudKit Console.
 
 ## Rischi
@@ -141,12 +144,25 @@ Stima indicativa: le fasi 2, 3 e 5 sono le più pesanti, perché hanno più logi
 2. **Armocromia facoltativa.** Va nella fase 5. Se Vision non basta per un risultato affidabile, la funzione si nasconde e si rimanda, senza bloccare la pubblicazione. Niente Armocromia "a metà". In ogni caso l'utente può **scegliere la sua stagione a mano** da un menu a tendina nel Profilo: vale anche se l'analisi non c'è o non lo convince, e i consigli sul guardaroba usano la stagione scelta.
 3. **Lingue:** italiano e inglese da subito, con String Catalog (`Localizable.xcstrings`, `InfoPlist.xcstrings`). In futuro francese, spagnolo, portoghese, inglese UK e inglese USA. Per l'inglese USA servono anche i gradi Fahrenheit e le unità locali (`Measurement` e `formatted()` di sistema), non solo le parole. Le unità si **regolano nelle Impostazioni dell'app** (temperatura °C/°F, ed eventuali misure), con il valore iniziale preso dalla regione del telefono.
 4. **Si parte dopo l'iscrizione all'Apple Developer Program.** Lorenzo avvisa quando è accettato.
-5. **Import dei dati di oggi:** da decidere all'avvio della fase 7.
+5. **Import dei dati di oggi:** con Esporta e importa, vedi "Migrazione dei dati di oggi". Era da decidere all'avvio della fase 7, ma l'audit ha escluso le altre due strade.
 6. **Prima versione senza avatar realistico (2026-11-05).** Mobile-VTON è addestrato su DressCode, che ha una licenza solo ricerca. Il codice va tolto dalla build, non nascosto con un interruttore (regola 2.5.19). Spariscono anche il download da 1,3 GB e l'entitlement `increased-memory-limit`. Il codice resta nella storia di git e il motore sta dietro `RealisticTryOn`, quindi può tornare in un aggiornamento, se arriva il permesso di AImageLab o se FASHN VTON regge sul telefono e l'origine dei suoi dati è chiarita (`tools/avatar-fashn/README.md`).
 
 ## Proposte aggiunte
 
 - **Esporta e importa (approvato da Lorenzo)** un file (JSON più foto, in uno zip) da Profilo: serve per cambiare telefono tra Apple e Android quando ci sarà, e copre il diritto alla portabilità del GDPR.
+
+## Correzioni dall'audit (2026-11-05)
+
+Vengono dalla sezione 00 del report `docs/pubblicazione/2026-11-04-report-app-store.md`, che ha i dettagli.
+
+- **L'app funziona senza iCloud.** Il dispositivo del revisore può non averlo. Con iCloud assente o pieno, SwiftData salva in locale e l'app mostra solo l'avviso "sincronizzazione non attiva": non si blocca e non chiede di accedere a iCloud. Va nella fase 1.
+- **Niente funzioni nascoste.** Ciò che non è pronto si toglie dalla build, compresa l'Armocromia se si rimanda: nessun interruttore da accendere dopo la revisione (2.5.19).
+- **Privacy e supporto.** Stessi indirizzi di oggi, `fara2106.github.io/stylevault/privacy` e `/supporto`, già scritti in `AppConfig`, oppure si aggiorna `AppConfig`. L'email di contatto è da confermare con Lorenzo.
+- **Privacy Labels.** I dati in iCloud sono nel database privato: lo sviluppatore non può leggerli, da riconfermare sulle domande di App Store Connect. Il feedback via Mail dà a Lorenzo email e testo: si dichiara, o si valuta se è raccolta rara e facoltativa.
+- **Meteo.** Con Open-Meteo si dichiara "Posizione approssimativa", non collegata all'utente, si arrotondano le coordinate a 2 decimali e lo si nomina nella privacy policy. Con il programma attivo WeatherKit si può accendere: scelta da fare nella fase 3. Se resta solo WeatherKit, Open-Meteo esce dalle dichiarazioni.
+- **Cina continentale.** Si esclude in App Store Connect, se restano i link a ChatGPT e Gemini.
+- **iPad.** `TARGETED_DEVICE_FAMILY "1,2"`, layout vero per iPad e screenshot iPad 13". Se l'invio slitta ad aprile 2027 o dopo, servono anche gli screenshot per iPhone Duo.
+- **App Store Connect.** Questionario dell'età, Accessibility Nutrition Labels solo per ciò che è provato, stato DSA, che decide Lorenzo, e note al revisore su cosa distingue l'app nella categoria (4.3(b)).
 
 ## Lasciato a chi costruisce
 

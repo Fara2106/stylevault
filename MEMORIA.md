@@ -3,6 +3,21 @@
 > File di ripartenza: se apri una nuova chat, leggi questo file per riprendere il lavoro
 > esattamente da dove eravamo. Va aggiornato a ogni avanzamento significativo.
 
+## Novità 2026-11-05 — Apple Developer Program ATTIVO
+
+Lorenzo è stato accettato: programma Individuale, Team ID `599MS2BZ63` (lo stesso
+di prima, già in `ios/project.yml`), dati in `~/.claude/CLAUDE.md`. Sullo store il
+venditore è il suo nome e cognome. Dispositivi registrati: 2, iPhone e iPad di
+Lorenzo; il telefono di Mary non c'è.
+- Verificato sul Mac: la sessione Vocali ha già ottenuto un profilo App Store che
+  scade il 05/11/2027.
+- **Il profilo attuale di StyleVault è ancora quello gratuito: scade l'11/11/2026.**
+  Dopo quella data l'app non si apre, finché non la si reinstalla da Xcode.
+- Sbloccati: fase 1 della nativa (CloudKit), TestFlight, WeatherKit.
+- Da fare: app in App Store Connect, dichiarazione DSA.
+- Il design ora contiene le correzioni dell'audit: l'import passa da Esporta e
+  importa, l'app deve funzionare senza iCloud.
+
 ## Novità 2026-11-05 (notte) — Prova tecnica FASHN VTON (branch `feat/app-ios`)
 
 Lorenzo ha chiesto un modello locale open source al posto di Mobile-VTON, i cui
