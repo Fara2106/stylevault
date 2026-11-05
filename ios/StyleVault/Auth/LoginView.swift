@@ -4,6 +4,8 @@ import SwiftUI
 /// Login nativo: stile del sito, email/password, Google e Apple (se attivo).
 struct LoginView: View {
     @EnvironmentObject private var auth: AuthService
+    @Environment(\.colorScheme) private var colorScheme
+    @State private var appleNonce = AppleNonce()
     @State private var registering = false
     @State private var name = ""
     @State private var email = ""
@@ -69,8 +71,15 @@ struct LoginView: View {
                     }
 
                     if AppConfig.appleSignInEnabled {
-                        SignInWithAppleButton(.continue) { _ in } onCompletion: { _ in }
+                        SignInWithAppleButton(.continue) { request in
+                            let nonce = AppleNonce()
+                            appleNonce = nonce
+                            request.requestedScopes = [.fullName, .email]
+                            request.nonce = nonce.hashed
+                        } onCompletion: { apple($0) }
+                            .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
                             .frame(height: 52)
+                            .disabled(busy)
                     }
                 }
 
@@ -126,6 +135,14 @@ struct LoginView: View {
     }
 
     private func google() { run { [auth] in try await auth.signInWithGoogle() } }
+
+    private func apple(_ result: Result<ASAuthorization, Error>) { run { [auth, appleNonce] in
+        let authorization = try result.get()
+        guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential else {
+            throw AppleTokenMissing()
+        }
+        try await auth.signInWithApple(credential: credential, nonce: appleNonce)
+    } }
 
     private func run(_ work: @escaping () async throws -> Void) {
         error = nil

@@ -30,6 +30,11 @@ Piano: `docs/superpowers/plans/2026-11-05-app-nativa-fase-2.md`, eseguito in ses
   in produzione il 05/11 con il sì di Lorenzo: 7 tipi di record, da ora solo aggiunte. I dati di sviluppo non compaiono nelle build TestFlight. Lo schema si crea con
   `-SVInitCloudSchema` su dispositivo; con `devicectl` gli argomenti vanno dopo `--`. Ogni nuova build vuole
   `CFBundleVersion` più alto in `ios/StyleVaultNative/Info.plist`.
+- Login dell'ibrida (05/11, richiesta di Lorenzo): Accedi con Apple scritto e attivo, nativo, Supabase con
+  Client ID `it.faraoni.stylevault` e nessun segreto; installato sull'iPhone, mai provato col login vero.
+  Google: codice pronto, manca il client OAuth e il segreto, che inserisce Lorenzo.
+- Login della nativa: Lorenzo l'ha chiesto il 05/11, rovescia la decisione 7 del design; da progettare,
+  niente codice finché non approva il design.
 - Nota per i test UI: `isHittable` è vero anche oltre il bordo dello schermo o sotto la tastiera; con la
   tastiera aperta il fine corsa dello scorrimento non la conta, e al primo ridisegno il contenuto torna
   indietro (lo spazio in `ItemFormView` è legato al `FocusState`).

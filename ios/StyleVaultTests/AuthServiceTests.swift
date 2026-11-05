@@ -9,6 +9,33 @@ final class AuthServiceTests: XCTestCase {
              underlyingResponse: HTTPURLResponse())
     }
 
+    func testLoginAppleAnnullatoNonEUnErrore() {
+        XCTAssertEqual(AuthErrorKind.from(ASAuthorizationError(.canceled)), .cancelled)
+    }
+
+    /// Apple firma il nonce cifrato, Supabase riceve quello in chiaro e rifà il conto.
+    func testIlNonceDiAppleEIlSuoSHA256() {
+        XCTAssertEqual(AppleNonce(raw: "abc").hashed,
+                       "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
+    }
+
+    func testIlNonceCambiaOgniVolta() {
+        XCTAssertNotEqual(AppleNonce().raw, AppleNonce().raw)
+    }
+
+    func testIlNomeDiAppleUnisceNomeECognome() {
+        var name = PersonNameComponents()
+        name.givenName = "Marianna"
+        name.familyName = "Cavaliere"
+        XCTAssertEqual(AppleNonce.displayName(name), "Marianna Cavaliere")
+    }
+
+    /// Dal secondo accesso Apple non manda più il nome: quello salvato non va cancellato.
+    func testSenzaNomeDaAppleNonSiToccaQuelloSalvato() {
+        XCTAssertNil(AppleNonce.displayName(nil))
+        XCTAssertNil(AppleNonce.displayName(PersonNameComponents()))
+    }
+
     func testLoginGoogleAnnullatoNonEUnErrore() {
         let error = ASWebAuthenticationSessionError(.canceledLogin)
         XCTAssertEqual(AuthErrorKind.from(error), .cancelled)

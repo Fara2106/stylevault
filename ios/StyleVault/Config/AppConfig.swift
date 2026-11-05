@@ -46,7 +46,7 @@ enum AppConfig {
     /// Redirect URLs di Supabase, come quello di Google).
     static let recoveryCallback = URL(string: "stylevault://reset-password")!
 
-    /// "Accedi con Apple" richiede l'Apple Developer Program a pagamento:
-    /// resta spento finché Lorenzo non si iscrive.
-    static let appleSignInEnabled = false
+    /// "Accedi con Apple": nativo, con il token passato a Supabase. Sul progetto Supabase il provider Apple
+    /// deve essere attivo con questo Bundle ID tra i Client IDs.
+    static let appleSignInEnabled = true
 }

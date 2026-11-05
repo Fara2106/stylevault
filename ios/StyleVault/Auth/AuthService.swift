@@ -1,3 +1,4 @@
+import CryptoKit
 import AuthenticationServices
 import Foundation
 import Supabase
@@ -18,6 +19,29 @@ enum Supa {
     )
 }
 
+/// Il valore che lega la risposta di Apple a questa richiesta: ad Apple va cifrato, a Supabase in chiaro.
+struct AppleNonce {
+    let raw: String
+
+    init(raw: String = UUID().uuidString) { self.raw = raw }
+
+    var hashed: String {
+        SHA256.hash(data: Data(raw.utf8)).map { String(format: "%02x", $0) }.joined()
+    }
+
+    /// Apple manda il nome solo al primo accesso: nil vuol dire "lascia quello salvato".
+    static func displayName(_ components: PersonNameComponents?) -> String? {
+        guard let components else { return nil }
+        let name = [components.givenName, components.familyName].compactMap { $0 }.joined(separator: " ")
+        return name.isEmpty ? nil : name
+    }
+}
+
+/// Apple ha detto sì ma senza il token da dare a Supabase.
+struct AppleTokenMissing: LocalizedError {
+    var errorDescription: String? { "Apple non ha completato l'accesso: riprova." }
+}
+
 /// Errori di login in forma leggibile, con gli stessi testi del sito (auth.errors.*).
 enum AuthErrorKind: Equatable {
     case invalidCredentials, emailTaken, weakPassword, samePassword, tooManyEmails, cancelled, unreachable
@@ -27,6 +51,7 @@ enum AuthErrorKind: Equatable {
         if let web = error as? ASWebAuthenticationSessionError, web.code == .canceledLogin {
             return .cancelled
         }
+        if let apple = error as? ASAuthorizationError, apple.code == .canceled { return .cancelled }
         if let auth = error as? AuthError, case let .api(message, code, _, _) = auth {
             switch code {
             case .invalidCredentials: return .invalidCredentials
@@ -137,6 +162,18 @@ final class AuthService: ObservableObject {
         session = try await client.auth.signInWithOAuth(
             provider: .google, redirectTo: AppConfig.authCallback
         )
+    }
+
+    func signInWithApple(credential: ASAuthorizationAppleIDCredential, nonce: AppleNonce) async throws {
+        guard let data = credential.identityToken, let token = String(data: data, encoding: .utf8) else {
+            throw AppleTokenMissing()
+        }
+        session = try await client.auth.signInWithIdToken(
+            credentials: OpenIDConnectCredentials(provider: .apple, idToken: token, nonce: nonce.raw)
+        )
+        if let name = AppleNonce.displayName(credential.fullName) {
+            _ = try? await client.auth.update(user: UserAttributes(data: ["name": .string(name)]))
+        }
     }
 
     func signOut() async {

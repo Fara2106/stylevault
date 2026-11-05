@@ -29,6 +29,7 @@ targets:
       path: StyleVault/StyleVault.entitlements
       properties:
         com.apple.developer.kernel.increased-memory-limit: true
+        com.apple.developer.applesignin: [Default]
     configFiles:
       Debug: Config/Secrets.xcconfig
       Release: Config/Secrets.xcconfig
