@@ -33,6 +33,35 @@ final class SyncMonitorTests: XCTestCase {
         XCTAssertEqual(SyncRules.state(health: .temporary, account: .available, lastError: nil), .temporaryStore)
     }
 
+    private func partial(_ inner: CKError.Code) -> CKError {
+        let id = CKRecord.ID(recordName: "x")
+        return CKError(.partialFailure, userInfo: [CKPartialErrorsByItemIDKey: [id: CKError(inner)]])
+    }
+
+    func testICloudPienoDentroPartialFailure() {
+        XCTAssertEqual(SyncRules.state(health: .cloud, account: .available, lastError: partial(.quotaExceeded)), .unavailable)
+    }
+
+    func testPartialFailureSenzaQuotaRestaAttivo() {
+        XCTAssertEqual(SyncRules.state(health: .cloud, account: .available, lastError: partial(.zoneBusy)), .active)
+    }
+
+    func testICloudPienoDentroUnderlyingError() {
+        let inner = CKError(.quotaExceeded)
+        let wrapped = NSError(domain: NSCocoaErrorDomain, code: 134400, userInfo: [NSUnderlyingErrorKey: inner])
+        XCTAssertEqual(SyncRules.state(health: .cloud, account: .available, lastError: wrapped), .unavailable)
+    }
+
+    func testICloudPienoComeNSError() {
+        let error = NSError(domain: CKErrorDomain, code: CKError.quotaExceeded.rawValue)
+        XCTAssertEqual(SyncRules.state(health: .cloud, account: .available, lastError: error), .unavailable)
+    }
+
+    @MainActor
+    func testMonitorCloudParteAttivoSenzaLampo() {
+        XCTAssertEqual(SyncMonitor(health: .cloud).state, .active)
+    }
+
     @MainActor
     func testMonitorTemporaneoNonContattaCloudKit() {
         let monitor = SyncMonitor(health: .temporary)

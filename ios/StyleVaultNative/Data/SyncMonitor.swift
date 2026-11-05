@@ -15,8 +15,21 @@ enum SyncRules {
         case .cloud: break
         }
         if account != .available { return .unavailable }
-        if let error = lastError as? CKError, error.code == .quotaExceeded { return .unavailable }
+        if let lastError, containsQuotaExceeded(lastError) { return .unavailable }
         return .active
+    }
+
+    /// CloudKit consegna `quotaExceeded` anche dentro `.partialFailure` e Core Data
+    /// può avvolgerlo in un errore sottostante: si cerca a ogni livello.
+    private static func containsQuotaExceeded(_ error: Error) -> Bool {
+        let nsError = error as NSError
+        if nsError.domain == CKErrorDomain, nsError.code == CKError.Code.quotaExceeded.rawValue { return true }
+        if let partial = nsError.userInfo[CKPartialErrorsByItemIDKey] as? [AnyHashable: Error],
+           partial.values.contains(where: containsQuotaExceeded) { return true }
+        if let underlying = nsError.userInfo[NSUnderlyingErrorKey] as? Error {
+            return containsQuotaExceeded(underlying)
+        }
+        return false
     }
 }
 
@@ -31,7 +44,8 @@ final class SyncMonitor {
 
     init(health: StoreHealth) {
         self.health = health
-        self.state = SyncRules.state(health: health, account: .couldNotDetermine, lastError: nil)
+        // Con il cloud si parte "attivo" fino alla prima risposta di accountStatus(): niente lampo dell'avviso.
+        self.state = health == .cloud ? .active : SyncRules.state(health: health, account: .couldNotDetermine, lastError: nil)
     }
 
     deinit {
