@@ -15,6 +15,17 @@ Piano: `docs/superpowers/plans/2026-11-05-app-nativa-fase-2.md`, eseguito in ses
   scheda di uso del capo alla fase 4. Il piano spiega perché.
 - Attenzione: `LocalizedStringKey("testo.\(x)")` cerca la chiave con `%lld`, non quella col valore.
   La chiave va costruita prima in una `String` (vedi `Text.warmth`).
+- Giro da utente sul simulatore fatto (skill `mobile-app-publishing`): 4 giri, ultimo pulito su iPhone e
+  iPad, 8 difetti corretti, commit `0793051`. Verbale e schermate in
+  `docs/verifiche/2026-11-05-nativa-fase-2/`. Test: Core 27, iPhone 140, iPad 140. Release controllata con
+  `strings`: nessun avanzo di prova, nessun segreto. App reinstallata su iPhone e iPad di Lorenzo.
+- Prima di pubblicare (fase 8) manca `PrivacyInfo.xcprivacy` nel nativo: `UserDefaults` richiede la
+  motivazione. Il nome sulla schermata è ancora "SV Nativa".
+- `testBloccoConAutenticatoreFinto` è fallito 3 volte su iPad col Mac saturo, poi 20 su 20: causa non
+  provata. Guardare se l'interruttore del blocco perde un tocco.
+- Nota per i test UI: `isHittable` è vero anche oltre il bordo dello schermo o sotto la tastiera; con la
+  tastiera aperta il fine corsa dello scorrimento non la conta, e al primo ridisegno il contenuto torna
+  indietro (lo spazio in `ItemFormView` è legato al `FocusState`).
 
 ## Novità 2026-11-05 — Apple Developer Program ATTIVO
 
