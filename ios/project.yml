@@ -2,12 +2,15 @@
 name: StyleVault
 options:
   bundleIdPrefix: it.faraoni
+  developmentLanguage: it
   deploymentTarget:
     iOS: "17.0"
 packages:
   Supabase:
     url: https://github.com/supabase/supabase-swift
     from: 2.0.0
+  StyleVaultCore:
+    path: StyleVaultCore
 settings:
   base:
     # Apple Developer Program di Lorenzo (attivo dal 2026-11-05): firma automatica
@@ -171,7 +174,57 @@ targets:
       base:
         CODE_SIGN_IDENTITY: "-"
         GENERATE_INFOPLIST_FILE: YES
+  # App nativa (SwiftUI + SwiftData + iCloud), accanto all'ibrida
+  StyleVaultNative:
+    type: application
+    platform: iOS
+    sources:
+      - StyleVaultNative
+      - StyleVault/Design/Palette.swift
+      - StyleVault/App/ThemeStore.swift
+    dependencies:
+      - package: StyleVaultCore
+    entitlements:
+      path: StyleVaultNative/StyleVaultNative.entitlements
+      properties:
+        com.apple.developer.icloud-container-identifiers: [iCloud.it.faraoni.stylevault]
+        com.apple.developer.icloud-services: [CloudKit]
+        aps-environment: development
+    info:
+      path: StyleVaultNative/Info.plist
+      properties:
+        CFBundleDisplayName: SV Nativa
+        CFBundleLocalizations: [it, en]
+        UILaunchScreen: {}
+        UIBackgroundModes: [remote-notification]
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        ITSAppUsesNonExemptEncryption: false
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: it.faraoni.stylevault.nativa
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SWIFT_EMIT_LOC_STRINGS: YES
+  StyleVaultNativeTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [StyleVaultNativeTests]
+    dependencies:
+      - target: StyleVaultNative
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
 schemes:
+  StyleVaultNative:
+    build:
+      targets:
+        StyleVaultNative: all
+    test:
+      targets: [StyleVaultNativeTests]
   RealisticBenchMac:
     build:
       targets:
