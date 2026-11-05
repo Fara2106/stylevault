@@ -6,6 +6,7 @@ struct StyleVaultNativeApp: App {
     // Creati una sola volta e tenuti per tutta la vita dell'app: il mainContext non trattiene il container.
     private let container: ModelContainer
     @State private var syncMonitor: SyncMonitor
+    @State private var cutoutWorker: CutoutWorker
     @State private var appLock: AppLock
     @State private var lockWindow: LockWindowController
     @State private var wasInBackground = false
@@ -23,6 +24,7 @@ struct StyleVaultNativeApp: App {
         let opened = StoreFactory.open(preferred: preferred)
         let monitor = SyncMonitor(health: opened.health)
         container = opened.container
+        _cutoutWorker = State(initialValue: CutoutWorker(context: opened.container.mainContext))
         _syncMonitor = State(initialValue: monitor)
         monitor.start()
     }
@@ -53,6 +55,7 @@ struct StyleVaultNativeApp: App {
                 .background(WindowSceneReader { lockWindow.attach(to: $0) })
                 .background(LockThemeSync(controller: lockWindow))
                 .environment(appLock)
+                .environment(cutoutWorker)
                 .onChange(of: covered, initial: true) { _, value in lockWindow.setVisible(value) }
                 .onChange(of: scenePhase, initial: true) { _, phase in
                     appLock.sceneDidChange(to: phase)
