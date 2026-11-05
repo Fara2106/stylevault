@@ -1,0 +1,14 @@
+{
+  "native.sync.off": {
+    "it": "Sincronizzazione non attiva. I dati restano su questo dispositivo.",
+    "en": "Sync is off. Your data stays on this device."
+  },
+  "native.sync.temporary": {
+    "it": "Non riesco ad aprire i dati. Ciò che aggiungi ora non verrà salvato.",
+    "en": "Your data could not be opened. What you add now will not be saved."
+  },
+  "native.comingSoon": { "it": "In arrivo", "en": "Coming soon" },
+  "native.language.system": { "it": "Si cambia nelle Impostazioni", "en": "Change it in Settings" },
+  "native.city.search": { "it": "Cerca una città", "en": "Search for a city" },
+  "native.city.none": { "it": "Nessuna città trovata", "en": "No city found" }
+}

@@ -1,0 +1,23 @@
+{
+  "sourceLanguage": "it",
+  "strings": {
+    "CFBundleDisplayName": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SV Nativa"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SV Nativa"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}
