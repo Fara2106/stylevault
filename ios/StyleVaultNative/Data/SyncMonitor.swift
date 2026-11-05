@@ -21,6 +21,8 @@ enum SyncRules {
 
     /// CloudKit consegna `quotaExceeded` anche dentro `.partialFailure` e Core Data
     /// può avvolgerlo in un errore sottostante: si cerca a ogni livello.
+    static func isQuotaExceeded(_ error: Error) -> Bool { containsQuotaExceeded(error) }
+
     private static func containsQuotaExceeded(_ error: Error) -> Bool {
         let nsError = error as NSError
         if nsError.domain == CKErrorDomain, nsError.code == CKError.Code.quotaExceeded.rawValue { return true }
@@ -33,13 +35,18 @@ enum SyncRules {
     }
 }
 
+/// Tipo di evento di sincronizzazione, specchio di `NSPersistentCloudKitContainer.Event.EventType`
+/// (così i test non dipendono da CoreData).
+enum SyncEventKind: Hashable { case setup, `import`, export }
+
 @MainActor @Observable
 final class SyncMonitor {
     private(set) var state: SyncState
 
     @ObservationIgnored private let health: StoreHealth
     @ObservationIgnored private var account: CKAccountStatus?  // nil = non ancora noto
-    @ObservationIgnored private var lastError: Error?
+    /// Ultimo errore per tipo di evento: un errore si azzera solo con un evento riuscito dello stesso tipo.
+    @ObservationIgnored private var lastErrors: [SyncEventKind: Error] = [:]
     @ObservationIgnored private var observers: [NSObjectProtocol] = []
 
     init(health: StoreHealth) {
@@ -68,8 +75,15 @@ final class SyncMonitor {
             let finished = event?.endDate != nil
             let succeeded = event?.succeeded ?? false
             let error = event?.error
+            let kind: SyncEventKind
+            switch event?.type {
+            case .setup: kind = .setup
+            case .import: kind = .import
+            case .export: kind = .export
+            default: return
+            }
             guard finished else { return }
-            Task { @MainActor in self?.record(succeeded: succeeded, error: error) }
+            Task { @MainActor in self?.record(kind, succeeded: succeeded, error: error) }
         })
         Task { await refreshAccount() }
     }
@@ -88,14 +102,25 @@ final class SyncMonitor {
         recompute()
     }
 
-    func record(succeeded: Bool, error: Error?) {
-        lastError = succeeded ? nil : error
+    /// Internal per i test. Un evento riuscito azzera l'errore del suo tipo; uno fallito senza errore non cambia nulla.
+    func record(_ kind: SyncEventKind, succeeded: Bool, error: Error?) {
+        if succeeded {
+            lastErrors[kind] = nil
+        } else if let error {
+            lastErrors[kind] = error
+        }
         recompute()
+    }
+
+    /// L'errore di quota, se c'è in un tipo qualunque (non deve lampeggiare); altrimenti uno qualsiasi.
+    private var relevantError: Error? {
+        let errors = Array(lastErrors.values)
+        return errors.first(where: SyncRules.isQuotaExceeded) ?? errors.first
     }
 
     private func recompute() {
         // Finché l'account non è noto lo stato resta quello iniziale (niente lampo dell'avviso).
         guard let account else { return }
-        state = SyncRules.state(health: health, account: account, lastError: lastError)
+        state = SyncRules.state(health: health, account: account, lastError: relevantError)
     }
 }

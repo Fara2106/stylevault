@@ -65,9 +65,9 @@ final class SyncMonitorTests: XCTestCase {
     @MainActor
     func testEventoPrimaDellAccountNonFaLampeggiare() {
         let monitor = SyncMonitor(health: .cloud)
-        monitor.record(succeeded: true, error: nil)
+        monitor.record(.export, succeeded: true, error: nil)
         XCTAssertEqual(monitor.state, .active)
-        monitor.record(succeeded: false, error: CKError(.quotaExceeded))
+        monitor.record(.export, succeeded: false, error: CKError(.quotaExceeded))
         XCTAssertEqual(monitor.state, .active)
         monitor.apply(account: .available)
         XCTAssertEqual(monitor.state, .unavailable)
@@ -86,5 +86,35 @@ final class SyncMonitorTests: XCTestCase {
         monitor.start()
         monitor.start()
         XCTAssertEqual(monitor.state, .temporaryStore)
+    }
+
+    @MainActor
+    private func monitorConQuotaSuExport() -> SyncMonitor {
+        let monitor = SyncMonitor(health: .cloud)
+        monitor.apply(account: .available)
+        monitor.record(.export, succeeded: false, error: CKError(.quotaExceeded))
+        XCTAssertEqual(monitor.state, .unavailable)
+        return monitor
+    }
+
+    @MainActor
+    func testQuotaSuExportNonSiSpegneConUnImportRiuscito() {
+        let monitor = monitorConQuotaSuExport()
+        monitor.record(.import, succeeded: true, error: nil)
+        XCTAssertEqual(monitor.state, .unavailable)
+    }
+
+    @MainActor
+    func testQuotaSuExportNonSiSpegneConUnImportFallitoPerRete() {
+        let monitor = monitorConQuotaSuExport()
+        monitor.record(.import, succeeded: false, error: CKError(.networkUnavailable))
+        XCTAssertEqual(monitor.state, .unavailable)
+    }
+
+    @MainActor
+    func testQuotaSuExportSiSpegneConUnExportRiuscito() {
+        let monitor = monitorConQuotaSuExport()
+        monitor.record(.export, succeeded: true, error: nil)
+        XCTAssertEqual(monitor.state, .active)
     }
 }
