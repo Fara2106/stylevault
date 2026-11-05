@@ -166,4 +166,119 @@ final class WardrobeFlowTests: XCTestCase {
         XCTAssertTrue(waitForCount(cards(app), 1))
         XCTAssertTrue(anyText(app, "Scarpe").exists)
     }
+
+    // MARK: Wishlist e categorie
+
+    private func fillAndSave(_ app: XCUIApplication, name: String, category: String) {
+        let sheet = app.otherElements["add-sheet"]
+        let field = app.textFields["item-name"]
+        scroll(app, to: field)
+        field.tap()
+        field.typeText(name)
+        let chip = app.buttons["category-\(category)"]
+        scroll(app, to: chip)
+        chip.tap()
+        let save = app.buttons["item-save"]
+        scroll(app, to: save)
+        save.tap()
+        XCTAssertTrue(waitForDisappearance(of: sheet))
+    }
+
+    func testDesiderioComprato() {
+        let app = launch(language: "it")
+        XCTAssertTrue(app.buttons["wardrobe-section-wishlist"].waitForExistence(timeout: 5))
+        app.buttons["wardrobe-section-wishlist"].tap()
+        XCTAssertTrue(anyText(app, "La tua wishlist è vuota").waitForExistence(timeout: 3))
+        app.buttons["wishlist-empty-add"].tap()
+        XCTAssertTrue(app.otherElements["add-sheet"].waitForExistence(timeout: 3))
+        let destination = app.buttons["destination-wishlist"]
+        scroll(app, to: destination)
+        XCTAssertTrue(destination.isSelected)
+        fillAndSave(app, name: "Borsa", category: "accessories")
+
+        let bought = app.buttons["wish-bought"]
+        XCTAssertTrue(bought.waitForExistence(timeout: 5))
+        app.buttons["wardrobe-section-wardrobe"].tap()
+        XCTAssertTrue(anyText(app, "Il tuo guardaroba è vuoto").waitForExistence(timeout: 3))
+        app.buttons["wardrobe-section-wishlist"].tap()
+        XCTAssertTrue(bought.waitForExistence(timeout: 3))
+        bought.tap()
+        XCTAssertTrue(anyText(app, "La tua wishlist è vuota").waitForExistence(timeout: 3))
+        app.buttons["wardrobe-section-wardrobe"].tap()
+        XCTAssertTrue(waitForCount(cards(app), 1))
+    }
+
+    func testCancellaUnDesiderio() {
+        let app = launch(language: "it")
+        addItem(app, name: "Borsa", category: "accessories", wishlist: true)
+        app.buttons["wardrobe-section-wishlist"].tap()
+        let delete = app.buttons["wish-delete"]
+        XCTAssertTrue(delete.waitForExistence(timeout: 3))
+        delete.tap()
+        XCTAssertTrue(anyText(app, "La tua wishlist è vuota").waitForExistence(timeout: 3))
+    }
+
+    private func createCategory(_ app: XCUIApplication, _ name: String) {
+        let new = app.buttons["category-new"]
+        scroll(app, to: new)
+        new.tap()
+        let field = app.alerts.textFields.firstMatch
+        XCTAssertTrue(field.waitForExistence(timeout: 3))
+        field.typeText(name)
+        // Per coordinate: a volte XCUITest prende l'avviso per un'interruzione e preme Annulla da solo.
+        app.alerts.buttons["Salva"].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+    }
+
+    private func addItemInNewCategory(_ app: XCUIApplication, item: String, category: String) {
+        let sheet = openForm(app)
+        let field = app.textFields["item-name"]
+        scroll(app, to: field)
+        field.tap()
+        field.typeText(item)
+        createCategory(app, category)
+        let save = app.buttons["item-save"]
+        scroll(app, to: save)
+        save.tap()
+        XCTAssertTrue(waitForDisappearance(of: sheet))
+    }
+
+    func testNuovaCategoria() {
+        let app = launch(language: "it")
+        addItemInNewCategory(app, item: "Costume", category: "Mare")
+        XCTAssertTrue(waitForCount(cards(app), 1))
+        addItem(app, name: "Scarpe", category: "shoes")
+        XCTAssertTrue(waitForCount(cards(app), 2))
+        let chip = app.buttons["Mare"]
+        XCTAssertTrue(chip.waitForExistence(timeout: 3))
+        chip.tap()
+        XCTAssertTrue(waitForCount(cards(app), 1))
+        cards(app).firstMatch.tap()
+        XCTAssertTrue(anyText(app, "Mare").waitForExistence(timeout: 3))
+    }
+
+    func testCategoriaUsataNonSiCancella() {
+        let app = launch(language: "it")
+        addItemInNewCategory(app, item: "Costume", category: "Mare")
+        let chip = app.buttons["Mare"]
+        XCTAssertTrue(chip.waitForExistence(timeout: 5))
+        chip.press(forDuration: 1.2)
+        let delete = app.buttons["Elimina categoria"]
+        XCTAssertTrue(delete.waitForExistence(timeout: 3))
+        delete.tap()
+        XCTAssertTrue(anyText(app, "Prima sposta i capi in un'altra categoria").waitForExistence(timeout: 3))
+        app.alerts.buttons["Chiudi"].tap()
+        XCTAssertTrue(chip.waitForExistence(timeout: 3))
+
+        cards(app).firstMatch.tap()
+        let remove = app.buttons["detail-delete"]
+        XCTAssertTrue(remove.waitForExistence(timeout: 3))
+        scroll(app, to: remove)
+        remove.tap()
+        app.alerts.buttons["Elimina"].tap()
+        XCTAssertTrue(chip.waitForExistence(timeout: 5))
+        chip.press(forDuration: 1.2)
+        XCTAssertTrue(delete.waitForExistence(timeout: 3))
+        delete.tap()
+        XCTAssertTrue(waitForDisappearance(of: chip))
+    }
 }

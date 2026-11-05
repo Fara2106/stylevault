@@ -25,6 +25,8 @@ struct ItemFormView: View {
     @State private var librarySide = PhotoSide.front
     @State private var cameraSide: PhotoSide?
     @State private var isDiscardAsked = false
+    @State private var isNewCategoryAsked = false
+    @State private var newCategoryName = ""
 
     private let logger = Logger(subsystem: "it.faraoni.stylevault.nativa", category: "wardrobe")
 
@@ -63,6 +65,11 @@ struct ItemFormView: View {
         .alert("native.form.discard.title", isPresented: $isDiscardAsked) {
             Button("native.form.discard.keep", role: .cancel) {}
             Button("native.form.discard.confirm", role: .destructive) { dismiss() }
+        }
+        .alert("native.category.new", isPresented: $isNewCategoryAsked) {
+            TextField("native.category.name", text: $newCategoryName)
+            Button("common.cancel", role: .cancel) {}
+            Button("common.save", action: createCategory)
         }
         .photosPicker(isPresented: $isLibraryPresented, selection: $libraryPick, matching: .images)
         .onChange(of: libraryPick) { _, pick in
@@ -274,7 +281,22 @@ struct ItemFormView: View {
                     }
                     .accessibilityIdentifier("category-\(choice.id)")
                 }
+                Chip(text: Text("native.category.new"), isSelected: false) {
+                    newCategoryName = ""
+                    isNewCategoryAsked = true
+                }
+                .accessibilityIdentifier("category-new")
             }
+        }
+    }
+
+    private func createCategory() {
+        do {
+            if let category = try CustomCategoryStore.add(name: newCategoryName, in: context) {
+                model.selectCategory(category.id)
+            }
+        } catch {
+            logger.error("Categoria non salvata: \(error)")
         }
     }
 

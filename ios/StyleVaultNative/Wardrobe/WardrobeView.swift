@@ -16,6 +16,7 @@ struct WardrobeView: View {
 
     @State private var section = WardrobeSection.wardrobe
     @State private var filter = WardrobeFilter()
+    @State private var isCategoryInUse = false
 
     private let logger = Logger(subsystem: "it.faraoni.stylevault.nativa", category: "wardrobe")
     private let columns = [GridItem(.adaptive(minimum: 150), spacing: 12)]
@@ -29,13 +30,33 @@ struct WardrobeView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     header
-                    wardrobeContent
+                    if section == .wardrobe {
+                        wardrobeContent
+                    } else {
+                        WishlistSection { onAdd(.wishlist) }
+                    }
                 }
                 .padding(16)
             }
             .scrollDismissesKeyboard(.interactively)
             .background(Palette.bg)
             .toolbar(.hidden, for: .navigationBar)
+            .alert("native.category.inUse", isPresented: $isCategoryInUse) {
+                Button("common.close", role: .cancel) {}
+            }
+        }
+    }
+
+    private func deleteCategory(_ choice: CategoryChoice) {
+        guard let category = customCategories.first(where: { $0.id == choice.id }) else { return }
+        do {
+            if try CustomCategoryStore.delete(category, in: context) {
+                if filter.category == choice.id { filter.category = nil }
+            } else {
+                isCategoryInUse = true
+            }
+        } catch {
+            logger.error("Cancellazione della categoria non riuscita: \(error)")
         }
     }
 
@@ -68,7 +89,8 @@ struct WardrobeView: View {
 
     @ViewBuilder private var wardrobeContent: some View {
         toolbarRow
-        CategoryChips(selection: $filter.category, choices: CategoryChoice.all(custom: customCategories))
+        CategoryChips(selection: $filter.category, choices: CategoryChoice.all(custom: customCategories),
+                      onDelete: deleteCategory)
         if filtered.isEmpty {
             emptyState
         } else {
