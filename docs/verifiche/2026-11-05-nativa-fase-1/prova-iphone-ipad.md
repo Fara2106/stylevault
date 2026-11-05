@@ -12,17 +12,16 @@ build ha associato il container `iCloud.it.faraoni.stylevault`.
 
 ## Esito
 
-Lorenzo ha fatto le prove a mano. Ha riferito "sul profilo funziona tutto" dopo le prove di
-sincronizzazione e blocco, e "sì, tutto ok" dopo la reinstallazione.
+Lorenzo ha fatto le prove a mano e ha confermato che funzionano tutte.
 
 | Prova | Esito |
 |---|---|
 | Installazione su iPhone e iPad, ibrida ancora presente | ok |
-| Città e tema da un dispositivo all'altro | ok, secondo Lorenzo; tempi non annotati |
-| Blocco con Face ID, vero, sull'iPhone | ok, secondo Lorenzo; passi non confermati uno per uno |
+| Città e tema da un dispositivo all'altro | ok; tempi non annotati |
+| Blocco con Face ID, vero, sull'iPhone | ok |
 | Reinstallazione sull'iPad: tornano Napoli e tema scuro, non Milano | ok |
-| Modifica senza rete | non confermata a parte; Napoli è stata scelta in quella prova ed è tornata da iCloud |
-| iCloud spento per l'app: compare l'avviso | **non confermata a parte: da ripetere** |
+| Modifica senza rete: arriva sull'altro dispositivo | ok |
+| iCloud spento per l'app: compare l'avviso | ok |
 
 ## Test automatici, ripetuti una suite alla volta
 

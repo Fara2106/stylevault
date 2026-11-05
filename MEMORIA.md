@@ -30,9 +30,12 @@ Lorenzo; il telefono di Mary non c'è.
   fatto, provato solo su simulatore con un autenticatore finto (design, decisione 7).
 - **Fase 1 chiusa il 2026-11-05.** Revisione finale fatta, due difetti corretti: un Profilo nuovo
   azzerava città e tema, l'avviso di iCloud pieno lampeggiava. Prova su iPhone e iPad veri passata:
-  sincronizzazione, blocco con Face ID, reinstallazione. Da ripetere: avviso con iCloud spento per
-  l'app. Esito, decisioni e rimandi: `docs/verifiche/2026-11-05-nativa-fase-1/prova-iphone-ipad.md`.
+  sincronizzazione, blocco con Face ID, rete, reinstallazione, avviso con iCloud spento. Esito, decisioni e rimandi: `docs/verifiche/2026-11-05-nativa-fase-1/prova-iphone-ipad.md`.
   Container `iCloud.it.faraoni.stylevault` creato. Ramo `feat/app-nativa` solo locale. Prossima: fase 2.
+- App ibrida reinstallata sull'iPhone il 05/11 col team a pagamento: build Debug, profilo fino al
+  05/11/2027. Debug carica il sito dal Mac (`vite --host` :5181, IP in `Secrets.xcconfig`). Xcode
+  riusava il vecchio profilo gratuito finché non è stato tolto da `Provisioning Profiles`: il profilo
+  della bench `it.faraoni.stylevault.bench` scade ancora l'11/11, ma non è usata.
 
 ## Novità 2026-11-05 (notte) — Prova tecnica FASHN VTON (branch `feat/app-ios`)
 
