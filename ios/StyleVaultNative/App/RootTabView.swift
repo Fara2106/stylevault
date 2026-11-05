@@ -55,8 +55,7 @@ struct RootTabView: View {
         .tint(Palette.accent)
         .preferredColorScheme(ThemeStore.colorScheme(for: ProfileStore.survivor(of: profiles)?.theme ?? "system"))
         .sheet(isPresented: $router.isAddSheetPresented) {
-            // Lo riempie la fase 2.
-            Palette.bg.ignoresSafeArea().accessibilityIdentifier("add-sheet")
+            ItemFormView(mode: .add(router.addDestination))
         }
         .task(id: profiles.count) { _ = try? ProfileStore.current(in: context) }
     }
