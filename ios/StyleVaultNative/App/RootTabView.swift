@@ -48,7 +48,7 @@ struct RootTabView: View {
                 // Il + non ha una schermata: il foglio si apre da TabRouter.
                 Color.clear.tabItem { Label(LocalizedStringKey("nav.add"), systemImage: "plus.circle.fill") }.tag(AppTab.add)
                 placeholder("nav.calendar", .calendar, "calendar")
-                placeholder("nav.profile", .profile, "person")
+                ProfileView().tabItem { Label(LocalizedStringKey("nav.profile"), systemImage: "person") }.tag(AppTab.profile)
             }
         }
         .background(Palette.bg)

@@ -218,13 +218,23 @@ targets:
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES
+  StyleVaultNativeUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [StyleVaultNativeUITests]
+    dependencies:
+      - target: StyleVaultNative
+    settings:
+      base:
+        TEST_TARGET_NAME: StyleVaultNative
+        GENERATE_INFOPLIST_FILE: YES
 schemes:
   StyleVaultNative:
     build:
       targets:
         StyleVaultNative: all
     test:
-      targets: [StyleVaultNativeTests]
+      targets: [StyleVaultNativeTests, StyleVaultNativeUITests]
   RealisticBenchMac:
     build:
       targets:
