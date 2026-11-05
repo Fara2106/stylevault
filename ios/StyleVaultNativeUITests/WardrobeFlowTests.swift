@@ -69,6 +69,17 @@ final class WardrobeFlowTests: XCTestCase {
         XCTAssertTrue(label.waitForExistence(timeout: 3))
     }
 
+    func testSalvaPortaAlPrimoErrore() {
+        let app = launch(language: "it")
+        _ = openForm(app)
+        let save = app.buttons["item-save"]
+        scroll(app, to: save)
+        save.tap()
+        let visible = XCTNSPredicateExpectation(predicate: NSPredicate(format: "isHittable == true"),
+                                                object: app.textFields["item-name"])
+        XCTAssertEqual(XCTWaiter().wait(for: [visible], timeout: 3), .completed)
+    }
+
     // MARK: Lista e dettaglio
 
     private func scroll(_ app: XCUIApplication, to element: XCUIElement, down: Bool = true) {

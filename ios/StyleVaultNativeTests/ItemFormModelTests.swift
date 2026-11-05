@@ -30,6 +30,20 @@ private actor Gate {
         XCTAssertEqual(m.errors, [.name, .category])
     }
 
+    func testIlPrimoErroreSegueLOrdineDelModulo() {
+        let m = ItemFormModel(mode: .add(.wardrobe))
+        XCTAssertNil(m.firstError)
+        m.priceText = "abc"
+        _ = m.validatedValues()
+        XCTAssertEqual(m.firstError, .name)
+        m.name = "Giacca"
+        _ = m.validatedValues()
+        XCTAssertEqual(m.firstError, .category)
+        m.selectCategory("outerwear")
+        _ = m.validatedValues()
+        XCTAssertEqual(m.firstError, .price)
+    }
+
     func testSoloSpaziNonENome() {
         let m = filled()
         m.name = "   "

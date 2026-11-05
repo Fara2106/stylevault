@@ -27,6 +27,7 @@ struct ItemFormView: View {
     @State private var isDiscardAsked = false
     @State private var isNewCategoryAsked = false
     @State private var newCategoryName = ""
+    @State private var errorScrolls = 0
 
     private let logger = Logger(subsystem: "it.faraoni.stylevault.nativa", category: "wardrobe")
 
@@ -37,18 +38,24 @@ struct ItemFormView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    sourcePicker
-                    if model.showsLink { linkSource } else { photoSource }
-                    backPhoto
-                    details
-                    saveButton
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 24) {
+                        sourcePicker
+                        if model.showsLink { linkSource } else { photoSource }
+                        backPhoto
+                        details
+                        saveButton
+                    }
+                    .padding(16)
+                    // Su iPad il modulo resta centrato e non si allarga su tutto lo schermo.
+                    .frame(maxWidth: 600)
+                    .frame(maxWidth: .infinity)
                 }
-                .padding(16)
-                // Su iPad il modulo resta centrato e non si allarga su tutto lo schermo.
-                .frame(maxWidth: 600)
-                .frame(maxWidth: .infinity)
+                .onChange(of: errorScrolls) {
+                    guard let field = model.firstError else { return }
+                    withAnimation { proxy.scrollTo(field, anchor: .top) }
+                }
             }
             .scrollDismissesKeyboard(.interactively)
             .background { Palette.bg.ignoresSafeArea().accessibilityIdentifier("add-sheet") }
@@ -268,6 +275,7 @@ struct ItemFormView: View {
                 .accessibilityIdentifier("item-name")
             if model.errors.contains(.name) { errorText("addItem.nameRequired") }
         }
+        .id(FormField.name)
     }
 
     private var categoryPicker: some View {
@@ -288,6 +296,7 @@ struct ItemFormView: View {
                 .accessibilityIdentifier("category-new")
             }
         }
+        .id(FormField.category)
     }
 
     private func createCategory() {
@@ -397,6 +406,7 @@ struct ItemFormView: View {
                 .accessibilityIdentifier("item-price")
             if model.errors.contains(.price) { errorText("native.form.priceInvalid") }
         }
+        .id(FormField.price)
     }
 
     private var destinationPicker: some View {
@@ -452,7 +462,10 @@ struct ItemFormView: View {
     }
 
     private func save() {
-        guard let values = model.validatedValues() else { return }
+        guard let values = model.validatedValues() else {
+            errorScrolls += 1
+            return
+        }
         do {
             switch mode {
             case .edit(let item):

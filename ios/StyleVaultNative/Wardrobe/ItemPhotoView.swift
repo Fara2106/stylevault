@@ -2,14 +2,27 @@ import StyleVaultCore
 import SwiftUI
 import UIKit
 
-/// Le miniature già decodificate, per lato: la griglia non rilegge i JPEG a ogni scorrimento.
-@MainActor private enum PhotoCache {
+/// Le immagini già decodificate, per lato: la griglia non rilegge i JPEG a ogni scorrimento.
+@MainActor enum PhotoCache {
+    /// Per cache: una foto del dettaglio decodificata pesa 13 MB, una miniatura meno di uno.
+    private static let byteLimit = 100 * 1024 * 1024
     private static var caches: [Int: NSCache<NSData, UIImage>] = [:]
 
-    static func cache(maxSide: Int) -> NSCache<NSData, UIImage> {
+    static func image(for data: Data, maxSide: Int) -> UIImage? {
+        cache(maxSide: maxSide).object(forKey: data as NSData)
+    }
+
+    @discardableResult
+    static func store(_ image: CGImage, for data: Data, maxSide: Int) -> UIImage {
+        let result = UIImage(cgImage: image)
+        cache(maxSide: maxSide).setObject(result, forKey: data as NSData, cost: image.bytesPerRow * image.height)
+        return result
+    }
+
+    private static func cache(maxSide: Int) -> NSCache<NSData, UIImage> {
         if let cache = caches[maxSide] { return cache }
         let cache = NSCache<NSData, UIImage>()
-        cache.countLimit = 200
+        cache.totalCostLimit = byteLimit
         caches[maxSide] = cache
         return cache
     }
@@ -46,8 +59,7 @@ struct ItemPhotoView: View {
             image = nil
             return
         }
-        let cache = PhotoCache.cache(maxSide: maxSide)
-        if let cached = cache.object(forKey: data as NSData) {
+        if let cached = PhotoCache.image(for: data, maxSide: maxSide) {
             image = cached
             return
         }
@@ -58,8 +70,6 @@ struct ItemPhotoView: View {
             image = nil
             return
         }
-        let result = UIImage(cgImage: decoded)
-        cache.setObject(result, forKey: data as NSData)
-        image = result
+        image = PhotoCache.store(decoded, for: data, maxSide: side)
     }
 }

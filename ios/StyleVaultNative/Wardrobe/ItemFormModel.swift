@@ -46,6 +46,8 @@ enum LinkState: Equatable { case idle, loading, success, failure }
     var isProcessingPhoto: Bool { isFrontBusy || isBackBusy }
     var canSave: Bool { !isProcessingPhoto }
     var isDirty: Bool { snapshot != initial }
+    /// Il primo errore dall'alto: Salva sta in fondo al modulo e la persona va portata lì.
+    var firstError: FormField? { [FormField.name, .category, .price].first(where: errors.contains) }
 
     init(mode: ItemFormMode,
          prepare: @escaping @Sendable (Data) async -> Data? = { data in
