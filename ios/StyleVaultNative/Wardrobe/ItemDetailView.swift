@@ -169,7 +169,7 @@ struct ItemDetailView: View {
                 fact("addItem.occasion", Text(LocalizedStringKey(key)))
             }
             if (1...5).contains(item.warmthLevel) {
-                fact("addItem.warmth", Text(LocalizedStringKey("addItem.warmthLevels.\(item.warmthLevel)")))
+                fact("addItem.warmth", Text.warmth(item.warmthLevel))
             }
             if let price = item.price {
                 fact("addItem.price", Text(price, format: .currency(code: "EUR")))

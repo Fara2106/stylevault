@@ -61,6 +61,14 @@ final class WardrobeFlowTests: XCTestCase {
         XCTAssertEqual(app.textFields["item-name"].value as? String, "Camicia in lino")
     }
 
+    func testIlCaloreHaIlSuoNome() {
+        let app = launch(language: "it")
+        _ = openForm(app)
+        let label = anyText(app, "Medio-leggero")
+        scroll(app, to: app.buttons["item-save"])
+        XCTAssertTrue(label.waitForExistence(timeout: 3))
+    }
+
     // MARK: Lista e dettaglio
 
     private func scroll(_ app: XCUIApplication, to element: XCUIElement, down: Bool = true) {

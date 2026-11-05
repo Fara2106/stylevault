@@ -36,3 +36,12 @@ struct CategoryChoice: Identifiable, Equatable {
         all(custom: custom).first { $0.id == id }
     }
 }
+
+extension Text {
+    /// Il nome del livello di calore. La chiave passa da una `String`: scritta direttamente dentro
+    /// `LocalizedStringKey`, l'interpolazione cercherebbe `addItem.warmthLevels.%lld`.
+    static func warmth(_ level: Int) -> Text {
+        let key = "addItem.warmthLevels.\(level)"
+        return Text(LocalizedStringKey(key))
+    }
+}

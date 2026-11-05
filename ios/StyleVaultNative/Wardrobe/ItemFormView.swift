@@ -354,7 +354,7 @@ struct ItemFormView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 4) {
                 fieldLabel("addItem.warmth")
-                Text(LocalizedStringKey("addItem.warmthLevels.\(model.warmthLevel)"))
+                Text.warmth(model.warmthLevel)
                     .font(.caption)
                     .foregroundStyle(Palette.ink)
             }
@@ -368,7 +368,7 @@ struct ItemFormView: View {
                             .frame(width: 44, height: 44)
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel(Text(LocalizedStringKey("addItem.warmthLevels.\(level)")))
+                    .accessibilityLabel(Text.warmth(level))
                     .accessibilityAddTraits(model.warmthLevel == level ? .isSelected : [])
                 }
             }

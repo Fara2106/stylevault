@@ -75,6 +75,8 @@ struct CategoryChips: View {
             }
             .padding(.vertical, 1)
         }
+        // I chip arrivano al bordo dello schermo, non al margine della pagina.
+        .scrollClipDisabled()
     }
 
     @ViewBuilder private func chip(for choice: CategoryChoice) -> some View {
