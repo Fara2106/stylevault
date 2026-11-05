@@ -28,9 +28,11 @@ Lorenzo; il telefono di Mary non c'è.
   nativa, poi ha deciso di no: i dati restano su iCloud, personali, e su App Store ognuno ha
   già i suoi. Al loro posto un blocco facoltativo con Face ID nel Profilo: Task 10 del piano
   fatto, provato solo su simulatore con un autenticatore finto (design, decisione 7).
-- Revisione finale della fase 1 fatta, due difetti corretti: un Profilo nuovo azzerava città e
-  tema, l'avviso di iCloud pieno lampeggiava. Verdi a e252125+2 commit: nativa su simulatore
-  iPhone e iPad, Core, ibrida 138/138. Manca solo il Task 9 con Lorenzo, prima della fase 2.
+- **Fase 1 chiusa il 2026-11-05.** Revisione finale fatta, due difetti corretti: un Profilo nuovo
+  azzerava città e tema, l'avviso di iCloud pieno lampeggiava. Prova su iPhone e iPad veri passata:
+  sincronizzazione, blocco con Face ID, reinstallazione. Da ripetere: avviso con iCloud spento per
+  l'app. Esito, decisioni e rimandi: `docs/verifiche/2026-11-05-nativa-fase-1/prova-iphone-ipad.md`.
+  Container `iCloud.it.faraoni.stylevault` creato. Ramo `feat/app-nativa` solo locale. Prossima: fase 2.
 
 ## Novità 2026-11-05 (notte) — Prova tecnica FASHN VTON (branch `feat/app-ios`)
 
