@@ -7,26 +7,19 @@ struct StyleVaultNativeApp: App {
     private let container: ModelContainer
     @State private var syncMonitor: SyncMonitor
     @State private var appLock: AppLock
+    @State private var lockWindow: LockWindowController
+    @State private var wasInBackground = false
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
-        var preferred = StoreMode.cloud
         #if DEBUG
-        if ProcessInfo.processInfo.arguments.contains("-SVMemoryStore") { preferred = .memory }
+        let preferred: StoreMode = ProcessInfo.processInfo.arguments.contains("-SVMemoryStore") ? .memory : .cloud
+        #else
+        let preferred = StoreMode.cloud
         #endif
-        var lockDefaults = UserDefaults.standard
-        var authenticator: DeviceAuthenticating = SystemAuthenticator()
-        #if DEBUG
-        if ProcessInfo.processInfo.arguments.contains("-SVFakeLock") {
-            // Suite dedicata: il blocco non deve filtrare negli altri test UI.
-            let suite = "StyleVaultNativeFakeLock"
-            lockDefaults = UserDefaults(suiteName: suite) ?? lockDefaults
-            let reset = ProcessInfo.processInfo.arguments.contains("-SVFakeLockReset")
-            if reset { lockDefaults.removePersistentDomain(forName: suite) }
-            authenticator = FakeAuthenticator(cancelFirst: !reset)
-        }
-        #endif
-        _appLock = State(initialValue: AppLock(defaults: lockDefaults, authenticator: authenticator))
+        let lock = Self.makeAppLock()
+        _appLock = State(initialValue: lock)
+        _lockWindow = State(initialValue: LockWindowController(lock: lock))
         let opened = StoreFactory.open(preferred: preferred)
         let monitor = SyncMonitor(health: opened.health)
         container = opened.container
@@ -34,14 +27,41 @@ struct StyleVaultNativeApp: App {
         monitor.start()
     }
 
+    private static func makeAppLock() -> AppLock {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-SVFakeLock") {
+            // Suite dedicata: il blocco non deve filtrare negli altri test UI.
+            let suite = "StyleVaultNativeFakeLock"
+            let defaults = UserDefaults(suiteName: suite) ?? .standard
+            let reset = ProcessInfo.processInfo.arguments.contains("-SVFakeLockReset")
+            if reset { defaults.removePersistentDomain(forName: suite) }
+            return AppLock(defaults: defaults, authenticator: FakeAuthenticator(failingCall: reset ? 2 : 1))
+        }
+        #endif
+        return AppLock(defaults: .standard, authenticator: SystemAuthenticator())
+    }
+
     var body: some Scene {
         WindowGroup {
-            ZStack {
-                RootTabView(syncMonitor: syncMonitor)
-                if appLock.isLocked || appLock.isObscured { LockView() }
-            }
-            .environment(appLock)
-            .onChange(of: scenePhase) { _, phase in appLock.sceneDidChange(to: phase) }
+            let covered = appLock.isLocked || appLock.isObscured
+            RootTabView(syncMonitor: syncMonitor)
+                // Finché è coperto il contenuto non si vede, non si tocca e VoiceOver non lo legge.
+                // La vera LockView sta in una finestra propria (LockWindow), sopra anche ai fogli.
+                .overlay { if covered { Palette.bg.ignoresSafeArea() } }
+                .accessibilityHidden(covered)
+                .allowsHitTesting(!covered)
+                .background(WindowSceneReader { lockWindow.attach(to: $0) })
+                .environment(appLock)
+                .onChange(of: covered, initial: true) { _, value in lockWindow.setVisible(value) }
+                .onChange(of: scenePhase) { _, phase in
+                    appLock.sceneDidChange(to: phase)
+                    if phase == .background { wasInBackground = true }
+                    if phase == .active, wasInBackground {
+                        // Al ritorno dal background chiede lo sblocco; il foglio di Face ID passa da .inactive, non da qui.
+                        wasInBackground = false
+                        Task { await appLock.unlock(reason: String(localized: "native.lock.reason")) }
+                    }
+                }
         }
         .modelContainer(container)
     }

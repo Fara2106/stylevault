@@ -28,6 +28,8 @@ final class AppLock {
     @ObservationIgnored private let defaults: UserDefaults
     @ObservationIgnored private let authenticator: DeviceAuthenticating
     @ObservationIgnored private var isAuthenticating = false
+    /// Sale a ogni `.background`: un esito arrivato da una richiesta più vecchia non sblocca.
+    @ObservationIgnored private var generation = 0
 
     init(defaults: UserDefaults, authenticator: DeviceAuthenticating) {
         self.defaults = defaults
@@ -43,20 +45,22 @@ final class AppLock {
         if value && !canEnable { return }
         isAuthenticating = true
         defer { isAuthenticating = false }
+        let started = generation
         let outcome = await authenticator.authenticate(reason: reason)
         // Se il codice è sparito mentre si spegne, spegnere è l'unica via d'uscita sensata.
         guard outcome == .success || (outcome == .unavailable && !value) else { return }
         store(enabled: value)
-        isLocked = false
+        if started == generation { isLocked = false }
     }
 
     func unlock(reason: String) async {
         guard isLocked, !isAuthenticating else { return }
         isAuthenticating = true
         defer { isAuthenticating = false }
+        let started = generation
         switch await authenticator.authenticate(reason: reason) {
         case .success:
-            isLocked = false
+            if started == generation { isLocked = false }
         case .unavailable:
             // Mai chiudere la persona fuori dai suoi dati.
             store(enabled: false)
@@ -70,6 +74,7 @@ final class AppLock {
     /// e bloccare lì creerebbe un ciclo. Da `.inactive` si copre soltanto.
     func sceneDidChange(to phase: ScenePhase) {
         isObscured = isEnabled && phase != .active
+        if phase == .background { generation += 1 }
         if isEnabled && phase == .background { isLocked = true }
     }
 

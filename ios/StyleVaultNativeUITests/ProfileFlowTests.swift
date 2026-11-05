@@ -53,6 +53,30 @@ final class ProfileFlowTests: XCTestCase {
         XCTAssertTrue(tab(second, "Profilo").waitForExistence(timeout: 5))
         XCTAssertFalse(second.descendants(matching: .any)["lock-screen"].exists)
     }
+    /// Il foglio Aggiungi sta sopra la finestra principale: il blocco deve coprirlo senza chiuderlo (le bozze restano).
+    func testIlBloccoCopreIlFoglioAggiungi() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-SVMemoryStore", "-SVFakeLock", "-SVFakeLockReset", "-AppleLanguages", "(it)"]
+        app.launch()
+        tab(app, "Profilo").tap()
+        let toggle = app.switches["lock-toggle"]
+        XCTAssertTrue(toggle.waitForExistence(timeout: 5))
+        toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        let on = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == '1'"), object: toggle)
+        XCTAssertEqual(XCTWaiter().wait(for: [on], timeout: 5), .completed)
+        tab(app, "Aggiungi").tap()
+        let sheet = app.otherElements["add-sheet"]
+        XCTAssertTrue(sheet.waitForExistence(timeout: 3))
+
+        XCUIDevice.shared.press(.home)
+        app.activate()
+        let lock = app.descendants(matching: .any)["lock-screen"]
+        XCTAssertTrue(lock.waitForExistence(timeout: 5))
+        XCTAssertTrue(lock.isHittable)
+        app.buttons["Sblocca"].tap()
+        XCTAssertTrue(waitForDisappearance(of: lock))
+        XCTAssertTrue(sheet.exists, "Il foglio non va chiuso dal blocco")
+    }
     private func launch(language: String) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = ["-SVMemoryStore", "-AppleLanguages", "(\(language))"]

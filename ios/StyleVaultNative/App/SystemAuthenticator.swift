@@ -8,16 +8,14 @@ struct SystemAuthenticator: DeviceAuthenticating {
     }
 
     func authenticate(reason: String) async -> AuthOutcome {
+        var error: NSError?
+        guard LAContext().canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else { return .unavailable }
         do {
             let ok = try await LAContext().evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason)
             return ok ? .success : .failed
         } catch let error as LAError {
-            switch error.code {
-            case .passcodeNotSet, .biometryNotAvailable, .biometryNotEnrolled:
-                return .unavailable
-            default:
-                return .failed // annullata, non riconosciuto, ecc.
-            }
+            // Il codice del dispositivo c'è sempre: tutto il resto (annullata, non riconosciuto...) è un semplice fallimento.
+            return error.code == .passcodeNotSet ? .unavailable : .failed
         } catch {
             return .failed
         }
@@ -25,15 +23,17 @@ struct SystemAuthenticator: DeviceAuthenticating {
 }
 
 #if DEBUG
-/// Per i test UI: il simulatore non ha Face ID registrato. Riesce sempre; con `cancelFirst` la prima richiesta
-/// è "annullata", come se la persona chiudesse il foglio: resta la schermata di blocco col tasto Sblocca.
+/// Per i test UI: il simulatore non ha Face ID registrato. Riesce sempre tranne una richiesta, "annullata"
+/// come se la persona chiudesse il foglio: così resta la schermata di blocco col tasto Sblocca.
 final class FakeAuthenticator: DeviceAuthenticating {
-    private var cancelNext: Bool
-    init(cancelFirst: Bool) { cancelNext = cancelFirst }
+    private let failingCall: Int
+    private var calls = 0
+    /// Fallisce (come un foglio annullato) la richiesta numero `failingCall`; le altre riescono.
+    init(failingCall: Int) { self.failingCall = failingCall }
     var isAvailable: Bool { true }
     func authenticate(reason: String) async -> AuthOutcome {
-        if cancelNext { cancelNext = false; return .failed }
-        return .success
+        calls += 1
+        return calls == failingCall ? .failed : .success
     }
 }
 #endif

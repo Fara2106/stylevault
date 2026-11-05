@@ -3,8 +3,6 @@ import SwiftUI
 /// Copre tutta la finestra quando l'app è bloccata o nascosta (selettore delle app).
 struct LockView: View {
     @Environment(AppLock.self) private var lock
-    @Environment(\.scenePhase) private var phase
-    @State private var wasInBackground = false
 
     var body: some View {
         ZStack {
@@ -22,15 +20,8 @@ struct LockView: View {
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("lock-screen")
         // Una sola richiesta quando compare: se la persona annulla resta il tasto Sblocca.
-        .task(id: lock.isLocked) { if lock.isLocked { await unlock() } }
-        // Al ritorno dal background chiede di nuovo. Il foglio di Face ID passa da .inactive e non da qui.
-        .onChange(of: phase) { _, new in
-            if new == .background { wasInBackground = true }
-            if new == .active, wasInBackground {
-                wasInBackground = false
-                if lock.isLocked { Task { await unlock() } }
-            }
-        }
+        // Al ritorno dal background la chiede l'App (qui la scena della finestra non segue quella dell'app).
+        .task { if lock.isLocked { await unlock() } }
     }
 
     private func unlock() async {

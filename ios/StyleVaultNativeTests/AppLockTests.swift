@@ -157,6 +157,20 @@ final class AppLockTests: XCTestCase {
         XCTAssertFalse(lock.isLocked)
     }
 
+    func testUnSuccessArrivatoDopoIlBackgroundNonSblocca() async {
+        let lock = await enabledLock()
+        lock.sceneDidChange(to: .background)
+        lock.sceneDidChange(to: .active)
+        let before = auth.calls
+        auth.holds = true
+        let pending = Task { await lock.unlock(reason: "r") }
+        while auth.calls == before { await Task.yield() }
+        lock.sceneDidChange(to: .background) // mentre il foglio è ancora aperto
+        auth.release()
+        await pending.value
+        XCTAssertTrue(lock.isLocked, "Un'autenticazione partita prima del background non deve sbloccare dopo")
+    }
+
     func testLaSceltaSopravviveAlRiavvio() async {
         _ = await enabledLock()
         let reopened = makeLock()
