@@ -33,3 +33,6 @@ ios/build/
 tools/avatar-realistico/out/
 ios/RealisticBench/Models/
 __pycache__/
+
+# Prova tecnica FASHN VTON: uscite e modelli convertiti
+tools/avatar-fashn/out/

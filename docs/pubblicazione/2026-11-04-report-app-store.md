@@ -42,6 +42,12 @@ Restano validi il Privacy Manifest, la crittografia e le versioni.
      - (b) chiedere un permesso scritto ad AImageLab (Università di Modena e Reggio Emilia) e agli autori di Mobile-VTON;
      - (c) un modello addestrato su dati con licenza commerciale.
    - Consiglio (a) subito e (b) in parallelo. Con (a) spariscono dalla prima versione anche il download da 1,3 GB, l'entitlement di memoria e buona parte delle protezioni IA della fase 6.
+   - **Aggiornamento del 05/11: un candidato per (c) è FASHN VTON v1.5.**
+     - Codice e pesi sono Apache 2.0 e il modello è stato addestrato da zero, ma l'origine dei 18 milioni di coppie di addestramento non è dichiarata. Licenza commerciale non significa dati verificati: va chiesta a FASHN prima di pubblicare.
+     - Il suo parser ha una licenza solo ricerca ed è escluso: senza maschere non serve.
+     - Provato sul Mac M1 Pro: 3 min 40 s a immagine in Core ML sulla GPU, 704 MB a 6 bit, 38,3 dB rispetto al modello fp16. Il capo è giusto, i dettagli fini meno.
+     - **Non provato su iPhone e iPad.** Richiede 59 passaggi contro i 10 passi di Mobile-VTON, e le pose non sono ancora portate sul dispositivo. Dati in `tools/avatar-fashn/README.md`.
+     - Il consiglio non cambia: (a) per la prima versione. FASHN entra solo se la misura sul telefono e la risposta sui dati vanno bene.
 2. **[2.5.19 e 2.1] Import dei dati di oggi**
    - Le due strade del design non vanno nella versione inviata:
      - "Accedi per portare qui i tuoi dati": un login Supabase che il revisore non può usare, e che riporta i problemi dell'account demo e della cancellazione;

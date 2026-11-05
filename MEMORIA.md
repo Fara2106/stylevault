@@ -3,6 +3,23 @@
 > File di ripartenza: se apri una nuova chat, leggi questo file per riprendere il lavoro
 > esattamente da dove eravamo. Va aggiornato a ogni avanzamento significativo.
 
+## Novità 2026-11-05 (notte) — Prova tecnica FASHN VTON (branch `feat/app-ios`)
+
+Lorenzo ha chiesto un modello locale open source al posto di Mobile-VTON, i cui
+dati di addestramento sono solo ricerca. Candidato: **FASHN VTON v1.5**, Apache
+2.0, 972 milioni di parametri, origine dei dati di addestramento NON dichiarata.
+Parser escluso (licenza solo ricerca), non serve senza maschere.
+- **Sul Mac M1 Pro funziona**: Core ML GPU, 30 passi (59 passaggi), fp16 1,8 GB
+  in 3 min 40 s; 6 bit 704 MB in 4 min 26 s con Mac occupato, 38,3 dB dal fp16.
+  Capo giusto; trecce irregolari, logo perso, trama leggera nel fondo a 6 bit.
+- **NON provato su iPhone e iPad**: tempi e memoria ignoti. DWPose non convertito:
+  le pose della prova vengono dal Mac. Manca il PSNR contro PyTorch (`guard.sh` lo
+  ha fermato per lo swap).
+- Tutto in `tools/avatar-fashn/` (README con numeri e confronto). Pesi e modelli
+  fuori da git, nello scratchpad e in `out/`: un riavvio cancella lo scratchpad.
+- **Sempre con `guard.sh`**: una generazione senza limiti ha fatto riavviare il Mac.
+- Il consiglio resta: prima versione senza avatar realistico. Decide Lorenzo.
+
 ## Novità 2026-11-03 (sera tardi) — FEEDBACK per email (branch `feat/app-ios`)
 
 Richiesta di Lorenzo: sezione dove gli utenti segnalano difetti o idee, che
