@@ -63,6 +63,24 @@ final class SyncMonitorTests: XCTestCase {
     }
 
     @MainActor
+    func testEventoPrimaDellAccountNonFaLampeggiare() {
+        let monitor = SyncMonitor(health: .cloud)
+        monitor.record(succeeded: true, error: nil)
+        XCTAssertEqual(monitor.state, .active)
+        monitor.record(succeeded: false, error: CKError(.quotaExceeded))
+        XCTAssertEqual(monitor.state, .active)
+        monitor.apply(account: .available)
+        XCTAssertEqual(monitor.state, .unavailable)
+    }
+
+    @MainActor
+    func testAccountNonDisponibileDopoLaRisposta() {
+        let monitor = SyncMonitor(health: .cloud)
+        monitor.apply(account: .noAccount)
+        XCTAssertEqual(monitor.state, .unavailable)
+    }
+
+    @MainActor
     func testMonitorTemporaneoNonContattaCloudKit() {
         let monitor = SyncMonitor(health: .temporary)
         monitor.start()

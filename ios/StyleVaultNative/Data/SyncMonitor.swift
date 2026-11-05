@@ -38,7 +38,7 @@ final class SyncMonitor {
     private(set) var state: SyncState
 
     @ObservationIgnored private let health: StoreHealth
-    @ObservationIgnored private var account: CKAccountStatus = .couldNotDetermine
+    @ObservationIgnored private var account: CKAccountStatus?  // nil = non ancora noto
     @ObservationIgnored private var lastError: Error?
     @ObservationIgnored private var observers: [NSObjectProtocol] = []
 
@@ -76,19 +76,26 @@ final class SyncMonitor {
 
     private func refreshAccount() async {
         do {
-            account = try await CKContainer(identifier: StoreFactory.containerID).accountStatus()
+            apply(account: try await CKContainer(identifier: StoreFactory.containerID).accountStatus())
         } catch {
-            account = .couldNotDetermine
+            apply(account: .couldNotDetermine)
         }
+    }
+
+    /// Internal per i test: applica la risposta di `accountStatus()` senza CloudKit.
+    func apply(account status: CKAccountStatus) {
+        account = status
         recompute()
     }
 
-    private func record(succeeded: Bool, error: Error?) {
+    func record(succeeded: Bool, error: Error?) {
         lastError = succeeded ? nil : error
         recompute()
     }
 
     private func recompute() {
+        // Finché l'account non è noto lo stato resta quello iniziale (niente lampo dell'avviso).
+        guard let account else { return }
         state = SyncRules.state(health: health, account: account, lastError: lastError)
     }
 }
