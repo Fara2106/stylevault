@@ -3,6 +3,19 @@
 > File di ripartenza: se apri una nuova chat, leggi questo file per riprendere il lavoro
 > esattamente da dove eravamo. Va aggiornato a ogni avanzamento significativo.
 
+## Novità 2026-11-05 (sera) — Nativa, fase 2 Guardaroba (ramo `feat/app-nativa`, solo locale)
+
+Piano: `docs/superpowers/plans/2026-11-05-app-nativa-fase-2.md`, eseguito in sessione, senza subagent.
+- Fatti Task 1-9: filtri, prezzo, testi dei link, foto e scontorno in `StyleVaultCore`; `WardrobeStore`,
+  `CustomCategoryStore`, `CutoutWorker`; modulo con foto e link; lista, dettaglio, wishlist, categorie
+  personalizzate. Viste in `ios/StyleVaultNative/Wardrobe/`.
+- **Manca il Task 10, la prova con Lorenzo su iPhone e iPad.** Lo scontorno gira solo su dispositivo
+  (Vision non va nel simulatore), e fotocamera, link veri e foto su iCloud non sono mai stati provati.
+- Spostati: doppioni di `BodyPhoto` e tasto "Prova outfit" alla fase 6, `setArmocromia` alla fase 5,
+  scheda di uso del capo alla fase 4. Il piano spiega perché.
+- Attenzione: `LocalizedStringKey("testo.\(x)")` cerca la chiave con `%lld`, non quella col valore.
+  La chiave va costruita prima in una `String` (vedi `Text.warmth`).
+
 ## Novità 2026-11-05 — Apple Developer Program ATTIVO
 
 Lorenzo è stato accettato: programma Individuale, Team ID `599MS2BZ63` (lo stesso

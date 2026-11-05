@@ -234,7 +234,15 @@ final class WardrobeFlowTests: XCTestCase {
         XCTAssertTrue(field.waitForExistence(timeout: 3))
         field.typeText(name)
         // Per coordinate: a volte XCUITest prende l'avviso per un'interruzione e preme Annulla da solo.
-        app.alerts.buttons["Salva"].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        // Si ripete perché un tocco durante l'animazione della tastiera va a vuoto.
+        let alert = app.alerts.firstMatch
+        var tries = 0
+        while alert.exists, tries < 4 {
+            app.alerts.buttons["Salva"].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+            _ = waitForDisappearance(of: alert)
+            tries += 1
+        }
+        XCTAssertFalse(alert.exists)
     }
 
     private func addItemInNewCategory(_ app: XCUIApplication, item: String, category: String) {
