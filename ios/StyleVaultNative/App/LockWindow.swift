@@ -1,3 +1,4 @@
+import SwiftData
 import SwiftUI
 import UIKit
 
@@ -5,41 +6,59 @@ import UIKit
 /// qualunque presentazione modale senza chiuderla, e le bozze non si perdono.
 @MainActor
 final class LockWindowController {
-    private let lock: AppLock
-    private weak var scene: UIWindowScene?
-    private var window: UIWindow?
-    private var wantsVisible = false
+    private let placement: LockWindowPlacement<UIWindowScene, UIWindow>
+    private var style = UIUserInterfaceStyle.unspecified
 
-    init(lock: AppLock) { self.lock = lock }
+    init(lock: AppLock) {
+        placement = LockWindowPlacement(
+            make: { scene in
+                let window = UIWindow(windowScene: scene)
+                window.windowLevel = UIWindow.Level.alert + 1
+                // Una vista nuova a ogni comparsa: la richiesta di sblocco parte una volta sola.
+                let host = UIHostingController(rootView: LockView().environment(lock))
+                // VoiceOver non deve raggiungere il contenuto (né il foglio) dietro il blocco.
+                host.view.accessibilityViewIsModal = true
+                window.rootViewController = host
+                window.makeKeyAndVisible()
+                return window
+            },
+            dismiss: { window in
+                window.isHidden = true
+                window.rootViewController = nil
+                // Tastiera e fuoco tornano alla finestra principale.
+                window.windowScene?.windows.first { !$0.isHidden && $0 !== window }?.makeKey()
+            }
+        )
+    }
 
     func attach(to scene: UIWindowScene) {
-        guard self.scene !== scene else { return }
-        self.scene = scene
-        apply()
+        placement.attach(to: scene)
+        placement.window?.overrideUserInterfaceStyle = style
     }
 
     func setVisible(_ visible: Bool) {
-        wantsVisible = visible
-        apply()
+        placement.setVisible(visible)
+        placement.window?.overrideUserInterfaceStyle = style
     }
 
-    private func apply() {
-        guard let scene else { return }
-        if wantsVisible {
-            guard window == nil else { return }
-            let lockWindow = UIWindow(windowScene: scene)
-            lockWindow.windowLevel = UIWindow.Level.alert + 1
-            // Una vista nuova a ogni comparsa: la richiesta di sblocco parte una volta sola.
-            lockWindow.rootViewController = UIHostingController(rootView: LockView().environment(lock))
-            lockWindow.makeKeyAndVisible()
-            window = lockWindow
-        } else if let lockWindow = window {
-            lockWindow.isHidden = true
-            lockWindow.rootViewController = nil
-            window = nil
-            // Tastiera e fuoco tornano alla finestra principale.
-            scene.windows.first { !$0.isHidden }?.makeKey()
-        }
+    /// Segue il tema scelto nel Profilo; con "system" resta `.unspecified`.
+    func setStyle(_ newStyle: UIUserInterfaceStyle) {
+        style = newStyle
+        placement.window?.overrideUserInterfaceStyle = newStyle
+    }
+}
+
+/// Legge il tema dal Profilo (serve il contesto di SwiftData) e lo passa alla finestra del blocco.
+struct LockThemeSync: View {
+    let controller: LockWindowController
+    @Query private var profiles: [Profile]
+
+    var body: some View {
+        let scheme = ThemeStore.colorScheme(for: ProfileStore.survivor(of: profiles)?.theme ?? "system")
+        Color.clear
+            .onChange(of: scheme, initial: true) { _, value in
+                controller.setStyle(value == .dark ? .dark : value == .light ? .light : .unspecified)
+            }
     }
 }
 

@@ -51,6 +51,7 @@ struct StyleVaultNativeApp: App {
                 .accessibilityHidden(covered)
                 .allowsHitTesting(!covered)
                 .background(WindowSceneReader { lockWindow.attach(to: $0) })
+                .background(LockThemeSync(controller: lockWindow))
                 .environment(appLock)
                 .onChange(of: covered, initial: true) { _, value in lockWindow.setVisible(value) }
                 .onChange(of: scenePhase) { _, phase in
