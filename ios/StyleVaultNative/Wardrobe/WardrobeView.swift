@@ -18,6 +18,7 @@ struct WardrobeView: View {
     @State private var filter = WardrobeFilter()
     @State private var isCategoryInUse = false
 
+    @Environment(\.horizontalSizeClass) private var sizeClass
     private let logger = Logger(subsystem: "it.faraoni.stylevault.nativa", category: "wardrobe")
     private let columns = [GridItem(.adaptive(minimum: 150), spacing: 12)]
 
@@ -40,7 +41,9 @@ struct WardrobeView: View {
             }
             .scrollDismissesKeyboard(.interactively)
             .background(Palette.bg)
-            .toolbar(.hidden, for: .navigationBar)
+            // Su iPad le tab stanno nella fascia della barra: nasconderla fa salire la pagina sotto di loro
+            // quando si torna dal dettaglio.
+            .toolbar(sizeClass == .regular ? .automatic : .hidden, for: .navigationBar)
             .alert("native.category.inUse", isPresented: $isCategoryInUse) {
                 Button("common.close", role: .cancel) {}
             }
@@ -124,8 +127,7 @@ struct WardrobeView: View {
             if items.isEmpty {
                 Text("wardrobe.emptyState").font(.headline).foregroundStyle(Palette.ink)
                 Button("wardrobe.emptyAction") { onAdd(.wardrobe) }
-                    .buttonStyle(.borderedProminent)
-                    .tint(Palette.ink)
+                    .buttonStyle(InkButtonStyle())
                     .accessibilityIdentifier("wardrobe-empty-add")
             } else {
                 Text("common.noResults").font(.headline).foregroundStyle(Palette.ink)
@@ -145,7 +147,7 @@ struct WardrobeView: View {
             }
             .buttonStyle(.plain)
             .accessibilityIdentifier("item-card")
-            FavoriteButton(isFavorite: item.favorite, id: "item-card-favorite") {
+            FavoriteButton(isFavorite: item.favorite, id: "item-card-favorite", onPhoto: true) {
                 do {
                     try WardrobeStore.toggleFavorite(item, in: context)
                 } catch {

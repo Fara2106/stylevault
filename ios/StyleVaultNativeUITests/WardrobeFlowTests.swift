@@ -80,14 +80,44 @@ final class WardrobeFlowTests: XCTestCase {
         XCTAssertEqual(XCTWaiter().wait(for: [visible], timeout: 3), .completed)
     }
 
+    func testIlPrezzoRestaSopraLaTastiera() {
+        let app = launch(language: "it")
+        _ = openForm(app)
+        let price = app.textFields["item-price"]
+        scroll(app, to: price)
+        price.tap()
+        let keyboard = app.keyboards.firstMatch
+        XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
+        // Si misura a tastiera ferma: mentre sale il suo bordo è ancora in fondo allo schermo.
+        var edge = keyboard.frame.minY
+        var settled = false
+        for _ in 0..<20 {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.25))
+            settled = keyboard.frame.minY == edge && keyboard.frame.maxY > 0
+            edge = keyboard.frame.minY
+            if settled { break }
+        }
+        XCTAssertTrue(settled)
+        price.typeText("12,50")
+        RunLoop.current.run(until: Date().addingTimeInterval(1))
+        XCTAssertLessThanOrEqual(price.frame.maxY, keyboard.frame.minY)
+    }
+
     // MARK: Lista e dettaglio
 
     private func scroll(_ app: XCUIApplication, to element: XCUIElement, down: Bool = true) {
         var tries = 0
-        while !element.isHittable, tries < 12 {
+        while !isReachable(app, element), tries < 12 {
             if down { app.swipeUp() } else { app.swipeDown() }
             tries += 1
         }
+    }
+
+    /// `isHittable` dice sì anche a un elemento sotto la tastiera o oltre il bordo dello schermo.
+    private func isReachable(_ app: XCUIApplication, _ element: XCUIElement) -> Bool {
+        guard element.isHittable else { return false }
+        let keyboard = app.keyboards.firstMatch
+        return element.frame.maxY <= (keyboard.exists ? keyboard.frame.minY : app.frame.maxY)
     }
 
     private func addItem(_ app: XCUIApplication, name: String, category: String, wishlist: Bool = false) {
@@ -156,6 +186,22 @@ final class WardrobeFlowTests: XCTestCase {
         XCTAssertTrue(confirm.waitForExistence(timeout: 3))
         confirm.tap()
         XCTAssertTrue(anyText(app, "Il tuo guardaroba è vuoto").waitForExistence(timeout: 5))
+    }
+
+    func testIlTitoloRestaAlSuoPostoTornandoDalDettaglio() {
+        let app = launch(language: "it")
+        addItem(app, name: "Maglione", category: "tops")
+        let title = anyText(app, "Il Mio Guardaroba")
+        XCTAssertTrue(title.waitForExistence(timeout: 5))
+        RunLoop.current.run(until: Date().addingTimeInterval(1))
+        let top = title.frame.minY
+        cards(app).firstMatch.tap()
+        let back = app.navigationBars.buttons.firstMatch
+        XCTAssertTrue(back.waitForExistence(timeout: 5))
+        back.tap()
+        XCTAssertTrue(title.waitForExistence(timeout: 5))
+        RunLoop.current.run(until: Date().addingTimeInterval(1))
+        XCTAssertEqual(title.frame.minY, top, accuracy: 1)
     }
 
     func testFiltriERicerca() {

@@ -4,6 +4,9 @@ import StyleVaultCore
 import SwiftData
 import SwiftUI
 
+/// I campi di testo in fondo al modulo, quelli che la tastiera può coprire.
+private enum BottomField: Hashable { case brand, size, price }
+
 private enum PhotoSide: Identifiable {
     case front, back
     var id: Self { self }
@@ -28,8 +31,10 @@ struct ItemFormView: View {
     @State private var isNewCategoryAsked = false
     @State private var newCategoryName = ""
     @State private var errorScrolls = 0
+    @FocusState private var bottomField: BottomField?
 
     private let logger = Logger(subsystem: "it.faraoni.stylevault.nativa", category: "wardrobe")
+    private static let keyboardRoom: CGFloat = 320
 
     @MainActor init(mode: ItemFormMode) {
         self.mode = mode
@@ -48,6 +53,9 @@ struct ItemFormView: View {
                         saveButton
                     }
                     .padding(16)
+                    // Il fine corsa dello scorrimento non conta la tastiera: senza questo spazio il primo
+                    // carattere riporta il modulo indietro e i campi in fondo finiscono sotto i tasti.
+                    .padding(.bottom, bottomField == nil ? 0 : Self.keyboardRoom)
                     // Su iPad il modulo resta centrato e non si allarga su tutto lo schermo.
                     .frame(maxWidth: 600)
                     .frame(maxWidth: .infinity)
@@ -388,11 +396,15 @@ struct ItemFormView: View {
         HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 6) {
                 fieldLabel("addItem.brand")
-                TextField("", text: $model.brand).textFieldStyle(.roundedBorder)
+                TextField("", text: $model.brand)
+                    .textFieldStyle(.roundedBorder)
+                    .focused($bottomField, equals: .brand)
             }
             VStack(alignment: .leading, spacing: 6) {
                 fieldLabel("addItem.size")
-                TextField("", text: $model.size).textFieldStyle(.roundedBorder)
+                TextField("", text: $model.size)
+                    .textFieldStyle(.roundedBorder)
+                    .focused($bottomField, equals: .size)
             }
         }
     }
@@ -403,6 +415,7 @@ struct ItemFormView: View {
             TextField("common.optional", text: $model.priceText)
                 .keyboardType(.decimalPad)
                 .textFieldStyle(.roundedBorder)
+                .focused($bottomField, equals: .price)
                 .accessibilityIdentifier("item-price")
             if model.errors.contains(.price) { errorText("native.form.priceInvalid") }
         }

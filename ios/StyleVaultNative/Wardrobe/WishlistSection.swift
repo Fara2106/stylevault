@@ -19,8 +19,7 @@ struct WishlistSection: View {
             VStack(spacing: 12) {
                 Text("wishlist.emptyState").font(.headline).foregroundStyle(Palette.ink)
                 Button("wishlist.emptyAction", action: onAdd)
-                    .buttonStyle(.borderedProminent)
-                    .tint(Palette.ink)
+                    .buttonStyle(InkButtonStyle())
                     .accessibilityIdentifier("wishlist-empty-add")
             }
             .frame(maxWidth: .infinity)

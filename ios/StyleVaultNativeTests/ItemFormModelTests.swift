@@ -44,6 +44,19 @@ private actor Gate {
         XCTAssertEqual(m.firstError, .price)
     }
 
+    func testLErroreSparisceQuandoSiCorreggeIlCampo() {
+        let m = ItemFormModel(mode: .add(.wardrobe))
+        m.priceText = "abc"
+        _ = m.validatedValues()
+        XCTAssertEqual(m.errors, [.name, .category, .price])
+        m.name = "Giacca"
+        XCTAssertEqual(m.errors, [.category, .price])
+        m.selectCategory("outerwear")
+        XCTAssertEqual(m.errors, [.price])
+        m.priceText = "12"
+        XCTAssertEqual(m.errors, [])
+    }
+
     func testSoloSpaziNonENome() {
         let m = filled()
         m.name = "   "

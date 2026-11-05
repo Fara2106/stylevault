@@ -13,7 +13,7 @@ enum LinkState: Equatable { case idle, loading, success, failure }
 
 /// Lo stato del modulo di aggiunta e modifica, come src/pages/AddItemPage/AddItemPage.jsx.
 @MainActor @Observable final class ItemFormModel {
-    var name = ""
+    var name = "" { didSet { errors.remove(.name) } }
     private(set) var category = ""
     var subcategory: String?
     var brand = ""
@@ -22,7 +22,7 @@ enum LinkState: Equatable { case idle, loading, success, failure }
     var season = "all"
     var occasion = "casual"
     var warmthLevel = 2
-    var priceText = ""
+    var priceText = "" { didSet { errors.remove(.price) } }
     var linkText = ""
     var destination: AddDestination = .wardrobe
     var showsLink = false
@@ -68,6 +68,7 @@ enum LinkState: Equatable { case idle, loading, success, failure }
     func selectCategory(_ id: String) {
         category = id
         subcategory = nil
+        errors.remove(.category)
     }
 
     func toggleColor(_ id: String) {

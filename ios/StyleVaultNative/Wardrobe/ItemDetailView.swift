@@ -98,10 +98,12 @@ struct ItemDetailView: View {
             }
         }
         .tabViewStyle(.page(indexDisplayMode: pages.count > 1 ? .always : .never))
+        // I pallini sono bianchi: senza fondo spariscono sulle foto chiare e il retro non si trova.
+        .indexViewStyle(.page(backgroundDisplayMode: .always))
         .frame(height: sizeClass == .regular ? 560 : 420)
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .overlay(alignment: .topTrailing) {
-            FavoriteButton(isFavorite: item.favorite, id: "detail-favorite") {
+            FavoriteButton(isFavorite: item.favorite, id: "detail-favorite", onPhoto: true) {
                 perform { try WardrobeStore.toggleFavorite(item, in: context) }
             }
         }

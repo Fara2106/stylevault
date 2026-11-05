@@ -39,12 +39,17 @@ struct ItemCard: View {
 struct FavoriteButton: View {
     let isFavorite: Bool
     let id: String
+    /// Sopra una foto serve il suo fondo, come sul sito: le foto dei negozi sono spesso chiarissime.
+    var onPhoto = false
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             Image(systemName: isFavorite ? "heart.fill" : "heart")
                 .foregroundStyle(isFavorite ? Palette.danger : Palette.ink)
+                .background {
+                    if onPhoto { Circle().fill(Palette.bg.opacity(0.85)).frame(width: 32, height: 32) }
+                }
                 .frame(width: 44, height: 44)
                 // Con lo stile plain conta solo il disegno: il centro del cuore vuoto non si toccherebbe.
                 .contentShape(Rectangle())

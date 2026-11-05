@@ -38,6 +38,19 @@ struct FlowLayout: Layout {
     }
 }
 
+/// Il tasto pieno. `.borderedProminent` scrive sempre in bianco: col tema scuro, dove l'inchiostro
+/// è chiaro, il testo sparirebbe.
+struct InkButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .padding(.horizontal, 18)
+            .padding(.vertical, 10)
+            .foregroundStyle(Palette.bg)
+            .background(Palette.ink, in: Capsule())
+            .opacity(configuration.isPressed ? 0.7 : 1)
+    }
+}
+
 struct Chip: View {
     let text: Text
     let isSelected: Bool
