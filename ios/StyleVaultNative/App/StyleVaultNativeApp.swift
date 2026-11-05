@@ -14,6 +14,7 @@ struct StyleVaultNativeApp: App {
 
     init() {
         #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-SVInitCloudSchema") { CloudSchema.initialize() }
         let preferred: StoreMode = ProcessInfo.processInfo.arguments.contains("-SVMemoryStore") ? .memory : .cloud
         #else
         let preferred = StoreMode.cloud

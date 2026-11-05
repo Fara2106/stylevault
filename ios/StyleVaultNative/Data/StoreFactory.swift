@@ -13,11 +13,13 @@ struct OpenedStore {
 enum StoreFactory {
     static let containerID = "iCloud.it.faraoni.stylevault"
 
-    static let schema = Schema([
+    static let models: [any PersistentModel.Type] = [
         Item.self, Outfit.self, CalendarEntry.self,
         WishlistItem.self, Profile.self, BodyPhoto.self,
         CustomCategory.self,
-    ])
+    ]
+
+    static let schema = Schema(models)
 
     static func build(_ mode: StoreMode, url: URL? = nil) throws -> ModelContainer {
         let configuration: ModelConfiguration

@@ -23,6 +23,11 @@ Piano: `docs/superpowers/plans/2026-11-05-app-nativa-fase-2.md`, eseguito in ses
   motivazione. Il nome sulla schermata è ancora "SV Nativa".
 - `testBloccoConAutenticatoreFinto` è fallito 3 volte su iPad col Mac saturo, poi 20 su 20: causa non
   provata. Guardare se l'interruttore del blocco perde un tocco.
+- TestFlight per Mary: archivio pronto in `ios/build/StyleVaultNative.xcarchive`, firmato Apple Distribution,
+  versione 1.0 (1), iCloud in Production. Mancano, con login di Lorenzo: app in App Store Connect, schema
+  iCloud distribuito in produzione (solo aggiunte, non si torna indietro), Mary tester interna. I dati di
+  sviluppo non compaiono nelle build TestFlight. Lo schema si crea con `-SVInitCloudSchema` su dispositivo;
+  con `devicectl` gli argomenti vanno dopo `--`.
 - Nota per i test UI: `isHittable` è vero anche oltre il bordo dello schermo o sotto la tastiera; con la
   tastiera aperta il fine corsa dello scorrimento non la conta, e al primo ridisegno il contenuto torna
   indietro (lo spazio in `ItemFormView` è legato al `FocusState`).
