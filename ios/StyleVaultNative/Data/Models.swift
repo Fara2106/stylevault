@@ -46,6 +46,15 @@ import SwiftData
     init() {}
 }
 
+@Model final class CustomCategory {
+    /// `custom_<uuid>`: finisce in `Item.category` accanto alle categorie del catalogo.
+    var id: String = ""
+    var name: String = ""
+    var createdAt: Date = Date.now
+
+    init() {}
+}
+
 @Model final class Outfit {
     var id: UUID = UUID()
     var occasion: String?

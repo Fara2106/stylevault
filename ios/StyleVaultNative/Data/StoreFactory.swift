@@ -16,6 +16,7 @@ enum StoreFactory {
     static let schema = Schema([
         Item.self, Outfit.self, CalendarEntry.self,
         WishlistItem.self, Profile.self, BodyPhoto.self,
+        CustomCategory.self,
     ])
 
     static func build(_ mode: StoreMode, url: URL? = nil) throws -> ModelContainer {
