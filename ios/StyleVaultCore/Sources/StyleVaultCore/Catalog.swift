@@ -158,4 +158,8 @@ public enum Catalog {
     public static func category(id: String) -> WardrobeCategory? {
         categories.first { $0.id == id }
     }
+
+    public static func color(id: String) -> ClothingColor? {
+        colors.first { $0.id == id }
+    }
 }

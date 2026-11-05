@@ -57,3 +57,35 @@ struct Chip: View {
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
+
+/// I filtri di categoria. Una categoria che non esiste più non ha il suo chip: il capo resta in Tutti.
+struct CategoryChips: View {
+    @Binding var selection: String?
+    let choices: [CategoryChoice]
+    var onDelete: ((CategoryChoice) -> Void)?
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                Chip(text: Text("common.all"), isSelected: selection == nil) { selection = nil }
+                    .accessibilityIdentifier("filter-all")
+                ForEach(choices) { choice in
+                    chip(for: choice)
+                }
+            }
+            .padding(.vertical, 1)
+        }
+    }
+
+    @ViewBuilder private func chip(for choice: CategoryChoice) -> some View {
+        let chip = Chip(text: choice.text, isSelected: selection == choice.id) { selection = choice.id }
+            .accessibilityIdentifier("filter-\(choice.id)")
+        if let onDelete, choice.isCustom {
+            chip.contextMenu {
+                Button("native.category.delete", role: .destructive) { onDelete(choice) }
+            }
+        } else {
+            chip
+        }
+    }
+}

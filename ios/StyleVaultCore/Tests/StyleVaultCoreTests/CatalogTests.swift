@@ -31,6 +31,11 @@ final class CatalogTests: XCTestCase {
         XCTAssertEqual(Catalog.colors, site.colors.map { ClothingColor(id: $0.id, hex: $0.hex, labelKey: $0.labelKey) })
     }
 
+    func testColorePerId() {
+        XCTAssertEqual(Catalog.color(id: "navy")?.hex, "#1B2A4A")
+        XCTAssertNil(Catalog.color(id: "boh"))
+    }
+
     func testCategoriaSconosciutaNonEsiste() {
         XCTAssertNil(Catalog.category(id: "boh"))
         XCTAssertEqual(Catalog.category(id: "shoes")?.icon, "👟")

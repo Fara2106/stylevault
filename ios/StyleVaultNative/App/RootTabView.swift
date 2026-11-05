@@ -43,7 +43,9 @@ struct RootTabView: View {
         VStack(spacing: 0) {
             SyncNotice(state: syncMonitor.state)
             TabView(selection: selection) {
-                placeholder("nav.wardrobe", .wardrobe, "tshirt")
+                WardrobeView { router.openAdd(to: $0) }
+                    .tabItem { Label(LocalizedStringKey("nav.wardrobe"), systemImage: "tshirt") }
+                    .tag(AppTab.wardrobe)
                 placeholder("nav.outfit", .outfit, "sparkles")
                 // Il + non ha una schermata: il foglio si apre da TabRouter.
                 Color.clear.tabItem { Label(LocalizedStringKey("nav.add"), systemImage: "plus.circle.fill") }.tag(AppTab.add)
