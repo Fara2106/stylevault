@@ -23,6 +23,12 @@ const PICKED = {
     'warmthLevels.1', 'warmthLevels.2', 'warmthLevels.3', 'warmthLevels.4', 'warmthLevels.5',
   ],
   itemDetail: ['title', 'openShop', 'deleteItem'],
+  auth: [
+    'login', 'register', 'email', 'password', 'forgotPassword', 'loginTitle', 'loginSubtitle', 'registerTitle',
+    'registerSubtitle', 'logout', 'noAccount', 'hasAccount', 'google', 'errors.missing-fields',
+    'errors.invalid-credentials', 'errors.password-too-short', 'errors.email-taken', 'errors.rate-limited',
+    'errors.same-password', 'errors.delete-failed',
+  ],
   common: ['save', 'cancel', 'delete', 'edit', 'close', 'all', 'favorites', 'noResults', 'optional'],
 };
 

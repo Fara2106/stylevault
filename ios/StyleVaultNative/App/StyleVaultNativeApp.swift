@@ -9,12 +9,16 @@ struct StyleVaultNativeApp: App {
     @State private var cutoutWorker: CutoutWorker
     @State private var appLock: AppLock
     @State private var lockWindow: LockWindowController
+    @StateObject private var auth = AuthService()
     @State private var wasInBackground = false
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
         #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("-SVInitCloudSchema") { CloudSchema.initialize() }
+        if ProcessInfo.processInfo.arguments.contains("-SVShowLogin") {
+            UserDefaults.standard.removeObject(forKey: "auth.skipped")
+        }
         let preferred: StoreMode = ProcessInfo.processInfo.arguments.contains("-SVMemoryStore") ? .memory : .cloud
         #else
         let preferred = StoreMode.cloud
@@ -28,6 +32,15 @@ struct StyleVaultNativeApp: App {
         _cutoutWorker = State(initialValue: CutoutWorker(context: opened.container.mainContext))
         _syncMonitor = State(initialValue: monitor)
         monitor.start()
+    }
+
+    private static var skipsLogin: Bool {
+        #if DEBUG
+        let arguments = ProcessInfo.processInfo.arguments
+        return arguments.contains("-SVMemoryStore") && !arguments.contains("-SVShowLogin")
+        #else
+        return false
+        #endif
     }
 
     private static func makeLinkReader() -> any LinkReading {
@@ -54,7 +67,9 @@ struct StyleVaultNativeApp: App {
     var body: some Scene {
         WindowGroup {
             let covered = appLock.isLocked || appLock.isObscured
-            RootTabView(syncMonitor: syncMonitor)
+            AuthGateView(auth: auth, bypass: Self.skipsLogin) { RootTabView(syncMonitor: syncMonitor) }
+                .environmentObject(auth)
+                .onOpenURL { url in Task { await auth.handle(url) } }
                 // Finché è coperto il contenuto non si vede, non si tocca e VoiceOver non lo legge.
                 // La vera LockView sta in una finestra propria (LockWindow), sopra anche ai fogli.
                 .overlay { if covered { Palette.bg.ignoresSafeArea() } }

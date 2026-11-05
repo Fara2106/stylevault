@@ -183,11 +183,17 @@ targets:
       - StyleVaultNative
       - StyleVault/Design/Palette.swift
       - StyleVault/App/ThemeStore.swift
+      - StyleVault/Auth/AuthService.swift
     dependencies:
       - package: StyleVaultCore
+      - package: Supabase
+    configFiles:
+      Debug: Config/Secrets.xcconfig
+      Release: Config/Secrets.xcconfig
     entitlements:
       path: StyleVaultNative/StyleVaultNative.entitlements
       properties:
+        com.apple.developer.applesignin: [Default]
         com.apple.developer.icloud-container-identifiers: [iCloud.it.faraoni.stylevault]
         com.apple.developer.icloud-services: [CloudKit]
         aps-environment: development
@@ -197,6 +203,13 @@ targets:
         NSCameraUsageDescription: Per fotografare i tuoi capi.
         NSFaceIDUsageDescription: Serve per sbloccare l'app, se attivi il blocco nel Profilo.
         CFBundleDisplayName: SV Nativa
+        CFBundleShortVersionString: "1.0"
+        CFBundleVersion: "2"
+        SupabaseURL: $(SUPABASE_URL)
+        SupabaseKey: $(SUPABASE_KEY)
+        CFBundleURLTypes:
+          - CFBundleURLName: it.faraoni.stylevault.nativa
+            CFBundleURLSchemes: [svnativa]
         CFBundleLocalizations: [it, en]
         UILaunchScreen: {}
         UIBackgroundModes: [remote-notification]

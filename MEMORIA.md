@@ -3,6 +3,23 @@
 > File di ripartenza: se apri una nuova chat, leggi questo file per riprendere il lavoro
 > esattamente da dove eravamo. Va aggiornato a ogni avanzamento significativo.
 
+## Novità 2026-11-05 (notte) — Login nella nativa, percorso minimo
+
+Decisione di Lorenzo: la nativa ha Accedi con Apple, Google, email e password, password dimenticata. I dati
+restano su iCloud e l'account non li sposta. Rovescia la decisione 7 del design (vedi decisione 8).
+- Codice in `ios/StyleVaultNative/Auth/`; `AuthService` è condiviso con l'ibrida. Schema `svnativa://`.
+- "Continua senza account" sotto il login: Apple 5.1.1(v) vieta il login obbligatorio se le funzioni non
+  dipendono dall'account. Da confermare con Lorenzo.
+- Supabase: `svnativa://**` nei Redirect URLs e `it.faraoni.stylevault.nativa` nei Client IDs di Apple, verificati.
+- Il tasto Google compare solo col provider attivo: manca che Lorenzo incolli ID e segreto in Supabase, poi utenti
+  di prova o pubblicazione della schermata OAuth.
+- Non provato: accessi veri (Apple, Google, email), reset vero, cancellazione account, Release su dispositivo.
+- Test: iPhone 151 e ibrida 143 verdi. Su iPad i test del guardaroba falliscono con il Mac saturo (load 200, swap
+  19 GB su 20, 4 simulatori accesi): i tocchi vanno a vuoto mentre la tastiera sposta il foglio. A mano su iPad il
+  capo si salva. Da rilanciare a Mac scarico.
+- Prima dell'App Store: `/privacy` e `/supporto` rispondono 404 (si vedono solo grazie a 404.html), mittente delle
+  email di reset, revoca del token Apple, account demo, Privacy Labels.
+
 ## Novità 2026-11-05 (sera) — Nativa, fase 2 Guardaroba (ramo `feat/app-nativa`, solo locale)
 
 Piano: `docs/superpowers/plans/2026-11-05-app-nativa-fase-2.md`, eseguito in sessione, senza subagent.

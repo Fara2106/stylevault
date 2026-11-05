@@ -4,7 +4,7 @@ import Foundation
 import Supabase
 
 /// Client Supabase unico dell'app. La sessione resta nel Portachiavi
-/// (default di supabase-swift) e il login Google torna con stylevault://.
+/// (default di supabase-swift) e il login Google torna con lo schema dell'app (AppConfig.authCallback).
 enum Supa {
     /// emitLocalSessionAsInitialSession: senza rete si entra lo stesso con la
     /// sessione salvata (poi si rinnova in background) invece di finire sul login.
@@ -174,6 +174,15 @@ final class AuthService: ObservableObject {
         if let name = AppleNonce.displayName(credential.fullName) {
             _ = try? await client.auth.update(user: UserAttributes(data: ["name": .string(name)]))
         }
+    }
+
+    /// Cancella l'account di chi è entrato (Apple 5.1.1(v)). L'utente non esiste più: si chiude la sessione locale.
+    func deleteAccount() async throws {
+        struct Confirmation: Encodable { let confirm = "DELETE" }
+        try await client.functions.invoke("delete-account", options: FunctionInvokeOptions(body: Confirmation()))
+        try? await client.auth.signOut(scope: .local)
+        session = nil
+        recovering = false
     }
 
     func signOut() async {

@@ -78,7 +78,6 @@ Quindi l'app nativa si costruisce **in parallelo**, una fase alla volta, su un r
 ## Cosa sparisce
 
 - Il sito React come app, `WebViewStore`, il ponte `svNative`, `nativeBridge.js`.
-- Login, `AuthService`, recupero e cambio password, Google e Apple Sign In.
 - Supabase: SDK Swift, tabelle, storage, Edge Functions `send-feedback`, `fetch-link-metadata` e `delete-account` (quest'ultima mai pubblicata). Il progetto si spegne dopo la migrazione dei dati.
 - @imgly (AGPL), MediaPipe, onnxruntime-web.
 - Dal report dell'audit: blocchi 2 (cancellazione account) e 6 (rete locale in Release: senza WebView non serve neanche in Debug), avvisi 6, 7, 8, 9 (microlink e Resend), 3 (AGPL) e 14 (picsum).
@@ -147,6 +146,8 @@ Stima indicativa: le fasi 2, 3 e 5 sono le più pesanti, perché hanno più logi
 5. **Import dei dati di oggi:** con Esporta e importa, vedi "Migrazione dei dati di oggi". Era da decidere all'avvio della fase 7, ma l'audit ha escluso le altre due strade.
 6. **Prima versione senza avatar realistico (2026-11-05).** Mobile-VTON è addestrato su DressCode, che ha una licenza solo ricerca. Il codice va tolto dalla build, non nascosto con un interruttore (regola 2.5.19). Spariscono anche il download da 1,3 GB e l'entitlement `increased-memory-limit`. Il codice resta nella storia di git e il motore sta dietro `RealisticTryOn`, quindi può tornare in un aggiornamento, se arriva il permesso di AImageLab o se FASHN VTON regge sul telefono e l'origine dei suoi dati è chiarita (`tools/avatar-fashn/README.md`).
 7. **Niente login, blocco facoltativo con Face ID (2026-11-05).** Lorenzo ha valutato l'accesso con Apple, Google e password e l'ha scartato: i dati restano su iCloud, personali e legati all'Apple ID, quindi su App Store ognuno ha già i suoi. Un login avrebbe richiesto un servizio di account sempre acceso, con guardaroba e foto del corpo degli utenti a carico suo, più account demo e cancellazione dell'account. Il Profilo offre invece un blocco facoltativo: vale per il singolo dispositivo, non si sincronizza e non può mai chiudere fuori la persona, perché dopo Face ID resta il codice del dispositivo.
+
+8. **Accesso con Apple, Google, email e password, facoltativo (2026-11-05, sera).** Lorenzo ha rovesciato la decisione 7 sul login: la nativa, che è l'app su cui punta, deve avere Accedi con Apple, Accedi con Google, email, password e "Password dimenticata?". Ha scelto il minimo: i dati restano su iCloud e l'account non li sposta. Gli account stanno sul progetto Supabase esistente, che quindi non si spegne alla fine. Scelta di Claude, da confermare: si può entrare con "Continua senza account", perché Apple (5.1.1(v)) respinge il login obbligatorio quando le funzioni non dipendono dall'account. Il blocco con Face ID resta. Servono cancellazione dell'account nell'app, privacy manifest con i dati dell'account e, prima dell'App Store, la revoca del token di Apple quando si cancella l'account.
 
 ## Proposte aggiunte
 

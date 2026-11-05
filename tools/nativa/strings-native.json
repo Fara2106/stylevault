@@ -7,11 +7,26 @@
     "it": "Non riesco ad aprire i dati. Ciò che aggiungi ora non verrà salvato.",
     "en": "Your data could not be opened. What you add now will not be saved."
   },
-  "native.comingSoon": { "it": "In arrivo", "en": "Coming soon" },
-  "native.language.system": { "it": "Si cambia nelle Impostazioni", "en": "Change it in Settings" },
-  "native.city.search": { "it": "Cerca una città", "en": "Search for a city" },
-  "native.city.none": { "it": "Nessuna città trovata", "en": "No city found" },
-  "native.lock.toggle": { "it": "Blocca l'app", "en": "Lock the app" },
+  "native.comingSoon": {
+    "it": "In arrivo",
+    "en": "Coming soon"
+  },
+  "native.language.system": {
+    "it": "Si cambia nelle Impostazioni",
+    "en": "Change it in Settings"
+  },
+  "native.city.search": {
+    "it": "Cerca una città",
+    "en": "Search for a city"
+  },
+  "native.city.none": {
+    "it": "Nessuna città trovata",
+    "en": "No city found"
+  },
+  "native.lock.toggle": {
+    "it": "Blocca l'app",
+    "en": "Lock the app"
+  },
   "native.lock.footer": {
     "it": "All'apertura chiede Face ID, Touch ID o il codice del dispositivo. Vale solo su questo dispositivo.",
     "en": "Asks for Face ID, Touch ID or your device passcode when opened. Applies to this device only."
@@ -20,22 +35,126 @@
     "it": "Imposta un codice sul dispositivo per usare il blocco.",
     "en": "Set a device passcode to use the lock."
   },
-  "native.lock.title": { "it": "StyleVault è bloccata", "en": "StyleVault is locked" },
-  "native.lock.unlock": { "it": "Sblocca", "en": "Unlock" },
-  "native.lock.reason": { "it": "Sblocca StyleVault", "en": "Unlock StyleVault" },
-  "native.wardrobe.count %lld": {
-    "it": { "one": "%lld capo", "other": "%lld capi" },
-    "en": { "one": "%lld item", "other": "%lld items" }
+  "native.lock.title": {
+    "it": "StyleVault è bloccata",
+    "en": "StyleVault is locked"
   },
-  "native.form.priceInvalid": { "it": "Scrivi il prezzo in numeri", "en": "Enter the price as a number" },
-  "native.form.photoError": { "it": "Non riesco a leggere questa foto", "en": "This photo could not be read" },
-  "native.form.discard.title": { "it": "Scartare le modifiche?", "en": "Discard your changes?" },
-  "native.form.discard.confirm": { "it": "Scarta", "en": "Discard" },
-  "native.form.discard.keep": { "it": "Continua a modificare", "en": "Keep editing" },
-  "native.category.new": { "it": "Nuova categoria", "en": "New category" },
-  "native.category.name": { "it": "Nome della categoria", "en": "Category name" },
-  "native.category.delete": { "it": "Elimina categoria", "en": "Delete category" },
-  "native.category.inUse": { "it": "Prima sposta i capi in un'altra categoria", "en": "Move the items to another category first" },
-  "native.detail.photoBack": { "it": "Retro", "en": "Back" },
-  "native.detail.cutout": { "it": "Scontorno", "en": "Cutout" }
+  "native.lock.unlock": {
+    "it": "Sblocca",
+    "en": "Unlock"
+  },
+  "native.lock.reason": {
+    "it": "Sblocca StyleVault",
+    "en": "Unlock StyleVault"
+  },
+  "native.wardrobe.count %lld": {
+    "it": {
+      "one": "%lld capo",
+      "other": "%lld capi"
+    },
+    "en": {
+      "one": "%lld item",
+      "other": "%lld items"
+    }
+  },
+  "native.form.priceInvalid": {
+    "it": "Scrivi il prezzo in numeri",
+    "en": "Enter the price as a number"
+  },
+  "native.form.photoError": {
+    "it": "Non riesco a leggere questa foto",
+    "en": "This photo could not be read"
+  },
+  "native.form.discard.title": {
+    "it": "Scartare le modifiche?",
+    "en": "Discard your changes?"
+  },
+  "native.form.discard.confirm": {
+    "it": "Scarta",
+    "en": "Discard"
+  },
+  "native.form.discard.keep": {
+    "it": "Continua a modificare",
+    "en": "Keep editing"
+  },
+  "native.category.new": {
+    "it": "Nuova categoria",
+    "en": "New category"
+  },
+  "native.category.name": {
+    "it": "Nome della categoria",
+    "en": "Category name"
+  },
+  "native.category.delete": {
+    "it": "Elimina categoria",
+    "en": "Delete category"
+  },
+  "native.category.inUse": {
+    "it": "Prima sposta i capi in un'altra categoria",
+    "en": "Move the items to another category first"
+  },
+  "native.detail.photoBack": {
+    "it": "Retro",
+    "en": "Back"
+  },
+  "native.detail.cutout": {
+    "it": "Scontorno",
+    "en": "Cutout"
+  },
+  "native.auth.skip": {
+    "it": "Continua senza account",
+    "en": "Continue without an account"
+  },
+  "native.auth.unreachable": {
+    "it": "Il servizio non risponde. Controlla la connessione e riprova.",
+    "en": "The service isn't responding. Check your connection and try again."
+  },
+  "native.auth.writeEmail": {
+    "it": "Scrivi la tua email qui sopra, poi tocca «Password dimenticata?».",
+    "en": "Enter your email above, then tap \"Forgot password?\"."
+  },
+  "native.auth.resetSent %@": {
+    "it": "Ti ho mandato un'email a %@: aprila su questo dispositivo e tocca il link.",
+    "en": "We sent an email to %@. Open it on this device and tap the link."
+  },
+  "native.auth.newPassword": {
+    "it": "Scegli una nuova password",
+    "en": "Choose a new password"
+  },
+  "native.auth.newPasswordField": {
+    "it": "Nuova password",
+    "en": "New password"
+  },
+  "native.auth.saveAndEnter": {
+    "it": "Salva ed entra",
+    "en": "Save and continue"
+  },
+  "native.auth.linkFailed": {
+    "it": "Il link non è valido o è scaduto: chiedine un altro.",
+    "en": "This link is invalid or has expired. Ask for a new one."
+  },
+  "native.auth.privacy": {
+    "it": "Privacy",
+    "en": "Privacy"
+  },
+  "native.auth.support": {
+    "it": "Supporto",
+    "en": "Support"
+  },
+  "native.account.title": {
+    "it": "Account",
+    "en": "Account"
+  },
+  "native.account.delete": {
+    "it": "Elimina account",
+    "en": "Delete account"
+  },
+  "native.account.delete.title": {
+    "it": "Eliminare l'account?",
+    "en": "Delete your account?"
+  },
+  "native.account.delete.message": {
+    "it": "L'account viene cancellato per sempre. I tuoi capi restano nel tuo iCloud.",
+    "en": "Your account will be deleted permanently. Your items stay in your iCloud."
+  }
 }

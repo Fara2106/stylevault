@@ -23,14 +23,29 @@
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
 	<string>1.0</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>it.faraoni.stylevault.nativa</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>svnativa</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>2</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>NSCameraUsageDescription</key>
 	<string>Per fotografare i tuoi capi.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Serve per sbloccare l'app, se attivi il blocco nel Profilo.</string>
+	<key>SupabaseKey</key>
+	<string>$(SUPABASE_KEY)</string>
+	<key>SupabaseURL</key>
+	<string>$(SUPABASE_URL)</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>

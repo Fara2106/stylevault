@@ -62,6 +62,7 @@ struct ProfileView: View {
             } footer: {
                 Text(lock.canEnable || lock.isEnabled ? "native.lock.footer" : "native.lock.unavailable")
             }
+            AccountSection()
         }
         .scrollContentBackground(.hidden)
         // Su iPad il contenuto resta centrato e non si allarga su tutto lo schermo.
