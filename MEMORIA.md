@@ -17,6 +17,8 @@ Lorenzo; il telefono di Mary non c'è.
 - Da fare: app in App Store Connect, dichiarazione DSA.
 - Il design ora contiene le correzioni dell'audit: l'import passa da Esporta e
   importa, l'app deve funzionare senza iCloud.
+- Piano della fase 1 scritto: `docs/superpowers/plans/2026-11-05-app-nativa-fase-1.md`
+  (9 task, ramo `feat/app-nativa`). Non ancora eseguito.
 
 ## Novità 2026-11-05 (notte) — Prova tecnica FASHN VTON (branch `feat/app-ios`)
 
