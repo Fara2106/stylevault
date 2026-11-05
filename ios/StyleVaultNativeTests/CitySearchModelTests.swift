@@ -1,4 +1,5 @@
 import XCTest
+import SwiftData
 import StyleVaultCore
 @testable import StyleVaultNative
 
@@ -22,7 +23,7 @@ import StyleVaultCore
         await m.run(query: "mila")
         XCTAssertEqual(m.phase, .empty)
     }
-    func testLAnnullamentoLasciaLaFaseCom() async {
+    func testUnaRicercaAnnullataNonCambiaLaFase() async {
         let m = CitySearchModel(search: { [milano] _ in [milano] })
         await m.run(query: "mila")
         let cancelling = CitySearchModel(search: { _ in throw CancellationError() })
@@ -32,6 +33,24 @@ import StyleVaultCore
         await urlCancelled.run(query: "mila")
         XCTAssertEqual(urlCancelled.phase, .searching)
         XCTAssertEqual(m.phase, .results([milano]))
+    }
+    func testUnaRicercaVecchiaAnnullataNonSovrascriveLaNuova() async {
+        let roma = City(id: 2, name: "Roma", latitude: 41.9, longitude: 12.5, country: "Italia", region: nil)
+        let m = CitySearchModel(search: { [milano, roma] query in
+            if query == "mila" {
+                // Lenta: finisce dopo la nuova, con un errore di rete (timeout).
+                try? await Task.sleep(for: .milliseconds(300))
+                throw URLError(.timedOut)
+            }
+            return [roma]
+        })
+        let old = Task { await m.run(query: "mila") }
+        try? await Task.sleep(for: .milliseconds(50))
+        await m.run(query: "roma")
+        XCTAssertEqual(m.phase, .results([roma]))
+        old.cancel()
+        await old.value
+        XCTAssertEqual(m.phase, .results([roma]))
     }
     func testQueryBrevePortaAIdle() async {
         let m = CitySearchModel(search: { [milano] _ in [milano] })
@@ -50,5 +69,38 @@ import StyleVaultCore
         p.setTheme("dark")
         XCTAssertEqual(p.theme, "dark")
         XCTAssertGreaterThanOrEqual(p.updatedAt, before)
+    }
+
+    private var container: ModelContainer?
+    private func twoProfiles() throws -> (ModelContext, old: Profile, keeper: Profile) {
+        let built = try StoreFactory.build(.memory)
+        container = built
+        let c = built.mainContext
+        let old = Profile(); old.updatedAt = .distantPast
+        let keeper = Profile(); keeper.updatedAt = .now
+        c.insert(old); c.insert(keeper); try c.save()
+        return (c, old, keeper)
+    }
+    func testLaCittaVaSulProfiloCheSopravvive() throws {
+        let (c, old, keeper) = try twoProfiles()
+        let all = try c.fetch(FetchDescriptor<Profile>())
+        ProfileStore.update(all, in: c) { $0.apply(city: milano.renamed("Roma")) }
+        XCTAssertEqual(old.cityName, "Milano")
+        XCTAssertEqual(keeper.cityName, "Roma")
+        XCTAssertEqual(try ProfileStore.current(in: c).cityName, "Roma")
+    }
+    func testIlTemaVaSulProfiloCheSopravvive() throws {
+        let (c, old, keeper) = try twoProfiles()
+        let all = try c.fetch(FetchDescriptor<Profile>())
+        ProfileStore.update(all, in: c) { $0.setTheme("dark") }
+        XCTAssertEqual(old.theme, "system")
+        XCTAssertEqual(keeper.theme, "dark")
+        XCTAssertEqual(try ProfileStore.current(in: c).theme, "dark")
+    }
+}
+
+private extension City {
+    func renamed(_ name: String) -> City {
+        City(id: id, name: name, latitude: latitude, longitude: longitude, country: country, region: region)
     }
 }

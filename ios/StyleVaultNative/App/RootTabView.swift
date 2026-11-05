@@ -53,7 +53,7 @@ struct RootTabView: View {
         }
         .background(Palette.bg)
         .tint(Palette.accent)
-        .preferredColorScheme(ThemeStore.colorScheme(for: profiles.first?.theme ?? "system"))
+        .preferredColorScheme(ThemeStore.colorScheme(for: ProfileStore.survivor(of: profiles)?.theme ?? "system"))
         .sheet(isPresented: $router.isAddSheetPresented) {
             // Lo riempie la fase 2.
             Palette.bg.ignoresSafeArea().accessibilityIdentifier("add-sheet")

@@ -2,7 +2,7 @@ import StyleVaultCore
 import SwiftUI
 
 struct CitySearchView: View {
-    let profile: Profile
+    let onPick: (City) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var query = ""
@@ -22,7 +22,7 @@ struct CitySearchView: View {
             case .results(let cities):
                 ForEach(cities) { city in
                     Button {
-                        profile.apply(city: city)
+                        onPick(city)
                         dismiss()
                     } label: {
                         VStack(alignment: .leading, spacing: 2) {

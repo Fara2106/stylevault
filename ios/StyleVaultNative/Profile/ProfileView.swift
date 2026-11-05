@@ -8,7 +8,7 @@ struct ProfileView: View {
     var body: some View {
         NavigationStack {
             Group {
-                if let profile = profiles.first {
+                if let profile = ProfileStore.survivor(of: profiles) {
                     settings(for: profile)
                 } else {
                     Palette.bg
@@ -24,7 +24,9 @@ struct ProfileView: View {
         Form {
             Section("profile.settings") {
                 NavigationLink {
-                    CitySearchView(profile: profile)
+                    CitySearchView { city in
+                        ProfileStore.update(profiles, in: context) { $0.apply(city: city) }
+                    }
                 } label: {
                     LabeledContent("profile.defaultCity", value: profile.cityName)
                 }
@@ -37,7 +39,8 @@ struct ProfileView: View {
                         .foregroundStyle(Palette.ink)
                 }
                 Picker("profile.theme", selection: Binding(
-                    get: { profile.theme }, set: { profile.setTheme($0) }
+                    get: { profile.theme },
+                    set: { value in ProfileStore.update(profiles, in: context) { $0.setTheme(value) } }
                 )) {
                     Text("profile.themeLight").tag("light")
                     Text("profile.themeDark").tag("dark")

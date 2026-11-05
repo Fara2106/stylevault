@@ -42,6 +42,8 @@ extension Profile {
         } catch is CancellationError {
             // Una ricerca più recente ha preso il posto di questa: la fase la decide lei.
         } catch let error as URLError where error.code == .cancelled {
+        } catch where Task.isCancelled {
+            // Un errore tardivo (timeout) di una ricerca già sostituita non deve coprire quella nuova.
         } catch {
             // Rete assente o errore del servizio: per chi cerca è "nessuna città".
             phase = .empty

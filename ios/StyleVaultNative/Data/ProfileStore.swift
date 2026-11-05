@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 import SwiftData
 
 /// CloudKit non ha vincoli `unique`: due dispositivi possono creare ognuno un `Profile`.
@@ -25,6 +26,16 @@ import SwiftData
         others.forEach(context.delete)
         try context.save()
         return keeper
+    }
+
+    private static let logger = Logger(subsystem: "it.faraoni.stylevault.nativa", category: "profile")
+
+    /// Applica `change` al Profilo che sopravvive all'unione e salva. Le viste passano da qui,
+    /// così scrivono sempre sul record che resta e non su uno che l'unione cancellerà.
+    static func update(_ profiles: [Profile], in context: ModelContext, _ change: (Profile) -> Void) {
+        guard let keeper = survivor(of: profiles) else { return }
+        change(keeper)
+        do { try context.save() } catch { logger.error("Salvataggio del Profilo non riuscito: \(error)") }
     }
 
     /// Il più recente per `updatedAt`; a parità il maggiore per `id.uuidString`,
