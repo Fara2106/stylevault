@@ -54,7 +54,7 @@ struct StyleVaultNativeApp: App {
                 .background(LockThemeSync(controller: lockWindow))
                 .environment(appLock)
                 .onChange(of: covered, initial: true) { _, value in lockWindow.setVisible(value) }
-                .onChange(of: scenePhase) { _, phase in
+                .onChange(of: scenePhase, initial: true) { _, phase in
                     appLock.sceneDidChange(to: phase)
                     if phase == .background { wasInBackground = true }
                     if phase == .active, wasInBackground {

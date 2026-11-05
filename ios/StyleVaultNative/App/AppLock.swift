@@ -60,10 +60,10 @@ final class AppLock {
         let started = generation
         switch await authenticator.authenticate(reason: reason) {
         case .success:
-            if started == generation { isLocked = false }
+            if started == generation { isLocked = false; isObscured = false }
         case .unavailable:
             // Mai chiudere la persona fuori dai suoi dati.
-            store(enabled: false)
+            store(enabled: false) // azzera anche isObscured
             isLocked = false
         case .failed:
             break

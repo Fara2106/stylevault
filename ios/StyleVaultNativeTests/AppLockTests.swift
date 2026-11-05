@@ -171,6 +171,15 @@ final class AppLockTests: XCTestCase {
         XCTAssertTrue(lock.isLocked, "Un'autenticazione partita prima del background non deve sbloccare dopo")
     }
 
+    func testSbloccoSenzaScenaAttivaScopreIlContenuto() async {
+        let lock = await enabledLock()
+        lock.sceneDidChange(to: .inactive)
+        lock.sceneDidChange(to: .background) // nasce una scena nuova già attiva: nessun .active arriva
+        await lock.unlock(reason: "r")
+        XCTAssertFalse(lock.isLocked)
+        XCTAssertFalse(lock.isObscured, "Senza tasto Sblocca la copertura non deve restare accesa")
+    }
+
     func testLaSceltaSopravviveAlRiavvio() async {
         _ = await enabledLock()
         let reopened = makeLock()
