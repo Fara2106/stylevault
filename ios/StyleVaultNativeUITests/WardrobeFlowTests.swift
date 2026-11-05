@@ -47,4 +47,17 @@ final class WardrobeFlowTests: XCTestCase {
         XCTAssertTrue(anyText(app, "Scegli una categoria").exists)
         XCTAssertTrue(sheet.exists)
     }
+
+    func testDaLinkRiempieIlModulo() {
+        let app = launch(language: "it", extra: ["-SVFakeLink"])
+        _ = openForm(app)
+        app.buttons["mode-link"].tap()
+        let link = app.textFields["item-link"]
+        XCTAssertTrue(link.waitForExistence(timeout: 3))
+        link.tap()
+        link.typeText("https://zara.com/p")
+        app.buttons["link-analyze"].tap()
+        XCTAssertTrue(anyText(app, "Dati estratti: controlla e completa").waitForExistence(timeout: 5))
+        XCTAssertEqual(app.textFields["item-name"].value as? String, "Camicia in lino")
+    }
 }

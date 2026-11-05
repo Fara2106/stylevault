@@ -29,6 +29,13 @@ struct StyleVaultNativeApp: App {
         monitor.start()
     }
 
+    private static func makeLinkReader() -> any LinkReading {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-SVFakeLink") { return FakeLinkReader() }
+        #endif
+        return SystemLinkReader()
+    }
+
     private static func makeAppLock() -> AppLock {
         #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("-SVFakeLock") {
@@ -56,6 +63,7 @@ struct StyleVaultNativeApp: App {
                 .background(LockThemeSync(controller: lockWindow))
                 .environment(appLock)
                 .environment(cutoutWorker)
+                .environment(\.linkReader, Self.makeLinkReader())
                 .onChange(of: covered, initial: true) { _, value in lockWindow.setVisible(value) }
                 .onChange(of: scenePhase, initial: true) { _, phase in
                     appLock.sceneDidChange(to: phase)

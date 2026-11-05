@@ -17,6 +17,7 @@ struct ItemFormView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
     @Environment(CutoutWorker.self) private var cutoutWorker
+    @Environment(\.linkReader) private var linkReader
     @Query private var customCategories: [CustomCategory]
 
     @State private var libraryPick: PhotosPickerItem?
@@ -158,6 +159,38 @@ struct ItemFormView: View {
                 .autocorrectionDisabled()
                 .textFieldStyle(.roundedBorder)
                 .accessibilityIdentifier("item-link")
+            Button("addItem.analyzeLink") {
+                Task { await model.analyzeLink(with: linkReader) }
+            }
+            .buttonStyle(.bordered)
+            .tint(Palette.ink)
+            .disabled(LinkText.httpURL(from: model.linkText) == nil || model.linkState == .loading)
+            .accessibilityIdentifier("link-analyze")
+            linkStatus
+            if let photo = model.photoFront {
+                ItemPhotoView(data: photo, name: model.name, maxSide: 800, contentMode: .fit)
+                    .frame(height: 240)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+            }
+            // Con un link illeggibile la foto si mette a mano.
+            photoMenu(.front) {
+                Text(LocalizedStringKey(model.photoFront == nil ? "addItem.uploadPhoto" : "addItem.changePhoto"))
+                    .foregroundStyle(Palette.accent)
+            }
+            photoStatus
+        }
+    }
+
+    @ViewBuilder private var linkStatus: some View {
+        switch model.linkState {
+        case .idle:
+            EmptyView()
+        case .loading:
+            Text("addItem.linkLoading").font(.footnote).foregroundStyle(Palette.muted)
+        case .success:
+            Text("addItem.linkSuccess").font(.footnote).foregroundStyle(Palette.ink)
+        case .failure:
+            Text("addItem.linkError").font(.footnote).foregroundStyle(Palette.danger)
         }
     }
 

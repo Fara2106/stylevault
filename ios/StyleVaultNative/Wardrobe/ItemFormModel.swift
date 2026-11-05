@@ -9,6 +9,8 @@ enum ItemFormMode {
 
 enum FormField: Hashable { case name, category, price }
 
+enum LinkState: Equatable { case idle, loading, success, failure }
+
 /// Lo stato del modulo di aggiunta e modifica, come src/pages/AddItemPage/AddItemPage.jsx.
 @MainActor @Observable final class ItemFormModel {
     var name = ""
@@ -29,12 +31,14 @@ enum FormField: Hashable { case name, category, price }
     private(set) var photoBack: Data?
     private(set) var photoFailed = false
     private(set) var errors: Set<FormField> = []
+    private(set) var linkState = LinkState.idle
 
     let isEditing: Bool
 
     @ObservationIgnored private let prepare: @Sendable (Data) async -> Data?
     @ObservationIgnored private var frontRun = 0
     @ObservationIgnored private var backRun = 0
+    @ObservationIgnored private var linkRun = 0
     private var isFrontBusy = false
     private var isBackBusy = false
     @ObservationIgnored private var initial: Snapshot?
@@ -105,6 +109,30 @@ enum FormField: Hashable { case name, category, price }
         backRun += 1
         isBackBusy = false
         photoBack = nil
+    }
+
+    /// Riempie solo ciò che è ancora vuoto. Il link resta nel campo anche se la lettura non riesce.
+    func analyzeLink(with reader: any LinkReading) async {
+        guard let url = LinkText.httpURL(from: linkText) else { return }
+        linkRun += 1
+        let run = linkRun
+        let requested = linkText
+        linkState = .loading
+        do {
+            let preview = try await reader.read(url)
+            guard run == linkRun else { return }
+            guard linkText == requested else {
+                linkState = .idle
+                return
+            }
+            if trimmed(name).isEmpty { name = preview.title }
+            if trimmed(brand).isEmpty { brand = preview.site }
+            if photoFront == nil, let image = preview.imageData { await setFront(image) }
+            linkState = .success
+        } catch {
+            guard run == linkRun else { return }
+            linkState = linkText == requested ? .failure : .idle
+        }
     }
 
     /// I valori da salvare, oppure `nil` con `errors` aggiornato.
