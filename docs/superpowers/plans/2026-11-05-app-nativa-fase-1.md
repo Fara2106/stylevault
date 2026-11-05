@@ -784,9 +784,10 @@ Expected: passano tutti e 5.
 - [ ] **Step 3: Provare senza rete e senza doppioni**
 
 1. mettere l'iPad in modalità aereo, cambiare città e riattivare la rete: il cambio arriva sull'iPhone;
-2. disinstallare l'app dall'iPad, reinstallarla e aspettare: il Profilo torna quello di prima, un record solo.
+2. disinstallare l'app dall'iPad, reinstallarla e aspettare: il Profilo torna quello di prima, un record solo, con la città e il tema scelti, e anche l'iPhone li conserva;
+3. in Impostazioni → iCloud spegnere SV Nativa sull'iPhone, riaprire l'app: deve comparire l'avviso `native.sync.off`, poi riaccendere. Se non compare, l'errore dell'evento `.setup` va trattato come `.unavailable`.
 
-Expected: passano entrambi. Il cambio più recente vince.
+Expected: passano tutti e 3. Il cambio più recente vince.
 
 - [ ] **Step 4: Scrivere l'esito**
 
