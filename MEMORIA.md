@@ -43,6 +43,14 @@ restano su iCloud e l'account non li sposta. Rovescia la decisione 7 del design 
   "Esci e vai all'accesso" funzionano; registrazione vera e tasto Apple non provati lì. Su Supabase "Confirm email" è
   spento: chi si registra entra subito, quindi non serve un messaggio "controlla la posta".
 - Sito: consiglio della foto in costume nella prova virtuale (commit `0da8b7f`), non pubblicato né visto a schermo.
+- Outfit e Calendario nativi (06/11, fasi 3 e 4 del design): tolto "In arrivo" dalle due schede, statistiche nel Profilo,
+  logica portata in `StyleVaultCore` con i casi del sito e il confronto `harmony-parity.json`. Build interna 4 in preparazione
+  per Marianna, non ancora caricata. Niente "Prova": arriva con la fase 6. Meteo da Open-Meteo con coordinate a 2 decimali; la
+  posizione si chiede solo dal tasto, dopo la spiegazione; senza si usa la città del Profilo.
+- Decisione di Lorenzo (06/11): si segue sempre la skill `mobile-app-publishing`, giro da utente compreso, e si tolgono dal
+  repository ibrida e sito. Lo fa una sessione a parte sul suo ramo, con tag `archivio-ibrida-e-sito`; la fusione la decide
+  Lorenzo e il sito resta online finché non pubblica lui. Supabase e `keepalive.yml` restano: account della nativa e dati di
+  Lorenzo e Marianna. Per Android ci sarà un pulsante di esportazione nel Profilo, non ancora costruito.
 - `Info 2.plist` e `StyleVaultNative 2.entitlements` sono vecchie copie non tracciate: escluse in `project.yml`, non
   cancellate.
 - Prima dell'App Store: `/privacy` e `/supporto` rispondono 404 (si vedono solo grazie a 404.html), mittente delle
