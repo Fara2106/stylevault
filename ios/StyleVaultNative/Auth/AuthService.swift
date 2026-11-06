@@ -42,7 +42,7 @@ struct AppleTokenMissing: LocalizedError {
     var errorDescription: String? { "Apple non ha completato l'accesso: riprova." }
 }
 
-/// Errori di login in forma leggibile, con gli stessi testi del sito (auth.errors.*).
+/// Errori di login in forma leggibile.
 enum AuthErrorKind: Equatable {
     case invalidCredentials, emailTaken, weakPassword, samePassword, tooManyEmails, cancelled, unreachable
     case appleFailed(Int)
@@ -85,13 +85,13 @@ enum AuthErrorKind: Equatable {
     }
 }
 
-/// Stato del login nativo: email/password, Google e (quando attivo) Apple.
+/// Stato del login: email/password, Google e (quando attivo) Apple.
 @MainActor
 final class AuthService: ObservableObject {
     @Published private(set) var session: Session?
     @Published private(set) var restoring = true
-    /// Il bottone Google compare solo se il provider è attivo su Supabase
-    /// (come sul sito): spento, darebbe solo un errore.
+    /// Il bottone Google compare solo se il provider è attivo su Supabase:
+    /// spento, darebbe solo un errore.
     @Published private(set) var googleAvailable = false
     /// Dopo il link dell'email di reset si ha già una sessione, ma si entra
     /// solo dopo aver scelto la nuova password.

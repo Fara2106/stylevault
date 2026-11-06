@@ -1,7 +1,7 @@
 import SwiftUI
 import UIKit
 
-/// Gli stessi colori del sito (src/styles/tokens.css), chiari e scuri.
+/// I colori dell'app, chiari e scuri.
 enum Palette {
     static let bg = dynamic(light: 0xFAF7F2, dark: 0x141210)
     static let surface = dynamic(light: 0xFFFFFF, dark: 0x1D1A17)
@@ -27,6 +27,6 @@ private extension UIColor {
 }
 
 extension Font {
-    /// Titoli editoriali: il serif di sistema (New York) al posto di Playfair.
+    /// Titoli editoriali: il serif di sistema (New York).
     static func display(_ size: CGFloat) -> Font { .system(size: size, weight: .regular, design: .serif) }
 }

@@ -1,16 +1,16 @@
 import CoreLocation
 import MapKit
 
-/// Posizione da passare al sito (svNative.setLocation).
-struct PlacePayload: Encodable, Equatable {
+/// La posizione del dispositivo, con il nome della città.
+struct PlacePayload: Equatable {
     let latitude: Double
     let longitude: Double
     let name: String
 }
 
 /// Una posizione approssimativa alla volta, solo "mentre usi l'app": per il
-/// meteo basta la città. Permesso negato o errore → nil, e il sito resta sulla
-/// città predefinita.
+/// meteo basta la città. Permesso negato o errore → nil, e si resta sulla
+/// città del Profilo.
 @MainActor
 final class LocationProvider: NSObject, CLLocationManagerDelegate {
     private let manager = CLLocationManager()

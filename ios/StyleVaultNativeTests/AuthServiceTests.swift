@@ -1,7 +1,7 @@
 import AuthenticationServices
 import Auth
 import XCTest
-@testable import StyleVault
+@testable import StyleVaultNative
 
 final class AuthServiceTests: XCTestCase {
     private func apiError(_ code: ErrorCode) -> AuthError {
@@ -60,7 +60,7 @@ final class AuthServiceTests: XCTestCase {
         XCTAssertTrue(Supa.authOptions.emitLocalSessionAsInitialSession)
     }
 
-    func testMessaggiComeSulSito() {
+    func testMessaggiLeggibili() {
         XCTAssertEqual(AuthErrorKind.invalidCredentials.message, "Email o password non corrette.")
         XCTAssertEqual(AuthErrorKind.emailTaken.message,
                        "Esiste già un account con questa email: prova ad accedere.")
@@ -81,9 +81,9 @@ final class PasswordRecoveryTests: XCTestCase {
     // Il link dell'email di reset riapre l'app su un indirizzo suo, diverso
     // dal ritorno del login Google
     func testLinkDelResetRiconosciuto() {
-        XCTAssertEqual(AppConfig.recoveryCallback.absoluteString, "stylevault://reset-password")
-        XCTAssertTrue(AuthService.isRecoveryLink(URL(string: "stylevault://reset-password?code=abc")!))
-        XCTAssertFalse(AuthService.isRecoveryLink(URL(string: "stylevault://auth-callback?code=abc")!))
+        XCTAssertEqual(AppConfig.recoveryCallback.absoluteString, "svnativa://reset-password")
+        XCTAssertTrue(AuthService.isRecoveryLink(URL(string: "svnativa://reset-password?code=abc")!))
+        XCTAssertFalse(AuthService.isRecoveryLink(URL(string: "svnativa://auth-callback?code=abc")!))
         XCTAssertFalse(AuthService.isRecoveryLink(URL(string: "https://example.com/reset-password?code=abc")!))
     }
 }
