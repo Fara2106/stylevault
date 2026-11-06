@@ -20,6 +20,11 @@ struct StyleVaultNativeApp: App {
             UserDefaults.standard.removeObject(forKey: "auth.skipped")
         }
         let preferred: StoreMode = ProcessInfo.processInfo.arguments.contains("-SVMemoryStore") ? .memory : .cloud
+        if preferred == .memory {
+            // Il dato in memoria riparte vuoto a ogni test: anche il luogo scelto deve ripartire da zero.
+            UserDefaults.standard.removeObject(forKey: "outfit.place")
+            UserDefaults.standard.removeObject(forKey: "outfit.place.position")
+        }
         #else
         let preferred = StoreMode.cloud
         #endif
@@ -27,6 +32,9 @@ struct StyleVaultNativeApp: App {
         _appLock = State(initialValue: lock)
         _lockWindow = State(initialValue: LockWindowController(lock: lock))
         let opened = StoreFactory.open(preferred: preferred)
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-SVSeedWardrobe") { DebugSeed.fill(opened.container.mainContext) }
+        #endif
         let monitor = SyncMonitor(health: opened.health)
         container = opened.container
         _cutoutWorker = State(initialValue: CutoutWorker(context: opened.container.mainContext))
@@ -48,6 +56,24 @@ struct StyleVaultNativeApp: App {
         if ProcessInfo.processInfo.arguments.contains("-SVFakeLink") { return FakeLinkReader() }
         #endif
         return SystemLinkReader()
+    }
+
+    private static func makeForecastLoader() -> any ForecastLoading {
+        #if DEBUG
+        let arguments = ProcessInfo.processInfo.arguments
+        if arguments.contains("-SVFakeForecast") { return FakeForecastLoader(fails: false) }
+        if arguments.contains("-SVFakeForecastFail") { return FakeForecastLoader(fails: true) }
+        #endif
+        return OpenMeteoLoader()
+    }
+
+    private static func makePositionProvider() -> any PositionProviding {
+        #if DEBUG
+        let arguments = ProcessInfo.processInfo.arguments
+        if arguments.contains("-SVFakePosition") { return FakePositionProvider(denied: false) }
+        if arguments.contains("-SVFakePositionDenied") { return FakePositionProvider(denied: true) }
+        #endif
+        return SystemPositionProvider()
     }
 
     private static func makeAppLock() -> AppLock {
@@ -80,6 +106,8 @@ struct StyleVaultNativeApp: App {
                 .environment(appLock)
                 .environment(cutoutWorker)
                 .environment(\.linkReader, Self.makeLinkReader())
+                .environment(\.forecastLoader, Self.makeForecastLoader())
+                .environment(\.positionProvider, Self.makePositionProvider())
                 .onChange(of: covered, initial: true) { _, value in lockWindow.setVisible(value) }
                 .onChange(of: scenePhase, initial: true) { _, phase in
                     appLock.sceneDidChange(to: phase)

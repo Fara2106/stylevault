@@ -1,0 +1,145 @@
+import StyleVaultCore
+import SwiftUI
+
+/// Le miniature di una fila di capi.
+struct OutfitThumbs: View {
+    let items: [Item]
+    var size: CGFloat = 56
+
+    var body: some View {
+        HStack(spacing: 8) {
+            ForEach(items) { item in
+                ItemPhotoView(data: item.photoFront, name: item.name)
+                    .frame(width: size, height: size)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .accessibilityLabel(Text(verbatim: item.name))
+            }
+        }
+    }
+}
+
+/// La proposta di un outfit, come src/components/OutfitCard.
+struct OutfitCardView: View {
+    let outfit: GeneratedOutfit
+    let items: [String: Item]
+    let lockedIDs: Set<String>
+    let saved: Bool
+    let onToggleLock: (String) -> Void
+    let onSave: () -> Void
+    let onWear: () -> Void
+
+    private var sections: [(label: LocalizedStringKey, piece: OutfitPiece)] {
+        let slots: [(LocalizedStringKey, OutfitPiece?)] = [
+            (outfit.isDress ? "outfit.dress" : "outfit.top", outfit.top), ("outfit.bottom", outfit.bottom),
+            ("outfit.shoes", outfit.shoes), ("outfit.outerwear", outfit.outerwear),
+        ]
+        return slots.compactMap { label, piece in piece.map { (label, $0) } }
+    }
+
+    private var missingText: String {
+        outfit.missing.map { piece in
+            switch piece {
+            case .top: return String(localized: "outfit.missingPiece.top")
+            case .bottom: return String(localized: "outfit.missingPiece.bottom")
+            case .shoes: return String(localized: "outfit.missingPiece.shoes")
+            }
+        }.joined(separator: ", ")
+    }
+
+    var body: some View {
+        Card {
+            VStack(alignment: .leading, spacing: 12) {
+                header
+                if !outfit.missing.isEmpty {
+                    Text("outfit.incomplete \(missingText)")
+                        .font(.footnote)
+                        .foregroundStyle(Palette.muted)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier("outfit-missing")
+                }
+                ForEach(sections, id: \.piece.id) { section in
+                    row(section.label, section.piece)
+                }
+                if !outfit.accessories.isEmpty {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("outfit.accessoriesLabel").font(.caption).foregroundStyle(Palette.muted)
+                        OutfitThumbs(items: outfit.accessories.compactMap { items[$0.id] }, size: 44)
+                    }
+                }
+                actions
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("outfit-card")
+    }
+
+    private var header: some View {
+        HStack(alignment: .firstTextBaseline) {
+            VStack(alignment: .leading, spacing: 0) {
+                Text(verbatim: "\(outfit.score)").font(.display(34)).foregroundStyle(Palette.ink)
+                    .accessibilityIdentifier("outfit-score")
+                Text("outfit.outfitScore").font(.caption).foregroundStyle(Palette.muted)
+            }
+            Spacer()
+            metric(outfit.weatherMatch, "outfit.weatherMatch")
+            metric(outfit.colorHarmony, "outfit.colorMatch")
+        }
+    }
+
+    private func metric(_ value: Int, _ label: LocalizedStringKey) -> some View {
+        VStack(alignment: .trailing, spacing: 0) {
+            Text(verbatim: "\(value)%").font(.subheadline.weight(.medium)).foregroundStyle(Palette.ink)
+            Text(label).font(.caption).foregroundStyle(Palette.muted)
+        }
+        .padding(.leading, 12)
+    }
+
+    @ViewBuilder private func row(_ label: LocalizedStringKey, _ piece: OutfitPiece) -> some View {
+        if let item = items[piece.id] {
+            let locked = lockedIDs.contains(piece.id)
+            HStack(spacing: 12) {
+                ItemPhotoView(data: item.photoFront, name: item.name)
+                    .frame(width: 56, height: 56)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(label).font(.caption).foregroundStyle(Palette.muted)
+                    Text(verbatim: item.name).font(.subheadline).foregroundStyle(Palette.ink).lineLimit(2)
+                }
+                Spacer()
+                Button { onToggleLock(piece.id) } label: {
+                    Image(systemName: locked ? "lock.fill" : "lock.open")
+                        .foregroundStyle(locked ? Palette.ink : Palette.muted)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text(locked ? "outfit.unlockItem" : "outfit.lockItem"))
+                .accessibilityAddTraits(locked ? .isSelected : [])
+                .accessibilityIdentifier("outfit-lock")
+            }
+        }
+    }
+
+    private var actions: some View {
+        HStack(spacing: 8) {
+            Button(action: onSave) {
+                Label(saved ? "outfit.saved" : "common.save", systemImage: saved ? "checkmark" : "heart")
+                    .font(.subheadline)
+                    .frame(maxWidth: .infinity, minHeight: 36)
+            }
+            .buttonStyle(.bordered)
+            .tint(Palette.ink)
+            .disabled(saved)
+            .accessibilityIdentifier("outfit-save")
+            Button(action: onWear) {
+                Label("outfit.wearThis", systemImage: "checkmark")
+                    .font(.subheadline)
+                    .frame(maxWidth: .infinity, minHeight: 36)
+                    .foregroundStyle(Palette.bg)
+                    .background(Palette.ink, in: RoundedRectangle(cornerRadius: 8))
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("outfit-wear")
+        }
+    }
+}

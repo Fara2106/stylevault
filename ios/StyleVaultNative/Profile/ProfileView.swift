@@ -62,6 +62,14 @@ struct ProfileView: View {
             } footer: {
                 Text(lock.canEnable || lock.isEnabled ? "native.lock.footer" : "native.lock.unavailable")
             }
+            Section {
+                NavigationLink {
+                    StatisticsView()
+                } label: {
+                    Text("profile.stats")
+                }
+                .accessibilityIdentifier("profile-stats")
+            }
             AccountSection()
         }
         .scrollContentBackground(.hidden)

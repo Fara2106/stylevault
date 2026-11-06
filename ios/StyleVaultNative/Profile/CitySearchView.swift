@@ -2,6 +2,7 @@ import StyleVaultCore
 import SwiftUI
 
 struct CitySearchView: View {
+    var title: LocalizedStringKey = "profile.defaultCity"
     let onPick: (City) -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -37,7 +38,7 @@ struct CitySearchView: View {
         }
         .scrollContentBackground(.hidden)
         .background(Palette.bg)
-        .navigationTitle(Text("profile.defaultCity"))
+        .navigationTitle(Text(title))
         .navigationBarTitleDisplayMode(.inline)
         .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always),
                     prompt: Text("native.city.search"))

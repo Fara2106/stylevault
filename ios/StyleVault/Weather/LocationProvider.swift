@@ -23,7 +23,7 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate {
         manager.desiredAccuracy = kCLLocationAccuracyReduced
     }
 
-    func currentPlace() async -> PlacePayload? {
+    func currentPlace(fallbackName: String = "La mia posizione") async -> PlacePayload? {
         if manager.authorizationStatus == .notDetermined, authorizationWaiter == nil {
             await withCheckedContinuation { waiter in
                 authorizationWaiter = waiter
@@ -39,7 +39,7 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate {
             if locationWaiters.count == 1 { manager.requestLocation() }
         }
         guard let location else { return nil }
-        let name = await Self.placeName(for: location) ?? "La mia posizione"
+        let name = await Self.placeName(for: location) ?? fallbackName
         return PlacePayload(latitude: location.coordinate.latitude,
                             longitude: location.coordinate.longitude, name: name)
     }

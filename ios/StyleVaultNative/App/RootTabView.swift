@@ -46,10 +46,14 @@ struct RootTabView: View {
                 WardrobeView { router.openAdd(to: $0) }
                     .tabItem { Label(LocalizedStringKey("nav.wardrobe"), systemImage: "tshirt") }
                     .tag(AppTab.wardrobe)
-                placeholder("nav.outfit", .outfit, "sparkles")
+                OutfitView { router.openAdd(to: .wardrobe) }
+                    .tabItem { Label(LocalizedStringKey("nav.outfit"), systemImage: "sparkles") }
+                    .tag(AppTab.outfit)
                 // Il + non ha una schermata: il foglio si apre da TabRouter.
                 Color.clear.tabItem { Label(LocalizedStringKey("nav.add"), systemImage: "plus.circle.fill") }.tag(AppTab.add)
-                placeholder("nav.calendar", .calendar, "calendar")
+                CalendarView()
+                    .tabItem { Label(LocalizedStringKey("nav.calendar"), systemImage: "calendar") }
+                    .tag(AppTab.calendar)
                 ProfileView().tabItem { Label(LocalizedStringKey("nav.profile"), systemImage: "person") }.tag(AppTab.profile)
             }
         }
@@ -59,14 +63,5 @@ struct RootTabView: View {
             ItemFormView(mode: .add(router.addDestination))
         }
         .task(id: profiles.count) { _ = try? ProfileStore.current(in: context) }
-    }
-
-    private func placeholder(_ titleKey: String, _ tab: AppTab, _ symbol: String) -> some View {
-        ZStack {
-            Palette.bg.ignoresSafeArea()
-            Text("native.comingSoon").foregroundStyle(Palette.muted)
-        }
-        .tabItem { Label(LocalizedStringKey(titleKey), systemImage: symbol) }
-        .tag(tab)
     }
 }

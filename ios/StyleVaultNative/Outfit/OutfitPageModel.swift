@@ -1,0 +1,148 @@
+import Foundation
+import Observation
+import StyleVaultCore
+
+struct SavedCity: Codable, Equatable {
+    let name: String
+    let latitude: Double
+    let longitude: Double
+}
+
+/// Da dove viene il meteo. Si parte dalla città del Profilo: la posizione si usa solo dopo averla chiesta.
+enum PlaceChoice: Equatable {
+    case defaultCity, position
+    case city(SavedCity)
+}
+
+enum PlaceKind { case fallback, position, manual }
+
+/// Lo stato della schermata Outfit, come src/pages/OutfitPage/OutfitPage.jsx.
+@MainActor @Observable final class OutfitPageModel {
+    private static let placeKey = "outfit.place"
+    /// Entro ~5 km il meteo è lo stesso: gli outfit già mostrati non cambiano.
+    private static let sameWeatherDegrees = 0.05
+
+    @ObservationIgnored private let defaults: UserDefaults
+    private(set) var choice: PlaceChoice
+    private(set) var position: ForecastPlace?
+    var positionUnavailable = false
+    private(set) var forecast: ForecastResult?
+    private(set) var weatherError = false
+    var manualTemperature = 20.0
+    var manualRain = false
+    private(set) var dayIndex = 0
+    private(set) var occasion = "all"
+    private(set) var outfits: [GeneratedOutfit] = []
+    private(set) var lockedIDs: Set<String> = []
+    private var savedOutfits: Set<UUID> = []
+    /// Il giorno su cui si è appena registrato un outfit.
+    var wornDay: String?
+
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+        choice = Self.readChoice(from: defaults)
+    }
+
+    private static func readChoice(from defaults: UserDefaults) -> PlaceChoice {
+        guard let data = defaults.data(forKey: placeKey) else {
+            return defaults.bool(forKey: placeKey + ".position") ? .position : .defaultCity
+        }
+        return (try? JSONDecoder().decode(SavedCity.self, from: data)).map(PlaceChoice.city) ?? .defaultCity
+    }
+
+    func choose(_ city: SavedCity) {
+        choice = .city(city)
+        defaults.set(try? JSONEncoder().encode(city), forKey: Self.placeKey)
+        defaults.set(false, forKey: Self.placeKey + ".position")
+    }
+
+    /// Le coordinate non si ricordano: solo la scelta.
+    func chooseMyPosition() {
+        choice = .position
+        positionUnavailable = false
+        defaults.removeObject(forKey: Self.placeKey)
+        defaults.set(true, forKey: Self.placeKey + ".position")
+    }
+
+    func receive(position new: ForecastPlace) {
+        guard choice == .position else { return }
+        positionUnavailable = false
+        if let old = position, abs(old.latitude - new.latitude) <= Self.sameWeatherDegrees,
+           abs(old.longitude - new.longitude) <= Self.sameWeatherDegrees { return }
+        position = new
+    }
+
+    var placeKind: PlaceKind {
+        switch choice {
+        case .city: return .manual
+        case .position: return position == nil ? .fallback : .position
+        case .defaultCity: return .fallback
+        }
+    }
+
+    func place(defaultCity: ForecastPlace) -> ForecastPlace {
+        switch choice {
+        case .city(let city):
+            return ForecastPlace(name: city.name, latitude: city.latitude, longitude: city.longitude, isPosition: false)
+        case .position: return position ?? defaultCity
+        case .defaultCity: return defaultCity
+        }
+    }
+
+    /// Cambiando luogo gli outfit vecchi erano per un altro meteo.
+    func loadForecast(for place: ForecastPlace, using loader: any ForecastLoading) async {
+        weatherError = false
+        forecast = nil
+        outfits = []
+        do {
+            let result = try await loader.load(place: place)
+            guard !Task.isCancelled else { return }
+            forecast = result
+        } catch {
+            guard !Task.isCancelled else { return }
+            weatherError = true
+        }
+    }
+
+    func dayWeather(city: String, today: String) -> DayForecast? {
+        if let days = forecast?.days, days.indices.contains(dayIndex) { return days[dayIndex] }
+        guard weatherError else { return nil }
+        return DayForecast(city: city, date: DayText.adding(dayIndex, to: today), tMin: nil, tMax: nil,
+                           temperature: manualTemperature, windSpeed: 0, uvIndex: 0, precipProb: nil,
+                           icon: manualRain ? .rain : .sun, descriptionKey: manualRain ? "weather.rainy" : "weather.clear",
+                           rain: manualRain, snow: false)
+    }
+
+    func select(day: Int) {
+        dayIndex = day
+        outfits = []
+    }
+
+    func select(occasion: String) {
+        self.occasion = occasion
+        outfits = []
+    }
+
+    func toggleLock(_ id: String) {
+        if lockedIDs.remove(id) == nil { lockedIDs.insert(id) }
+    }
+
+    func generate(items: [OutfitPiece], recentWear: [RecentWear], city: String = "", today: String = CalendarMath.iso(.now)) {
+        guard let weather = dayWeather(city: city, today: today) else { return }
+        var generator = SystemRandomNumberGenerator()
+        outfits = OutfitEngine.generate(items: items, weather: weather, occasion: occasion, count: 3,
+                                        locked: items.filter { lockedIDs.contains($0.id) }, recentWear: recentWear,
+                                        referenceDate: weather.date, using: &generator)
+        savedOutfits = []
+        wornDay = nil
+    }
+
+    func generateIfNeeded(items: [OutfitPiece], recentWear: [RecentWear], city: String = "", today: String = CalendarMath.iso(.now)) {
+        guard outfits.isEmpty, !items.isEmpty else { return }
+        generate(items: items, recentWear: recentWear, city: city, today: today)
+    }
+
+    func markSaved(_ outfit: GeneratedOutfit) { savedOutfits.insert(outfit.id) }
+
+    func isSaved(_ outfit: GeneratedOutfit) -> Bool { savedOutfits.contains(outfit.id) }
+}

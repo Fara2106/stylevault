@@ -186,6 +186,7 @@ targets:
       - StyleVault/Design/Palette.swift
       - StyleVault/App/ThemeStore.swift
       - StyleVault/Auth/AuthService.swift
+      - StyleVault/Weather/LocationProvider.swift
     dependencies:
       - package: StyleVaultCore
       - package: Supabase
@@ -204,9 +205,11 @@ targets:
       properties:
         NSCameraUsageDescription: Per fotografare i tuoi capi.
         NSFaceIDUsageDescription: Serve per sbloccare l'app, se attivi il blocco nel Profilo.
+        NSLocationWhenInUseUsageDescription: Per mostrarti il meteo di dove sei e consigliarti cosa indossare.
+        NSLocationDefaultAccuracyReduced: true
         CFBundleDisplayName: SV Nativa
         CFBundleShortVersionString: "1.0"
-        CFBundleVersion: "3"
+        CFBundleVersion: "4"
         SupabaseURL: $(SUPABASE_URL)
         SupabaseKey: $(SUPABASE_KEY)
         CFBundleURLTypes:

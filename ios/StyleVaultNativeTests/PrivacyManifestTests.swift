@@ -22,10 +22,12 @@ final class PrivacyManifestTests: XCTestCase {
 
         XCTAssertEqual(Set(collected.compactMap { $0["NSPrivacyCollectedDataType"] as? String }), [
             "NSPrivacyCollectedDataTypeEmailAddress", "NSPrivacyCollectedDataTypeName",
-            "NSPrivacyCollectedDataTypeUserID",
+            "NSPrivacyCollectedDataTypeUserID", "NSPrivacyCollectedDataTypeCoarseLocation",
         ])
         for type in collected {
-            XCTAssertEqual(type["NSPrivacyCollectedDataTypeLinked"] as? Bool, true)
+            // Le coordinate arrotondate per il meteo non sono legate alla persona, l'account sì.
+            let isLocation = type["NSPrivacyCollectedDataType"] as? String == "NSPrivacyCollectedDataTypeCoarseLocation"
+            XCTAssertEqual(type["NSPrivacyCollectedDataTypeLinked"] as? Bool, !isLocation)
             XCTAssertEqual(type["NSPrivacyCollectedDataTypeTracking"] as? Bool, false)
             XCTAssertEqual(type["NSPrivacyCollectedDataTypePurposes"] as? [String],
                            ["NSPrivacyCollectedDataTypePurposeAppFunctionality"])

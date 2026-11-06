@@ -35,13 +35,17 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>3</string>
+	<string>4</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>NSCameraUsageDescription</key>
 	<string>Per fotografare i tuoi capi.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Serve per sbloccare l'app, se attivi il blocco nel Profilo.</string>
+	<key>NSLocationDefaultAccuracyReduced</key>
+	<true/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Per mostrarti il meteo di dove sei e consigliarti cosa indossare.</string>
 	<key>SupabaseKey</key>
 	<string>$(SUPABASE_KEY)</string>
 	<key>SupabaseURL</key>

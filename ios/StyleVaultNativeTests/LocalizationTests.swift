@@ -19,6 +19,38 @@ final class LocalizationTests: XCTestCase {
         + ["form.priceInvalid", "form.photoError", "form.discard.title", "form.discard.confirm", "form.discard.keep",
            "category.new", "category.name", "category.delete", "category.inUse", "detail.photoBack", "detail.cutout"]
             .map { "native.\($0)" }
+        + ["subtitle", "generateOutfit", "regenerate", "regenerateHint", "today", "tomorrow", "noOutfits", "noItemsForOutfit",
+           "missingPiece.top", "missingPiece.bottom", "missingPiece.shoes", "outfitScore", "weatherMatch", "colorMatch",
+           "wearThis", "saved", "top", "bottom", "shoes", "outerwear", "accessoriesLabel", "dress", "lockItem", "unlockItem",
+           "adviceTitle", "manualWeather", "manualTemp", "manualRain", "myPosition", "chosenByHand", "searchCity"]
+            .map { "outfit.\($0)" }
+        + ["colorsHarmonious", "colorsClash", "tooManyColors", "monochrome", "perfectWarmth", "rainShoes", "rainOuter",
+           "elevated", "uvHigh", "windStrong"].map { "advice.\($0)" }
+        + ["title", "subtitle", "noOutfit", "planned", "worn", "markWorn", "assignOutfit", "pickOutfit", "noSavedOutfits",
+           "customOutfit", "removeEntry"].map { "calendar.\($0)" }
+        + ["cloudy", "rainy", "snow", "clear", "partlyCloudy", "fog", "drizzle", "thunderstorm", "openMeteoCredit",
+           "part.morning", "part.afternoon", "part.evening", "partTitle.morning", "partTitle.afternoon", "partTitle.evening"]
+            .map { "weather.\($0)" }
+        + ["stats", "totalOutfits", "statsMostWorn", "statsLeastWorn", "statsByCategory", "statsByColor", "statsCostPerWear",
+           "statsNoData", "statsNever"].map { "profile.\($0)" }
+        + ["native.outfit.saved.title", "native.outfit.saved.empty", "common.loading"]
+
+    func testIlMotivoDellaPosizioneHaLeDueLingue() throws {
+        for language in ["it", "en"] {
+            let path = try XCTUnwrap(Bundle.main.path(forResource: language, ofType: "lproj"))
+            let bundle = try XCTUnwrap(Bundle(path: path))
+            XCTAssertNotEqual(bundle.localizedString(forKey: "NSLocationWhenInUseUsageDescription", value: nil, table: "InfoPlist"),
+                              "NSLocationWhenInUseUsageDescription", language)
+        }
+    }
+
+    func testGliUtilizziHannoIlPlurale() throws {
+        let path = try XCTUnwrap(Bundle.main.path(forResource: "it", ofType: "lproj"))
+        let bundle = try XCTUnwrap(Bundle(path: path))
+        let format = bundle.localizedString(forKey: "profile.statsWears %lld", value: nil, table: nil)
+        XCTAssertEqual(String.localizedStringWithFormat(format, 1), "1 utilizzo")
+        XCTAssertEqual(String.localizedStringWithFormat(format, 3), "3 utilizzi")
+    }
 
     func testOgniEtichettaHaItalianoEInglese() throws {
         let keys = Catalog.categories.flatMap { [$0.labelKey] + $0.subcategories.map(\.labelKey) }

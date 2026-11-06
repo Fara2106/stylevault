@@ -51,6 +51,23 @@
           }
         }
       }
+    },
+    "NSLocationWhenInUseUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Per mostrarti il meteo di dove sei e consigliarti cosa indossare."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To show the weather where you are and suggest what to wear."
+          }
+        }
+      }
     }
   },
   "version": "1.0"
