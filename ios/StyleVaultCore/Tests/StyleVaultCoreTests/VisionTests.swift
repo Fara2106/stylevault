@@ -99,3 +99,21 @@ final class VisionTests: XCTestCase {
 
     private func XCTUnwrapAsync<T>(_ value: T?) async throws -> T { try XCTUnwrap(value) }
 }
+
+// Armocromia: l'analisi del viso con Vision al posto di MediaPipe.
+extension VisionTests {
+    func testLeggeColoriDaUnaFotoConIlViso() async throws {
+        let colors = try await FaceColorAnalyzer.analyze(try fixture("persona"))
+        let skin = try XCTUnwrap(ColorLab.lab(hex: try XCTUnwrap(colors.skin)))
+        // Una pelle ha sempre a e b positivi e non è né nera né bianca.
+        XCTAssertGreaterThan(skin.a, 2)
+        XCTAssertGreaterThan(skin.b, 2)
+        XCTAssertTrue((30...92).contains(skin.L), "L \(skin.L)")
+        XCTAssertNotNil(ArmocromiaClassifier.classify(colors))
+    }
+
+    func testSenzaVisoNessunColore() async throws {
+        let colors = try await FaceColorAnalyzer.analyze(solidImage(width: 400, height: 600))
+        XCTAssertEqual(colors, FaceColors())
+    }
+}
