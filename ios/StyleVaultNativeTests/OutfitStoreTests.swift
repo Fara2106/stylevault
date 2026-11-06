@@ -35,6 +35,24 @@ import XCTest
         XCTAssertFalse(future.worn)
     }
 
+    func testLoStessoOutfitNonSiAssegnaDueVolteAlloStessoGiorno() throws {
+        let c = try context()
+        let ids = [UUID(), UUID()]
+        let first = try OutfitStore.log(itemIDs: ids, outfitID: nil, day: "2026-11-06", today: "2026-11-06", in: c)
+        let second = try OutfitStore.log(itemIDs: ids.reversed(), outfitID: nil, day: "2026-11-06", today: "2026-11-06", in: c)
+        XCTAssertEqual(first.id, second.id)
+        XCTAssertEqual(try c.fetchCount(FetchDescriptor<CalendarEntry>()), 1)
+        try OutfitStore.log(itemIDs: ids, outfitID: nil, day: "2026-11-07", today: "2026-11-06", in: c)
+        XCTAssertEqual(try c.fetchCount(FetchDescriptor<CalendarEntry>()), 2)
+    }
+
+    func testUnGiornoFuturoNonSiSegnaIndossato() throws {
+        let c = try context()
+        let future = try OutfitStore.log(itemIDs: [UUID()], outfitID: nil, day: "2026-11-07", today: "2026-11-06", in: c)
+        XCTAssertFalse(OutfitStore.canMarkWorn(future, today: "2026-11-06"))
+        XCTAssertTrue(OutfitStore.canMarkWorn(future, today: "2026-11-07"))
+    }
+
     func testSegnaIndossatoERimuovi() throws {
         let c = try context()
         let entry = try OutfitStore.log(itemIDs: [UUID()], outfitID: nil, day: "2026-11-07", today: "2026-11-06", in: c)

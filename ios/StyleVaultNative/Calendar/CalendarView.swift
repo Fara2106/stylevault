@@ -212,7 +212,7 @@ struct CalendarView: View {
                     Button("tryon.seeOnMe") { tryOn = .from(entry.itemIDs.compactMap { id in items.first { $0.id == id } }) }
                         .tint(Palette.link)
                         .accessibilityIdentifier("calendar-avatar")
-                    if !entry.worn {
+                    if OutfitStore.canMarkWorn(entry, today: today) {
                         Button("calendar.markWorn") { perform { try OutfitStore.markWorn(entry, in: context) } }
                             .tint(Palette.link)
                             .accessibilityIdentifier("calendar-mark-worn")

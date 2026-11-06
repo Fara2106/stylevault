@@ -37,6 +37,9 @@ extension CalendarEntry {
     /// Un giorno passato o di oggi è indossato, uno futuro è pianificato.
     @discardableResult
     static func log(itemIDs: [UUID], outfitID: UUID?, day: String, today: String, in context: ModelContext) throws -> CalendarEntry {
+        let existing = try context.fetch(FetchDescriptor<CalendarEntry>(predicate: #Predicate { $0.day == day }))
+        // Toccare due volte lo stesso outfit non deve raddoppiare il giorno.
+        if let same = existing.first(where: { Set($0.itemIDs) == Set(itemIDs) }) { return same }
         let entry = CalendarEntry()
         entry.day = day
         entry.worn = day <= today
@@ -46,6 +49,9 @@ extension CalendarEntry {
         try context.save()
         return entry
     }
+
+    /// Un giorno che deve ancora arrivare non può essere già indossato.
+    static func canMarkWorn(_ entry: CalendarEntry, today: String) -> Bool { !entry.worn && entry.day <= today }
 
     static func markWorn(_ entry: CalendarEntry, in context: ModelContext) throws {
         entry.worn = true

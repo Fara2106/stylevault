@@ -125,10 +125,14 @@ final class OutfitFlowTests: XCTestCase {
         let status = app.staticTexts["calendar-status"].firstMatch
         XCTAssertTrue(status.waitForExistence(timeout: 10))
         XCTAssertEqual(status.label, "Pianificato")
-        app.buttons["calendar-mark-worn"].tap()
-        XCTAssertTrue(app.staticTexts["Indossato"].waitForExistence(timeout: 5))
+        // Un giorno che deve ancora arrivare non può essere già indossato.
+        XCTAssertFalse(app.buttons["calendar-mark-worn"].exists)
         app.buttons["calendar-remove"].tap()
-        XCTAssertTrue(app.staticTexts["calendar-empty"].waitForExistence(timeout: 5))
+        // Togliere chiede conferma: un tocco sbagliato non deve perdere il giorno.
+        let confirm = app.alerts.buttons["Rimuovi dal giorno"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 30))
+        confirm.tap()
+        XCTAssertTrue(app.staticTexts["calendar-empty"].waitForExistence(timeout: 30))
     }
 
     func testSenzaMeteoSiImpostaAManoESiGeneraLoStesso() {
