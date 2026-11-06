@@ -49,8 +49,9 @@ restano su iCloud e l'account non li sposta. Rovescia la decisione 7 del design 
   posizione si chiede solo dal tasto, dopo la spiegazione; senza si usa la città del Profilo.
 - Decisione di Lorenzo (06/11): si segue sempre la skill `mobile-app-publishing`, giro da utente compreso, e si tolgono dal
   repository ibrida e sito. Lo fa una sessione a parte sul suo ramo, con tag `archivio-ibrida-e-sito`; la fusione la decide
-  Lorenzo e il sito resta online finché non pubblica lui. Supabase e `keepalive.yml` restano: account della nativa e dati di
-  Lorenzo e Marianna. Per Android ci sarà un pulsante di esportazione nel Profilo, non ancora costruito.
+  Lorenzo e il sito resta online finché non pubblica lui. Supabase e `keepalive.yml` per ora restano: account della nativa e dati
+  di Lorenzo e Marianna. Se pulire anche Supabase lo si decide più avanti con Lorenzo. Per Android si esportano i dati
+  direttamente, senza complicazioni, con un pulsante nel Profilo non ancora costruito.
 - `Info 2.plist` e `StyleVaultNative 2.entitlements` sono vecchie copie non tracciate: escluse in `project.yml`, non
   cancellate.
 - Prima dell'App Store: `/privacy` e `/supporto` rispondono 404 (si vedono solo grazie a 404.html), mittente delle
