@@ -18,8 +18,25 @@ restano su iCloud e l'account non li sposta. Rovescia la decisione 7 del design 
   simulatore lento il test toccava mentre la tastiera spostava il foglio. Corretto il test con `waitForKeyboard`
   (15 su 15), l'app non cambia: a mano il capo si salva. Il carico intanto era sceso, quindi il merito può essere
   in parte suo. Swap pieno (23 GB) e 4 simulatori accesi rallentano tutto.
-- Build 1.0 (2) archiviata ed esportata, NON caricata: serve l'ok di Lorenzo perché la distribuzione automatica la
-  manda subito anche a Marianna. IPA controllata: diritti di produzione, Apple attivo, nessun avanzo di prova.
+- Build 1.0 (2) caricata il 2026-11-06 alle 08:33 con l'ok di Lorenzo ("Upload succeeded", commit `5d79ad5`). La
+  distribuzione automatica del gruppo "Lorenzo e Marianna" la manda anche a Marianna. Verificato su App Store
+  Connect: elaborata entro le 08:35, stato "Pronta per l'invio", gruppo con 2 tester e 2 build. Alle 08:35 Lorenzo
+  e Marianna risultavano ancora "Invitato", senza sessioni né dispositivi: invito non ancora accettato o dato non
+  aggiornato. IPA controllata: diritti di produzione, Apple attivo, nessun avanzo di prova.
+- Build 1.0 (3) caricata il 2026-11-06 alle 12:41 con l'ok di Lorenzo ("Upload succeeded", commit `2a965f5`), con le
+  correzioni del giro da utente sul simulatore: griglia, categoria doppia, pallini, riquadro dei campi (`FieldBox`), tema
+  nel login, invio nel login, colori (`Palette.link`), errore Apple col codice, "Registrati" in evidenza, "Esci e vai
+  all'accesso" nel Profilo per chi è senza account ("Esci" per chi ha l'account c'era già). Verificato su App Store
+  Connect alle 12:46: elaborata, "Pronta per l'invio", nel gruppo con 2 inviti, ancora nessuna installazione.
+- Test prima dell'upload: iPhone verdi (29 UI), ibrida 144. iPad: 28 su 29 UI nella suite completa; il test del
+  login cercava la tastiera a schermo e falliva sempre: corretto con `waitForFocus`, poi 5 su 5, ma la suite iPad
+  intera non è stata rifatta dopo. A mano su iPad il tocco sul bordo apre la tastiera. `testGiroCompleto` è fallito una
+  volta a load 136 (app occupata 21 secondi dopo il tocco, poi niente fuoco) e poi 6 su 6: causa non determinata.
+- Marianna (06/11): dice che Accedi con Apple non va e che non vede Registrati. Non visto a schermo. Su App Store Connect
+  la build 2 non risulta installata da nessuno (dato forse in ritardo). La build 1.0 (1) non ha login. Ipotesi aperte:
+  build vecchia, password dell'Account Apple rifiutata da iOS o dal download, "Continua senza account" già toccato
+  (dopo il login non ricompare). Servono il numero di versione in TestFlight e una foto della schermata.
+- Sito: consiglio della foto in costume nella prova virtuale (commit `0da8b7f`), non pubblicato né visto a schermo.
 - `Info 2.plist` e `StyleVaultNative 2.entitlements` sono vecchie copie non tracciate: escluse in `project.yml`, non
   cancellate.
 - Prima dell'App Store: `/privacy` e `/supporto` rispondono 404 (si vedono solo grazie a 404.html), mittente delle
