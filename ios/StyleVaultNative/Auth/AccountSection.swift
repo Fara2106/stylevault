@@ -12,6 +12,14 @@ struct AccountSection: View {
         Section {
             if let user = auth.session?.user {
                 if let email = user.email { Text(verbatim: email).foregroundStyle(Palette.muted) }
+                if usesPassword {
+                    NavigationLink {
+                        ChangePasswordView()
+                    } label: {
+                        Text("profile.changePassword").foregroundStyle(Palette.ink)
+                    }
+                    .accessibilityIdentifier("account-password")
+                }
                 Button("auth.logout") { Task { await auth.signOut() } }
                     .disabled(busy)
                     .accessibilityIdentifier("account-logout")
@@ -36,6 +44,11 @@ struct AccountSection: View {
         }
         // L'accento sui tasti dei messaggi non arriva a 4,5:1.
         .tint(Palette.ink)
+    }
+
+    /// Chi entra con Apple o Google non ha una password da cambiare qui.
+    private var usesPassword: Bool {
+        auth.session?.user.identities?.contains { $0.provider == "email" } ?? false
     }
 
     private func deleteAccount() {

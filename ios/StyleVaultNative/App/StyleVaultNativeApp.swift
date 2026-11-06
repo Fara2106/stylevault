@@ -20,6 +20,9 @@ struct StyleVaultNativeApp: App {
             UserDefaults.standard.removeObject(forKey: "auth.skipped")
         }
         let preferred: StoreMode = ProcessInfo.processInfo.arguments.contains("-SVMemoryStore") ? .memory : .cloud
+        if ProcessInfo.processInfo.arguments.contains("-SVResetAIConsent") {
+            UserDefaults.standard.removeObject(forKey: "tryon.ai.accepted")
+        }
         if preferred == .memory {
             // Il dato in memoria riparte vuoto a ogni test: anche il luogo scelto deve ripartire da zero.
             UserDefaults.standard.removeObject(forKey: "outfit.place")
@@ -75,6 +78,20 @@ struct StyleVaultNativeApp: App {
         return SystemBodyPhotoAnalyzer()
     }
 
+    private static func makeFaceAnalyzer() -> any FaceAnalyzing {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-SVFakeBody") { return FakeFaceAnalyzer() }
+        #endif
+        return SystemFaceAnalyzer()
+    }
+
+    private static func makeFeedbackSender() -> any FeedbackSending {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-SVFakeFeedback") { return FakeFeedbackSender() }
+        #endif
+        return SystemFeedbackSender()
+    }
+
     private static func makeAvatarRenderer() -> any AvatarRendering {
         #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("-SVFakeBody") { return FakeAvatarRenderer() }
@@ -125,6 +142,8 @@ struct StyleVaultNativeApp: App {
                 .environment(\.positionProvider, Self.makePositionProvider())
                 .environment(\.bodyPhotoAnalyzer, Self.makeBodyPhotoAnalyzer())
                 .environment(\.avatarRenderer, Self.makeAvatarRenderer())
+                .environment(\.faceAnalyzer, Self.makeFaceAnalyzer())
+                .environment(\.feedbackSender, Self.makeFeedbackSender())
                 .onChange(of: covered, initial: true) { _, value in lockWindow.setVisible(value) }
                 .onChange(of: scenePhase, initial: true) { _, phase in
                     appLock.sceneDidChange(to: phase)

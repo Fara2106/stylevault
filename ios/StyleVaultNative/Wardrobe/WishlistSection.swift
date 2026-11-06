@@ -5,6 +5,7 @@ import SwiftUI
 
 /// La sezione Wishlist. Un desiderio si apre nel negozio, si compra o si cancella.
 struct WishlistSection: View {
+    @State private var removing: WishlistItem?
     let onAdd: () -> Void
 
     @Environment(\.modelContext) private var context
@@ -50,7 +51,7 @@ struct WishlistSection: View {
                     .accessibilityHint(Text("wishlist.moveToWardrobe"))
                     .accessibilityIdentifier("wish-bought")
                 Spacer(minLength: 0)
-                Button { remove(wish) } label: {
+                Button { removing = wish } label: {
                     Image(systemName: "trash")
                         .foregroundStyle(Palette.muted)
                         .frame(width: 44, height: 44)
@@ -63,6 +64,13 @@ struct WishlistSection: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("wish-card")
+        .alert("native.wishlist.removeTitle", isPresented: Binding(get: { removing?.id == wish.id }, set: { if !$0 { removing = nil } })) {
+            Button("common.cancel", role: .cancel) { removing = nil }
+            Button("common.delete", role: .destructive) {
+                remove(wish)
+                removing = nil
+            }
+        }
     }
 
     private func buy(_ wish: WishlistItem) {

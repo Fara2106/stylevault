@@ -16,6 +16,9 @@ struct CalendarView: View {
     @State private var selected = CalendarMath.iso(.now)
     @State private var isPickerOpen = false
     @State private var forecast: [DayForecast] = []
+    @State private var tryOn: TryOnSelection?
+    @State private var removing: CalendarEntry?
+    @AppStorage(TemperatureText.storageKey) private var temperatureUnit = "auto"
 
     private let logger = Logger(subsystem: "it.faraoni.stylevault.nativa", category: "calendar")
 
@@ -45,6 +48,14 @@ struct CalendarView: View {
             }
             .background(Palette.bg)
             .toolbar(.hidden, for: .navigationBar)
+            .sheet(item: $tryOn) { selection in AvatarView(garments: selection) }
+            .alert("native.calendar.removeTitle", isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } })) {
+                Button("common.cancel", role: .cancel) { removing = nil }
+                Button("calendar.removeEntry", role: .destructive) {
+                    if let entry = removing { perform { try OutfitStore.remove(entry, in: context) } }
+                    removing = nil
+                }
+            }
             .sheet(isPresented: $isPickerOpen) {
                 OutfitPickerView { outfit in assign(outfit) }
             }
@@ -153,7 +164,7 @@ struct CalendarView: View {
                 Text(verbatim: DayText.long(selected)).font(.headline).foregroundStyle(Palette.ink)
                 Spacer()
                 if let day = forecast.first(where: { $0.date == selected }), let low = day.tMin, let high = day.tMax {
-                    Label { Text(verbatim: "\(jsRound(low))° / \(jsRound(high))°") } icon: { Image(systemName: day.icon.symbol) }
+                    Label { Text(verbatim: "\(TemperatureText.string(low)) / \(TemperatureText.string(high))") } icon: { Image(systemName: day.icon.symbol) }
                         .font(.footnote)
                         .foregroundStyle(Palette.muted)
                         .accessibilityIdentifier("calendar-forecast")
@@ -198,13 +209,16 @@ struct CalendarView: View {
                     OutfitThumbs(items: entry.itemIDs.compactMap { id in items.first { $0.id == id } })
                 }
                 HStack(spacing: 16) {
+                    Button("tryon.seeOnMe") { tryOn = .from(entry.itemIDs.compactMap { id in items.first { $0.id == id } }) }
+                        .tint(Palette.link)
+                        .accessibilityIdentifier("calendar-avatar")
                     if !entry.worn {
                         Button("calendar.markWorn") { perform { try OutfitStore.markWorn(entry, in: context) } }
                             .tint(Palette.link)
                             .accessibilityIdentifier("calendar-mark-worn")
                     }
                     // Senza `role`: col ruolo iOS usa il suo rosso, fuori dalla palette.
-                    Button { perform { try OutfitStore.remove(entry, in: context) } } label: {
+                    Button { removing = entry } label: {
                         Text("calendar.removeEntry").foregroundStyle(Palette.danger)
                     }
                     .accessibilityIdentifier("calendar-remove")

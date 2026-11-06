@@ -81,21 +81,21 @@ import XCTest
         item.photoBack = Data([2])
         let outfit = GeneratedOutfit(top: OutfitPiece(id: item.id.uuidString, category: "tops"))
         let items = [item.id.uuidString: item]
-        XCTAssertEqual(AvatarRequest.make(outfit, items: items, view: .front).garments.first?.photo, Data([1]))
-        XCTAssertEqual(AvatarRequest.make(outfit, items: items, view: .back).garments.first?.photo, Data([2]))
+        XCTAssertEqual(AvatarRequest.make(.from(outfit, items: items), view: .front).garments.first?.photo, Data([1]))
+        XCTAssertEqual(AvatarRequest.make(.from(outfit, items: items), view: .back).garments.first?.photo, Data([2]))
     }
 
     func testDiSpalleSenzaRetroUsaIlDavanti() {
         let item = Item()
         item.photoFront = Data([1])
         let outfit = GeneratedOutfit(top: OutfitPiece(id: item.id.uuidString, category: "tops"))
-        XCTAssertEqual(AvatarRequest.make(outfit, items: [item.id.uuidString: item], view: .back).garments.first?.photo, Data([1]))
+        XCTAssertEqual(AvatarRequest.make(.from(outfit, items: [item.id.uuidString: item]), view: .back).garments.first?.photo, Data([1]))
     }
 
     func testCapoSenzaFotoVieneContato() {
         let item = Item()
         let outfit = GeneratedOutfit(top: OutfitPiece(id: item.id.uuidString, category: "tops"))
-        let request = AvatarRequest.make(outfit, items: [item.id.uuidString: item], view: .front)
+        let request = AvatarRequest.make(.from(outfit, items: [item.id.uuidString: item]), view: .front)
         XCTAssertTrue(request.garments.isEmpty)
         XCTAssertEqual(request.withoutPhoto, 1)
     }

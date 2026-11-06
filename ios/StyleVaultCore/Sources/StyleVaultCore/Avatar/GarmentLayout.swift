@@ -132,3 +132,18 @@ enum GarmentLayout {
         CGRect(x: x - width / 2, y: top, width: width, height: bottom - top)
     }
 }
+
+/// Il posto addosso di un capo fuori da un outfit generato, dal Calendario o dal dettaglio.
+public enum AvatarSlots {
+    public static func slot(category: String) -> String? {
+        switch category {
+        case "tops": return "top"
+        case "bottoms": return "bottom"
+        case "shoes": return "shoes"
+        case "outerwear": return "outerwear"
+        case "dresses": return "dress"
+        case "accessories", "underwear": return nil
+        default: return "top"
+        }
+    }
+}

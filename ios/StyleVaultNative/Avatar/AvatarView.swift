@@ -6,8 +6,7 @@ import SwiftUI
 /// "Vedilo addosso": la persona scontornata con i capi veri sopra, davanti, di lato e di spalle.
 /// Non è un'immagine generata: è un collage fatto sul dispositivo con le foto di chi usa l'app.
 struct AvatarView: View {
-    let outfit: GeneratedOutfit
-    let items: [String: Item]
+    let garments: TryOnSelection
 
     private enum Page {
         case missing, preparing, failed
@@ -21,6 +20,7 @@ struct AvatarView: View {
     @State private var pages: [BodyView: Page] = [:]
     @State private var selection = BodyView.front
     @State private var editing: BodyView?
+    @State private var isPromptOpen = false
 
     private let logger = Logger(subsystem: "it.faraoni.stylevault.nativa", category: "avatar")
 
@@ -41,6 +41,11 @@ struct AvatarView: View {
                 if case let .ready(_, unavailable)? = pages[selection], unavailable > 0 {
                     Text("native.avatar.unavailable \(unavailable)").font(.footnote).foregroundStyle(Palette.muted)
                 }
+                Button("native.avatar.withAI") { isPromptOpen = true }
+                    .font(.subheadline)
+                    .tint(Palette.link)
+                    .frame(minHeight: 44)
+                    .accessibilityIdentifier("avatar-prompt")
             }
             .padding(16)
             .background(Palette.bg)
@@ -51,6 +56,7 @@ struct AvatarView: View {
         .tint(Palette.ink)
         .task(id: photoKeys) { await build() }
         .sheet(item: $editing) { view in BodyPhotoEditorView(view: view) }
+        .sheet(isPresented: $isPromptOpen) { TryOnPromptView(selection: garments) }
     }
 
     @ViewBuilder private func page(_ view: BodyView) -> some View {
@@ -93,7 +99,7 @@ struct AvatarView: View {
         if found[selection] == nil, let first = BodyView.allCases.first(where: { found[$0] != nil }) { selection = first }
         for view in BodyView.allCases {
             guard let photo = found[view], let body = photo.photo else { continue }
-            let request = AvatarRequest.make(outfit, items: items, view: view)
+            let request = AvatarRequest.make(garments, view: view)
             do {
                 let result = try await renderer.render(body: body, bodyKey: BodyPhotoStore.key(of: photo),
                                                        garments: request.garments, view: view)

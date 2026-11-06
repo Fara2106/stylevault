@@ -21,7 +21,8 @@ struct OutfitView: View {
     // Fogli e non pagine: entrando in una pagina la barra si riaccende e, tornando, resta uno spazio vuoto in cima.
     @State private var isCitySearchOpen = false
     @State private var isSavedOpen = false
-    @State private var avatarOutfit: GeneratedOutfit?
+    @State private var tryOn: TryOnSelection?
+    @AppStorage(TemperatureText.storageKey) private var temperatureUnit = "auto"
 
     private let logger = Logger(subsystem: "it.faraoni.stylevault.nativa", category: "outfit")
 
@@ -84,7 +85,7 @@ struct OutfitView: View {
                 }
                 .tint(Palette.ink)
             }
-            .sheet(item: $avatarOutfit) { outfit in AvatarView(outfit: outfit, items: itemsByID) }
+            .sheet(item: $tryOn) { selection in AvatarView(garments: selection) }
             .alert("native.outfit.position.title", isPresented: $isPositionAsked) {
                 Button("common.cancel", role: .cancel) {}
                 Button("native.outfit.position.continue") { model.chooseMyPosition() }
@@ -215,7 +216,7 @@ struct OutfitView: View {
                     .accessibilityIdentifier("outfit-manual")
                 Stepper(value: $model.manualTemperature, in: -30...50, step: 1) {
                     Text("outfit.manualTemp").font(.footnote).foregroundStyle(Palette.muted)
-                    + Text(verbatim: "  \(jsRound(model.manualTemperature))°").font(.subheadline).foregroundStyle(Palette.ink)
+                    + Text(verbatim: "  \(TemperatureText.string(model.manualTemperature))").font(.subheadline).foregroundStyle(Palette.ink)
                 }
                 .accessibilityIdentifier("outfit-manual-temp")
                 Toggle("outfit.manualRain", isOn: $model.manualRain)
@@ -274,7 +275,7 @@ struct OutfitView: View {
             ForEach(model.outfits) { outfit in
                 VStack(alignment: .leading, spacing: 8) {
                     OutfitCardView(outfit: outfit, items: itemsByID, lockedIDs: model.lockedIDs, saved: model.isSaved(outfit),
-                                   wornLabel: wornLabel(for: outfit), onToggleLock: model.toggleLock, onSave: { save(outfit) }, onTryOn: { avatarOutfit = outfit }, onWear: { wear(outfit) })
+                                   wornLabel: wornLabel(for: outfit), onToggleLock: model.toggleLock, onSave: { save(outfit) }, onTryOn: { tryOn = .from(outfit, items: itemsByID) }, onWear: { wear(outfit) })
                     advice(for: outfit)
                 }
             }

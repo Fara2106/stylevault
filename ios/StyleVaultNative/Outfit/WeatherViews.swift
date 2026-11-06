@@ -41,6 +41,7 @@ struct OutlineButtonStyle: ButtonStyle {
 
 /// La scheda meteo del giorno.
 struct WeatherCard: View {
+    @AppStorage(TemperatureText.storageKey) private var temperatureUnit = "auto"
     let weather: DayForecast
     let stale: Bool
     let fetchedAt: Date?
@@ -50,7 +51,7 @@ struct WeatherCard: View {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 12) {
                     Image(systemName: weather.icon.symbol).font(.title).foregroundStyle(Palette.ink)
-                    Text(verbatim: "\(jsRound(weather.temperature))°").font(.display(34)).foregroundStyle(Palette.ink)
+                    Text(verbatim: TemperatureText.string(weather.temperature)).font(.display(34)).foregroundStyle(Palette.ink)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(verbatim: weather.city).font(.subheadline.weight(.medium)).foregroundStyle(Palette.ink)
                         Text(LocalizedStringKey(weather.descriptionKey)).font(.footnote).foregroundStyle(Palette.muted)
@@ -58,7 +59,7 @@ struct WeatherCard: View {
                 }
                 HStack(spacing: 12) {
                     if let low = weather.tMin, let high = weather.tMax {
-                        Text(verbatim: "\(jsRound(low))° / \(jsRound(high))°")
+                        Text(verbatim: "\(TemperatureText.string(low)) / \(TemperatureText.string(high))")
                     }
                     if let rain = weather.precipProb {
                         Label { Text(verbatim: "\(rain)%") } icon: { Image(systemName: "drop") }
@@ -85,6 +86,7 @@ struct WeatherCard: View {
 
 /// La giornata in tre fasce.
 struct DayStripView: View {
+    @AppStorage(TemperatureText.storageKey) private var temperatureUnit = "auto"
     let parts: [DayPart]
 
     var body: some View {
@@ -96,7 +98,7 @@ struct DayStripView: View {
                             Text(part.key.title).font(.caption).foregroundStyle(Palette.muted)
                             // Le fasce passate in grigio, senza trasparenza: sbiadite scenderebbero sotto il contrasto minimo.
                             Image(systemName: part.icon.symbol).foregroundStyle(part.past ? Palette.muted : Palette.ink)
-                            Text(verbatim: part.temperature.map { "\(jsRound($0))°" } ?? "–")
+                            Text(verbatim: part.temperature.map { TemperatureText.string($0) } ?? "–")
                                 .font(.subheadline.weight(.medium))
                                 .foregroundStyle(part.past ? Palette.muted : Palette.ink)
                             if let rain = part.precipProb, rain > 0 {

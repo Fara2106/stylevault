@@ -33,7 +33,20 @@ struct RootTabView: View {
 
     @Environment(\.modelContext) private var context
     @Query private var profiles: [Profile]
+    @Query private var items: [Item]
+    @Query private var bodyPhotos: [BodyPhoto]
     @State private var router = TabRouter()
+    @State private var isOnboardingOpen = false
+    @AppStorage("onboarding.done") private var onboardingDone = false
+
+    /// Solo a chi parte da zero: chi ha già capi o foto non deve rifare i primi passi.
+    private var needsOnboarding: Bool {
+        #if DEBUG
+        let arguments = ProcessInfo.processInfo.arguments
+        if arguments.contains("-SVMemoryStore"), !arguments.contains("-SVShowOnboarding") { return false }
+        #endif
+        return !onboardingDone && items.isEmpty && bodyPhotos.isEmpty
+    }
 
     private var selection: Binding<AppTab> {
         Binding(get: { router.selected }, set: { router.select($0) })
@@ -58,6 +71,13 @@ struct RootTabView: View {
             }
         }
         .background(Palette.bg)
+        .onAppear { isOnboardingOpen = needsOnboarding }
+        .fullScreenCover(isPresented: $isOnboardingOpen) {
+            OnboardingView {
+                onboardingDone = true
+                isOnboardingOpen = false
+            }
+        }
         .tint(Palette.accent)
         .sheet(isPresented: $router.isAddSheetPresented) {
             ItemFormView(mode: .add(router.addDestination))

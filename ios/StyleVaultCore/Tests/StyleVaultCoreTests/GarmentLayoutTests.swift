@@ -211,3 +211,22 @@ final class ShoeAndSilhouetteLayoutTests: XCTestCase {
         XCTAssertLessThanOrEqual(bottom.width, 1.5 * 160)
     }
 }
+
+final class AvatarSlotsTests: XCTestCase {
+    func testOgniCategoriaHaIlSuoPosto() {
+        XCTAssertEqual(AvatarSlots.slot(category: "tops"), "top")
+        XCTAssertEqual(AvatarSlots.slot(category: "bottoms"), "bottom")
+        XCTAssertEqual(AvatarSlots.slot(category: "shoes"), "shoes")
+        XCTAssertEqual(AvatarSlots.slot(category: "outerwear"), "outerwear")
+        XCTAssertEqual(AvatarSlots.slot(category: "dresses"), "dress")
+    }
+
+    func testGliAccessoriELIntimoNonSiVedonoAddosso() {
+        XCTAssertNil(AvatarSlots.slot(category: "accessories"))
+        XCTAssertNil(AvatarSlots.slot(category: "underwear"))
+    }
+
+    func testUnaCategoriaPersonaleSiIndossaSopra() {
+        XCTAssertEqual(AvatarSlots.slot(category: "custom_123"), "top")
+    }
+}

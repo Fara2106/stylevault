@@ -27,8 +27,8 @@ extension OutfitAdvice {
         case .monochrome: return String(localized: "advice.monochrome")
         case .colorsHarmonious: return String(localized: "advice.colorsHarmonious")
         case .colorsClash: return String(localized: "advice.colorsClash")
-        case .tooLight(let temp): return String(localized: "advice.tooLight \(temp)")
-        case .tooWarm(let temp): return String(localized: "advice.tooWarm \(temp)")
+        case .tooLight(let temp): return String(localized: "advice.tooLight \(Temperature.value(Double(temp), unit: TemperatureText.unit))")
+        case .tooWarm(let temp): return String(localized: "advice.tooWarm \(Temperature.value(Double(temp), unit: TemperatureText.unit))")
         case .perfectWarmth: return String(localized: "advice.perfectWarmth")
         case .layers(let cold, let coldPart, let warm, let warmPart):
             return String(localized: "advice.layers \(cold) \(coldPart.inlineText) \(warm) \(warmPart.inlineText)")

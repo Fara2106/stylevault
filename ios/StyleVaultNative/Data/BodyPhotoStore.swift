@@ -46,16 +46,15 @@ struct AvatarRequest {
     let garments: [AvatarGarment]
     let withoutPhoto: Int
 
-    @MainActor static func make(_ outfit: GeneratedOutfit, items: [String: Item], view: BodyView) -> AvatarRequest {
+    @MainActor static func make(_ selection: TryOnSelection, view: BodyView) -> AvatarRequest {
         var garments: [AvatarGarment] = []
         var withoutPhoto = 0
-        for (slot, piece) in outfit.avatarPieces {
-            let item = items[piece.id]
-            guard let photo = view == .back ? item?.photoBack ?? item?.photoFront : item?.photoFront else {
+        for (slot, item) in selection.pieces {
+            guard let photo = view == .back ? item.photoBack ?? item.photoFront : item.photoFront else {
                 withoutPhoto += 1
                 continue
             }
-            garments.append(AvatarGarment(slot: slot, photo: photo, key: "item-\(piece.id)-\(view.rawValue)-\(photo.count)"))
+            garments.append(AvatarGarment(slot: slot, photo: photo, key: "item-\(item.id.uuidString)-\(view.rawValue)-\(photo.count)"))
         }
         return AvatarRequest(garments: garments, withoutPhoto: withoutPhoto)
     }

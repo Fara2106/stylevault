@@ -10,6 +10,7 @@ struct ItemDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Query private var items: [Item]
+    @State private var tryOn: TryOnSelection?
     @Query private var customCategories: [CustomCategory]
 
     @State private var isEditing = false
@@ -57,6 +58,7 @@ struct ItemDetailView: View {
         .sheet(isPresented: $isEditing) {
             ItemFormView(mode: .edit(item))
         }
+        .sheet(item: $tryOn) { selection in AvatarView(garments: selection) }
         .alert("itemDetail.deleteItem", isPresented: $isDeleteAsked) {
             Button("common.cancel", role: .cancel) {}
             Button("common.delete", role: .destructive) { delete(item) }
@@ -127,6 +129,10 @@ struct ItemDetailView: View {
                 }
                 .tint(Palette.link)
             }
+            Button("tryon.seeOnMe") { tryOn = .from([item]) }
+                .buttonStyle(.bordered)
+                .tint(Palette.ink)
+                .accessibilityIdentifier("detail-avatar")
             HStack(spacing: 12) {
                 Button("common.edit") { isEditing = true }
                     .buttonStyle(.bordered)
