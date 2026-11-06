@@ -80,7 +80,7 @@ Quindi l'app nativa si costruisce una fase alla volta su un ramo nuovo. Ogni fas
 ## Cosa sparisce
 
 - Il sito React come app, `WebViewStore`, il ponte `svNative`, `nativeBridge.js`: tolti dal repository il 2026-11-06 (decisione 9).
-- Da Supabase, per i dati: tabelle e storage smettono di ricevere dati nuovi dopo la migrazione. Il progetto **non si spegne**: regge gli account della nativa (decisione 8) e tiene i dati di Lorenzo e Mary finché non sono importati. Le migrazioni in `supabase/` e `.github/workflows/keepalive.yml` restano.
+- Da Supabase, per i dati: tabelle e storage smettono di ricevere dati nuovi dopo la migrazione. Per ora Supabase non si tocca, migrazioni in `supabase/` e `.github/workflows/keepalive.yml` compresi: regge gli account della nativa (decisione 8) e tiene i dati di Lorenzo e Mary, che non vanno persi prima dell'import. Se pulire anche Supabase è da decidere più avanti con Lorenzo (decisione 9).
 - @imgly (AGPL), MediaPipe, onnxruntime-web.
 - Dal report dell'audit: blocchi 2 (cancellazione account) e 6 (rete locale in Release: senza WebView non serve neanche in Debug), avvisi 6, 7, 8, 9 (microlink e Resend), 3 (AGPL) e 14 (picsum).
 
@@ -100,7 +100,7 @@ Si passa da **Esporta e importa**, nient'altro:
 - sul telefono: Profilo → Importa;
 - nell'app non arriva una riga di Supabase.
 
-Le due strade pensate prima sono escluse dall'audit: un login Supabase nell'app riporta l'account demo e la cancellazione dell'account, e un import nascosto è vietato dalla regola 2.5.19. Dopo l'import di Lorenzo e Mary Supabase resta acceso per gli account (decisione 8), e i loro dati vecchi non si cancellano finché Lorenzo non lo dice.
+Le due strade pensate prima sono escluse dall'audit: un login Supabase nell'app riporta l'account demo e la cancellazione dell'account, e un import nascosto è vietato dalla regola 2.5.19. Supabase intanto resta com'è e i dati di Lorenzo e Mary non vanno persi prima dell'import. Che cosa pulire dopo, e se farlo, è da decidere più avanti con Lorenzo (decisione 9).
 
 ## Fasi (ognuna con i suoi test e una prova sul telefono)
 
@@ -121,7 +121,7 @@ Le due strade pensate prima sono escluse dall'audit: un login Supabase nell'app 
 5. **Armocromia:** analisi del viso con Vision, stagioni, consigli sul guardaroba. Va verificato che i risultati siano vicini a quelli di MediaPipe, perché i punti del viso sono diversi. La logica si recupera dal tag, vedi "Da recuperare dal tag".
 6. **Prova vestiti e avatar stilizzato:** riportare dal tag gli schermi nativi già scritti ("Da recuperare dal tag") e collegarli ai dati SwiftData invece che al ponte con il sito. Etichetta "Generato con IA" e "Segnala" solo se nell'app resta un'immagine generata.
    Decisione di Lorenzo del 2026-11-06: se fra i capi scelti c'è un costume, l'app consiglia una foto della persona in costume, non vestita, altrimenti non rende. Nel tag c'è già: `hasSwimwear` in `src/utils/tryOnPrompt.js`, testo `tryon.swimwearPhoto`.
-7. **Esporta e importa:** pulsante di esportazione nel Profilo (serve anche per passare ad Android, decisione 9), importazione, script di esportazione da Supabase, import dei dati di oggi. WebView e sito sono già fuori; Supabase e login restano (decisioni 8 e 9).
+7. **Esporta e importa:** pulsante di esportazione nel Profilo (serve anche per passare ad Android, decisione 9), importazione, script di esportazione da Supabase, import dei dati di oggi. WebView e sito sono già fuori; il login resta (decisione 8). Se pulire anche Supabase è da decidere più avanti con Lorenzo: per ora non si tocca nulla e i dati di Lorenzo e Mary non vanno persi prima dell'import.
 8. **Pubblicazione:**
    - privacy e supporto nella nuova sede, online prima dell'invio, e `AppConfig` aggiornato;
    - schema CloudKit promosso in Production;
@@ -144,7 +144,7 @@ Stima indicativa: le fasi 2, 3 e 5 sono le più pesanti, perché hanno più logi
 
 ## Decisioni di Lorenzo (2026-11-04)
 
-1. **Prima Apple (iPhone e iPad), Android si decide dopo.** Se arriverà, sarà un'app a sé, con i dati su Google Drive (cartella privata dell'app). Le due versioni non si scambiano dati: ciascuna resta nel suo ecosistema, e la privacy è gestita da Apple e Google. La logica in `StyleVaultCore` e i suoi test di parità fanno da specifica per il futuro porting Android.
+1. **Prima Apple (iPhone e iPad), Android si decide dopo.** Se arriverà, sarà un'app a sé. ~~Con i dati su Google Drive (cartella privata dell'app). Le due versioni non si scambiano dati: ciascuna resta nel suo ecosistema, e la privacy è gestita da Apple e Google.~~ Superato il 2026-11-06 dalla decisione 9: per passare ad Android i dati si esportano direttamente dal Profilo, in un file. La logica in `StyleVaultCore` e i suoi test di parità fanno da specifica per il futuro porting Android.
 2. **Armocromia facoltativa.** Va nella fase 5. Se Vision non basta per un risultato affidabile, la funzione si nasconde e si rimanda, senza bloccare la pubblicazione. Niente Armocromia "a metà". In ogni caso l'utente può **scegliere la sua stagione a mano** da un menu a tendina nel Profilo: vale anche se l'analisi non c'è o non lo convince, e i consigli sul guardaroba usano la stagione scelta.
 3. **Lingue:** italiano e inglese da subito, con String Catalog (`Localizable.xcstrings`, `InfoPlist.xcstrings`). In futuro francese, spagnolo, portoghese, inglese UK e inglese USA. Per l'inglese USA servono anche i gradi Fahrenheit e le unità locali (`Measurement` e `formatted()` di sistema), non solo le parole. Le unità si **regolano nelle Impostazioni dell'app** (temperatura °C/°F, ed eventuali misure), con il valore iniziale preso dalla regione del telefono.
 4. **Si parte dopo l'iscrizione all'Apple Developer Program.** Lorenzo avvisa quando è accettato.
@@ -153,11 +153,13 @@ Stima indicativa: le fasi 2, 3 e 5 sono le più pesanti, perché hanno più logi
 7. **Niente login, blocco facoltativo con Face ID (2026-11-05).** Lorenzo ha valutato l'accesso con Apple, Google e password e l'ha scartato: i dati restano su iCloud, personali e legati all'Apple ID, quindi su App Store ognuno ha già i suoi. Un login avrebbe richiesto un servizio di account sempre acceso, con guardaroba e foto del corpo degli utenti a carico suo, più account demo e cancellazione dell'account. Il Profilo offre invece un blocco facoltativo: vale per il singolo dispositivo, non si sincronizza e non può mai chiudere fuori la persona, perché dopo Face ID resta il codice del dispositivo.
 
 8. **Accesso con Apple, Google, email e password, facoltativo (2026-11-05, sera).** Lorenzo ha rovesciato la decisione 7 sul login: la nativa, che è l'app su cui punta, deve avere Accedi con Apple, Accedi con Google, email, password e "Password dimenticata?". Ha scelto il minimo: i dati restano su iCloud e l'account non li sposta. Gli account stanno sul progetto Supabase esistente, che quindi non si spegne alla fine. Scelta di Claude, da confermare: si può entrare con "Continua senza account", perché Apple (5.1.1(v)) respinge il login obbligatorio quando le funzioni non dipendono dall'account. Il blocco con Face ID resta. Servono cancellazione dell'account nell'app, privacy manifest con i dati dell'account e, prima dell'App Store, la revoca del token di Apple quando si cancella l'account.
-9. **Niente più ibrida né sito nel repository, Android con un pulsante di esportazione (2026-11-06).** Parole di Lorenzo: «elimina ogni riferimento alla versione ibrida, anche quella del web, almeno non si calpestano i piedi... per passare ad android metteremo un pulsante per esportare i dati». Nel repository restano solo `StyleVaultNative` e `StyleVaultCore`, più `supabase/` e `keepalive.yml`, che servono agli account e ai dati già salvati. Il resto sta nel tag `archivio-ibrida-e-sito`. Il sito pubblicato resta online finché Lorenzo non decide di pubblicare il ramo. L'esportazione è un pulsante nel Profilo, che produce il file descritto in "Esporta e importa" qui sotto: non è ancora costruito, va nella fase 7. Questa decisione aggiorna la 1: le versioni Apple e Android restano separate, ma i dati passano dall'una all'altra con quel file.
+9. **Niente più ibrida né sito nel repository, Android con un pulsante di esportazione (2026-11-06).** Parole di Lorenzo: «elimina ogni riferimento alla versione ibrida, anche quella del web, almeno non si calpestano i piedi... per passare ad android metteremo un pulsante per esportare i dati». Nel repository restano solo `StyleVaultNative` e `StyleVaultCore`, più `supabase/` e `keepalive.yml`, che servono agli account e ai dati già salvati. Il resto sta nel tag `archivio-ibrida-e-sito`. Il sito pubblicato resta online finché Lorenzo non decide di pubblicare il ramo. Aggiunta dello stesso giorno, parole di Lorenzo: «Per il futuro passaggio ad android si esportano i dati direttamente, senza complicarsi la vita». Quindi i dati si esportano direttamente dal pulsante nel Profilo, in un file, senza altri passaggi: è il file descritto in "Esporta e importa" qui sotto. Il pulsante non è ancora costruito e va nella fase 7. Questa decisione supera la parte della 1 su Google Drive e sulle due versioni che non si scambiano dati.
+
+   Supabase, parole di Lorenzo: «poi decidiamo se pulire anche supabase». È da decidere più avanti con lui. Per ora non si tocca nulla, `keepalive.yml` e migrazioni compresi, e i dati di Lorenzo e Mary non vanno persi prima dell'import.
 
 ## Proposte aggiunte
 
-- **Esporta e importa (approvato da Lorenzo)** un file (JSON più foto, in uno zip) da Profilo: serve per cambiare telefono tra Apple e Android quando ci sarà, e copre il diritto alla portabilità del GDPR.
+- **Esporta e importa (approvato da Lorenzo)** un file (JSON più foto, in uno zip) da Profilo: serve per cambiare telefono tra Apple e Android quando ci sarà, e copre il diritto alla portabilità del GDPR. Dal 2026-11-06 è la strada per passare ad Android, senza altri passaggi (decisione 9): non vale più il "non si scambiano dati" della decisione 1.
 
 ## Correzioni dall'audit (2026-11-05)
 
