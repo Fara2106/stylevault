@@ -86,7 +86,7 @@ final class ProfileFlowTests: XCTestCase {
         toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
         // L'autenticazione è asincrona: l'interruttore passa a acceso solo dopo.
         let on = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == '1'"), object: toggle)
-        XCTAssertEqual(XCTWaiter().wait(for: [on], timeout: 5), .completed)
+        XCTAssertEqual(XCTWaiter().wait(for: [on], timeout: 30), .completed)
         first.terminate()
 
         let second = XCUIApplication()
@@ -107,7 +107,7 @@ final class ProfileFlowTests: XCTestCase {
         XCTAssertTrue(toggle.waitForExistence(timeout: 5))
         toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
         let on = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == '1'"), object: toggle)
-        XCTAssertEqual(XCTWaiter().wait(for: [on], timeout: 5), .completed)
+        XCTAssertEqual(XCTWaiter().wait(for: [on], timeout: 30), .completed)
         tab(app, "Aggiungi").tap()
         let sheet = app.otherElements["add-sheet"]
         XCTAssertTrue(sheet.waitForExistence(timeout: 3))

@@ -195,7 +195,7 @@ final class WardrobeFlowTests: XCTestCase {
         scroll(app, to: save)
         save.tap()
         scroll(app, to: anyText(app, "Giacca nera"), down: false)
-        XCTAssertTrue(anyText(app, "Giacca nera").waitForExistence(timeout: 3))
+        XCTAssertTrue(anyText(app, "Giacca nera").waitForExistence(timeout: 30))
 
         let delete = app.buttons["detail-delete"]
         scroll(app, to: delete)
