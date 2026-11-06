@@ -54,7 +54,7 @@ struct ItemCard: View {
 struct FavoriteButton: View {
     let isFavorite: Bool
     let id: String
-    /// Sopra una foto serve il suo fondo, come sul sito: le foto dei negozi sono spesso chiarissime.
+    /// Sopra una foto serve il suo fondo: le foto dei negozi sono spesso chiarissime.
     var onPhoto = false
     let action: () -> Void
 

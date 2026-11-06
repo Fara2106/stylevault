@@ -1,7 +1,7 @@
 import XCTest
 @testable import StyleVaultCore
 
-/// Casi presi da src/services/linkMetadata.test.js.
+/// Casi presi da `linkMetadata.test.js` (tag `archivio-ibrida-e-sito`).
 final class LinkTextTests: XCTestCase {
     func testURL() {
         XCTAssertEqual(LinkText.httpURL(from: " https://zara.com/p/1\n")?.absoluteString, "https://zara.com/p/1")

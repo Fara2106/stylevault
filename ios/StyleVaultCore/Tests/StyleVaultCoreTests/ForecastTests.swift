@@ -1,7 +1,7 @@
 import XCTest
 @testable import StyleVaultCore
 
-/// Stessi casi di src/utils/dayParts.test.js e src/services/weather.test.js.
+/// Stessi casi di `dayParts.test.js` e `weather.test.js` (tag `archivio-ibrida-e-sito`).
 final class ForecastTests: XCTestCase {
     private func day(_ over: (Int) -> HourForecast? = { _ in nil }) -> [HourForecast] {
         (0..<24).map { over($0) ?? HourForecast(hour: $0, apparent: Double($0), precipProb: 0, code: 0) }

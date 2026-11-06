@@ -1,7 +1,7 @@
 import XCTest
 @testable import StyleVaultCore
 
-/// Stessi casi di src/utils/outfitAdvice.test.js.
+/// Stessi casi di `outfitAdvice.test.js` (tag `archivio-ibrida-e-sito`).
 final class OutfitAdviceTests: XCTestCase {
     private func outfitOf(top: OutfitPiece? = mk("top1", "tops"), bottom: OutfitPiece? = mk("bottom1", "bottoms"),
                           shoes: OutfitPiece? = mk("shoes1", "shoes"), outerwear: OutfitPiece? = nil,

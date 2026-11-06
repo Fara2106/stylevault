@@ -1,6 +1,6 @@
 import Foundation
 
-/// I filtri della schermata Guardaroba, come src/pages/WardrobePage/WardrobePage.jsx.
+/// I filtri della schermata Guardaroba.
 public struct WardrobeFilter: Equatable, Sendable {
     /// `nil` vuol dire tutte le categorie.
     public var category: String?

@@ -27,7 +27,7 @@ function reply(status: number, body: Record<string, unknown>) {
 async function currentUserId(req: Request): Promise<string | null> {
   const auth = req.headers.get('Authorization') ?? '';
   const url = Deno.env.get('SUPABASE_URL');
-  // La chiave pubblicabile che manda il sito; la legacy anon key può essere spenta
+  // La chiave pubblicabile che manda il client; la legacy anon key può essere spenta
   const key = req.headers.get('apikey') ?? Deno.env.get('SUPABASE_ANON_KEY');
   if (!auth.startsWith('Bearer ') || !url || !key) return null;
   const res = await fetch(`${url}/auth/v1/user`, {

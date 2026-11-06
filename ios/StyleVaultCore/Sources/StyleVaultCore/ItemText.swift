@@ -7,7 +7,7 @@ public enum PriceInput: Equatable, Sendable {
 }
 
 public enum ItemText {
-    /// L'iniziale del segnaposto di un capo senza foto, come src/utils/placeholderPhoto.js.
+    /// L'iniziale del segnaposto di un capo senza foto.
     public static func placeholderInitial(_ name: String?) -> String {
         guard let first = (name ?? "").trimmingCharacters(in: .whitespacesAndNewlines).first else { return "·" }
         return String(first).uppercased(with: Locale(identifier: "it"))

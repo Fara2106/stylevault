@@ -1,6 +1,6 @@
 import Foundation
 
-/// Testi delle pagine dei negozi, come src/services/linkMetadata.js.
+/// Testi delle pagine dei negozi.
 public enum LinkText {
     public static func httpURL(from text: String) -> URL? {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)

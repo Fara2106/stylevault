@@ -3,7 +3,7 @@ import StyleVaultCore
 import SwiftData
 import SwiftUI
 
-/// La schermata Outfit, come src/pages/OutfitPage/OutfitPage.jsx. Niente "Prova": arriva con la fase 6.
+/// La schermata Outfit. Niente "Prova": arriva con la fase 6.
 struct OutfitView: View {
     let onAddItem: () -> Void
 
@@ -356,7 +356,7 @@ struct SheetCloseButton: ToolbarContent {
     }
 }
 
-/// Gli outfit salvati. Sul sito se ne vedeva solo il conto: senza elenco non si potevano togliere.
+/// Gli outfit salvati: senza elenco non si potrebbero togliere.
 struct SavedOutfitsView: View {
     @Environment(\.modelContext) private var context
     @Query(sort: \Outfit.createdAt, order: .reverse) private var outfits: [Outfit]

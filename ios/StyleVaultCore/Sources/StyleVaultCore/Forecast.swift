@@ -80,7 +80,7 @@ public struct DayForecast: Equatable, Codable, Sendable {
     }
 }
 
-/// La giornata in tre fasce, come src/utils/dayParts.js. Contano le ore "fuori casa", dalle 8 alle 20;
+/// La giornata in tre fasce. Contano le ore "fuori casa", dalle 8 alle 20;
 /// per oggi solo quelle da adesso in poi.
 public enum DayParts {
     public static let rainThreshold = 45
@@ -117,7 +117,7 @@ public enum DayParts {
     }
 }
 
-/// Le previsioni di Open-Meteo, come src/services/weather.js.
+/// Le previsioni di Open-Meteo.
 public enum Forecast {
     public struct CodeInfo: Equatable, Sendable {
         public let icon: WeatherIcon

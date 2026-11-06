@@ -22,7 +22,7 @@ protocol ForecastLoading: Sendable {
 }
 
 /// L'ultima previsione per luogo. La posizione ha una chiave sola e senza coordinate:
-/// niente storico dei posti sul dispositivo, come sul sito.
+/// niente storico dei posti sul dispositivo.
 struct ForecastCache {
     private struct Entry: Codable {
         let fetchedAt: Date

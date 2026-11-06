@@ -48,7 +48,7 @@ public struct ClothingColor: Identifiable, Equatable, Sendable {
     }
 }
 
-/// Catalogo del guardaroba, identico a src/utils/categories.js del sito.
+/// Catalogo del guardaroba.
 public enum Catalog {
     public static let categories: [WardrobeCategory] = [
         WardrobeCategory(id: "tops", icon: "👕", labelKey: "categories.tops", subcategories: [

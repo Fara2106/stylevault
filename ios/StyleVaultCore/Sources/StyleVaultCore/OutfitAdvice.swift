@@ -10,7 +10,7 @@ public enum OutfitAdvice: Equatable, Sendable {
     case elevated
 }
 
-/// Consigli di stile, come src/utils/outfitAdvice.js. Nessuna IA: regole sugli stessi punteggi degli outfit.
+/// Consigli di stile. Nessuna IA: regole sugli stessi punteggi degli outfit.
 public enum OutfitAdvisor {
     private static let neutralColors: Set<String> = ["black", "white", "gray", "beige", "navy", "cream", "brown", "tan",
                                                      "khaki", "denim", "silver"]

@@ -1,10 +1,10 @@
 import Foundation
 
 /// `Math.round` di JavaScript: la metà va verso +∞. `.rounded()` di Swift la allontana da zero,
-/// e a -2,5 gradi darebbe un numero diverso dal sito.
+/// e a -2,5 gradi darebbe un numero diverso da `harmony-parity.json`.
 public func jsRound(_ value: Double) -> Int { Int((value + 0.5).rounded(.down)) }
 
-/// Armonia dei colori di un outfit, come src/utils/colorHarmony.js.
+/// Armonia dei colori di un outfit.
 public enum ColorHarmony {
     public struct HSL: Equatable, Sendable {
         public let h: Int

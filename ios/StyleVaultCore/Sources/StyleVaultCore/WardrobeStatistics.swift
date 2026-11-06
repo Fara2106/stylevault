@@ -40,7 +40,7 @@ public struct Breakdown: Identifiable, Equatable, Sendable {
     public var id: String { key }
 }
 
-/// Statistiche del guardaroba, come src/utils/statistics.js. Contano solo le voci indossate.
+/// Statistiche del guardaroba. Contano solo le voci indossate.
 public enum WardrobeStatistics {
     public static func wearStats(_ history: [WearLog]) -> [String: WearStat] {
         var stats: [String: WearStat] = [:]
@@ -55,7 +55,7 @@ public enum WardrobeStatistics {
         return stats
     }
 
-    /// `sort` di Swift non promette di tenere l'ordine a parità: l'indice lo rende uguale al sito.
+    /// `sort` di Swift non promette di tenere l'ordine a parità: l'indice lo tiene fermo.
     private static func stableSorted<T, K: Comparable>(_ values: [T], by key: (T) -> K, descending: Bool = false) -> [T] {
         values.enumerated().sorted { a, b in
             let (first, second) = (key(a.element), key(b.element))
