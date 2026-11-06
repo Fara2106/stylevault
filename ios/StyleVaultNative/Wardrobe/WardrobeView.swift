@@ -5,7 +5,7 @@ import SwiftUI
 
 enum WardrobeSection: Hashable { case wardrobe, wishlist }
 
-/// La schermata Guardaroba, come src/pages/WardrobePage/WardrobePage.jsx.
+/// La schermata Guardaroba.
 struct WardrobeView: View {
     let onAdd: (AddDestination) -> Void
 

@@ -16,7 +16,7 @@ enum PlaceChoice: Equatable {
 
 enum PlaceKind { case fallback, position, manual }
 
-/// Lo stato della schermata Outfit, come src/pages/OutfitPage/OutfitPage.jsx.
+/// Lo stato della schermata Outfit.
 @MainActor @Observable final class OutfitPageModel {
     private static let placeKey = "outfit.place"
     /// Entro ~5 km il meteo è lo stesso: gli outfit già mostrati non cambiano.

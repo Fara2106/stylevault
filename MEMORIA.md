@@ -3,6 +3,14 @@
 > File di ripartenza: se apri una nuova chat, leggi questo file per riprendere il lavoro
 > esattamente da dove eravamo. Va aggiornato a ogni avanzamento significativo.
 
+## Novità 2026-11-06 — Ibrida e sito fuori dal repository
+
+Sul ramo `claude/togli-ibrida-e-sito-5d8100`, non fuso: nel repository restano `StyleVaultNative`, `StyleVaultCore`,
+`supabase/` e `keepalive.yml`. Il resto è nel tag locale `archivio-ibrida-e-sito`; cosa recuperare per le fasi 5, 6 e 7 è
+elencato nel design (decisione 9). Testi legali in `docs/pubblicazione/testi-legali.md`. `Localizable.xcstrings` ora si
+modifica direttamente. Il sito resta online finché Lorenzo non pubblica; prima dell'App Store privacy e supporto hanno
+bisogno di una nuova sede.
+
 ## Novità 2026-11-05 (notte) — Login nella nativa, percorso minimo
 
 Decisione di Lorenzo: la nativa ha Accedi con Apple, Google, email e password, password dimenticata. I dati

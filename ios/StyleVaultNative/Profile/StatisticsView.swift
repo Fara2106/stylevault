@@ -2,7 +2,7 @@ import StyleVaultCore
 import SwiftData
 import SwiftUI
 
-/// Le statistiche del guardaroba, come la sezione di src/pages/ProfilePage/ProfilePage.jsx.
+/// Le statistiche del guardaroba.
 struct StatisticsView: View {
     @Query(sort: \Item.createdAt) private var items: [Item]
     @Query private var entries: [CalendarEntry]

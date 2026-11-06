@@ -18,7 +18,7 @@ struct OutfitThumbs: View {
     }
 }
 
-/// La proposta di un outfit, come src/components/OutfitCard.
+/// La proposta di un outfit.
 struct OutfitCardView: View {
     let outfit: GeneratedOutfit
     let items: [String: Item]

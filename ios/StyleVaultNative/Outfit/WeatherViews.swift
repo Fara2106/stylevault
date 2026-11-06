@@ -39,7 +39,7 @@ struct OutlineButtonStyle: ButtonStyle {
     }
 }
 
-/// La scheda meteo del giorno, come src/components/WeatherBadge.
+/// La scheda meteo del giorno.
 struct WeatherCard: View {
     let weather: DayForecast
     let stale: Bool
@@ -83,7 +83,7 @@ struct WeatherCard: View {
     }
 }
 
-/// La giornata in tre fasce, come src/components/DayStrip.
+/// La giornata in tre fasce.
 struct DayStripView: View {
     let parts: [DayPart]
 

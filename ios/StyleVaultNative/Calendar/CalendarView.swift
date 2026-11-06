@@ -3,7 +3,7 @@ import StyleVaultCore
 import SwiftData
 import SwiftUI
 
-/// La schermata Calendario, come src/pages/CalendarPage/CalendarPage.jsx. Niente "Prova": arriva con la fase 6.
+/// La schermata Calendario. Niente "Prova": arriva con la fase 6.
 struct CalendarView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.forecastLoader) private var forecastLoader

@@ -11,7 +11,7 @@ enum FormField: Hashable { case name, category, price }
 
 enum LinkState: Equatable { case idle, loading, success, failure }
 
-/// Lo stato del modulo di aggiunta e modifica, come src/pages/AddItemPage/AddItemPage.jsx.
+/// Lo stato del modulo di aggiunta e modifica.
 @MainActor @Observable final class ItemFormModel {
     var name = "" { didSet { errors.remove(.name) } }
     private(set) var category = ""

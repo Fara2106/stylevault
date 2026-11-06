@@ -1,7 +1,7 @@
 import XCTest
 @testable import StyleVaultCore
 
-/// Stessi casi di src/utils/outfitAlgorithm.test.js.
+/// Stessi casi di `outfitAlgorithm.test.js` (tag `archivio-ibrida-e-sito`).
 final class OutfitEngineTests: XCTestCase {
     private var rng = SeededGenerator()
 

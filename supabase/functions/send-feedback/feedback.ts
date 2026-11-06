@@ -1,6 +1,5 @@
 // Regole della segnalazione, senza rete: le prova `deno test` (feedback_test.ts).
-// Il sito fa gli stessi controlli prima di inviare (src/services/feedback.js):
-// qui sono la rete di sicurezza, perché la funzione è pubblica.
+// Qui sono la rete di sicurezza, perché la funzione è pubblica.
 
 export const MESSAGE_MIN = 10;
 export const MESSAGE_MAX = 2000;

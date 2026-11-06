@@ -1,7 +1,7 @@
 import Foundation
 
 /// Configurazione degli account. URL e chiave pubblica arrivano da Config/Secrets.xcconfig via Info.plist.
-/// Lo schema è diverso da quello dell'ibrida: le due app stanno sullo stesso telefono.
+/// Lo schema `svnativa` è quello registrato nei Redirect URLs di Supabase.
 enum AppConfig {
     static let supabaseURL: URL = {
         guard let raw = Bundle.main.object(forInfoDictionaryKey: "SupabaseURL") as? String,

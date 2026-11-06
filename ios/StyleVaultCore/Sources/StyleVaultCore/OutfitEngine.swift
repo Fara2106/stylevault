@@ -23,7 +23,7 @@ public struct OutfitPiece: Identifiable, Equatable, Sendable {
         self.price = price
     }
 
-    /// `item.warmthLevel || 2` del sito.
+    /// Senza un livello di calore vale 2.
     var warmth: Int { warmthLevel == 0 ? 2 : warmthLevel }
 }
 
@@ -84,7 +84,7 @@ public struct GeneratedOutfit: Identifiable, Equatable, Sendable {
     fileprivate var duplicateKey: [String?] { [top?.id, bottom?.id, shoes?.id, outerwear?.id] }
 }
 
-/// Gli outfit di un giorno, come src/utils/outfitAlgorithm.js: stessi pesi, soglie e ripieghi.
+/// Gli outfit di un giorno: stessi pesi, soglie e ripieghi.
 /// Non si blocca mai: un pezzo che manca diventa un avviso. Unica eccezione, nessun capo da indossare.
 public enum OutfitEngine {
     private static func hexColors(of piece: OutfitPiece) -> [String] {
@@ -138,7 +138,7 @@ public enum OutfitEngine {
 
     private static func pickBest<G: RandomNumberGenerator>(_ pieces: [OutfitPiece], target: Int, count: Int = 3,
                                                            using rng: inout G) -> [OutfitPiece] {
-        // `sort` di Swift non promette di tenere l'ordine a parità: l'indice lo rende uguale al sito.
+        // `sort` di Swift non promette di tenere l'ordine a parità: l'indice lo tiene fermo.
         let sorted = pieces.enumerated()
             .map { (offset: $0.offset, piece: $0.element, score: warmthScore($0.element.warmth, target: target)) }
             .sorted { $0.score != $1.score ? $0.score > $1.score : $0.offset < $1.offset }

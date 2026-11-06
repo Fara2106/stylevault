@@ -1,7 +1,7 @@
 import XCTest
 @testable import StyleVaultCore
 
-/// I risultati attesi vengono da src/utils/colorHarmony.js e weatherMapper.js: vedi harmony-parity.json.
+/// I risultati attesi vengono da `colorHarmony.js` e `weatherMapper.js` (tag `archivio-ibrida-e-sito`): vedi harmony-parity.json.
 private struct Parity: Decodable {
     struct HSLCase: Decodable { let hex: String; let h: Int; let s: Int; let l: Int }
     struct Pair: Decodable { let a: String; let b: String; let compatible: Bool; let score: Int }

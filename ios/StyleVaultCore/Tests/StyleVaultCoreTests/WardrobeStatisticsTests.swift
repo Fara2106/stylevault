@@ -1,7 +1,7 @@
 import XCTest
 @testable import StyleVaultCore
 
-/// Stessi casi di src/utils/statistics.test.js.
+/// Stessi casi di `statistics.test.js` (tag `archivio-ibrida-e-sito`).
 final class WardrobeStatisticsTests: XCTestCase {
     private let top = mk("top1", "tops", colors: ["white", "navy"], price: 60)
     private let bottom = mk("bottom1", "bottoms", price: 100)

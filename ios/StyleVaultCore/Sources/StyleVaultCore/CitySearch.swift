@@ -1,6 +1,6 @@
 import Foundation
 
-/// Una città trovata dalla ricerca (stessi campi di `searchCities` nel sito).
+/// Una città trovata dalla ricerca.
 public struct City: Identifiable, Equatable, Sendable {
     public let id: Int
     public let name: String

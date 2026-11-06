@@ -3,7 +3,7 @@ import StyleVaultCore
 import SwiftData
 import SwiftUI
 
-/// Il dettaglio di un capo, come src/pages/ItemDetailPage/ItemDetailPage.jsx.
+/// Il dettaglio di un capo.
 /// Passa dall'id: se un altro dispositivo cancella il capo, la query si svuota e la vista esce.
 struct ItemDetailView: View {
     @Environment(\.modelContext) private var context
