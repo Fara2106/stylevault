@@ -3,6 +3,23 @@
 > File di ripartenza: se apri una nuova chat, leggi questo file per riprendere il lavoro
 > esattamente da dove eravamo. Va aggiornato a ogni avanzamento significativo.
 
+## Novità 2026-11-06 (notte) — Bozza completa per Mary
+
+Richiesta di Lorenzo: finire tutte le schermate nella notte e mandarla a Mary. Fatto sul ramo `feat/app-nativa`, nessun push.
+- Nuove: Armocromia (`Armocromia/`, logica in `StyleVaultCore/Armocromia`, stagione anche a mano dal Profilo), primi passi (`Onboarding/`, solo
+  a chi parte da zero), segnalazioni (`Feedback/`, serve un account), cambio password, esporta e importa (`Data/DataTransfer.swift`, zip nel Core),
+  Prompt AI con consenso (`Avatar/TryOnPromptView.swift`), "Vedilo addosso" anche da Calendario e dettaglio, °C/°F, privacy e supporto nel Profilo.
+- Calendario: niente doppioni nello stesso giorno, niente "indossato" su giorni futuri, conferma prima di togliere. Desideri: conferma. Sono due
+  scelte fatte qui, che cambiano ciò che il sito faceva: i test sono stati aggiornati di conseguenza.
+- Dati del sito: `scripts/esporta-da-supabase.mjs` li scrive nel formato di Profilo → Importa. Lo lancia Lorenzo, la chiave service_role resta nel
+  suo terminale. Mai provato contro Supabase vero. Istruzioni in `docs/pubblicazione/portare-i-dati-di-mary.md`.
+- Vision con foto vere: letto solo `persona.jpg`, foto al crepuscolo. L'affidabilità della stagione su foto di giorno è da verificare con Mary, e il
+  confronto con MediaPipe chiesto dal design non è stato fatto. Si correggono i colori a mano o si sceglie la stagione.
+- Guasto del simulatore: dopo ore l'app non parte più con "Library not loaded: /usr/lib/libSystem.B.dylib" e i test restano appesi senza errore.
+  Si risolve riavviando quel simulatore. Causa non trovata. Lo script `suite-vigilata.sh` interrompe il lancio se il log resta fermo 15 minuti.
+- Resta da fare prima dell'App Store: WeatherKit, iPhone Duo, schema CloudKit in Production (senza, in TestFlight i dati non passano fra dispositivi:
+  da verificare), testi legali da riscrivere (la pagina privacy descrive ancora il sito).
+
 ## Novità 2026-11-06 — Ibrida e sito fuori dal repository
 
 Sul ramo `claude/togli-ibrida-e-sito-5d8100`, non fuso: nel repository restano `StyleVaultNative`, `StyleVaultCore`,
