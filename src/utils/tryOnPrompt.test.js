@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { garmentDescriptor, buildTryOnPrompt } from './tryOnPrompt';
+import { garmentDescriptor, buildTryOnPrompt, hasSwimwear } from './tryOnPrompt';
 
 describe('garmentDescriptor', () => {
   it('unisce colore inglese e capo', () => {
@@ -43,5 +43,28 @@ describe('buildTryOnPrompt', () => {
   });
   it('spiega che le foto possono arrivare come provino unico numerato', () => {
     expect(buildTryOnPrompt(items)).toMatch(/single numbered contact sheet/i);
+  });
+});
+
+describe('hasSwimwear', () => {
+  it('riconosce il costume dal nome, in italiano e in inglese', () => {
+    expect(hasSwimwear([{ name: 'Costume intero blu', category: 'underwear' }])).toBe(true);
+    expect(hasSwimwear([{ name: 'COSTUMI mare', category: 'custom_1' }])).toBe(true);
+    expect(hasSwimwear([{ name: 'Bikini a righe', category: 'tops' }])).toBe(true);
+    expect(hasSwimwear([{ name: 'Black swimsuit', category: 'underwear' }])).toBe(true);
+    expect(hasSwimwear([{ name: 'Pantaloncini da bagno', category: 'bottoms' }])).toBe(true);
+  });
+  it('basta un capo fra quelli scelti', () => {
+    expect(hasSwimwear([{ name: 'Camicia', category: 'tops' }, { name: 'Tankini', category: 'tops' }])).toBe(true);
+  });
+  it('gli altri capi non fanno scattare il consiglio', () => {
+    expect(hasSwimwear([{ name: 'Camicia di lino', category: 'tops' }])).toBe(false);
+    expect(hasSwimwear([{ name: 'Accostumato', category: 'tops' }])).toBe(false);
+    expect(hasSwimwear([{ category: 'tops' }])).toBe(false);
+    expect(hasSwimwear([])).toBe(false);
+  });
+  it('scarpe e accessori non sono costumi, anche se il nome lo dice', () => {
+    expect(hasSwimwear([{ name: 'Costume jewelry', category: 'accessories' }])).toBe(false);
+    expect(hasSwimwear([{ name: 'Sandali da bagno', category: 'shoes' }])).toBe(false);
   });
 });

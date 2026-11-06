@@ -201,6 +201,7 @@
     "noItems": "No items of this kind in your wardrobe",
     "saveOutfit": "Save outfit",
     "withWishlist": "Includes wishlist items",
+    "swimwearPhoto": "For swimwear, use a photo of yourself in swimwear, with no clothes over it: otherwise the result won't look right.",
     "photoUpload": "Upload a photo of you",
     "photoChange": "Change photo",
     "photoNoOutfit": "Pick the garments above first: the prompt and photos to copy will appear here.",

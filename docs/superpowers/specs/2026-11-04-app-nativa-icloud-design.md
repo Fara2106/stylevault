@@ -116,6 +116,7 @@ Le due strade pensate prima sono escluse dall'audit: un login Supabase nell'app 
 4. **Calendario e statistiche:** storico degli outfit indossati e statistiche del Profilo.
 5. **Armocromia:** analisi del viso con Vision, stagioni, consigli sul guardaroba. Va verificato che i risultati siano vicini a quelli di MediaPipe, perché i punti del viso sono diversi.
 6. **Prova vestiti e avatar stilizzato:** collegare gli schermi nativi che già esistono ai dati SwiftData invece che al ponte con il sito. Etichetta "Generato con IA" e "Segnala" solo se nell'app resta un'immagine generata.
+   Decisione di Lorenzo del 2026-11-06: se fra i capi scelti c'è un costume, l'app consiglia una foto della persona in costume, non vestita, altrimenti non rende. Sul sito c'è già: `hasSwimwear` in `src/utils/tryOnPrompt.js`, testo `tryon.swimwearPhoto`.
 7. **Esporta e importa**, script di esportazione da Supabase, import dei dati di oggi, poi rimozione di WebView, Supabase e login.
 8. **Pubblicazione:**
    - pagina privacy e supporto, online prima dell'invio;

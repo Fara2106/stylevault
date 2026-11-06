@@ -263,6 +263,13 @@
   text-underline-offset: 2px;
 }
 
+.tryon-page__swimwear-note {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--sv-accent-ink);
+  margin-bottom: var(--sv-space-3);
+}
+
 /* ── Selettore modalità (Su di te / Prompt AI) ─────── */
 
 .tryon-page__modes {

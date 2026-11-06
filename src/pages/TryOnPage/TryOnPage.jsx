@@ -8,7 +8,7 @@ import { isNativeApp, postToNative, avatarPayload } from '../../utils/nativeBrid
 import { Header, Button, Modal, Icon } from '../../components/common';
 import { CLOTHING_COLORS } from '../../utils/categories';
 import { resizeImageFile } from '../../utils/imageUtils';
-import { buildTryOnPrompt } from '../../utils/tryOnPrompt';
+import { buildTryOnPrompt, hasSwimwear } from '../../utils/tryOnPrompt';
 import {
   shareFilePlan,
   buildShareFiles,
@@ -327,6 +327,10 @@ export default function TryOnPage() {
           {t('tryon.modePhoto')}
         </button>
       </div>
+
+      {hasSwimwear(items) && (
+        <p className="tryon-page__swimwear-note" role="note">{t('tryon.swimwearPhoto')}</p>
+      )}
 
       {/* "Su di te": la persona della foto, scontornata e vestita coi capi
           scontornati nelle sue proporzioni. Gratis, tutto on-device. */}

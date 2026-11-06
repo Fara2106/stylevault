@@ -31,6 +31,18 @@ const SUBCATEGORY_EN = {
   underwear_item: 'underwear', socks: 'socks', pajamas: 'pajamas',
 };
 
+/** Il costume si riconosce dal nome: il catalogo non ha una voce apposta. */
+const SWIMWEAR_NAME = /\b(costum[ei]|bikini|trikini|tankini|monokini|swimsuit|swimwear|swim trunks|da bagno)\b/i;
+const NOT_SWIMWEAR = new Set(['shoes', 'accessories']);
+
+/**
+ * Un costume va provato su una foto in costume: sopra i vestiti non rende.
+ * Scarpe e accessori restano fuori ("costume jewelry", "sandali da bagno").
+ */
+export function hasSwimwear(items = []) {
+  return items.some((item) => !NOT_SWIMWEAR.has(item.category) && SWIMWEAR_NAME.test(item.name || ''));
+}
+
 export function garmentDescriptor(item) {
   const noun = SUBCATEGORY_EN[item.subcategory] || item.name || 'garment';
   const colorId = Array.isArray(item.colors) ? item.colors[0] : undefined;
