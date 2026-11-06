@@ -34,6 +34,7 @@ struct StyleVaultNativeApp: App {
         let opened = StoreFactory.open(preferred: preferred)
         #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("-SVSeedWardrobe") { DebugSeed.fill(opened.container.mainContext) }
+        if ProcessInfo.processInfo.arguments.contains("-SVSeedBodyPhoto") { DebugSeed.fillBodyPhoto(opened.container.mainContext) }
         #endif
         let monitor = SyncMonitor(health: opened.health)
         container = opened.container
@@ -65,6 +66,20 @@ struct StyleVaultNativeApp: App {
         if arguments.contains("-SVFakeForecastFail") { return FakeForecastLoader(fails: true) }
         #endif
         return OpenMeteoLoader()
+    }
+
+    private static func makeBodyPhotoAnalyzer() -> any BodyPhotoAnalyzing {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-SVFakeBody") { return FakeBodyAnalyzer() }
+        #endif
+        return SystemBodyPhotoAnalyzer()
+    }
+
+    private static func makeAvatarRenderer() -> any AvatarRendering {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-SVFakeBody") { return FakeAvatarRenderer() }
+        #endif
+        return SystemAvatarRenderer()
     }
 
     private static func makePositionProvider() -> any PositionProviding {
@@ -108,6 +123,8 @@ struct StyleVaultNativeApp: App {
                 .environment(\.linkReader, Self.makeLinkReader())
                 .environment(\.forecastLoader, Self.makeForecastLoader())
                 .environment(\.positionProvider, Self.makePositionProvider())
+                .environment(\.bodyPhotoAnalyzer, Self.makeBodyPhotoAnalyzer())
+                .environment(\.avatarRenderer, Self.makeAvatarRenderer())
                 .onChange(of: covered, initial: true) { _, value in lockWindow.setVisible(value) }
                 .onChange(of: scenePhase, initial: true) { _, phase in
                     appLock.sceneDidChange(to: phase)

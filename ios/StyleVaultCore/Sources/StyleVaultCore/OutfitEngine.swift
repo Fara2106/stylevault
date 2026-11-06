@@ -73,6 +73,13 @@ public struct GeneratedOutfit: Identifiable, Equatable, Sendable {
     /// Tutti i capi, accessori compresi, nell'ordine in cui si mostrano.
     public var pieces: [OutfitPiece] { corePieces + accessories }
 
+    /// I capi che si vedono addosso, ognuno col suo posto. Gli accessori restano fuori.
+    public var avatarPieces: [(slot: String, piece: OutfitPiece)] {
+        let slots: [(String, OutfitPiece?)] = [(isDress ? "dress" : "top", top), ("bottom", bottom),
+                                               ("shoes", shoes), ("outerwear", outerwear)]
+        return slots.compactMap { slot, piece in piece.map { (slot, $0) } }
+    }
+
     public var missing: [MissingPiece] {
         var result: [MissingPiece] = []
         if top == nil { result.append(.top) }

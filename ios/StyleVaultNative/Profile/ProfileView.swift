@@ -1,3 +1,4 @@
+import StyleVaultCore
 import SwiftData
 import SwiftUI
 
@@ -5,6 +6,7 @@ struct ProfileView: View {
     @Environment(\.modelContext) private var context
     @Environment(AppLock.self) private var lock
     @Query private var profiles: [Profile]
+    @State private var editingPhoto: BodyView?
 
     var body: some View {
         NavigationStack {
@@ -17,12 +19,15 @@ struct ProfileView: View {
             }
             .background(Palette.bg)
             .navigationTitle(Text("nav.profile"))
+            // Sul Form e non sulla sezione: lì il foglio si richiude da solo quando il Form ricrea le righe.
+            .sheet(item: $editingPhoto) { view in BodyPhotoEditorView(view: view) }
         }
         .task { _ = try? ProfileStore.current(in: context) }
     }
 
     private func settings(for profile: Profile) -> some View {
         Form {
+            BodyPhotosSection(editing: $editingPhoto)
             Section {
                 NavigationLink {
                     CitySearchView { city in

@@ -158,4 +158,15 @@ final class OutfitEngineTests: XCTestCase {
         let keys = outfits.map { [$0.top?.id, $0.bottom?.id, $0.shoes?.id, $0.outerwear?.id] }
         XCTAssertEqual(Set(keys).count, keys.count)
     }
+
+    func testPezziDellAvatarNelLoroPosto() {
+        let outfit = GeneratedOutfit(top: mk("t", "tops"), bottom: mk("b", "bottoms"), shoes: mk("s", "shoes"),
+                                     outerwear: mk("o", "outerwear"), accessories: [mk("a", "accessories")])
+        XCTAssertEqual(outfit.avatarPieces.map(\.slot), ["top", "bottom", "shoes", "outerwear"])
+    }
+
+    func testLAbitoHaIlSuoPostoNellAvatar() {
+        let outfit = GeneratedOutfit(top: mk("d", "dresses"), shoes: mk("s", "shoes"))
+        XCTAssertEqual(outfit.avatarPieces.map(\.slot), ["dress", "shoes"])
+    }
 }

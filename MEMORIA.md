@@ -58,6 +58,13 @@ restano su iCloud e l'account non li sposta. Rovescia la decisione 7 del design 
   (`testBloccoConAutenticatoreFinto`, `testGiroCompleto`) poi verdi 3 su 3 da soli. Lasciati come il sito: stesso outfit assegnabile
   due volte allo stesso giorno, giorno futuro segnabile come indossato. Niente "Prova": arriva con la fase 6. Meteo da Open-Meteo con coordinate a 2 decimali; la
   posizione si chiede solo dal tasto, dopo la spiegazione; senza si usa la città del Profilo.
+- Foto del corpo e "Vedilo addosso" (06/11 sera): Mary segnalava "non crea l'outfit" perché nella nativa mancava la foto di sé. Ora
+  "Le tue foto" è in cima al Profilo (3 viste, sostituibili e cancellabili, foglio `BodyPhotoEditorView`), e ogni scheda outfit
+  ha "Vedilo addosso" (`AvatarView`). Logica in `StyleVaultCore/Avatar`, portata dal tag senza il realistico: i test girano sul Mac con
+  Vision vera, nel simulatore analisi e composizione sono finte con `-SVFakeBody`. Abito con posto proprio (`dress`). Fuori per ora:
+  Prompt AI, prova da Calendario e dal dettaglio. Il collage non è un'immagine generata: niente etichetta IA, resta la dichiarazione
+  sulle foto. Motore: outfit anche con soli capispalla o categorie create a mano; meteo si arrende dopo 10 secondi.
+- Ramo `claude/togli-ibrida-e-sito-5d8100` fuso in `feat/app-nativa` il 06/11 su richiesta di Lorenzo (`98d5989`), nessun push.
 - Decisione di Lorenzo (06/11): il meteo passerà a quello di iPhone (WeatherKit). Non in questa build: per Marianna resta
   Open-Meteo. Il passaggio tocca `Outfit/ForecastLoader.swift` dietro `ForecastLoading`, e poi tolgono Open-Meteo da citazione,
   Privacy Labels, privacy policy e `PrivacyInfo.xcprivacy` (la `Coarse Location` va rivista).

@@ -14,8 +14,8 @@ public enum GarmentImage {
     public static let thumbnailMaxSide = 400
 
     /// JPEG raddrizzato e ridotto, con la trasparenza su fondo bianco. `nil` se i dati non sono un'immagine.
-    public static func prepared(_ data: Data) -> Data? {
-        guard let image = decoded(data, maxSide: photoMaxSide),
+    public static func prepared(_ data: Data, maxSide: Int = photoMaxSide) -> Data? {
+        guard let image = decoded(data, maxSide: maxSide),
               let context = CGContext(data: nil, width: image.width, height: image.height, bitsPerComponent: 8,
                                       bytesPerRow: 0, space: CGColorSpaceCreateDeviceRGB(),
                                       bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue) else { return nil }

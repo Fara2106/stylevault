@@ -35,11 +35,11 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>4</string>
+	<string>5</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>NSCameraUsageDescription</key>
-	<string>Per fotografare i tuoi capi.</string>
+	<string>Per fotografare te e i tuoi capi.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Serve per sbloccare l'app, se attivi il blocco nel Profilo.</string>
 	<key>NSLocationDefaultAccuracyReduced</key>

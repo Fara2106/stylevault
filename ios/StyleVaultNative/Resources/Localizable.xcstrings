@@ -2466,6 +2466,438 @@
         }
       }
     },
+    "native.avatar.addPhoto": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiungi la foto"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add the photo"
+          }
+        }
+      }
+    },
+    "native.avatar.changePhoto": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambia la foto"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change the photo"
+          }
+        }
+      }
+    },
+    "native.avatar.failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non riesco a preparare questa vista con questa foto."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I can't prepare this view with this photo."
+          }
+        }
+      }
+    },
+    "native.avatar.missing.back": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manca la tua foto di spalle."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your back photo is missing."
+          }
+        }
+      }
+    },
+    "native.avatar.missing.front": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manca la tua foto davanti."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your front photo is missing."
+          }
+        }
+      }
+    },
+    "native.avatar.missing.side": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manca la tua foto di lato."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your side photo is missing."
+          }
+        }
+      }
+    },
+    "native.avatar.preparing": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparo l'avatar…"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparing your avatar…"
+          }
+        }
+      }
+    },
+    "native.avatar.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vedilo addosso"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "See it on you"
+          }
+        }
+      }
+    },
+    "native.avatar.unavailable %lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "1 capo non si vede: manca la foto o lo scontorno."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld capi non si vedono: manca la foto o lo scontorno."
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "1 item isn't shown: its photo or cutout is missing."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld items aren't shown: their photo or cutout is missing."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "native.body.analyzeError": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non riesco ad analizzare la foto su questo dispositivo."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I can't analyze the photo on this device."
+          }
+        }
+      }
+    },
+    "native.body.check.multiplePeople": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nella foto ci sono più persone: serve solo tu."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There's more than one person in the photo: it should be just you."
+          }
+        }
+      }
+    },
+    "native.body.check.noPerson": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non vedo nessuno nella foto: riprova inquadrandoti bene."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I can't see anyone in the photo: try again, framing yourself well."
+          }
+        }
+      }
+    },
+    "native.body.check.notFullBody": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non ti vedo dalla testa ai piedi: allontanati un po' e riprova."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I can't see you head to toe: step back a little and try again."
+          }
+        }
+      }
+    },
+    "native.body.check.wrongView.back": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questa foto sembra fatta da un altro lato: qui serve quella di spalle."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This photo seems taken from another side: this one needs the back."
+          }
+        }
+      }
+    },
+    "native.body.check.wrongView.front": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questa foto sembra fatta da un altro lato: qui serve quella davanti."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This photo seems taken from another side: this one needs the front."
+          }
+        }
+      }
+    },
+    "native.body.check.wrongView.side": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questa foto sembra fatta da un altro lato: qui serve quella di lato."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This photo seems taken from another side: this one needs the side."
+          }
+        }
+      }
+    },
+    "native.body.delete": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elimina la foto"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete photo"
+          }
+        }
+      }
+    },
+    "native.body.deleteConfirm": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La foto viene cancellata da questo dispositivo e dal tuo iCloud."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The photo is deleted from this device and your iCloud."
+          }
+        }
+      }
+    },
+    "native.body.guide.back": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Di spalle, stessa posizione della foto davanti. Dalla testa ai piedi."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From behind, same position as the front photo. Head to toe."
+          }
+        }
+      }
+    },
+    "native.body.guide.front": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In piedi, frontale, braccia un po' staccate dal corpo. Dalla testa ai piedi, con luce naturale."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Standing, facing forward, arms slightly away from your body. Head to toe, in natural light."
+          }
+        }
+      }
+    },
+    "native.body.guide.side": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Girati di 90°, braccia lungo i fianchi. Sempre dalla testa ai piedi."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn 90°, arms by your sides. Still head to toe."
+          }
+        }
+      }
+    },
+    "native.body.retake": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scegline un'altra"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick another"
+          }
+        }
+      }
+    },
+    "native.body.saveError": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non riesco a salvare la foto: riprova."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I can't save the photo: try again."
+          }
+        }
+      }
+    },
+    "native.body.use": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usa questa foto"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use this photo"
+          }
+        }
+      }
+    },
     "native.calendar.next": {
       "extractionState": "manual",
       "localizations": {
@@ -3765,6 +4197,108 @@
         }
       }
     },
+    "profile.bodyPhotoMissing": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manca"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Missing"
+          }
+        }
+      }
+    },
+    "profile.bodyPhotosHintWeb": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tocca una foto per cambiarla: in piedi, dalla testa ai piedi, con luce naturale. Servono a vedere gli outfit addosso."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap a photo to change it: standing, head to toe, in natural light. They let you see outfits on you."
+          }
+        }
+      }
+    },
+    "profile.bodyPhotosTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le tue foto"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your photos"
+          }
+        }
+      }
+    },
+    "profile.bodyViewBack": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Di spalle"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back"
+          }
+        }
+      }
+    },
+    "profile.bodyViewFront": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Davanti"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Front"
+          }
+        }
+      }
+    },
+    "profile.bodyViewSide": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Di lato"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Side"
+          }
+        }
+      }
+    },
     "profile.defaultCity": {
       "extractionState": "manual",
       "localizations": {
@@ -3795,6 +4329,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Language"
+          }
+        }
+      }
+    },
+    "profile.ownPhotoNotice": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usa solo foto di te: caricandole confermi che ritraggono te, oppure una persona che ti ha dato il consenso."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only use photos of yourself: by adding them you confirm they show you, or someone who gave you their consent."
           }
         }
       }

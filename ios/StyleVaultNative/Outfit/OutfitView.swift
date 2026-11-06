@@ -21,6 +21,7 @@ struct OutfitView: View {
     // Fogli e non pagine: entrando in una pagina la barra si riaccende e, tornando, resta uno spazio vuoto in cima.
     @State private var isCitySearchOpen = false
     @State private var isSavedOpen = false
+    @State private var avatarOutfit: GeneratedOutfit?
 
     private let logger = Logger(subsystem: "it.faraoni.stylevault.nativa", category: "outfit")
 
@@ -83,6 +84,7 @@ struct OutfitView: View {
                 }
                 .tint(Palette.ink)
             }
+            .sheet(item: $avatarOutfit) { outfit in AvatarView(outfit: outfit, items: itemsByID) }
             .alert("native.outfit.position.title", isPresented: $isPositionAsked) {
                 Button("common.cancel", role: .cancel) {}
                 Button("native.outfit.position.continue") { model.chooseMyPosition() }
@@ -272,7 +274,7 @@ struct OutfitView: View {
             ForEach(model.outfits) { outfit in
                 VStack(alignment: .leading, spacing: 8) {
                     OutfitCardView(outfit: outfit, items: itemsByID, lockedIDs: model.lockedIDs, saved: model.isSaved(outfit),
-                                   wornLabel: wornLabel(for: outfit), onToggleLock: model.toggleLock, onSave: { save(outfit) }, onWear: { wear(outfit) })
+                                   wornLabel: wornLabel(for: outfit), onToggleLock: model.toggleLock, onSave: { save(outfit) }, onTryOn: { avatarOutfit = outfit }, onWear: { wear(outfit) })
                     advice(for: outfit)
                 }
             }

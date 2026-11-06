@@ -28,6 +28,7 @@ struct OutfitCardView: View {
     let wornLabel: LocalizedStringKey?
     let onToggleLock: (String) -> Void
     let onSave: () -> Void
+    let onTryOn: () -> Void
     let onWear: () -> Void
 
     private var sections: [(label: LocalizedStringKey, piece: OutfitPiece)] {
@@ -123,6 +124,15 @@ struct OutfitCardView: View {
     }
 
     private var actions: some View {
+        VStack(spacing: 8) {
+            Button(action: onTryOn) { Label("native.avatar.title", systemImage: "person.crop.rectangle") }
+                .buttonStyle(OutlineButtonStyle())
+                .accessibilityIdentifier("outfit-avatar")
+            wearActions
+        }
+    }
+
+    private var wearActions: some View {
         HStack(spacing: 8) {
             Button(action: onSave) {
                 Label(saved ? "outfit.saved" : "common.save", systemImage: saved ? "checkmark" : "heart")

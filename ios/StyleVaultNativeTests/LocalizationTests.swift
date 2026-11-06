@@ -34,6 +34,13 @@ final class LocalizationTests: XCTestCase {
         + ["stats", "totalOutfits", "statsMostWorn", "statsLeastWorn", "statsByCategory", "statsByColor", "statsCostPerWear",
            "statsNoData", "statsNever"].map { "profile.\($0)" }
         + ["native.outfit.saved.title", "native.outfit.saved.empty", "common.loading"]
+        + ["bodyPhotosTitle", "bodyPhotosHintWeb", "bodyPhotoMissing", "bodyViewFront", "bodyViewSide", "bodyViewBack",
+           "ownPhotoNotice"].map { "profile.\($0)" }
+        + ["guide.front", "guide.side", "guide.back", "check.noPerson", "check.multiplePeople", "check.notFullBody",
+           "check.wrongView.front", "check.wrongView.side", "check.wrongView.back", "use", "retake", "delete",
+           "deleteConfirm", "analyzeError", "saveError"].map { "native.body.\($0)" }
+        + ["title", "preparing", "failed", "addPhoto", "changePhoto", "missing.front", "missing.side", "missing.back"]
+            .map { "native.avatar.\($0)" }
 
     func testIlMotivoDellaPosizioneHaLeDueLingue() throws {
         for language in ["it", "en"] {

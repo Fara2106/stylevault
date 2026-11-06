@@ -44,13 +44,13 @@ targets:
     info:
       path: StyleVaultNative/Info.plist
       properties:
-        NSCameraUsageDescription: Per fotografare i tuoi capi.
+        NSCameraUsageDescription: Per fotografare te e i tuoi capi.
         NSFaceIDUsageDescription: Serve per sbloccare l'app, se attivi il blocco nel Profilo.
         NSLocationWhenInUseUsageDescription: Per mostrarti il meteo di dove sei e consigliarti cosa indossare.
         NSLocationDefaultAccuracyReduced: true
         CFBundleDisplayName: SV Nativa
         CFBundleShortVersionString: "1.0"
-        CFBundleVersion: "4"
+        CFBundleVersion: "5"
         SupabaseURL: $(SUPABASE_URL)
         SupabaseKey: $(SUPABASE_KEY)
         CFBundleURLTypes:

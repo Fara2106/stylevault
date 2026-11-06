@@ -1,6 +1,8 @@
 #if DEBUG
 import Foundation
+import StyleVaultCore
 import SwiftData
+import UIKit
 
 /// Per i test UI: un guardaroba già pronto, solo con `-SVSeedWardrobe`. Non arriva nella Release.
 @MainActor enum DebugSeed {
@@ -22,6 +24,16 @@ import SwiftData
             values.price = price
             _ = try? WardrobeStore.addItem(values, in: context)
         }
+    }
+
+    /// Una foto finta, solo con `-SVSeedBodyPhoto`.
+    static func fillBodyPhoto(_ context: ModelContext) {
+        let size = CGSize(width: 300, height: 600)
+        let image = UIGraphicsImageRenderer(size: size).image { renderer in
+            UIColor.systemTeal.setFill()
+            renderer.fill(CGRect(origin: .zero, size: size))
+        }
+        if let jpeg = image.jpegData(compressionQuality: 0.8) { try? BodyPhotoStore.save(jpeg, view: .front, in: context) }
     }
 }
 #endif
