@@ -31,6 +31,15 @@ struct CategoryChoice: Identifiable, Equatable {
         return catalog + mine
     }
 
+    /// L'id della categoria del catalogo con quel nome nella lingua dell'app, se c'è.
+    static func catalogID(named name: String) -> String? {
+        let wanted = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        return Catalog.categories.first { category in
+            let label = String(localized: String.LocalizationValue(category.labelKey))
+            return label.caseInsensitiveCompare(wanted) == .orderedSame
+        }?.id
+    }
+
     /// `nil` per una categoria che non esiste più: la vista non mostra nulla, mai la chiave grezza.
     static func find(_ id: String, custom: [CustomCategory]) -> CategoryChoice? {
         all(custom: custom).first { $0.id == id }

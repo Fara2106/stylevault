@@ -9,6 +9,8 @@ enum Palette {
     static let muted = dynamic(light: 0x6B6560, dark: 0xA39B91)
     static let border = dynamic(light: 0xE5DFD6, dark: 0x3A342E)
     static let accent = dynamic(light: 0x8B7355, dark: 0xC4A57F)
+    /// I testi cliccabili: l'accento chiaro non arriva a 4.5:1 sullo sfondo.
+    static let link = dynamic(light: 0x6B6560, dark: 0xC4A57F)
     static let danger = dynamic(light: 0x9D4040, dark: 0xE08A8A)
 
     private static func dynamic(light: UInt32, dark: UInt32) -> Color {

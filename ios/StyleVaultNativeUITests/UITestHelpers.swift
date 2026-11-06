@@ -26,7 +26,36 @@ extension XCTestCase {
 
     func waitForDisappearance(of element: XCUIElement) -> Bool {
         let p = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: element)
-        return XCTWaiter().wait(for: [p], timeout: 4) == .completed
+        let gone = XCTWaiter().wait(for: [p], timeout: 4) == .completed
+        if !gone {
+            // Senza la schermata un fallimento raro non si può spiegare dopo.
+            let shot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+            shot.lifetime = .keepAlways
+            add(shot)
+        }
+        return gone
+    }
+
+    /// Con il simulatore sotto carico un tocco dato mentre i controlli si spostano finisce su quello vicino.
+    func waitForStillness(of element: XCUIElement) {
+        var last = element.frame
+        var still = 0
+        for _ in 0..<40 where still < 3 {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.15))
+            let now = element.frame
+            still = now == last ? still + 1 : 0
+            last = now
+        }
+    }
+
+    func waitForFocus(of element: XCUIElement) -> Bool {
+        let focused = XCTNSPredicateExpectation(predicate: NSPredicate(format: "hasKeyboardFocus == true"), object: element)
+        return XCTWaiter().wait(for: [focused], timeout: 15) == .completed
+    }
+
+    /// Tocca il bordo alto del riquadro: chi usa l'app non centra mai il testo.
+    func tapTopEdge(_ element: XCUIElement) {
+        element.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.08)).tap()
     }
 
     /// Un elemento con quel testo, qualunque sia il suo tipo.

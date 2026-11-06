@@ -1,6 +1,24 @@
 import StyleVaultCore
 import SwiftUI
 
+extension GridItem {
+    /// Le colonne di capi e desideri. In alto: le schede con più righe non devono spostare le vicine.
+    static let cardColumns = [GridItem(.adaptive(minimum: 150), spacing: 12, alignment: .top)]
+}
+
+/// Il pallino di un colore. Il bordo si vede sempre: il bianco su fondo chiaro, il nero su fondo scuro.
+struct ColorDot: View {
+    let color: Color
+    let size: CGFloat
+
+    var body: some View {
+        Circle()
+            .fill(color)
+            .frame(width: size, height: size)
+            .overlay(Circle().stroke(Palette.muted, lineWidth: 1))
+    }
+}
+
 /// La scheda di un capo. Lavora su valori semplici: vale per il guardaroba e per la wishlist.
 struct ItemCard: View {
     let name: String
@@ -26,10 +44,7 @@ struct ItemCard: View {
             }
             HStack(spacing: 4) {
                 ForEach(colors.compactMap(Catalog.color(id:))) { color in
-                    Circle()
-                        .fill(color.color)
-                        .frame(width: 10, height: 10)
-                        .overlay(Circle().stroke(Palette.border))
+                    ColorDot(color: color.color, size: 10)
                 }
             }
         }

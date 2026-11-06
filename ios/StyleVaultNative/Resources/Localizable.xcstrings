@@ -1769,6 +1769,23 @@
         }
       }
     },
+    "native.account.exitToLogin": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esci e vai all'accesso"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exit and go to Log In"
+          }
+        }
+      }
+    },
     "native.account.title": {
       "extractionState": "manual",
       "localizations": {
@@ -1782,6 +1799,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Account"
+          }
+        }
+      }
+    },
+    "native.auth.appleFailed %lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple non ha completato l'accesso (codice %lld). Riprova oppure continua senza account."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple didn't complete the sign-in (code %lld). Try again or continue without an account."
           }
         }
       }

@@ -12,7 +12,6 @@ struct WishlistSection: View {
     @Query(sort: \WishlistItem.createdAt) private var wishes: [WishlistItem]
 
     private let logger = Logger(subsystem: "it.faraoni.stylevault.nativa", category: "wardrobe")
-    private let columns = [GridItem(.adaptive(minimum: 150), spacing: 12)]
 
     var body: some View {
         if wishes.isEmpty {
@@ -25,7 +24,7 @@ struct WishlistSection: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 48)
         } else {
-            LazyVGrid(columns: columns, spacing: 16) {
+            LazyVGrid(columns: GridItem.cardColumns, spacing: 16) {
                 ForEach(wishes) { wish in
                     card(for: wish)
                 }
@@ -41,7 +40,7 @@ struct WishlistSection: View {
                     Link(destination: url) {
                         Image(systemName: "arrow.up.right.square").frame(width: 44, height: 44)
                     }
-                    .tint(Palette.accent)
+                    .tint(Palette.link)
                     .accessibilityLabel(Text("wishlist.openLink"))
                 }
                 Button("wishlist.bought") { buy(wish) }

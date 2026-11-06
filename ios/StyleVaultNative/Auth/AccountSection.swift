@@ -19,7 +19,8 @@ struct AccountSection: View {
                     .disabled(busy)
                     .accessibilityIdentifier("account-delete")
             } else {
-                Button("auth.login") { skipped = false }
+                Button("native.account.exitToLogin") { skipped = false }
+                    .tint(Palette.link)
                     .accessibilityIdentifier("account-login")
             }
         } header: {

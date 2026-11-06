@@ -17,10 +17,10 @@ struct WardrobeView: View {
     @State private var section = WardrobeSection.wardrobe
     @State private var filter = WardrobeFilter()
     @State private var isCategoryInUse = false
+    @FocusState private var isSearching: Bool
 
     @Environment(\.horizontalSizeClass) private var sizeClass
     private let logger = Logger(subsystem: "it.faraoni.stylevault.nativa", category: "wardrobe")
-    private let columns = [GridItem(.adaptive(minimum: 150), spacing: 12)]
 
     private var filtered: [Item] {
         items.filter { filter.matches(name: $0.name, brand: $0.brand, category: $0.category, favorite: $0.favorite) }
@@ -97,7 +97,7 @@ struct WardrobeView: View {
         if filtered.isEmpty {
             emptyState
         } else {
-            LazyVGrid(columns: columns, spacing: 16) {
+            LazyVGrid(columns: GridItem.cardColumns, spacing: 16) {
                 ForEach(filtered) { item in
                     card(for: item)
                 }
@@ -109,13 +109,17 @@ struct WardrobeView: View {
         HStack(spacing: 8) {
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass").foregroundStyle(Palette.muted)
-                TextField("wardrobe.searchPlaceholder", text: $filter.search)
+                TextField("wardrobe.searchPlaceholder", text: $filter.search,
+                          prompt: Text("wardrobe.searchPlaceholder").foregroundStyle(Palette.muted))
                     .autocorrectionDisabled()
+                    .focused($isSearching)
                     .accessibilityIdentifier("wardrobe-search")
             }
             .padding(10)
             .background(Palette.surface, in: RoundedRectangle(cornerRadius: 10))
             .overlay(RoundedRectangle(cornerRadius: 10).stroke(Palette.border))
+            .contentShape(RoundedRectangle(cornerRadius: 10))
+            .onTapGesture { isSearching = true }
             FavoriteButton(isFavorite: filter.onlyFavorites, id: "wardrobe-favorites") {
                 filter.onlyFavorites.toggle()
             }

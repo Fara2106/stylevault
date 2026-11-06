@@ -14,6 +14,7 @@ struct LoginView: View {
     @State private var notice: String?
     @State private var busy = false
     @State private var appleNonce = AppleNonce()
+    @FocusState private var passwordFocused: Bool
 
     var body: some View {
         ScrollView {
@@ -48,16 +49,23 @@ struct LoginView: View {
                     .accessibilityIdentifier("login-google")
                 }
 
-                TextField("auth.email", text: $email)
+                TextField("auth.email", text: $email,
+                          prompt: Text("auth.email").foregroundStyle(Palette.muted))
                     .textContentType(.emailAddress)
                     .keyboardType(.emailAddress)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
-                    .modifier(LoginFieldStyle())
+                    .submitLabel(.next)
+                    .onSubmit { passwordFocused = true }
+                    .modifier(FieldBox())
                     .accessibilityIdentifier("login-email")
-                SecureField("auth.password", text: $password)
+                SecureField("auth.password", text: $password,
+                            prompt: Text("auth.password").foregroundStyle(Palette.muted))
                     .textContentType(registering ? .newPassword : .password)
-                    .modifier(LoginFieldStyle())
+                    .focused($passwordFocused)
+                    .submitLabel(.go)
+                    .onSubmit(submit)
+                    .modifier(FieldBox())
                     .accessibilityIdentifier("login-password")
 
                 if !registering {
@@ -110,18 +118,18 @@ struct LoginView: View {
                     errorText = nil
                     notice = nil
                 } label: {
-                    (Text(registering ? "auth.hasAccount" : "auth.noAccount")
+                    // La parte da toccare sta in inchiostro: tutta grigia sembrava una didascalia.
+                    (Text(registering ? "auth.hasAccount" : "auth.noAccount").foregroundStyle(Palette.muted)
                         + Text(verbatim: " ")
-                        + Text(registering ? "auth.login" : "auth.register").bold())
+                        + Text(registering ? "auth.login" : "auth.register").bold().foregroundStyle(Palette.ink))
                         .font(.subheadline)
-                        .foregroundStyle(Palette.muted)
                         .multilineTextAlignment(.center)
                 }
                 .accessibilityIdentifier("login-toggle")
 
                 Button("native.auth.skip", action: onSkip)
                     .font(.subheadline)
-                    .tint(Palette.accent)
+                    .tint(Palette.link)
                     .padding(.top, 8)
                     .accessibilityIdentifier("login-skip")
 
@@ -198,15 +206,5 @@ struct LoginView: View {
                 errorText = kind.localizedMessage
             }
         }
-    }
-}
-
-struct LoginFieldStyle: ViewModifier {
-    func body(content: Content) -> some View {
-        content
-            .padding(.horizontal, 14)
-            .frame(minHeight: 52)
-            .background(Palette.surface, in: RoundedRectangle(cornerRadius: 6))
-            .overlay(RoundedRectangle(cornerRadius: 6).stroke(Palette.border))
     }
 }

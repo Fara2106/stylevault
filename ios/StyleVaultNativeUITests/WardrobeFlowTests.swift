@@ -349,6 +349,52 @@ final class WardrobeFlowTests: XCTestCase {
         XCTAssertTrue(anyText(app, "Mare").waitForExistence(timeout: 3))
     }
 
+    func testUnNomeGiaInCatalogoNonCreaUnaCategoriaDoppia() {
+        let app = launch(language: "it")
+        _ = openForm(app)
+        createCategory(app, "Scarpe")
+        XCTAssertTrue(app.buttons["category-shoes"].isSelected)
+        XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'category-custom'")).count, 0)
+    }
+
+    func testTuttoIlRiquadroDelModuloApreLaTastiera() {
+        let app = launch(language: "it")
+        _ = openForm(app)
+        tapTopEdge(app.textFields["item-name"])
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+    }
+
+    func testTuttoIlRiquadroDellaRicercaApreLaTastiera() {
+        let app = launch(language: "it")
+        let search = app.textFields["wardrobe-search"]
+        XCTAssertTrue(search.waitForExistence(timeout: 5))
+        // Sopra il testo ma dentro il riquadro, che è più alto del campo.
+        search.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: -0.2)).tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+    }
+
+    func testICapiPartonoAllaStessaAltezza() {
+        let app = launch(language: "it")
+        let sheet = openForm(app)
+        let field = app.textFields["item-name"]
+        field.tap()
+        field.typeText("Con colore")
+        waitForKeyboard(app, around: field)
+        let chip = app.buttons["category-tops"]
+        scroll(app, to: chip)
+        chip.tap()
+        let color = app.buttons["Bianco"]
+        scroll(app, to: color)
+        color.tap()
+        let save = app.buttons["item-save"]
+        scroll(app, to: save)
+        save.tap()
+        XCTAssertTrue(waitForDisappearance(of: sheet))
+        addItem(app, name: "Senza colore", category: "tops")
+        XCTAssertTrue(waitForCount(cards(app), 2))
+        XCTAssertEqual(cards(app).element(boundBy: 0).frame.minY, cards(app).element(boundBy: 1).frame.minY, accuracy: 0.5)
+    }
+
     func testCategoriaUsataNonSiCancella() {
         let app = launch(language: "it")
         addItemInNewCategory(app, item: "Costume", category: "Mare")

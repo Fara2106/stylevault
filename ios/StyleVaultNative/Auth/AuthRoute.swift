@@ -21,11 +21,12 @@ extension AuthErrorKind {
         case .samePassword: return "auth.errors.same-password"
         case .tooManyEmails: return "auth.errors.rate-limited"
         case .unreachable: return "native.auth.unreachable"
-        case .cancelled, .other: return nil
+        case .cancelled, .appleFailed, .other: return nil
         }
     }
 
     var localizedMessage: String? {
-        localizationKey.map { String(localized: String.LocalizationValue($0)) } ?? message
+        if case let .appleFailed(code) = self { return String(localized: "native.auth.appleFailed \(code)") }
+        return localizationKey.map { String(localized: String.LocalizationValue($0)) } ?? message
     }
 }

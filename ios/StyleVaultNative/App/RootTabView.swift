@@ -55,7 +55,6 @@ struct RootTabView: View {
         }
         .background(Palette.bg)
         .tint(Palette.accent)
-        .preferredColorScheme(ThemeStore.colorScheme(for: ProfileStore.survivor(of: profiles)?.theme ?? "system"))
         .sheet(isPresented: $router.isAddSheetPresented) {
             ItemFormView(mode: .add(router.addDestination))
         }

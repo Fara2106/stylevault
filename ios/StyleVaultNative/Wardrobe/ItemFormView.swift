@@ -147,7 +147,7 @@ struct ItemFormView: View {
                 ItemPhotoView(data: photo, name: model.name, maxSide: 800, contentMode: .fit)
                     .frame(height: 240)
                     .clipShape(RoundedRectangle(cornerRadius: 10))
-                photoMenu(.front) { Text("addItem.changePhoto").foregroundStyle(Palette.accent) }
+                photoMenu(.front) { Text("addItem.changePhoto").foregroundStyle(Palette.link) }
             } else {
                 photoMenu(.front) {
                     VStack(spacing: 6) {
@@ -175,11 +175,12 @@ struct ItemFormView: View {
 
     private var linkSource: some View {
         VStack(spacing: 12) {
-            TextField("addItem.pasteLink", text: $model.linkText)
+            TextField("addItem.pasteLink", text: $model.linkText,
+                      prompt: Text("addItem.pasteLink").foregroundStyle(Palette.muted))
                 .keyboardType(.URL)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
-                .textFieldStyle(.roundedBorder)
+                .modifier(FieldBox(minHeight: 40, inset: 10))
                 .accessibilityIdentifier("item-link")
             Button("addItem.analyzeLink") {
                 Task { await model.analyzeLink(with: linkReader) }
@@ -197,7 +198,7 @@ struct ItemFormView: View {
             // Con un link illeggibile la foto si mette a mano.
             photoMenu(.front) {
                 Text(LocalizedStringKey(model.photoFront == nil ? "addItem.uploadPhoto" : "addItem.changePhoto"))
-                    .foregroundStyle(Palette.accent)
+                    .foregroundStyle(Palette.link)
             }
             photoStatus
         }
@@ -248,7 +249,7 @@ struct ItemFormView: View {
             Spacer(minLength: 8)
             photoMenu(.back) {
                 Text(LocalizedStringKey(model.photoBack == nil ? "addItem.photoBackAdd" : "addItem.changePhoto"))
-                    .foregroundStyle(Palette.accent)
+                    .foregroundStyle(Palette.link)
             }
             if model.photoBack != nil {
                 Button { model.removeBack() } label: { Image(systemName: "xmark") }
@@ -279,7 +280,7 @@ struct ItemFormView: View {
         VStack(alignment: .leading, spacing: 6) {
             fieldLabel("addItem.itemName")
             TextField("", text: $model.name)
-                .textFieldStyle(.roundedBorder)
+                .modifier(FieldBox(minHeight: 40, inset: 10))
                 .accessibilityIdentifier("item-name")
             if model.errors.contains(.name) { errorText("addItem.nameRequired") }
         }
@@ -308,6 +309,10 @@ struct ItemFormView: View {
     }
 
     private func createCategory() {
+        if let id = CategoryChoice.catalogID(named: newCategoryName) {
+            model.selectCategory(id)
+            return
+        }
         do {
             if let category = try CustomCategoryStore.add(name: newCategoryName, in: context) {
                 model.selectCategory(category.id)
@@ -339,10 +344,7 @@ struct ItemFormView: View {
                 ForEach(Catalog.colors) { color in
                     let isSelected = model.colors.contains(color.id)
                     Button { model.toggleColor(color.id) } label: {
-                        Circle()
-                            .fill(color.color)
-                            .frame(width: 32, height: 32)
-                            .overlay(Circle().stroke(Palette.border))
+                        ColorDot(color: color.color, size: 32)
                             .overlay(Circle().inset(by: -3).stroke(isSelected ? Palette.ink : .clear, lineWidth: 2))
                             .frame(width: 44, height: 44)
                     }
@@ -397,13 +399,13 @@ struct ItemFormView: View {
             VStack(alignment: .leading, spacing: 6) {
                 fieldLabel("addItem.brand")
                 TextField("", text: $model.brand)
-                    .textFieldStyle(.roundedBorder)
+                    .modifier(FieldBox(minHeight: 40, inset: 10))
                     .focused($bottomField, equals: .brand)
             }
             VStack(alignment: .leading, spacing: 6) {
                 fieldLabel("addItem.size")
                 TextField("", text: $model.size)
-                    .textFieldStyle(.roundedBorder)
+                    .modifier(FieldBox(minHeight: 40, inset: 10))
                     .focused($bottomField, equals: .size)
             }
         }
@@ -412,9 +414,10 @@ struct ItemFormView: View {
     private var priceField: some View {
         VStack(alignment: .leading, spacing: 6) {
             fieldLabel("addItem.price")
-            TextField("common.optional", text: $model.priceText)
+            TextField("common.optional", text: $model.priceText,
+                      prompt: Text("common.optional").foregroundStyle(Palette.muted))
                 .keyboardType(.decimalPad)
-                .textFieldStyle(.roundedBorder)
+                .modifier(FieldBox(minHeight: 40, inset: 10))
                 .focused($bottomField, equals: .price)
                 .accessibilityIdentifier("item-price")
             if model.errors.contains(.price) { errorText("native.form.priceInvalid") }

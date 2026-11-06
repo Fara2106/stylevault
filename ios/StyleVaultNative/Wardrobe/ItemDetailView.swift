@@ -125,7 +125,7 @@ struct ItemDetailView: View {
                 Link(destination: url) {
                     Label("itemDetail.openShop", systemImage: "arrow.up.right.square")
                 }
-                .tint(Palette.accent)
+                .tint(Palette.link)
             }
             HStack(spacing: 12) {
                 Button("common.edit") { isEditing = true }
@@ -144,10 +144,7 @@ struct ItemDetailView: View {
         FlowLayout(spacing: 12) {
             ForEach(item.colors.compactMap(Catalog.color(id:))) { color in
                 HStack(spacing: 6) {
-                    Circle()
-                        .fill(color.color)
-                        .frame(width: 14, height: 14)
-                        .overlay(Circle().stroke(Palette.border))
+                    ColorDot(color: color.color, size: 14)
                     Text(LocalizedStringKey(color.labelKey)).font(.footnote).foregroundStyle(Palette.ink)
                 }
             }

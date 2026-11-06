@@ -45,13 +45,16 @@ struct AppleTokenMissing: LocalizedError {
 /// Errori di login in forma leggibile, con gli stessi testi del sito (auth.errors.*).
 enum AuthErrorKind: Equatable {
     case invalidCredentials, emailTaken, weakPassword, samePassword, tooManyEmails, cancelled, unreachable
+    case appleFailed(Int)
     case other(String)
 
     static func from(_ error: Error) -> AuthErrorKind {
         if let web = error as? ASWebAuthenticationSessionError, web.code == .canceledLogin {
             return .cancelled
         }
-        if let apple = error as? ASAuthorizationError, apple.code == .canceled { return .cancelled }
+        if let apple = error as? ASAuthorizationError {
+            return apple.code == .canceled ? .cancelled : .appleFailed(apple.code.rawValue)
+        }
         if let auth = error as? AuthError, case let .api(message, code, _, _) = auth {
             switch code {
             case .invalidCredentials: return .invalidCredentials
@@ -76,6 +79,7 @@ enum AuthErrorKind: Equatable {
         case .tooManyEmails: return "Hai già chiesto un'email da poco: aspetta qualche minuto e riprova."
         case .unreachable: return "Il servizio online non risponde. Controlla la connessione e riprova."
         case .cancelled: return nil
+        case let .appleFailed(code): return "Apple non ha completato l'accesso (codice \(code)): riprova."
         case let .other(text): return text
         }
     }

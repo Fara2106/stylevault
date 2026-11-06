@@ -1,3 +1,4 @@
+import AuthenticationServices
 @testable import StyleVaultNative
 import XCTest
 
@@ -41,5 +42,15 @@ final class AuthRouteTests: XCTestCase {
         XCTAssertEqual(AuthErrorKind.tooManyEmails.localizationKey, "auth.errors.rate-limited")
         XCTAssertEqual(AuthErrorKind.unreachable.localizationKey, "native.auth.unreachable")
         XCTAssertNil(AuthErrorKind.cancelled.localizationKey)
+    }
+
+    func testUnErroreDiAppleDiceIlCodice() throws {
+        let kind = AuthErrorKind.from(ASAuthorizationError(.failed))
+        XCTAssertEqual(kind, .appleFailed(1004))
+        XCTAssertTrue(try XCTUnwrap(kind.localizedMessage).contains("1004"))
+    }
+
+    func testChiChiudeAppleNonVedeErrori() {
+        XCTAssertEqual(AuthErrorKind.from(ASAuthorizationError(.canceled)), .cancelled)
     }
 }

@@ -19,7 +19,7 @@ struct NewPasswordView: View {
                 }
                 SecureField("native.auth.newPasswordField", text: $password)
                     .textContentType(.newPassword)
-                    .modifier(LoginFieldStyle())
+                    .modifier(FieldBox())
                 if let errorText {
                     Text(verbatim: errorText).font(.footnote).foregroundStyle(Palette.danger)
                 }

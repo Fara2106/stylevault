@@ -94,4 +94,10 @@ final class GoogleAvailabilityTests: XCTestCase {
         XCTAssertFalse(AuthService.googleEnabled(in: Data(#"{"external":{"google":false}}"#.utf8)))
         XCTAssertFalse(AuthService.googleEnabled(in: Data("non json".utf8)))
     }
+
+    func testUnErroreDiAppleDiceIlCodice() throws {
+        let kind = AuthErrorKind.from(ASAuthorizationError(.failed))
+        XCTAssertEqual(kind, .appleFailed(1004))
+        XCTAssertTrue(try XCTUnwrap(kind.message).contains("1004"))
+    }
 }
