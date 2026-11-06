@@ -159,4 +159,10 @@ final class ForecastTests: XCTestCase {
         let copy = try JSONDecoder().decode([DayForecast].self, from: JSONEncoder().encode(days))
         XCTAssertEqual(copy, days)
     }
+
+    /// Senza limite la rotellina durerebbe un minuto, e fino ad allora l'outfit non si genera.
+    func testLaRichiestaDelMeteoSiArrendeDopoDieciSecondi() throws {
+        let request = try XCTUnwrap(Forecast.request(latitude: 45.46, longitude: 9.19))
+        XCTAssertEqual(request.timeoutInterval, 10)
+    }
 }

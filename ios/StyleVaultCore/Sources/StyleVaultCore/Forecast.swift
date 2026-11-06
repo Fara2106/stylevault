@@ -247,10 +247,14 @@ public enum Forecast {
         }
     }
 
+    static func request(latitude: Double, longitude: Double) -> URLRequest? {
+        url(latitude: latitude, longitude: longitude).map { URLRequest(url: $0, timeoutInterval: 10) }
+    }
+
     public static func fetch(latitude: Double, longitude: Double, city: String, now: Date = .now,
                              session: URLSession = .shared) async throws -> [DayForecast] {
-        guard let url = url(latitude: latitude, longitude: longitude) else { throw URLError(.badURL) }
-        let (data, response) = try await session.data(from: url)
+        guard let request = request(latitude: latitude, longitude: longitude) else { throw URLError(.badURL) }
+        let (data, response) = try await session.data(for: request)
         if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
             throw HTTPError(statusCode: http.statusCode)
         }

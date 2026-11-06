@@ -110,6 +110,37 @@ final class OutfitEngineTests: XCTestCase {
         XCTAssertEqual(generate([mk("bag", "accessories")]), [])
     }
 
+    func testLIntimoNonDiventaUnOutfit() {
+        XCTAssertEqual(generate([mk("calze", "underwear")]), [])
+    }
+
+    func testSoliCapispallaGeneranoAncheColCaldo() throws {
+        let outfit = try XCTUnwrap(generate([mk("coat", "outerwear", season: "winter")], weatherOf(temperature: 28)).first)
+        XCTAssertEqual(outfit.outerwear?.id, "coat")
+        XCTAssertEqual(outfit.missing, [.top, .bottom, .shoes])
+    }
+
+    func testSoloCapospallaDiAltraOccasioneGeneraComunque() throws {
+        let outfit = try XCTUnwrap(generate([mk("blazer", "outerwear", occasion: "formal")], occasion: "sport").first)
+        XCTAssertEqual(outfit.outerwear?.id, "blazer")
+    }
+
+    func testCapoInCategoriaPersonaleDiventaIlPezzoSopra() throws {
+        let outfit = try XCTUnwrap(generate([mk("tuta", "6F9619FF-8B86-D011-B42D-00C04FC964FF")]).first)
+        XCTAssertEqual(outfit.top?.id, "tuta")
+        XCTAssertEqual(outfit.missing, [.bottom, .shoes])
+    }
+
+    func testCategoriaPersonaleNonPrendeIlPostoDeiTop() {
+        let wardrobe = [mk("top1", "tops"), mk("tuta", "6F9619FF-8B86-D011-B42D-00C04FC964FF")]
+        for outfit in generate(wardrobe, count: 3) { XCTAssertEqual(outfit.top?.id, "top1") }
+    }
+
+    func testCapoBloccatoInCategoriaPersonaleRestaNellOutfit() {
+        let tuta = mk("tuta", "6F9619FF-8B86-D011-B42D-00C04FC964FF")
+        for outfit in generate(baseWardrobe + [tuta], locked: [tuta]) { XCTAssertEqual(outfit.top?.id, "tuta") }
+    }
+
     func testOmbrelloConLaPioggia() {
         let w = baseWardrobe + [mk("u", "accessories", subcategory: "umbrella")]
         for o in generate(w, weatherOf(rain: true)) { XCTAssertTrue(o.accessories.contains { $0.id == "u" }) }

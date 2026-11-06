@@ -87,6 +87,8 @@ public struct GeneratedOutfit: Identifiable, Equatable, Sendable {
 /// Gli outfit di un giorno: stessi pesi, soglie e ripieghi.
 /// Non si blocca mai: un pezzo che manca diventa un avviso. Unica eccezione, nessun capo da indossare.
 public enum OutfitEngine {
+    private static let catalogCategories: Set<String> = ["tops", "bottoms", "shoes", "outerwear", "dresses", "accessories", "underwear"]
+
     private static func hexColors(of piece: OutfitPiece) -> [String] {
         piece.colors.compactMap { Catalog.color(id: $0)?.hex }
     }
@@ -196,7 +198,8 @@ public enum OutfitEngine {
                 case "bottoms": bottom = piece
                 case "shoes": shoes = piece
                 case "outerwear": outerwear = piece
-                default: break
+                case "accessories", "underwear": break
+                default: top = top ?? piece // categoria creata a mano
                 }
             }
         }
@@ -225,6 +228,9 @@ public enum OutfitEngine {
         let shoes = pool("shoes")
         let anyDresses = pool("dresses")
         let outerwear = filtered.filter { $0.category == "outerwear" }
+        // Un capo in una categoria creata a mano è da indossare: il motore non sa dove va, quindi prende il posto del top.
+        let others = items.filter { !catalogCategories.contains($0.category) }
+        let topsOrOthers = tops.isEmpty ? others : tops
         let accessories = filtered.filter { $0.category == "accessories" }
         let dresses = filtered.filter { $0.category == "dresses" }
         let canUseDress = (occasion == "formal" || occasion == "evening") && !dresses.isEmpty
@@ -247,7 +253,7 @@ public enum OutfitEngine {
                     .randomElement(using: &rng) else { continue }
                 outfit.top = dress
             } else {
-                outfit.top = locked.top ?? pick(tops, target: target, using: &rng)
+                outfit.top = locked.top ?? pick(topsOrOthers, target: target, using: &rng)
                 outfit.bottom = locked.bottom ?? pick(bottoms, target: target, using: &rng)
             }
             outfit.shoes = locked.shoes ?? pick(shoes, target: target, using: &rng)
@@ -257,6 +263,8 @@ public enum OutfitEngine {
             } else if weather.temperature < 18 || weather.rain {
                 outfit.outerwear = pick(outerwear, target: target, using: &rng)
             }
+            // Se non c'è altro da indossare il capospalla entra comunque, anche col caldo o fuori occasione.
+            if outfit.corePieces.isEmpty { outfit.outerwear = pick(pool("outerwear"), target: target, using: &rng) }
 
             var chosen: [OutfitPiece] = []
             func add(_ subcategory: String) {
