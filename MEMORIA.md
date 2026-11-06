@@ -36,6 +36,12 @@ restano su iCloud e l'account non li sposta. Rovescia la decisione 7 del design 
   la build 2 non risulta installata da nessuno (dato forse in ritardo). La build 1.0 (1) non ha login. Ipotesi aperte:
   build vecchia, password dell'Account Apple rifiutata da iOS o dal download, "Continua senza account" già toccato
   (dopo il login non ricompare). Servono il numero di versione in TestFlight e una foto della schermata.
+- Marianna, esito (06/11, ore 14:47, da App Store Connect e log di Supabase): ha installato la 1.0 (3) su iPhone 15 Pro
+  con iOS 27.2 ed è entrata con Apple dall'app nativa, creando un account nuovo con email nascosta da Apple
+  (`user_signedup`, id `6fffc5aa`). Resta separato dal suo account precedente "Marianna" (`3c113b1f`). Non si è visto cosa ha
+  fatto dopo. Giro sul simulatore da installazione pulita: Registrati, campi vuoti, tastiera aperta, senza account ed
+  "Esci e vai all'accesso" funzionano; registrazione vera e tasto Apple non provati lì. Su Supabase "Confirm email" è
+  spento: chi si registra entra subito, quindi non serve un messaggio "controlla la posta".
 - Sito: consiglio della foto in costume nella prova virtuale (commit `0da8b7f`), non pubblicato né visto a schermo.
 - `Info 2.plist` e `StyleVaultNative 2.entitlements` sono vecchie copie non tracciate: escluse in `project.yml`, non
   cancellate.
