@@ -14,9 +14,10 @@ restano su iCloud e l'account non li sposta. Rovescia la decisione 7 del design 
 - Il tasto Google compare solo col provider attivo: manca che Lorenzo incolli ID e segreto in Supabase, poi utenti
   di prova o pubblicazione della schermata OAuth.
 - Non provato: accessi veri (Apple, Google, email), reset vero, cancellazione account, Release su dispositivo.
-- Test: iPhone 151 e ibrida 143 verdi. Su iPad i test del guardaroba falliscono con il Mac saturo (load 200, swap
-  19 GB su 20, 4 simulatori accesi): i tocchi vanno a vuoto mentre la tastiera sposta il foglio. A mano su iPad il
-  capo si salva. Da rilanciare a Mac scarico.
+- Test: iPhone 151, iPad 151 e ibrida 143 verdi. Su iPad 9 test del guardaroba fallivano sempre, anche a carico 40: sul
+  simulatore lento il test toccava mentre la tastiera spostava il foglio. Corretto il test con `waitForKeyboard`
+  (15 su 15), l'app non cambia: a mano il capo si salva. Il carico intanto era sceso, quindi il merito può essere
+  in parte suo. Swap pieno (23 GB) e 4 simulatori accesi rallentano tutto.
 - Prima dell'App Store: `/privacy` e `/supporto` rispondono 404 (si vedono solo grazie a 404.html), mittente delle
   email di reset, revoca del token Apple, account demo, Privacy Labels.
 

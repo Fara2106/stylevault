@@ -23,6 +23,7 @@ final class WardrobeFlowTests: XCTestCase {
         let name = app.textFields["item-name"]
         name.tap()
         name.typeText("Giacca")
+        waitForKeyboard(app, around: name)
         app.buttons["item-close"].tap()
         let keep = app.buttons["Continua a modificare"]
         XCTAssertTrue(keep.waitForExistence(timeout: 3))
@@ -56,6 +57,7 @@ final class WardrobeFlowTests: XCTestCase {
         XCTAssertTrue(link.waitForExistence(timeout: 3))
         link.tap()
         link.typeText("https://zara.com/p")
+        waitForKeyboard(app, around: link)
         app.buttons["link-analyze"].tap()
         XCTAssertTrue(anyText(app, "Dati estratti: controlla e completa").waitForExistence(timeout: 5))
         XCTAssertEqual(app.textFields["item-name"].value as? String, "Camicia in lino")
@@ -99,6 +101,7 @@ final class WardrobeFlowTests: XCTestCase {
         }
         XCTAssertTrue(settled)
         price.typeText("12,50")
+        waitForKeyboard(app, around: price)
         RunLoop.current.run(until: Date().addingTimeInterval(1))
         XCTAssertLessThanOrEqual(price.frame.maxY, keyboard.frame.minY)
     }
@@ -114,6 +117,19 @@ final class WardrobeFlowTests: XCTestCase {
     }
 
     /// `isHittable` dice sì anche a un elemento sotto la tastiera o oltre il bordo dello schermo.
+    /// Su iPad la tastiera sposta il foglio: un tocco dato mentre si muove va a vuoto, e il simulatore lento lo rende sistematico.
+    private func waitForKeyboard(_ app: XCUIApplication, around element: XCUIElement) {
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+        var last = element.frame
+        var still = 0
+        for _ in 0..<40 where still < 3 {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.15))
+            let now = element.frame
+            still = now == last ? still + 1 : 0
+            last = now
+        }
+    }
+
     private func isReachable(_ app: XCUIApplication, _ element: XCUIElement) -> Bool {
         guard element.isHittable else { return false }
         let keyboard = app.keyboards.firstMatch
@@ -126,6 +142,7 @@ final class WardrobeFlowTests: XCTestCase {
         scroll(app, to: field)
         field.tap()
         field.typeText(name)
+        waitForKeyboard(app, around: field)
         let chip = app.buttons["category-\(category)"]
         scroll(app, to: chip)
         chip.tap()
@@ -173,6 +190,7 @@ final class WardrobeFlowTests: XCTestCase {
         scroll(app, to: field)
         field.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
         field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 3) + "nera")
+        waitForKeyboard(app, around: field)
         let save = app.buttons["item-save"]
         scroll(app, to: save)
         save.tap()
@@ -240,6 +258,7 @@ final class WardrobeFlowTests: XCTestCase {
         scroll(app, to: field)
         field.tap()
         field.typeText(name)
+        waitForKeyboard(app, around: field)
         let chip = app.buttons["category-\(category)"]
         scroll(app, to: chip)
         chip.tap()
@@ -308,6 +327,7 @@ final class WardrobeFlowTests: XCTestCase {
         scroll(app, to: field)
         field.tap()
         field.typeText(item)
+        waitForKeyboard(app, around: field)
         createCategory(app, category)
         let save = app.buttons["item-save"]
         scroll(app, to: save)
