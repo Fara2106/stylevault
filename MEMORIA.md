@@ -68,6 +68,11 @@ restano su iCloud e l'account non li sposta. Rovescia la decisione 7 del design 
 - Decisione di Lorenzo (06/11): il meteo passerà a quello di iPhone (WeatherKit). Non in questa build: per Marianna resta
   Open-Meteo. Il passaggio tocca `Outfit/ForecastLoader.swift` dietro `ForecastLoading`, e poi tolgono Open-Meteo da citazione,
   Privacy Labels, privacy policy e `PrivacyInfo.xcprivacy` (la `Coarse Location` va rivista).
+- Da fare nei prossimi passi, prima dell'App Store (Lorenzo, 06/11): provare l'app su iPhone Duo, il pieghevole. Oggi non è mai
+  stata aperta lì. Simulatore già presente: `iPhone Duo` `854E881E-D9B4-46B7-94AE-B670F95DBE1C`, runtime iOS 27.2 `24B91016s`.
+  Da guardare: schermo esterno e interno, passaggio da chiuso ad aperto con i dati ancora a posto, Split View. Su iPhone l'app è
+  bloccata in verticale, ma Apple dice che lo schermo interno non rispetta gli orientamenti dichiarati, quindi lì può ruotare.
+  A favore: il codice usa le size class e non `UIScreen.main` né `userInterfaceIdiom`; Xcode 27.2 copre già l'SDK 27.1 richiesto.
 - Decisione di Lorenzo (06/11): si segue sempre la skill `mobile-app-publishing`, giro da utente compreso, e si tolgono dal
   repository ibrida e sito. Lo fa una sessione a parte sul suo ramo, con tag `archivio-ibrida-e-sito`; la fusione la decide
   Lorenzo e il sito resta online finché non pubblica lui. Supabase e `keepalive.yml` per ora restano: account della nativa e dati

@@ -73,6 +73,7 @@ Quindi l'app nativa si costruisce una fase alla volta su un ramo nuovo. Ogni fas
   - viso per l'Armocromia: `VNDetectFaceLandmarksRequest` al posto del Face Landmarker di MediaPipe;
   - corpo: `VNDetectHumanBodyPoseRequest` e `VNGeneratePersonSegmentationRequest` al posto del segmenter multiclasse di MediaPipe.
 - **Meteo:** oggi Open-Meteo chiamato direttamente dall'app (fase 3, build interne). Decisione di Lorenzo del 2026-11-06: si passa a WeatherKit, il meteo di iPhone, in un passo successivo. Posizione con CoreLocation (già nativa).
+- **iPhone Duo (pieghevole):** da provare prima dell'App Store, richiesta di Lorenzo del 2026-11-06: schermo esterno e interno, apertura e chiusura senza perdere lo stato, Split View. Lo schermo interno non rispetta gli orientamenti dichiarati, quindi il blocco in verticale di iPhone lì non basta. Si adatta con le size class, senza layout separati per il modello.
 - **Link dei negozi:** `LPMetadataProvider` (LinkPresentation) sul telefono al posto di microlink.io e della Edge Function.
 - **Feedback:** `MFMailComposeViewController` verso l'indirizzo di Lorenzo, con il ripiego "copia testo" se Mail non è configurata. Nessun server.
 - **Avatar realistico e Mobile-VTON:** fuori dalla prima versione (decisione 6). La cartella `Realistic`, il consenso al download, i crediti e la scritta "Powered by Stability AI" di `AvatarView` non entrano nella build. Il codice sta nel tag `archivio-ibrida-e-sito`.
