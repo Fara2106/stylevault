@@ -44,8 +44,11 @@ restano su iCloud e l'account non li sposta. Rovescia la decisione 7 del design 
   spento: chi si registra entra subito, quindi non serve un messaggio "controlla la posta".
 - Sito: consiglio della foto in costume nella prova virtuale (commit `0da8b7f`), non pubblicato né visto a schermo.
 - Outfit e Calendario nativi (06/11, fasi 3 e 4 del design): tolto "In arrivo" dalle due schede, statistiche nel Profilo,
-  logica portata in `StyleVaultCore` con i casi del sito e il confronto `harmony-parity.json`. Build interna 4 in preparazione
-  per Marianna, non ancora caricata. Niente "Prova": arriva con la fase 6. Meteo da Open-Meteo con coordinate a 2 decimali; la
+  logica portata in `StyleVaultCore` con i casi del sito e il confronto `harmony-parity.json`. Build 1.0 (4) per Marianna caricata
+  il 06/11 alle 17:26 dal commit `07425e7`, dopo un giro da utente pulito da installazione nuova (tre passate, le prime due con
+  correzioni). Suite iPhone verde; suite iPad 37 su 39 al primo lancio con il Mac a carico 300, i due test rossi
+  (`testBloccoConAutenticatoreFinto`, `testGiroCompleto`) poi verdi 3 su 3 da soli. Lasciati come il sito: stesso outfit assegnabile
+  due volte allo stesso giorno, giorno futuro segnabile come indossato. Niente "Prova": arriva con la fase 6. Meteo da Open-Meteo con coordinate a 2 decimali; la
   posizione si chiede solo dal tasto, dopo la spiegazione; senza si usa la città del Profilo.
 - Decisione di Lorenzo (06/11): il meteo passerà a quello di iPhone (WeatherKit). Non in questa build: per Marianna resta
   Open-Meteo. Il passaggio tocca `Outfit/ForecastLoader.swift` dietro `ForecastLoading`, e poi tolgono Open-Meteo da citazione,
