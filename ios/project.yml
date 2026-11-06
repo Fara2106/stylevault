@@ -180,7 +180,9 @@ targets:
     type: application
     platform: iOS
     sources:
-      - StyleVaultNative
+      - path: StyleVaultNative
+        excludes:
+          - "* 2.*"
       - StyleVault/Design/Palette.swift
       - StyleVault/App/ThemeStore.swift
       - StyleVault/Auth/AuthService.swift

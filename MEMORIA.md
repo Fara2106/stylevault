@@ -18,6 +18,10 @@ restano su iCloud e l'account non li sposta. Rovescia la decisione 7 del design 
   simulatore lento il test toccava mentre la tastiera spostava il foglio. Corretto il test con `waitForKeyboard`
   (15 su 15), l'app non cambia: a mano il capo si salva. Il carico intanto era sceso, quindi il merito può essere
   in parte suo. Swap pieno (23 GB) e 4 simulatori accesi rallentano tutto.
+- Build 1.0 (2) archiviata ed esportata, NON caricata: serve l'ok di Lorenzo perché la distribuzione automatica la
+  manda subito anche a Marianna. IPA controllata: diritti di produzione, Apple attivo, nessun avanzo di prova.
+- `Info 2.plist` e `StyleVaultNative 2.entitlements` sono vecchie copie non tracciate: escluse in `project.yml`, non
+  cancellate.
 - Prima dell'App Store: `/privacy` e `/supporto` rispondono 404 (si vedono solo grazie a 404.html), mittente delle
   email di reset, revoca del token Apple, account demo, Privacy Labels.
 
