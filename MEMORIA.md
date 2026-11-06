@@ -47,6 +47,9 @@ restano su iCloud e l'account non li sposta. Rovescia la decisione 7 del design 
   logica portata in `StyleVaultCore` con i casi del sito e il confronto `harmony-parity.json`. Build interna 4 in preparazione
   per Marianna, non ancora caricata. Niente "Prova": arriva con la fase 6. Meteo da Open-Meteo con coordinate a 2 decimali; la
   posizione si chiede solo dal tasto, dopo la spiegazione; senza si usa la città del Profilo.
+- Decisione di Lorenzo (06/11): il meteo passerà a quello di iPhone (WeatherKit). Non in questa build: per Marianna resta
+  Open-Meteo. Il passaggio tocca `Outfit/ForecastLoader.swift` dietro `ForecastLoading`, e poi tolgono Open-Meteo da citazione,
+  Privacy Labels, privacy policy e `PrivacyInfo.xcprivacy` (la `Coarse Location` va rivista).
 - Decisione di Lorenzo (06/11): si segue sempre la skill `mobile-app-publishing`, giro da utente compreso, e si tolgono dal
   repository ibrida e sito. Lo fa una sessione a parte sul suo ramo, con tag `archivio-ibrida-e-sito`; la fusione la decide
   Lorenzo e il sito resta online finché non pubblica lui. Supabase e `keepalive.yml` per ora restano: account della nativa e dati

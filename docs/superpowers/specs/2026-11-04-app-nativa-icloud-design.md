@@ -70,7 +70,7 @@ Quindi l'app nativa si costruisce **in parallelo**, una fase alla volta, su un r
   - scontorno capi e persona: `VNGenerateForegroundInstanceMaskRequest`, già usata nell'app, al posto di @imgly;
   - viso per l'Armocromia: `VNDetectFaceLandmarksRequest` al posto del Face Landmarker di MediaPipe;
   - corpo: `VNDetectHumanBodyPoseRequest` e `VNGeneratePersonSegmentationRequest` al posto del segmenter multiclasse di MediaPipe.
-- **Meteo:** WeatherKit se attivo, altrimenti Open-Meteo chiamato direttamente dall'app. Posizione con CoreLocation (già nativa).
+- **Meteo:** oggi Open-Meteo chiamato direttamente dall'app (fase 3, build interne). Decisione di Lorenzo del 2026-11-06: si passa a WeatherKit, il meteo di iPhone, in un passo successivo. Posizione con CoreLocation (già nativa).
 - **Link dei negozi:** `LPMetadataProvider` (LinkPresentation) sul telefono al posto di microlink.io e della Edge Function.
 - **Feedback:** `MFMailComposeViewController` verso l'indirizzo di Lorenzo, con il ripiego "copia testo" se Mail non è configurata. Nessun server.
 - **Avatar realistico e Mobile-VTON:** fuori dalla prima versione (decisione 6). La cartella `Realistic`, il consenso al download, i crediti e la scritta "Powered by Stability AI" di `AvatarView` non entrano nella build. L'app ibrida che usano Lorenzo e Mary resta com'è.
@@ -162,7 +162,7 @@ Vengono dalla sezione 00 del report `docs/pubblicazione/2026-11-04-report-app-st
 - **Niente funzioni nascoste.** Ciò che non è pronto si toglie dalla build, compresa l'Armocromia se si rimanda: nessun interruttore da accendere dopo la revisione (2.5.19).
 - **Privacy e supporto.** Stessi indirizzi di oggi, `fara2106.github.io/stylevault/privacy` e `/supporto`, già scritti in `AppConfig`, oppure si aggiorna `AppConfig`. L'email di contatto è da confermare con Lorenzo.
 - **Privacy Labels.** I dati in iCloud sono nel database privato: lo sviluppatore non può leggerli, da riconfermare sulle domande di App Store Connect. Il feedback via Mail dà a Lorenzo email e testo: si dichiara, o si valuta se è raccolta rara e facoltativa.
-- **Meteo.** Con Open-Meteo si dichiara "Posizione approssimativa", non collegata all'utente, si arrotondano le coordinate a 2 decimali e lo si nomina nella privacy policy. Con il programma attivo WeatherKit si può accendere: scelta da fare nella fase 3. Se resta solo WeatherKit, Open-Meteo esce dalle dichiarazioni.
+- **Meteo.** Con Open-Meteo si dichiara "Posizione approssimativa", non collegata all'utente, si arrotondano le coordinate a 2 decimali e lo si nomina nella privacy policy. La fase 3 è uscita con Open-Meteo; Lorenzo ha scelto il 2026-11-06 di passare poi a WeatherKit: da fare prima dell'App Store, e allora Open-Meteo esce dalle dichiarazioni.
 - **Cina continentale.** Si esclude in App Store Connect, se restano i link a ChatGPT e Gemini.
 - **iPad.** `TARGETED_DEVICE_FAMILY "1,2"`, layout vero per iPad e screenshot iPad 13". Se l'invio slitta ad aprile 2027 o dopo, servono anche gli screenshot per iPhone Duo.
 - **App Store Connect.** Questionario dell'età, Accessibility Nutrition Labels solo per ciò che è provato, stato DSA, che decide Lorenzo, e note al revisore su cosa distingue l'app nella categoria (4.3(b)).
