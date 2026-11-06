@@ -299,6 +299,9 @@ final class WardrobeFlowTests: XCTestCase {
         let delete = app.buttons["wish-delete"]
         XCTAssertTrue(delete.waitForExistence(timeout: 3))
         delete.tap()
+        let confirm = app.alerts.buttons["Elimina"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 30))
+        confirm.tap()
         XCTAssertTrue(anyText(app, "La tua wishlist è vuota").waitForExistence(timeout: 3))
     }
 
