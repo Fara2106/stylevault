@@ -95,6 +95,14 @@ final class ExportTests: XCTestCase {
         }
     }
 
+    /// Prodotto da `scripts/esporta-da-supabase.mjs`: il formato dello script e quello dell'app devono coincidere.
+    func testLeggeIlFileDelloScriptDaSupabase() throws {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "da-supabase", withExtension: "zip", subdirectory: "Fixtures"))
+        let read = try ExportArchive.read(url)
+        XCTAssertEqual(read.bundle.items.first?.id, "capo-1")
+        XCTAssertEqual(try read.photo(read.bundle.items.first?.photoFront), Data([7, 8]))
+    }
+
     func testIlNomeDelFileHaLaData() {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(identifier: "Europe/Rome")!
