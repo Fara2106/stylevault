@@ -45,8 +45,9 @@ export function makeZip(files) {
     common.writeUInt32LE(content.length, 18);
     common.writeUInt16LE(nameBytes.length, 22);
     const local = Buffer.concat([Buffer.from([0x50, 0x4b, 3, 4]), common, nameBytes, body]);
-    const tail = Buffer.alloc(16);
-    tail.writeUInt32LE(offset, 12);
+    // Commento, disco e attributi vuoti, poi la posizione dell'intestazione locale.
+    const tail = Buffer.alloc(14);
+    tail.writeUInt32LE(offset, 10);
     centrals.push(Buffer.concat([Buffer.from([0x50, 0x4b, 1, 2, 20, 0]), common, tail, nameBytes]));
     locals.push(local);
     offset += local.length;
