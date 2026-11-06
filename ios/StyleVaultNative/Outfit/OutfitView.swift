@@ -18,6 +18,9 @@ struct OutfitView: View {
 
     @State private var model = OutfitPageModel()
     @State private var isPositionAsked = false
+    // Fogli e non pagine: entrando in una pagina la barra si riaccende e, tornando, resta uno spazio vuoto in cima.
+    @State private var isCitySearchOpen = false
+    @State private var isSavedOpen = false
 
     private let logger = Logger(subsystem: "it.faraoni.stylevault.nativa", category: "outfit")
 
@@ -46,7 +49,8 @@ struct OutfitView: View {
                     dayChips
                     occasionChips
                     weatherSection
-                    generateSection
+                    // A guardaroba vuoto il tasto spento coprirebbe quello che serve davvero: aggiungere un capo.
+                    if !items.isEmpty { generateSection }
                     results
                     savedLink
                 }
@@ -63,6 +67,22 @@ struct OutfitView: View {
             .task(id: autoGenerateKey) {
                 model.generateIfNeeded(items: pieces, recentWear: recentWear, city: place.name, today: today)
             }
+            .sheet(isPresented: $isCitySearchOpen) {
+                NavigationStack {
+                    CitySearchView(title: "outfit.location") { city in
+                        model.choose(SavedCity(name: city.name, latitude: city.latitude, longitude: city.longitude))
+                    }
+                    .toolbar { SheetCloseButton(id: "city-close") { isCitySearchOpen = false } }
+                }
+                .tint(Palette.ink)
+            }
+            .sheet(isPresented: $isSavedOpen) {
+                NavigationStack {
+                    SavedOutfitsView()
+                        .toolbar { SheetCloseButton(id: "saved-close") { isSavedOpen = false } }
+                }
+                .tint(Palette.ink)
+            }
             .alert("native.outfit.position.title", isPresented: $isPositionAsked) {
                 Button("common.cancel", role: .cancel) {}
                 Button("native.outfit.position.continue") { model.chooseMyPosition() }
@@ -70,6 +90,8 @@ struct OutfitView: View {
                 Text("native.outfit.position.message")
             }
         }
+        // L'accento sui tasti del messaggio non arriva a 4,5:1.
+        .tint(Palette.ink)
     }
 
     private var autoGenerateKey: String {
@@ -90,18 +112,14 @@ struct OutfitView: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text("nav.outfit").font(.display(30)).foregroundStyle(Palette.ink)
+                .accessibilityIdentifier("outfit-title")
             Text("outfit.subtitle").font(.footnote).foregroundStyle(Palette.muted)
         }
     }
 
     private var placeRow: some View {
         HStack(spacing: 8) {
-            NavigationLink {
-                CitySearchView(title: "outfit.searchCity") { city in
-                    model.choose(SavedCity(name: city.name, latitude: city.latitude, longitude: city.longitude))
-                }
-                .toolbar(.visible, for: .navigationBar)
-            } label: {
+            Button { isCitySearchOpen = true } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "magnifyingglass").foregroundStyle(Palette.muted)
                     Text(verbatim: place.name).foregroundStyle(Palette.ink).lineLimit(1)
@@ -116,7 +134,12 @@ struct OutfitView: View {
             .accessibilityIdentifier("outfit-city")
             Chip(text: Text("outfit.myPosition"), isSelected: model.choice == .position) {
                 // Il permesso si chiede qui, dopo aver detto a cosa serve e dove vanno le coordinate.
-                if model.choice != .position { isPositionAsked = true }
+                // Di nuovo sul tasto si torna alla città del Profilo, anche dopo un permesso negato.
+                if model.choice == .position {
+                    model.useDefaultCity()
+                } else {
+                    isPositionAsked = true
+                }
             }
             .accessibilityIdentifier("outfit-position")
         }
@@ -213,8 +236,8 @@ struct OutfitView: View {
                     .background(Palette.ink, in: RoundedRectangle(cornerRadius: 10))
             }
             .buttonStyle(.plain)
-            .disabled(weather == nil || items.isEmpty)
-            .opacity(weather == nil || items.isEmpty ? 0.5 : 1)
+            .disabled(weather == nil)
+            .opacity(weather == nil ? 0.5 : 1)
             .accessibilityIdentifier("outfit-generate")
             if !model.lockedIDs.isEmpty {
                 Label("outfit.regenerateHint", systemImage: "lock").font(.footnote).foregroundStyle(Palette.muted)
@@ -249,7 +272,7 @@ struct OutfitView: View {
             ForEach(model.outfits) { outfit in
                 VStack(alignment: .leading, spacing: 8) {
                     OutfitCardView(outfit: outfit, items: itemsByID, lockedIDs: model.lockedIDs, saved: model.isSaved(outfit),
-                                   onToggleLock: model.toggleLock, onSave: { save(outfit) }, onWear: { wear(outfit) })
+                                   wornLabel: wornLabel(for: outfit), onToggleLock: model.toggleLock, onSave: { save(outfit) }, onWear: { wear(outfit) })
                     advice(for: outfit)
                 }
             }
@@ -277,9 +300,7 @@ struct OutfitView: View {
 
     @ViewBuilder private var savedLink: some View {
         if !savedOutfits.isEmpty {
-            NavigationLink {
-                SavedOutfitsView().toolbar(.visible, for: .navigationBar)
-            } label: {
+            Button { isSavedOpen = true } label: {
                 HStack {
                     Text("native.outfit.saved.title")
                     Spacer()
@@ -294,6 +315,11 @@ struct OutfitView: View {
             .buttonStyle(.plain)
             .accessibilityIdentifier("outfit-saved-link")
         }
+    }
+
+    private func wornLabel(for outfit: GeneratedOutfit) -> LocalizedStringKey? {
+        guard model.isWorn(outfit) else { return nil }
+        return (model.wornDay ?? today) <= today ? "calendar.worn" : "calendar.planned"
     }
 
     private func ids(of outfit: GeneratedOutfit) -> [UUID] { outfit.pieces.compactMap { UUID(uuidString: $0.id) } }
@@ -311,9 +337,21 @@ struct OutfitView: View {
         let day = weather?.date ?? today
         do {
             try OutfitStore.log(itemIDs: ids(of: outfit), outfitID: nil, day: day, today: today, in: context)
-            model.wornDay = day
+            model.markWorn(outfit, day: day)
         } catch {
             logger.error("Outfit non registrato: \(error)")
+        }
+    }
+}
+
+/// Il tasto Chiudi dei fogli.
+struct SheetCloseButton: ToolbarContent {
+    let id: String
+    let action: () -> Void
+
+    var body: some ToolbarContent {
+        ToolbarItem(placement: .cancellationAction) {
+            Button("common.close", action: action).accessibilityIdentifier(id)
         }
     }
 }

@@ -77,6 +77,8 @@ struct ItemFormView: View {
         }
         // Un trascinamento non perde la bozza: resta aperto, e Chiudi chiede.
         .interactiveDismissDisabled(model.isDirty)
+        // L'accento sui tasti dei messaggi non arriva a 4,5:1.
+        .tint(Palette.ink)
         .alert("native.form.discard.title", isPresented: $isDiscardAsked) {
             Button("native.form.discard.keep", role: .cancel) {}
             Button("native.form.discard.confirm", role: .destructive) { dismiss() }

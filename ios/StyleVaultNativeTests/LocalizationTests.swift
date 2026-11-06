@@ -22,7 +22,7 @@ final class LocalizationTests: XCTestCase {
         + ["subtitle", "generateOutfit", "regenerate", "regenerateHint", "today", "tomorrow", "noOutfits", "noItemsForOutfit",
            "missingPiece.top", "missingPiece.bottom", "missingPiece.shoes", "outfitScore", "weatherMatch", "colorMatch",
            "wearThis", "saved", "top", "bottom", "shoes", "outerwear", "accessoriesLabel", "dress", "lockItem", "unlockItem",
-           "adviceTitle", "manualWeather", "manualTemp", "manualRain", "myPosition", "chosenByHand", "searchCity"]
+           "adviceTitle", "manualWeather", "manualTemp", "manualRain", "myPosition", "chosenByHand", "location"]
             .map { "outfit.\($0)" }
         + ["colorsHarmonious", "colorsClash", "tooManyColors", "monochrome", "perfectWarmth", "rainShoes", "rainOuter",
            "elevated", "uvHigh", "windStrong"].map { "advice.\($0)" }

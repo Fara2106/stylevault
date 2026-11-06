@@ -165,14 +165,9 @@ struct CalendarView: View {
             } else {
                 ForEach(dayEntries) { entry in card(for: entry) }
             }
-            Button { isPickerOpen = true } label: {
-                Label("calendar.assignOutfit", systemImage: "plus")
-                    .font(.subheadline)
-                    .frame(maxWidth: .infinity, minHeight: 36)
-            }
-            .buttonStyle(.bordered)
-            .tint(Palette.ink)
-            .accessibilityIdentifier("calendar-assign")
+            Button { isPickerOpen = true } label: { Label("calendar.assignOutfit", systemImage: "plus") }
+                .buttonStyle(OutlineButtonStyle())
+                .accessibilityIdentifier("calendar-assign")
         }
     }
 
@@ -208,9 +203,11 @@ struct CalendarView: View {
                             .tint(Palette.link)
                             .accessibilityIdentifier("calendar-mark-worn")
                     }
-                    Button("calendar.removeEntry", role: .destructive) { perform { try OutfitStore.remove(entry, in: context) } }
-                        .tint(Palette.danger)
-                        .accessibilityIdentifier("calendar-remove")
+                    // Senza `role`: col ruolo iOS usa il suo rosso, fuori dalla palette.
+                    Button { perform { try OutfitStore.remove(entry, in: context) } } label: {
+                        Text("calendar.removeEntry").foregroundStyle(Palette.danger)
+                    }
+                    .accessibilityIdentifier("calendar-remove")
                 }
                 .font(.footnote)
             }
@@ -269,6 +266,7 @@ struct OutfitPickerView: View {
                 }
             }
         }
+        .tint(Palette.ink)
         .accessibilityIdentifier("calendar-picker")
     }
 }

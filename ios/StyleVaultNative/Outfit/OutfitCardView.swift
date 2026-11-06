@@ -24,6 +24,8 @@ struct OutfitCardView: View {
     let items: [String: Item]
     let lockedIDs: Set<String>
     let saved: Bool
+    /// Già registrato: "calendar.worn" o "calendar.planned" secondo il giorno.
+    let wornLabel: LocalizedStringKey?
     let onToggleLock: (String) -> Void
     let onSave: () -> Void
     let onWear: () -> Void
@@ -124,22 +126,20 @@ struct OutfitCardView: View {
         HStack(spacing: 8) {
             Button(action: onSave) {
                 Label(saved ? "outfit.saved" : "common.save", systemImage: saved ? "checkmark" : "heart")
-                    .font(.subheadline)
-                    .frame(maxWidth: .infinity, minHeight: 36)
             }
-            .buttonStyle(.bordered)
-            .tint(Palette.ink)
+            .buttonStyle(OutlineButtonStyle())
             .disabled(saved)
             .accessibilityIdentifier("outfit-save")
-            Button(action: onWear) {
-                Label("outfit.wearThis", systemImage: "checkmark")
-                    .font(.subheadline)
-                    .frame(maxWidth: .infinity, minHeight: 36)
-                    .foregroundStyle(Palette.bg)
-                    .background(Palette.ink, in: RoundedRectangle(cornerRadius: 8))
+            if let wornLabel {
+                Button(action: {}) { Label(wornLabel, systemImage: "checkmark") }
+                    .buttonStyle(OutlineButtonStyle())
+                    .disabled(true)
+                    .accessibilityIdentifier("outfit-worn")
+            } else {
+                Button(action: onWear) { Label("outfit.wearThis", systemImage: "checkmark") }
+                    .buttonStyle(FilledButtonStyle())
+                    .accessibilityIdentifier("outfit-wear")
             }
-            .buttonStyle(.plain)
-            .accessibilityIdentifier("outfit-wear")
         }
     }
 }

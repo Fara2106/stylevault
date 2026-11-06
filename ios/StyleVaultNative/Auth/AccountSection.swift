@@ -34,6 +34,8 @@ struct AccountSection: View {
         } message: {
             Text("native.account.delete.message")
         }
+        // L'accento sui tasti dei messaggi non arriva a 4,5:1.
+        .tint(Palette.ink)
     }
 
     private func deleteAccount() {

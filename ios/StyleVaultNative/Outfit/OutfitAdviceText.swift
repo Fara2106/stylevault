@@ -10,7 +10,14 @@ extension DayPartKey {
         }
     }
 
-    var title: LocalizedStringKey { LocalizedStringKey("weather.partTitle.\(rawValue)") }
+    // Scritte per intero: una chiave composta con `\()` cercherebbe "weather.partTitle.%@".
+    var title: LocalizedStringKey {
+        switch self {
+        case .morning: return "weather.partTitle.morning"
+        case .afternoon: return "weather.partTitle.afternoon"
+        case .evening: return "weather.partTitle.evening"
+        }
+    }
 }
 
 extension OutfitAdvice {

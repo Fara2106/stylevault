@@ -3323,6 +3323,23 @@
         }
       }
     },
+    "outfit.location": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Città"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "City"
+          }
+        }
+      }
+    },
     "outfit.lockItem": {
       "extractionState": "manual",
       "localizations": {
@@ -3591,23 +3608,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Saved"
-          }
-        }
-      }
-    },
-    "outfit.searchCity": {
-      "extractionState": "manual",
-      "localizations": {
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cerca una città..."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Search a city..."
           }
         }
       }
@@ -5183,23 +5183,6 @@
         }
       }
     },
-    "weather.partlyCloudy": {
-      "extractionState": "manual",
-      "localizations": {
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Parzialmente nuvoloso"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Partly Cloudy"
-          }
-        }
-      }
-    },
     "weather.partTitle.afternoon": {
       "extractionState": "manual",
       "localizations": {
@@ -5247,6 +5230,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Morning"
+          }
+        }
+      }
+    },
+    "weather.partlyCloudy": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parzialmente nuvoloso"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partly Cloudy"
           }
         }
       }

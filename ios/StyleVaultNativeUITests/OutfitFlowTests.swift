@@ -19,6 +19,11 @@ final class OutfitFlowTests: XCTestCase {
         XCTAssertTrue(app.descendants(matching: .any)["outfit-card"].firstMatch.waitForExistence(timeout: 15))
         XCTAssertTrue(app.descendants(matching: .any)["outfit-score"].firstMatch.exists)
         XCTAssertTrue(app.descendants(matching: .any)["outfit-advice"].firstMatch.exists)
+        // Le chiavi non devono mai arrivare sullo schermo.
+        XCTAssertTrue(app.staticTexts["Mattina"].exists)
+        XCTAssertTrue(app.staticTexts["Pomeriggio"].exists)
+        XCTAssertTrue(app.staticTexts["Sera"].exists)
+        XCTAssertFalse(app.staticTexts.containing(NSPredicate(format: "label BEGINSWITH 'weather.'")).firstMatch.exists)
     }
 
     func testSalvaIndossaEVedeTuttoNelCalendarioENelleStatistiche() {
@@ -30,6 +35,10 @@ final class OutfitFlowTests: XCTestCase {
         XCTAssertTrue(app.buttons["Salvato"].firstMatch.waitForExistence(timeout: 5))
         app.buttons["outfit-wear"].firstMatch.tap()
         XCTAssertTrue(app.staticTexts["outfit-worn-message"].waitForExistence(timeout: 5))
+        // La conferma sta sul tasto, che non si può toccare due volte.
+        let worn = app.buttons["outfit-worn"].firstMatch
+        XCTAssertTrue(worn.waitForExistence(timeout: 5))
+        XCTAssertFalse(worn.isEnabled)
 
         tab(app, "Calendario").tap()
         let status = app.staticTexts["calendar-status"].firstMatch
@@ -43,6 +52,54 @@ final class OutfitFlowTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Per categoria"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["stats-item"].firstMatch.waitForExistence(timeout: 5))
         XCTAssertFalse(app.staticTexts["stats-no-data"].exists)
+    }
+
+    func testTornandoSullaSchedaGliOutfitNonCambiano() {
+        let app = launch(language: "it", extra: seeded)
+        openOutfit(app)
+        let score = app.descendants(matching: .any)["outfit-score"].firstMatch
+        XCTAssertTrue(score.waitForExistence(timeout: 15))
+        let lock = app.buttons["outfit-lock"].firstMatch
+        XCTAssertTrue(lock.waitForExistence(timeout: 5))
+        lock.tap()
+        XCTAssertTrue(app.staticTexts["I capi bloccati restano, il resto cambia"].waitForExistence(timeout: 5))
+        tab(app, "Calendario").tap()
+        XCTAssertTrue(app.buttons["calendar-assign"].waitForExistence(timeout: 10))
+        tab(app, "Outfit").tap()
+        XCTAssertTrue(app.staticTexts["I capi bloccati restano, il resto cambia"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["outfit-lock"].firstMatch.isSelected, "il capo bloccato resta bloccato")
+    }
+
+    func testLaRicercaDellaCittaNonSpostaLaPagina() {
+        let app = launch(language: "it", extra: seeded)
+        openOutfit(app)
+        let title = app.staticTexts["outfit-title"]
+        XCTAssertTrue(title.waitForExistence(timeout: 15))
+        let top = title.frame.minY
+        app.buttons["outfit-city"].tap()
+        let close = app.buttons["city-close"]
+        XCTAssertTrue(close.waitForExistence(timeout: 5))
+        close.tap()
+        XCTAssertTrue(waitForDisappearance(of: close))
+        waitForStillness(of: title)
+        XCTAssertEqual(title.frame.minY, top, accuracy: 1)
+    }
+
+    func testOutfitSalvatiSiVedonoESiCancellano() {
+        let app = launch(language: "it", extra: seeded)
+        openOutfit(app)
+        let save = app.buttons["outfit-save"].firstMatch
+        XCTAssertTrue(save.waitForExistence(timeout: 15))
+        save.tap()
+        let link = app.buttons["outfit-saved-link"]
+        for _ in 0..<8 where !link.exists { app.swipeUp() }
+        XCTAssertTrue(link.waitForExistence(timeout: 5))
+        link.tap()
+        let row = app.descendants(matching: .any)["saved-outfit"].firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 5))
+        row.swipeLeft()
+        app.buttons["Elimina"].firstMatch.tap()
+        XCTAssertTrue(app.staticTexts["Nessun outfit salvato"].waitForExistence(timeout: 5))
     }
 
     func testPianificaUnGiornoFuturoESegnaIndossato() {
@@ -86,6 +143,8 @@ final class OutfitFlowTests: XCTestCase {
         openOutfit(app)
         let add = app.buttons["outfit-empty-add"]
         XCTAssertTrue(add.waitForExistence(timeout: 15))
+        XCTAssertFalse(app.buttons["outfit-generate"].exists)
+        XCTAssertTrue(add.isHittable, "il tasto per aggiungere non deve finire sotto la barra")
         add.tap()
         XCTAssertTrue(app.otherElements["add-sheet"].waitForExistence(timeout: 5))
     }
@@ -119,5 +178,8 @@ final class OutfitFlowTests: XCTestCase {
         proceed.tap()
         XCTAssertTrue(app.descendants(matching: .any)["outfit-position-note"].firstMatch.waitForExistence(timeout: 10))
         XCTAssertTrue(app.descendants(matching: .any)["outfit-card"].firstMatch.waitForExistence(timeout: 15))
+        // Si può tornare indietro: il tasto si spegne e l'avviso sparisce.
+        position.tap()
+        XCTAssertTrue(waitForDisappearance(of: app.descendants(matching: .any)["outfit-position-note"].firstMatch))
     }
 }

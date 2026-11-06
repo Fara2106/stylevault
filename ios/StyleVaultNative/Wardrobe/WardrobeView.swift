@@ -48,6 +48,8 @@ struct WardrobeView: View {
                 Button("common.close", role: .cancel) {}
             }
         }
+        // L'accento sui tasti dei messaggi non arriva a 4,5:1.
+        .tint(Palette.ink)
     }
 
     private func deleteCategory(_ choice: CategoryChoice) {

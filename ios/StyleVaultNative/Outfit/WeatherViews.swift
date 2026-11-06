@@ -14,6 +14,31 @@ struct Card<Content: View>: View {
     }
 }
 
+/// I due tasti delle schede: stessa forma e stessa altezza, pieno quello principale.
+struct FilledButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.subheadline)
+            .frame(maxWidth: .infinity, minHeight: 44)
+            .foregroundStyle(Palette.bg)
+            .background(Palette.ink, in: RoundedRectangle(cornerRadius: 8))
+            .opacity(configuration.isPressed ? 0.7 : 1)
+    }
+}
+
+struct OutlineButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.subheadline)
+            .frame(maxWidth: .infinity, minHeight: 44)
+            .foregroundStyle(Palette.ink)
+            .background(Palette.surface, in: RoundedRectangle(cornerRadius: 8))
+            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Palette.border))
+            .contentShape(RoundedRectangle(cornerRadius: 8))
+            .opacity(configuration.isPressed ? 0.7 : 1)
+    }
+}
+
 /// La scheda meteo del giorno, come src/components/WeatherBadge.
 struct WeatherCard: View {
     let weather: DayForecast
@@ -69,16 +94,16 @@ struct DayStripView: View {
                     ForEach(parts, id: \.key) { part in
                         VStack(spacing: 4) {
                             Text(part.key.title).font(.caption).foregroundStyle(Palette.muted)
-                            Image(systemName: part.icon.symbol).foregroundStyle(Palette.ink)
+                            // Le fasce passate in grigio, senza trasparenza: sbiadite scenderebbero sotto il contrasto minimo.
+                            Image(systemName: part.icon.symbol).foregroundStyle(part.past ? Palette.muted : Palette.ink)
                             Text(verbatim: part.temperature.map { "\(jsRound($0))°" } ?? "–")
                                 .font(.subheadline.weight(.medium))
-                                .foregroundStyle(Palette.ink)
+                                .foregroundStyle(part.past ? Palette.muted : Palette.ink)
                             if let rain = part.precipProb, rain > 0 {
                                 Text(verbatim: "\(rain)%").font(.caption2).foregroundStyle(Palette.muted)
                             }
                         }
                         .frame(maxWidth: .infinity)
-                        .opacity(part.past ? 0.6 : 1)
                     }
                 }
             }

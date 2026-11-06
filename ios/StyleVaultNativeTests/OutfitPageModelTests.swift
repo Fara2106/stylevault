@@ -97,6 +97,60 @@ private struct Offline: Error {}
         XCTAssertNil(m.wornDay)
     }
 
+    func testTornandoSullaSchedaGliOutfitRestano() async {
+        let m = model()
+        let start = Date(timeIntervalSince1970: 1_000_000)
+        let loader = StubLoader(result: .success(ForecastResult(days: forecast().days, stale: false, fetchedAt: start)))
+        await m.loadForecast(for: milano, using: loader, now: start)
+        m.toggleLock("t2")
+        m.generateIfNeeded(items: wardrobe, recentWear: [])
+        let shown = m.outfits
+        await m.loadForecast(for: milano, using: loader, now: start.addingTimeInterval(600))
+        XCTAssertEqual(m.outfits, shown)
+        XCTAssertEqual(m.lockedIDs, ["t2"])
+    }
+
+    func testDopoUnOraIlMeteoSiAggiorna() async {
+        let m = model()
+        let start = Date(timeIntervalSince1970: 1_000_000)
+        let loader = StubLoader(result: .success(ForecastResult(days: forecast().days, stale: false, fetchedAt: start)))
+        await m.loadForecast(for: milano, using: loader, now: start)
+        m.generateIfNeeded(items: wardrobe, recentWear: [])
+        await m.loadForecast(for: milano, using: loader, now: start.addingTimeInterval(3700))
+        XCTAssertTrue(m.outfits.isEmpty)
+    }
+
+    func testIlMeteoVecchioDellaCacheSiRiprova() async {
+        let m = model()
+        await m.loadForecast(for: milano, using: StubLoader(result: .success(forecast(stale: true))))
+        m.generateIfNeeded(items: wardrobe, recentWear: [])
+        await m.loadForecast(for: milano, using: StubLoader(result: .success(forecast())))
+        XCTAssertEqual(m.forecast?.stale, false)
+    }
+
+    func testUnOutfitSiRegistraUnaVolta() async throws {
+        let m = model()
+        await m.loadForecast(for: milano, using: StubLoader(result: .success(forecast())))
+        m.generate(items: wardrobe, recentWear: [])
+        let outfit = try XCTUnwrap(m.outfits.first)
+        XCTAssertFalse(m.isWorn(outfit))
+        m.markWorn(outfit, day: "2026-11-06")
+        XCTAssertTrue(m.isWorn(outfit))
+        XCTAssertEqual(m.wornDay, "2026-11-06")
+        m.generate(items: wardrobe, recentWear: [])
+        XCTAssertFalse(m.isWorn(outfit))
+    }
+
+    func testLaPosizioneSiPuoSpegnere() {
+        let m = model()
+        m.chooseMyPosition()
+        m.positionUnavailable = true
+        m.useDefaultCity()
+        XCTAssertEqual(m.choice, .defaultCity)
+        XCTAssertFalse(m.positionUnavailable)
+        XCTAssertEqual(model().choice, .defaultCity)
+    }
+
     func testLaSceltaDelLuogoSiRicorda() {
         let m = model()
         // Niente permesso finché non lo si chiede: si parte dalla città del Profilo.

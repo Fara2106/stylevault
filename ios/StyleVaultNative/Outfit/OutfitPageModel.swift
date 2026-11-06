@@ -21,6 +21,7 @@ enum PlaceKind { case fallback, position, manual }
     private static let placeKey = "outfit.place"
     /// Entro ~5 km il meteo è lo stesso: gli outfit già mostrati non cambiano.
     private static let sameWeatherDegrees = 0.05
+    private static let forecastLifetime: TimeInterval = 3600
 
     @ObservationIgnored private let defaults: UserDefaults
     private(set) var choice: PlaceChoice
@@ -35,6 +36,8 @@ enum PlaceKind { case fallback, position, manual }
     private(set) var outfits: [GeneratedOutfit] = []
     private(set) var lockedIDs: Set<String> = []
     private var savedOutfits: Set<UUID> = []
+    private var wornOutfits: Set<UUID> = []
+    private var loadedPlace: ForecastPlace?
     /// Il giorno su cui si è appena registrato un outfit.
     var wornDay: String?
 
@@ -64,6 +67,14 @@ enum PlaceKind { case fallback, position, manual }
         defaults.set(true, forKey: Self.placeKey + ".position")
     }
 
+    func useDefaultCity() {
+        choice = .defaultCity
+        position = nil
+        positionUnavailable = false
+        defaults.removeObject(forKey: Self.placeKey)
+        defaults.set(false, forKey: Self.placeKey + ".position")
+    }
+
     func receive(position new: ForecastPlace) {
         guard choice == .position else { return }
         positionUnavailable = false
@@ -89,8 +100,12 @@ enum PlaceKind { case fallback, position, manual }
         }
     }
 
-    /// Cambiando luogo gli outfit vecchi erano per un altro meteo.
-    func loadForecast(for place: ForecastPlace, using loader: any ForecastLoading) async {
+    /// Cambiando luogo gli outfit vecchi erano per un altro meteo. Tornando sulla scheda, invece, resta
+    /// tutto com'era: `.task` riparte a ogni ritorno e rifare gli outfit perderebbe blocchi e "Salvato".
+    func loadForecast(for place: ForecastPlace, using loader: any ForecastLoading, now: Date = .now) async {
+        if place == loadedPlace, let current = forecast, !current.stale,
+           now.timeIntervalSince(current.fetchedAt) < Self.forecastLifetime { return }
+        loadedPlace = place
         weatherError = false
         forecast = nil
         outfits = []
@@ -134,6 +149,7 @@ enum PlaceKind { case fallback, position, manual }
                                         locked: items.filter { lockedIDs.contains($0.id) }, recentWear: recentWear,
                                         referenceDate: weather.date, using: &generator)
         savedOutfits = []
+        wornOutfits = []
         wornDay = nil
     }
 
@@ -145,4 +161,12 @@ enum PlaceKind { case fallback, position, manual }
     func markSaved(_ outfit: GeneratedOutfit) { savedOutfits.insert(outfit.id) }
 
     func isSaved(_ outfit: GeneratedOutfit) -> Bool { savedOutfits.contains(outfit.id) }
+
+    /// La conferma sta nel tasto: quello in cima alla pagina, scorrendo, non si vede.
+    func markWorn(_ outfit: GeneratedOutfit, day: String) {
+        wornOutfits.insert(outfit.id)
+        wornDay = day
+    }
+
+    func isWorn(_ outfit: GeneratedOutfit) -> Bool { wornOutfits.contains(outfit.id) }
 }
