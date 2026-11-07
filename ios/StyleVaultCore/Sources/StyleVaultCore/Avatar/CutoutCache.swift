@@ -9,10 +9,18 @@ public actor CutoutCache {
     public static let shared = CutoutCache()
 
     private var memory = [String: Cutout]()
+    /// Dal meno recente al più recente: quando si supera il limite esce il primo.
+    private var usage: [String] = []
+    private let memoryLimit: Int
     private let folder: URL
 
+    var keysInMemory: [String] { usage }
+
     /// - folder: dove salvare (i test ne usano una temporanea); di base Caches/cutouts.
-    public init(folder: URL? = nil) {
+    /// - memoryLimit: byte di immagini tenuti in memoria. Un outfit pesa circa 120 MB: ne stanno un paio,
+    ///   il resto si ricarica dal disco. Senza limite, provare molti outfit di fila chiude l'app.
+    public init(folder: URL? = nil, memoryLimit: Int = 256 * 1024 * 1024) {
+        self.memoryLimit = memoryLimit
         let dir = folder ?? FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("cutouts", isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
@@ -26,13 +34,16 @@ public actor CutoutCache {
     }
 
     private func cached(_ key: String) -> Cutout? {
-        if let hit = memory[key] { return hit }
+        if let hit = memory[key] {
+            remember(hit, key: key)
+            return hit
+        }
         // Accanto al PNG il numero di soggetti: un paio di scarpe (2) si
         // disegna diverso da una scarpa sola (1)
         guard let image = Self.load(file(key)) else { return nil }
         let count = (try? String(contentsOf: countFile(key), encoding: .utf8)).flatMap(Int.init) ?? 1
         let cached = Cutout(image: image, bounds: PersonCutout.opaqueBounds(image), instanceCount: count)
-        memory[key] = cached
+        remember(cached, key: key)
         return cached
     }
 
@@ -40,13 +51,27 @@ public actor CutoutCache {
         let result = try await PersonCutout.cutout(ImagePrep.downscaled(raw), allInstances: allInstances)
         Self.save(result.image, to: file(key))
         try? String(result.instanceCount).write(to: countFile(key), atomically: true, encoding: .utf8)
-        memory[key] = result
+        remember(result, key: key)
         return result
     }
+
+    private func remember(_ cutout: Cutout, key: String) {
+        memory[key] = cutout
+        usage.removeAll { $0 == key }
+        usage.append(key)
+        var used = usage.reduce(0) { $0 + (memory[$1].map(Self.bytes) ?? 0) }
+        while used > memoryLimit, usage.count > 1 {
+            let oldest = usage.removeFirst()
+            used -= memory.removeValue(forKey: oldest).map(Self.bytes) ?? 0
+        }
+    }
+
+    private static func bytes(_ cutout: Cutout) -> Int { cutout.image.bytesPerRow * cutout.image.height }
 
     /// Una foto del corpo cancellata non deve restare nemmeno come scontorno.
     public func removeAll(prefix: String) {
         memory = memory.filter { !$0.key.hasPrefix(prefix) }
+        usage.removeAll { $0.hasPrefix(prefix) }
         let names = (try? FileManager.default.contentsOfDirectory(atPath: folder.path)) ?? []
         for name in names where name.hasPrefix(prefix) {
             try? FileManager.default.removeItem(at: folder.appendingPathComponent(name))

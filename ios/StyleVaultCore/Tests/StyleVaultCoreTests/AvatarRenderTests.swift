@@ -87,6 +87,20 @@ final class AvatarRenderTests: XCTestCase {
         XCTAssertEqual(result.unavailable, 1)
     }
 
+    func testLaCacheInMemoriaNonCresceOltreIlLimite() async throws {
+        let cache = CutoutCache(folder: FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString),
+                                memoryLimit: 1)
+        let photo = try fixture("maglione")
+        _ = try await cache.cutout(image: photo, key: "item-1", allInstances: true)
+        _ = try await cache.cutout(image: photo, key: "item-2", allInstances: true)
+        let kept = await cache.keysInMemory
+        XCTAssertEqual(kept, ["item-2"], "resta solo l'ultimo")
+        // Quello uscito dalla memoria si ritrova su disco.
+        _ = try await cache.cutout(image: photo, key: "item-1", allInstances: true)
+        let again = await cache.keysInMemory
+        XCTAssertEqual(again, ["item-1"])
+    }
+
     func testLaCacheCancellaSoloLeFotoDelCorpo() async throws {
         let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         let cache = CutoutCache(folder: folder)

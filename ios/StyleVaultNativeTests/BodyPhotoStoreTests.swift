@@ -92,6 +92,19 @@ import XCTest
         XCTAssertEqual(AvatarRequest.make(.from(outfit, items: [item.id.uuidString: item]), view: .back).garments.first?.photo, Data([1]))
     }
 
+    func testLaStessaFotoSiScontornaUnaVoltaSola() {
+        let item = Item()
+        item.photoFront = Data([1])
+        let outfit = GeneratedOutfit(top: OutfitPiece(id: item.id.uuidString, category: "tops"))
+        let items = [item.id.uuidString: item]
+        let keys = [BodyView.front, .side, .back].compactMap { AvatarRequest.make(.from(outfit, items: items), view: $0).garments.first?.key }
+        XCTAssertEqual(Set(keys).count, 1)
+        item.photoBack = Data([2])
+        let front = AvatarRequest.make(.from(outfit, items: items), view: .front).garments.first?.key
+        let back = AvatarRequest.make(.from(outfit, items: items), view: .back).garments.first?.key
+        XCTAssertNotEqual(front, back)
+    }
+
     func testCapoSenzaFotoVieneContato() {
         let item = Item()
         let outfit = GeneratedOutfit(top: OutfitPiece(id: item.id.uuidString, category: "tops"))

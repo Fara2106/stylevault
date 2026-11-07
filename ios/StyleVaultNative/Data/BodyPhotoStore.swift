@@ -54,7 +54,9 @@ struct AvatarRequest {
                 withoutPhoto += 1
                 continue
             }
-            garments.append(AvatarGarment(slot: slot, photo: photo, key: "item-\(item.id.uuidString)-\(view.rawValue)-\(photo.count)"))
+            // La chiave nomina la foto, non la vista: di lato e di spalle senza retro è sempre quella davanti.
+            let side = view == .back && item.photoBack != nil ? "back" : "front"
+            garments.append(AvatarGarment(slot: slot, photo: photo, key: "item-\(item.id.uuidString)-\(side)-\(photo.count)"))
         }
         return AvatarRequest(garments: garments, withoutPhoto: withoutPhoto)
     }
