@@ -20,6 +20,16 @@ Richiesta di Lorenzo: finire tutte le schermate nella notte e mandarla a Mary. F
 - Resta da fare prima dell'App Store: WeatherKit, iPhone Duo, schema CloudKit in Production (senza, in TestFlight i dati non passano fra dispositivi:
   da verificare), testi legali da riscrivere (la pagina privacy descrive ancora il sito).
 
+## Novità 2026-11-07 — RC 1.0 (6), prove da finire
+
+Il progetto ora sta in `/Users/lorenzofaraoni/Documents/Apps Mobile 📱/StyleVault`. Ramo `feat/app-nativa`, solo commit locali.
+Fatto sul ramo: correzioni della revisione, `stamp` e `DuplicateStore`, storico dei capi cancellati con `snapshot`, import più robusto, date gregoriane,
+Mail per chi segnala senza account, privacy e supporto dentro l'app (`scripts/testi-legali.py` genera schermate e `docs/pubblicazione/pagine/` da `testi-legali.md`),
+Meteo di Apple con ripiego su Open-Meteo, build 6 in `project.yml`. Report pre-invio: `docs/pubblicazione/2026-11-07-report-rc.md`.
+**Non fatto:** build 6 non caricata; suite complete e giri fermati prima di dare un esito sul codice finale. Su Mary c'è ancora la 1.0 (5).
+Strumenti: `.superpowers/sdd/rc/` (ignorata da git): `round-rc.sh` fa suite iPhone e iPad e giri chiaro, scuro, inglese e iPhone Duo; `build6.sh` archivia ed esporta.
+`TempGiroTests.swift` viene copiato e tolto da `giro6.sh`, mai nel commit.
+
 ## Novità 2026-11-07 — Revisione esterna del ramo
 
 Sul ramo locale, non ancora in una build: correzioni dalla revisione (crash doppioni, crash viso a bordo foto, meteo vecchio, cache
