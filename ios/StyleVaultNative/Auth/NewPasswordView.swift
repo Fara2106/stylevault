@@ -17,7 +17,8 @@ struct NewPasswordView: View {
                 if let email = auth.session?.user.email {
                     Text(verbatim: email).font(.subheadline).foregroundStyle(Palette.muted)
                 }
-                SecureField("native.auth.newPasswordField", text: $password)
+                SecureField("native.auth.newPasswordField", text: $password,
+                            prompt: Text("native.auth.newPasswordField").foregroundStyle(Palette.muted))
                     .textContentType(.newPassword)
                     .modifier(FieldBox())
                 if let errorText {

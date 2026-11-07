@@ -32,7 +32,7 @@ struct AccountSection: View {
                     .accessibilityIdentifier("account-login")
             }
         } header: {
-            Text("native.account.title")
+            Text("native.account.title").foregroundStyle(Palette.muted)
         } footer: {
             if let errorText { Text(verbatim: errorText).foregroundStyle(Palette.danger) }
         }

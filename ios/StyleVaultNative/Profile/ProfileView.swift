@@ -57,7 +57,7 @@ struct ProfileView: View {
                         ProfileStore.update(profiles, in: context) { $0.apply(city: city) }
                     }
                 } label: {
-                    LabeledContent("profile.defaultCity", value: profile.cityName)
+                    LabeledContent("profile.defaultCity") { Text(verbatim: profile.cityName).foregroundStyle(Palette.muted) }
                 }
                 Button {
                     if let url = URL(string: UIApplication.openSettingsURLString) {
@@ -93,9 +93,10 @@ struct ProfileView: View {
                 .tint(Palette.link)
                 .accessibilityIdentifier("profile-temperature")
             } header: {
-                Text("profile.settings")
+                Text("profile.settings").foregroundStyle(Palette.muted)
             } footer: {
                 Text(lock.canEnable || lock.isEnabled ? "native.lock.footer" : "native.lock.unavailable")
+                    .foregroundStyle(Palette.muted)
             }
             Section {
                 NavigationLink {
@@ -123,7 +124,7 @@ struct ProfileView: View {
                 .accessibilityIdentifier("profile-stats")
             }
             DataTransferSection()
-            Section("native.help.title") {
+            Section {
                 NavigationLink {
                     FeedbackView()
                 } label: {
@@ -136,8 +137,10 @@ struct ProfileView: View {
                     .accessibilityIdentifier("profile-support")
                 NavigationLink { LegalView(kind: .deleteAccount) } label: { Text("native.help.deleteAccount") }
                     .accessibilityIdentifier("profile-delete-help")
-                LabeledContent("native.help.version", value: Self.version)
+                LabeledContent("native.help.version") { Text(verbatim: Self.version).foregroundStyle(Palette.muted) }
                     .accessibilityIdentifier("profile-version")
+            } header: {
+                Text("native.help.title").foregroundStyle(Palette.muted)
             }
         }
         .scrollContentBackground(.hidden)

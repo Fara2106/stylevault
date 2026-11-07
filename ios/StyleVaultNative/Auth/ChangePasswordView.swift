@@ -17,17 +17,19 @@ struct ChangePasswordView: View {
     var body: some View {
         Form {
             Section {
-                SecureField("profile.newPassword", text: $password)
+                SecureField("profile.newPassword", text: $password,
+                            prompt: Text("profile.newPassword").foregroundStyle(Palette.muted))
                     .textContentType(.newPassword)
                     .accessibilityIdentifier("password-new")
-                SecureField("profile.confirmPassword", text: $confirm)
+                SecureField("profile.confirmPassword", text: $confirm,
+                            prompt: Text("profile.confirmPassword").foregroundStyle(Palette.muted))
                     .textContentType(.newPassword)
                     .accessibilityIdentifier("password-confirm")
             } footer: {
                 if mismatch {
                     Text("native.password.mismatch").foregroundStyle(Palette.danger)
                 } else {
-                    Text("native.password.minimum \(Self.minimumLength)")
+                    Text("native.password.minimum \(Self.minimumLength)").foregroundStyle(Palette.muted)
                 }
             }
             Section {

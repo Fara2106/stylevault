@@ -16,9 +16,9 @@ struct BodyPhotosSection: View {
             }
             .padding(.vertical, 4)
         } header: {
-            Text("profile.bodyPhotosTitle")
+            Text("profile.bodyPhotosTitle").foregroundStyle(Palette.muted)
         } footer: {
-            Text("profile.bodyPhotosHintWeb")
+            Text("profile.bodyPhotosHintWeb").foregroundStyle(Palette.muted)
         }
     }
 

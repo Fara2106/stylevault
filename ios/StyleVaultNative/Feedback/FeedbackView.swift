@@ -112,6 +112,7 @@ struct FeedbackView: View {
     }
 
     private var sensitive: [SensitiveKind] { FeedbackRules.sensitive(in: message) }
+    private var hint: LocalizedStringKey { LocalizedStringKey(kind == "bug" ? "feedback.messageBugHint" : "feedback.messageIdeaHint") }
 
     private var form: some View {
         Form {
@@ -123,7 +124,7 @@ struct FeedbackView: View {
                 }
                 .accessibilityIdentifier("feedback-warning")
             }
-            Section("feedback.kindLabel") {
+            Section {
                 Picker("feedback.kindLabel", selection: $kind) {
                     Text("feedback.kindBug").tag("bug")
                     Text("feedback.kindIdea").tag("idea")
@@ -131,17 +132,20 @@ struct FeedbackView: View {
                 .pickerStyle(.segmented)
                 .labelsHidden()
                 .accessibilityIdentifier("feedback-kind")
+            } header: {
+                Text("feedback.kindLabel").foregroundStyle(Palette.muted)
             }
             Section {
-                TextField(LocalizedStringKey(kind == "bug" ? "feedback.messageBugHint" : "feedback.messageIdeaHint"),
-                          text: $message, axis: .vertical)
+                TextField(hint, text: $message, prompt: Text(hint).foregroundStyle(Palette.muted), axis: .vertical)
                     .lineLimit(5...12)
                     .accessibilityIdentifier("feedback-message")
             } header: {
                 Text(LocalizedStringKey(kind == "bug" ? "feedback.messageBug" : "feedback.messageIdea"))
+                    .foregroundStyle(Palette.muted)
             } footer: {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(verbatim: "\(message.trimmingCharacters(in: .whitespacesAndNewlines).count)/\(FeedbackRules.maximum)")
+                        .foregroundStyle(Palette.muted)
                     if !sensitive.isEmpty {
                         Text("native.feedback.sensitive \(sensitive.map { localized($0.labelKey) }.joined(separator: ", "))")
                             .foregroundStyle(Palette.danger)
@@ -152,13 +156,13 @@ struct FeedbackView: View {
             Section {
                 ForEach(info.sorted(by: { $0.key < $1.key }), id: \.key) { key, value in
                     if let label = Self.infoKeys[key] {
-                        LabeledContent(LocalizedStringKey(label), value: value)
+                        LabeledContent(LocalizedStringKey(label)) { Text(verbatim: value).foregroundStyle(Palette.muted) }
                     }
                 }
             } header: {
-                Text("feedback.infoTitle")
+                Text("feedback.infoTitle").foregroundStyle(Palette.muted)
             } footer: {
-                Text("feedback.infoNote")
+                Text("feedback.infoNote").foregroundStyle(Palette.muted)
             }
             Section {
                 if let errorKey {

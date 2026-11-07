@@ -27,7 +27,7 @@ targets:
     sources:
       - path: StyleVaultNative
         excludes:
-          - "* 2.*"
+          - "* [2-9].*"
     dependencies:
       - package: StyleVaultCore
       - package: Supabase

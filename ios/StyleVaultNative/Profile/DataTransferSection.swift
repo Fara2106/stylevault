@@ -68,9 +68,9 @@ struct DataTransferSection: View {
                     .accessibilityIdentifier("data-error")
             }
         } header: {
-            Text("native.data.title")
+            Text("native.data.title").foregroundStyle(Palette.muted)
         } footer: {
-            Text("native.data.footer")
+            Text("native.data.footer").foregroundStyle(Palette.muted)
         }
         .fileImporter(isPresented: $isPickingFile, allowedContentTypes: [.zip]) { result in
             if case let .success(url) = result { open(url) }
