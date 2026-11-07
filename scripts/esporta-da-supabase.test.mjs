@@ -39,6 +39,23 @@ test('le categorie personali restano collegate ai capi', () => {
   assert.equal(bundle.customCategories[0].name, 'Categoria 1');
 });
 
+test('lo storico ricorda i capi che non esistono più', () => {
+  const bundle = toBundle({
+    items: [{ id: 'a', name: 'Maglia', category: 'tops', created_at: '2026-07-19T10:00:00.000Z' }],
+    wishlist: [{ id: 'w', name: 'Telo', category: null, created_at: '2026-07-19T10:00:00.000Z' },
+      { id: 'x', name: 'Borsa', category: 'custom_2', created_at: '2026-07-19T10:00:00.000Z' }],
+    outfits: [{ id: 'o', payload: { score: 80, top: { id: 'a' } }, created_at: '2026-07-19T10:00:00.000Z' }],
+    calendar: [{ id: 'c', date: '2026-07-20', worn: true, created_at: '2026-07-19T10:00:00.000Z',
+      payload: { top: { id: 'a', name: 'Maglia' }, shoes: { id: 'via', name: 'Stivali', category: 'shoes' } } }],
+    profile: null,
+  }, photos);
+  assert.deepEqual(bundle.calendar[0].itemIDs, ['a', 'via']);
+  assert.deepEqual(bundle.calendar[0].snapshot, [{ id: 'via', name: 'Stivali', category: 'shoes' }]);
+  assert.equal(bundle.wishlist[0].category, 'other');
+  assert.deepEqual(bundle.customCategories.map((c) => c.id), ['custom_2']);
+  assert.equal(bundle.outfits[0].score, 80);
+});
+
 test('chi non ha un profilo si esporta lo stesso', () => {
   const bundle = toBundle({ items: [], wishlist: [], outfits: [], calendar: [], profile: null }, photos);
   assert.equal(bundle.profile, null);

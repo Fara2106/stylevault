@@ -68,10 +68,19 @@ export function outfitItemIds(payload = {}) {
   return [...new Set(pieces.filter(Boolean).map((piece) => (typeof piece === 'string' ? piece : piece.id)).filter(Boolean))];
 }
 
+/** I capi dello snapshot del sito che non esistono più: lo storico ne ricorda il nome. */
+export function wornItems(payload = {}, known = new Set()) {
+  const pieces = [payload.top, payload.bottom, payload.shoes, payload.outerwear, payload.dress, ...(payload.accessories || [])];
+  return pieces
+    .filter((piece) => piece && typeof piece === 'object' && piece.id && piece.name && !known.has(piece.id))
+    .map((piece) => ({ id: piece.id, name: piece.name, category: piece.category ?? 'other' }));
+}
+
 const garment = (row, photos, withFavorite) => ({
   id: row.id,
   name: row.name,
-  category: row.category,
+  // Nei desideri la categoria può mancare; nell'app no.
+  category: row.category ?? 'other',
   subcategory: row.subcategory ?? null,
   brand: row.brand ?? null,
   size: row.size ?? null,
@@ -109,7 +118,7 @@ export function toBundle({ items, wishlist, outfits, calendar, profile }, photos
     items: items.map((row) => garment(row, photos, true)),
     wishlist: wishlist.map((row) => garment(row, photos, false)),
     // Il sito teneva i nomi solo nel browser: restano i capi, con un nome da cambiare a mano.
-    customCategories: [...new Set(items.map((row) => row.category).filter((id) => id.startsWith('custom')))].map((id, index) => ({
+    customCategories: [...new Set([...items, ...wishlist].map((row) => row.category).filter((id) => id?.startsWith('custom')))].map((id, index) => ({
       id,
       name: `Categoria ${index + 1}`,
       createdAt: now.toISOString(),
@@ -117,7 +126,7 @@ export function toBundle({ items, wishlist, outfits, calendar, profile }, photos
     outfits: outfits.map((row) => ({
       id: row.id,
       occasion: row.occasion ?? null,
-      score: row.score ?? null,
+      score: row.score ?? row.payload?.score ?? null,
       itemIDs: kept(row.item_ids?.length ? row.item_ids : outfitItemIds(row.payload)),
       createdAt: row.created_at,
     })),
@@ -126,8 +135,9 @@ export function toBundle({ items, wishlist, outfits, calendar, profile }, photos
       day: row.date,
       worn: row.worn,
       outfitID: null,
-      itemIDs: kept(outfitItemIds(row.payload)),
+      itemIDs: outfitItemIds(row.payload),
       createdAt: row.created_at,
+      snapshot: wornItems(row.payload, known),
     })),
     bodyPhotos: photos.body(profile),
   };
