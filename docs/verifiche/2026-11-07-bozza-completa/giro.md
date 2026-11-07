@@ -1,5 +1,55 @@
 # Giro da utente della bozza completa — 2026-11-07
 
+## RC 1.0 (6)
+
+Build 1.0 (6), commit `99048c5`, ramo `feat/app-nativa`, iOS 27.2 simulato. Ogni giro parte da installazione nuova: i 26 passi
+di sotto più Privacy, Supporto, Eliminare l'account, ognuna fino in fondo, e il capo cancellato nel calendario. Sono 33 schermate.
+
+| Prova | Dove | Esito |
+|-------|------|-------|
+| Suite completa | iPhone 18 Pro | 272 su 272 |
+| Suite completa | iPad Pro 11" | 272 su 272 |
+| Giro r1, italiano chiaro | iPhone 18 Pro | passato, 33 schermate viste |
+| Giro r1d, italiano scuro | iPhone 18 Pro | passato, 33 schermate viste |
+| Giro r1e, inglese chiaro | iPhone 18 Pro | passato al secondo tentativo, 33 schermate viste |
+| Giro duo, italiano chiaro | iPhone Duo, schermo interno | passato al terzo tentativo, 33 schermate viste |
+
+Core non è stato rilanciato: 187 verdi prima di questo round, e il commit `99048c5` non lo tocca. Nessun crash dell'app durante
+il round: l'ultimo report dell'app è delle 09:29, precedente.
+
+Un difetto dell'app, corretto, con il giro ripartito da zero: nel primo round i moduli di sistema davano titoli e note a 3,35:1 e
+segnaposto a 1,72:1 in chiaro, 2,48:1 in scuro. Ora usano il testo secondario della palette.
+
+I tentativi falliti non vengono dall'app. Inglese: al secondo capo il campo nome non ha preso il fuoco, con il Mac a carico sopra
+300; il test ora riprova il tocco. Duo, primo tentativo: il programma di test è andato in crash prima di aprire l'app
+(`handleStalledWait`, a carico alto). Duo, secondo tentativo: non compilava per una copia `TempGiroTests 2.swift` comparsa da sola.
+Il fuoco perso non è dimostrato estraneo all'app: il modulo non resetta il campo e non è cambiato, ma il motivo non è provato.
+
+Contrasti misurati dai pixel degli screenshot, in italiano:
+
+| Testo | Chiaro | Scuro |
+|-------|--------|-------|
+| Link Privacy e Supporto, nota dei primi passi, date delle pagine legali | 5,38:1 | 6,81:1 |
+| Titoli e note delle sezioni nel Profilo e in Segnala, contatore | 5,38:1 | 6,81:1 |
+| Segnaposto di Segnala | 5,74:1 | 6,20:1 |
+| Capo cancellato nel calendario | 5,74:1 | 6,31:1 |
+
+Nessun pixel del grigio di sistema #888789 in r1, r1d, r1e. In inglese i colori sono gli stessi, ma i numeri non sono stati misurati
+perché le zone di misura sono tarate sull'italiano. Il Duo non è stato misurato: stessi colori, schermate solo viste.
+
+Sotto soglia e non corretti: chevron dei NavigationLink e interruttore spento di "Blocca l'app" (#C5C5C7, di sistema); l'accento
+chiaro sulla scheda selezionata resta a 4,2:1, vecchio. Non controllati: alert "Nuova categoria" e ricerca della città, lasciati di
+sistema. Da guardare sul telefono: nelle pagine legali, scorrendo, il testo passa sotto il tasto Indietro senza sfocatura;
+con il cappotto nell'outfit il consiglio dice comunque "Troppo leggero per 12°", logica già presente prima.
+
+Sul Duo la barra è verticale a destra e il contenuto regge. Nel calendario il capo cancellato è sotto il bordo dello schermo e lì non
+è stato visto.
+
+Finti come sotto. Non provati: "Aumenta contrasto", testo grande, VoiceOver, schermo esterno e passaggio aperto e chiuso del Duo,
+giro a mano su iPad. Le schermate sono in `.superpowers/sdd/rc/giro`, fuori da git.
+
+## Build 1.0 (5)
+
 Build 1.0 (5), commit `e5003bb`, ramo `feat/app-nativa`. iPhone 18 Pro simulato, iOS 27.2.
 
 ## Com'è andato
@@ -24,7 +74,8 @@ successivo è il testo dell'Armocromia, coperto dai giri. Nessun crash nuovo il 
 
 Contrasti misurati sui colori della palette, sfondo e superficie: nelle schermate nuove il minimo è 5,38:1 in chiaro
 (testo secondario) e 6,31:1 in scuro. L'accento chiaro sulla scheda selezionata resta a 4,2:1, con etichetta piccola:
-è una cosa vecchia, non toccata.
+è una cosa vecchia, non toccata. Correzione: quel minimo veniva dalla palette, non dai pixel, e non valeva per i moduli di sistema.
+Vedi sopra, RC 1.0 (6).
 
 Screenshot: `it-chiaro-*.png`, `it-scuro-*.png`, `en-chiaro-*.png` in questa cartella.
 
