@@ -15,6 +15,33 @@ extension CalendarEntry {
     var repeatLog: RepeatLog { RepeatLog(id: id.uuidString, date: day, itemIDs: itemIDs.map(\.uuidString)) }
 }
 
+extension CalendarEntry {
+    var wornItems: [WornItem] {
+        guard let snapshot, let items = try? JSONDecoder().decode([WornItem].self, from: snapshot) else { return [] }
+        return items
+    }
+
+    func remember(_ item: Item) {
+        let id = item.id.uuidString
+        guard !wornItems.contains(where: { $0.id == id }) else { return }
+        snapshot = try? JSONEncoder().encode(wornItems + [WornItem(id: id, name: item.name, category: item.category)])
+    }
+
+    /// I capi di questo giorno che ci sono ancora, nell'ordine in cui sono stati registrati.
+    func present(in items: [Item]) -> [Item] {
+        let known = Item.byID(items)
+        return itemIDs.compactMap { known[$0.uuidString] }
+    }
+
+    /// I nomi dei capi cancellati, per quelli che si conoscono.
+    func deletedNames(in items: [Item]) -> [String] {
+        let known = Item.byID(items)
+        return wornItems.filter { known[$0.id] == nil }.map(\.name)
+    }
+
+    func hasDeletedItems(in items: [Item]) -> Bool { present(in: items).count < itemIDs.count }
+}
+
 /// Tutte le scritture su outfit salvati e calendario passano da qui, e ognuna salva prima di tornare.
 @MainActor enum OutfitStore {
     @discardableResult

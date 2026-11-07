@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 import SwiftData
 
 enum StoreMode { case cloud, local, memory }
@@ -12,6 +13,7 @@ struct OpenedStore {
 
 enum StoreFactory {
     static let containerID = "iCloud.it.faraoni.stylevault"
+    private static let logger = Logger(subsystem: "it.faraoni.stylevault.nativa", category: "store")
 
     static let models: [any PersistentModel.Type] = [
         Item.self, Outfit.self, CalendarEntry.self,
@@ -51,12 +53,15 @@ enum StoreFactory {
         var tried: [StoreMode] = []
         for mode in order where !tried.contains(mode) {
             tried.append(mode)
-            if let container = try? build(mode) {
+            do {
+                let container = try build(mode)
                 switch mode {
                 case .cloud: return OpenedStore(container: container, health: .cloud)
                 case .local: return OpenedStore(container: container, health: .localOnly)
                 case .memory: return OpenedStore(container: container, health: .temporary)
                 }
+            } catch {
+                logger.error("Archivio \(String(describing: mode), privacy: .public) non aperto: \(error, privacy: .public)")
             }
         }
         fatalError("Impossibile aprire anche l'archivio in memoria")

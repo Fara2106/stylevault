@@ -116,17 +116,20 @@ public final class ZipReader {
         let compressed: Int
         let size: Int
         let offset: Int
+        let crc: Int
     }
 
     /// Più grande di qualsiasi foto: ferma gli zip che si gonfiano a dismisura.
-    private static let entryLimit = 256 * 1024 * 1024
+    public static let defaultEntryLimit = 256 * 1024 * 1024
 
+    private let entryLimit: Int
     private let file: Data
     private var entries: [String: Entry] = [:]
 
     public var names: [String] { Array(entries.keys) }
 
-    public init(url: URL) throws {
+    public init(url: URL, entryLimit: Int = ZipReader.defaultEntryLimit) throws {
+        self.entryLimit = entryLimit
         file = try Data(contentsOf: url, options: .alwaysMapped)
         guard let end = Self.endRecord(in: file) else { throw ZipError.notAZip }
         let count = file.read16(end + 10)
@@ -138,7 +141,7 @@ public final class ZipReader {
             let range = (file.startIndex + position + 46)..<(file.startIndex + position + 46 + nameLength)
             entries[String(decoding: file[range], as: UTF8.self)] = Entry(
                 method: file.read16(position + 10), compressed: file.read32(position + 20),
-                size: file.read32(position + 24), offset: file.read32(position + 42))
+                size: file.read32(position + 24), offset: file.read32(position + 42), crc: file.read32(position + 16))
             position += 46 + nameLength + extra + comment
         }
     }
@@ -155,16 +158,20 @@ public final class ZipReader {
 
     public func data(name: String) throws -> Data? {
         guard let entry = entries[name] else { return nil }
-        guard entry.size <= Self.entryLimit else { throw ZipError.tooLarge }
+        // `size` e `compressed` si dichiarano nel file: valgono entrambi.
+        guard entry.size <= entryLimit, entry.compressed <= entryLimit else { throw ZipError.tooLarge }
         guard entry.offset + 30 <= file.count, file.read32(entry.offset) == 0x0403_4B50 else { throw ZipError.damaged }
         let start = entry.offset + 30 + file.read16(entry.offset + 26) + file.read16(entry.offset + 28)
         guard start + entry.compressed <= file.count else { throw ZipError.damaged }
         let raw = file[(file.startIndex + start)..<(file.startIndex + start + entry.compressed)]
+        let contents: Data
         switch entry.method {
-        case 0: return Data(raw)
-        case 8: return try Self.inflate(raw, size: entry.size)
+        case 0: contents = Data(raw)
+        case 8: contents = try Self.inflate(raw, size: entry.size)
         default: throw ZipError.unsupported
         }
+        guard Int(CRC32.checksum(contents)) == entry.crc else { throw ZipError.damaged }
+        return contents
     }
 
     private static func inflate(_ raw: Data, size: Int) throws -> Data {

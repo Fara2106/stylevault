@@ -164,6 +164,11 @@ struct FeedbackView: View {
                 if let errorKey {
                     Text(LocalizedStringKey(errorKey)).font(.footnote).foregroundStyle(Palette.danger)
                         .accessibilityIdentifier("feedback-error")
+                    if errorKey == "native.feedback.needsAccount" {
+                        Link(destination: AppConfig.supportMail) { Text("native.feedback.writeEmail").font(.footnote) }
+                            .tint(Palette.link)
+                            .accessibilityIdentifier("feedback-email")
+                    }
                 }
                 Button(action: send) {
                     Text(isSending ? "feedback.sending" : "feedback.send").frame(maxWidth: .infinity).bold()

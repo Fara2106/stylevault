@@ -21,6 +21,14 @@ public enum CalendarMath {
         return calendar
     }
 
+    /// Il calendario del telefono può essere buddista o giapponese: i giorni dell'app sono sempre gregoriani.
+    public static var local: Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = .current
+        calendar.locale = .current
+        return calendar
+    }
+
     private static func date(_ day: String) -> Date? {
         let parts = day.split(separator: "-").compactMap { Int($0) }
         guard parts.count == 3 else { return nil }
@@ -32,9 +40,15 @@ public enum CalendarMath {
     }
 
     /// Il giorno di `date` nel calendario del telefono.
-    public static func iso(_ date: Date, calendar: Calendar = .current) -> String {
+    public static func iso(_ date: Date, calendar: Calendar = CalendarMath.local) -> String {
         let parts = calendar.dateComponents([.year, .month, .day], from: date)
         return iso(year: parts.year ?? 0, month: parts.month ?? 0, day: parts.day ?? 0)
+    }
+
+    /// Una data vera nel formato `yyyy-MM-dd`: i file importati possono contenere di tutto.
+    public static func isValid(_ day: String) -> Bool {
+        guard let parsed = date(day) else { return false }
+        return iso(parsed, calendar: utc) == day
     }
 
     /// Giorni da `start` a `end`; negativo se `end` viene prima.

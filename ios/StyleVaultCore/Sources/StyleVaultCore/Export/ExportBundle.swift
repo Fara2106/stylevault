@@ -75,6 +75,19 @@ public struct ExportOutfit: Codable, Equatable, Sendable {
     }
 }
 
+/// Il ricordo di un capo indossato: resta nello storico anche quando il capo viene cancellato.
+public struct WornItem: Codable, Equatable, Sendable {
+    public var id: String
+    public var name: String
+    public var category: String
+
+    public init(id: String, name: String, category: String) {
+        self.id = id
+        self.name = name
+        self.category = category
+    }
+}
+
 public struct ExportCalendarEntry: Codable, Equatable, Sendable {
     public var id: String
     public var day: String
@@ -82,8 +95,12 @@ public struct ExportCalendarEntry: Codable, Equatable, Sendable {
     public var outfitID: String?
     public var itemIDs: [String]
     public var createdAt: Date
+    /// Assente nei file vecchi.
+    public var snapshot: [WornItem]?
 
-    public init(id: String, day: String, worn: Bool, outfitID: String?, itemIDs: [String], createdAt: Date) {
+    public init(id: String, day: String, worn: Bool, outfitID: String?, itemIDs: [String], createdAt: Date,
+                snapshot: [WornItem]? = nil) {
+        self.snapshot = snapshot
         self.id = id
         self.day = day
         self.worn = worn
@@ -231,7 +248,7 @@ public enum ExportArchive {
         return Contents(bundle: try ExportBundle.decode(document), reader: reader)
     }
 
-    public static func fileName(date: Date = .now, calendar: Calendar = .current) -> String {
+    public static func fileName(date: Date = .now, calendar: Calendar = CalendarMath.local) -> String {
         let parts = calendar.dateComponents([.year, .month, .day], from: date)
         return String(format: "StyleVault-%04d-%02d-%02d.zip", parts.year ?? 0, parts.month ?? 0, parts.day ?? 0)
     }

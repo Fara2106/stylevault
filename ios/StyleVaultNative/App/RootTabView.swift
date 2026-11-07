@@ -47,6 +47,8 @@ struct RootTabView: View {
         if arguments.contains("-SVShowOnboarding") { return true }
         if arguments.contains("-SVMemoryStore") { return false }
         #endif
+        // Con l'archivio temporaneo i dati ci sono ma non si vedono: i primi passi coprirebbero l'avviso.
+        guard syncMonitor.state != .temporaryStore else { return false }
         return !onboardingDone && items.isEmpty && bodyPhotos.isEmpty
     }
 
@@ -85,5 +87,7 @@ struct RootTabView: View {
             ItemFormView(mode: .add(router.addDestination))
         }
         .task(id: profiles.count) { _ = try? ProfileStore.current(in: context) }
+        // I doppioni arrivano da iCloud dopo l'avvio: si riguarda ogni volta che cambia il numero dei capi.
+        .task(id: items.count) { try? DuplicateStore.clean(in: context) }
     }
 }

@@ -162,4 +162,137 @@ import XCTest
         let item = try XCTUnwrap(target.fetch(FetchDescriptor<Item>()).first)
         XCTAssertEqual(try target.fetch(FetchDescriptor<Outfit>()).first?.itemIDs, [item.id])
     }
+
+    private func garment(_ id: String, name: String = "Capo", warmth: Int = 2, photo: String? = nil) -> ExportGarment {
+        ExportGarment(id: id, name: name, category: "tops", subcategory: nil, brand: nil, size: nil, colors: [], season: "all",
+                      occasion: "casual", warmthLevel: warmth, sourceURL: nil, price: nil, favorite: false, createdAt: .now,
+                      photoFront: photo, photoBack: nil, cutout: nil)
+    }
+
+    private func archive(_ bundle: ExportBundle, photos: [String: Data] = [:]) throws -> ExportArchive.Contents {
+        let url = try folder().appendingPathComponent("prova.zip")
+        try ExportArchive.write(bundle, photos: photos, to: url)
+        return try ExportArchive.read(url)
+    }
+
+    func testUnFileStranoNonPortaValoriPericolosi() async throws {
+        var bundle = ExportBundle()
+        bundle.items = [garment(UUID().uuidString, warmth: Int.max)]
+        bundle.calendar = [ExportCalendarEntry(id: UUID().uuidString, day: "domani", worn: true, outfitID: nil, itemIDs: [], createdAt: .now)]
+        bundle.profile = ExportProfile(theme: "system", cityName: "Milano", cityLatitude: 45, cityLongitude: 9, cityCountry: nil,
+                                       armocromia: try String(decoding: ArmocromiaVerdict(season: "inventata").encoded(), as: UTF8.self))
+        let target = try context()
+        let summary = try await DataImporter.apply(try archive(bundle), to: target)
+        XCTAssertEqual(try target.fetch(FetchDescriptor<Item>()).first?.warmthLevel, 5)
+        XCTAssertEqual(summary.calendar, 0)
+        XCTAssertEqual(summary.skipped, 1)
+        XCTAssertNil(try ProfileStore.current(in: target).armocromia)
+    }
+
+    func testUnaFotoMancataSiRecuperaRipetendoLImport() async throws {
+        let id = UUID().uuidString
+        var bundle = ExportBundle()
+        bundle.items = [garment(id, photo: "photos/a.jpg")]
+        let target = try context()
+        let first = try await DataImporter.apply(try archive(bundle), to: target)
+        XCTAssertEqual(first.missingPhotos, 1)
+        XCTAssertNil(try target.fetch(FetchDescriptor<Item>()).first?.photoFront)
+
+        let second = try await DataImporter.apply(try archive(bundle, photos: ["photos/a.jpg": Data([7])]), to: target)
+        XCTAssertEqual(second.items, 0)
+        XCTAssertEqual(second.missingPhotos, 0)
+        let items = try target.fetch(FetchDescriptor<Item>())
+        XCTAssertEqual(items.count, 1)
+        XCTAssertEqual(items.first?.photoFront, Data([7]))
+    }
+
+    func testChiaviNonUUIDNonCreanoDoppioni() async throws {
+        var bundle = ExportBundle()
+        bundle.items = [garment("capo-1")]
+        let target = try context()
+        _ = try await DataImporter.apply(try archive(bundle), to: target)
+        let again = try await DataImporter.apply(try archive(bundle), to: target)
+        XCTAssertEqual(again.items, 0)
+        XCTAssertEqual(try target.fetchCount(FetchDescriptor<Item>()), 1)
+    }
+
+    func testICapiCancellatiRestanoNelloStoricoAncheNelFile() async throws {
+        let source = try context()
+        let (item, _) = try fill(source)
+        try WardrobeStore.delete(item, in: source)
+        let entry = try XCTUnwrap(try source.fetch(FetchDescriptor<CalendarEntry>()).first)
+        XCTAssertEqual(entry.deletedNames(in: []), ["Maglia rossa"])
+        XCTAssertTrue(entry.hasDeletedItems(in: []))
+        XCTAssertTrue(entry.present(in: []).isEmpty)
+
+        let url = try await DataExporter.export(from: source, to: folder())
+        let target = try context()
+        _ = try await DataImporter.apply(try ExportArchive.read(url), to: target)
+        let imported = try XCTUnwrap(try target.fetch(FetchDescriptor<CalendarEntry>()).first)
+        XCTAssertEqual(imported.deletedNames(in: []), ["Maglia rossa"])
+    }
+
+    func testLeCopieTemporaneeSparisconoEGliAltriFileNo() throws {
+        let tmp = try folder()
+        for name in ["importa-1.zip", "StyleVault-2026-11-07.zip", "altro.txt"] {
+            FileManager.default.createFile(atPath: tmp.appendingPathComponent(name).path, contents: Data())
+        }
+        try FileManager.default.createDirectory(at: tmp.appendingPathComponent("prova"), withIntermediateDirectories: true)
+        TemporaryFiles.sweep(tmp)
+        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: tmp.path), ["altro.txt"])
+    }
+
+    // MARK: Doppioni
+
+    private func copies(_ c: ModelContext, id: UUID = UUID(), stamps: [UUID?]) throws -> [Item] {
+        let items = stamps.map { stamp -> Item in
+            let item = Item()
+            item.id = id
+            item.stamp = stamp
+            c.insert(item)
+            return item
+        }
+        try c.save()
+        return items
+    }
+
+    func testDueDispositiviTengonoLaStessaCopia() throws {
+        let (low, high) = (UUID(uuidString: "00000000-0000-0000-0000-000000000001")!, UUID(uuidString: "FFFFFFFF-0000-0000-0000-000000000001")!)
+        for order in [[low, high], [high, low]] {
+            let c = try context()
+            _ = try copies(c, stamps: order)
+            XCTAssertEqual(try DuplicateStore.clean(in: c), 1)
+            XCTAssertEqual(try c.fetch(FetchDescriptor<Item>()).map(\.stamp), [high])
+        }
+    }
+
+    func testLaCopiaCheRestaPrendeLeFotoDellAltra() throws {
+        let c = try context()
+        let (low, high) = (UUID(uuidString: "00000000-0000-0000-0000-000000000001")!, UUID(uuidString: "FFFFFFFF-0000-0000-0000-000000000001")!)
+        let items = try copies(c, stamps: [low, high])
+        items[0].photoFront = Data([1])
+        items[0].favorite = true
+        try c.save()
+        try DuplicateStore.clean(in: c)
+        let kept = try XCTUnwrap(try c.fetch(FetchDescriptor<Item>()).first)
+        XCTAssertEqual(kept.photoFront, Data([1]))
+        XCTAssertTrue(kept.favorite)
+    }
+
+    func testSenzaUnaSceltaSicuraRestanoEntrambe() throws {
+        let c = try context()
+        let same = UUID()
+        _ = try copies(c, stamps: [nil, nil])
+        _ = try copies(c, stamps: [same, same])
+        XCTAssertEqual(try DuplicateStore.clean(in: c), 0)
+        XCTAssertEqual(try c.fetchCount(FetchDescriptor<Item>()), 4)
+    }
+
+    func testCapiDiversiNonSiToccano() throws {
+        let c = try context()
+        _ = try copies(c, stamps: [UUID()])
+        _ = try copies(c, stamps: [UUID()])
+        XCTAssertEqual(try DuplicateStore.clean(in: c), 0)
+        XCTAssertEqual(try c.fetchCount(FetchDescriptor<Item>()), 2)
+    }
 }

@@ -14,6 +14,7 @@ struct StyleVaultNativeApp: App {
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
+        TemporaryFiles.sweep()
         #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("-SVInitCloudSchema") { CloudSchema.initialize() }
         if ProcessInfo.processInfo.arguments.contains("-SVShowLogin") {

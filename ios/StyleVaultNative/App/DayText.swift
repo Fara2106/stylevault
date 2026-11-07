@@ -6,7 +6,7 @@ enum DayText {
     private static func date(_ day: String) -> Date? {
         let parts = day.split(separator: "-").compactMap { Int($0) }
         guard parts.count == 3 else { return nil }
-        return Calendar.current.date(from: DateComponents(year: parts[0], month: parts[1], day: parts[2], hour: 12))
+        return CalendarMath.local.date(from: DateComponents(year: parts[0], month: parts[1], day: parts[2], hour: 12))
     }
 
     /// "ven 6"
@@ -26,7 +26,7 @@ enum DayText {
 
     static func adding(_ days: Int, to day: String) -> String {
         guard let start = date(day),
-              let end = Calendar.current.date(byAdding: .day, value: days, to: start) else { return day }
+              let end = CalendarMath.local.date(byAdding: .day, value: days, to: start) else { return day }
         return CalendarMath.iso(end)
     }
 }

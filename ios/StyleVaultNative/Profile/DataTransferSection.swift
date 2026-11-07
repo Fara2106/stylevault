@@ -12,6 +12,7 @@ struct DataTransferSection: View {
     @State private var isImporting = false
     @State private var isPickingFile = false
     @State private var pending: ExportArchive.Contents?
+    @State private var importCopy: URL?
     @State private var summary: ImportSummary?
     @State private var errorKey: String?
 
@@ -53,6 +54,12 @@ struct DataTransferSection: View {
                     .font(.footnote)
                     .foregroundStyle(Palette.muted)
                     .accessibilityIdentifier("data-result")
+                if summary.missingPhotos > 0 {
+                    Text("native.data.missingPhotos \(summary.missingPhotos)")
+                        .font(.footnote)
+                        .foregroundStyle(Palette.danger)
+                        .accessibilityIdentifier("data-missing-photos")
+                }
             }
             if let errorKey {
                 Text(LocalizedStringKey(errorKey))
@@ -69,7 +76,10 @@ struct DataTransferSection: View {
             if case let .success(url) = result { open(url) }
         }
         .alert("native.data.confirmTitle", isPresented: Binding(get: { pending != nil }, set: { if !$0 { pending = nil } })) {
-            Button("common.cancel", role: .cancel) { pending = nil }
+            Button("common.cancel", role: .cancel) {
+                pending = nil
+                dropImportCopy()
+            }
             Button("native.data.confirm", action: applyPending)
         } message: {
             if let bundle = pending?.bundle {
@@ -103,10 +113,13 @@ struct DataTransferSection: View {
             // Copia locale: l'accesso al file scelto finisce qui, la conferma arriva dopo.
             let copy = FileManager.default.temporaryDirectory.appendingPathComponent("importa-\(UUID().uuidString).zip")
             try FileManager.default.copyItem(at: url, to: copy)
+            importCopy = copy
             pending = try ExportArchive.read(copy)
         } catch ExportError.newerVersion {
+            dropImportCopy()
             errorKey = "native.data.newerVersion"
         } catch {
+            dropImportCopy()
             logger.error("File non letto: \(error.localizedDescription, privacy: .public)")
             errorKey = "native.data.notAnExport"
         }
@@ -121,14 +134,20 @@ struct DataTransferSection: View {
             defer {
                 isBusy = false
                 isImporting = false
+                dropImportCopy()
             }
             do {
                 summary = try await DataImporter.apply(contents, to: context)
             } catch {
                 logger.error("Importazione non riuscita: \(error.localizedDescription, privacy: .public)")
-                context.rollback()
                 errorKey = "native.data.importFailed"
             }
         }
+    }
+
+    /// La copia contiene le foto: finita l'importazione non serve più.
+    private func dropImportCopy() {
+        if let importCopy { try? FileManager.default.removeItem(at: importCopy) }
+        importCopy = nil
     }
 }

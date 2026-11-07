@@ -3,6 +3,9 @@ import SwiftData
 
 // Tutte le proprietà hanno un default o sono facoltative, senza `unique`:
 // è il requisito di CloudKit per lo schema.
+//
+// `stamp` distingue due copie con lo stesso `id`, vedi `DuplicateStore`. Sta nell'init e non nel default
+// della proprietà: i record già salvati devono restare senza, non ricevere tutti lo stesso valore.
 
 @Model final class Item {
     var id: UUID = UUID()
@@ -22,8 +25,9 @@ import SwiftData
     @Attribute(.externalStorage) var photoFront: Data?
     @Attribute(.externalStorage) var photoBack: Data?
     @Attribute(.externalStorage) var cutout: Data?
+    var stamp: UUID?
 
-    init() {}
+    init() { stamp = UUID() }
 }
 
 @Model final class WishlistItem {
@@ -42,8 +46,9 @@ import SwiftData
     var createdAt: Date = Date.now
     @Attribute(.externalStorage) var photoFront: Data?
     @Attribute(.externalStorage) var photoBack: Data?
+    var stamp: UUID?
 
-    init() {}
+    init() { stamp = UUID() }
 }
 
 @Model final class CustomCategory {
@@ -51,8 +56,9 @@ import SwiftData
     var id: String = ""
     var name: String = ""
     var createdAt: Date = Date.now
+    var stamp: UUID?
 
-    init() {}
+    init() { stamp = UUID() }
 }
 
 @Model final class Outfit {
@@ -61,8 +67,9 @@ import SwiftData
     var score: Int?
     var itemIDs: [UUID] = []
     var createdAt: Date = Date.now
+    var stamp: UUID?
 
-    init() {}
+    init() { stamp = UUID() }
 }
 
 @Model final class CalendarEntry {
@@ -73,8 +80,11 @@ import SwiftData
     var outfitID: UUID?
     var itemIDs: [UUID] = []
     var createdAt: Date = Date.now
+    var stamp: UUID?
+    /// I capi di quel giorno che nel frattempo sono stati cancellati: `[WornItem]` in JSON.
+    var snapshot: Data?
 
-    init() {}
+    init() { stamp = UUID() }
 }
 
 @Model final class Profile {

@@ -3384,6 +3384,40 @@
         }
       }
     },
+    "calendar.deletedItems": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capi non più nel guardaroba"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Items no longer in your wardrobe"
+          }
+        }
+      }
+    },
+    "calendar.deletedNamed %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non più nel guardaroba: %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No longer in your wardrobe: %@"
+          }
+        }
+      }
+    },
     "calendar.markWorn": {
       "extractionState": "manual",
       "localizations": {
@@ -5958,6 +5992,23 @@
         }
       }
     },
+    "native.data.missingPhotos %lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld foto non recuperate: ripeti l'importazione con un file completo."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld photos not recovered: repeat the import with a complete file."
+          }
+        }
+      }
+    },
     "native.data.newerVersion": {
       "extractionState": "manual",
       "localizations": {
@@ -6066,13 +6117,13 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Per inviare una segnalazione serve un account: entra dal Profilo, oppure scrivici dalla pagina di supporto."
+            "value": "Per inviare una segnalazione da qui serve un account: entra dal Profilo, oppure scrivici via email."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "You need an account to send feedback: sign in from Profile, or write to us from the support page."
+            "value": "You need an account to send feedback from here: sign in from Profile, or email us."
           }
         }
       }
@@ -6090,6 +6141,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "It looks like you wrote %@: remove it before sending."
+          }
+        }
+      }
+    },
+    "native.feedback.writeEmail": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scrivici via email"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Email us"
           }
         }
       }

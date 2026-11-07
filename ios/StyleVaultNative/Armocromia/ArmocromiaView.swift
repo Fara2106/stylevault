@@ -36,7 +36,9 @@ struct ArmocromiaView: View {
                 case .idle: intro
                 case .analyzing: analyzing
                 case .detected: colorsToCheck
-                case .result: if let season { result(season) }
+                case .result:
+                    // Una stagione sconosciuta può arrivare da un file importato.
+                    if let season { result(season) } else { intro }
                 }
             }
             .padding(16)

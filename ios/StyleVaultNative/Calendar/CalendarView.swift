@@ -11,8 +11,8 @@ struct CalendarView: View {
     @Query(sort: \Item.createdAt) private var items: [Item]
     @Query private var profiles: [Profile]
 
-    @State private var year = Calendar.current.component(.year, from: .now)
-    @State private var month = Calendar.current.component(.month, from: .now)
+    @State private var year = CalendarMath.local.component(.year, from: .now)
+    @State private var month = CalendarMath.local.component(.month, from: .now)
     @State private var selected = CalendarMath.iso(.now)
     @State private var isPickerOpen = false
     @State private var forecast: [DayForecast] = []
@@ -69,21 +69,21 @@ struct CalendarView: View {
     // MARK: Mese
 
     private var monthTitle: String {
-        let date = Calendar.current.date(from: DateComponents(year: year, month: month, day: 1)) ?? .now
+        let date = CalendarMath.local.date(from: DateComponents(year: year, month: month, day: 1)) ?? .now
         return date.formatted(.dateTime.month(.wide).year())
     }
 
     /// Le iniziali dei giorni, dal lunedì.
     private var weekdays: [String] {
-        let symbols = Calendar.current.veryShortStandaloneWeekdaySymbols
+        let symbols = CalendarMath.local.veryShortStandaloneWeekdaySymbols
         return Array(symbols[1...]) + [symbols[0]]
     }
 
     private func change(month delta: Int) {
-        let start = Calendar.current.date(from: DateComponents(year: year, month: month, day: 1)) ?? .now
-        let moved = Calendar.current.date(byAdding: .month, value: delta, to: start) ?? start
-        year = Calendar.current.component(.year, from: moved)
-        month = Calendar.current.component(.month, from: moved)
+        let start = CalendarMath.local.date(from: DateComponents(year: year, month: month, day: 1)) ?? .now
+        let moved = CalendarMath.local.date(byAdding: .month, value: delta, to: start) ?? start
+        year = CalendarMath.local.component(.year, from: moved)
+        month = CalendarMath.local.component(.month, from: moved)
     }
 
     private var monthCard: some View {
@@ -182,6 +182,19 @@ struct CalendarView: View {
         }
     }
 
+    private func deletedNote(_ names: [String]) -> some View {
+        Group {
+            if names.isEmpty {
+                Text("calendar.deletedItems")
+            } else {
+                Text("calendar.deletedNamed \(names.joined(separator: ", "))")
+            }
+        }
+        .font(.footnote)
+        .foregroundStyle(Palette.muted)
+        .accessibilityIdentifier("calendar-deleted")
+    }
+
     private func repeatDate(for entry: CalendarEntry) -> String? {
         CalendarMath.repeatDate(for: entry.repeatLog, in: entries.map(\.repeatLog))
     }
@@ -205,13 +218,19 @@ struct CalendarView: View {
                             .accessibilityIdentifier("calendar-repeat")
                     }
                 }
+                let present = entry.present(in: items)
                 ScrollView(.horizontal, showsIndicators: false) {
-                    OutfitThumbs(items: entry.itemIDs.compactMap { id in items.first { $0.id == id } })
+                    OutfitThumbs(items: present)
+                }
+                if entry.hasDeletedItems(in: items) {
+                    deletedNote(entry.deletedNames(in: items))
                 }
                 HStack(spacing: 16) {
-                    Button("tryon.seeOnMe") { tryOn = .from(entry.itemIDs.compactMap { id in items.first { $0.id == id } }) }
-                        .tint(Palette.link)
-                        .accessibilityIdentifier("calendar-avatar")
+                    if !present.isEmpty {
+                        Button("tryon.seeOnMe") { tryOn = .from(present) }
+                            .tint(Palette.link)
+                            .accessibilityIdentifier("calendar-avatar")
+                    }
                     if OutfitStore.canMarkWorn(entry, today: today) {
                         Button("calendar.markWorn") { perform { try OutfitStore.markWorn(entry, in: context) } }
                             .tint(Palette.link)

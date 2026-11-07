@@ -32,6 +32,10 @@ import SwiftData
     }
 
     static func delete(_ item: Item, in context: ModelContext) throws {
+        // Lo storico dice cosa si è indossato anche quando il capo non c'è più.
+        for entry in try context.fetch(FetchDescriptor<CalendarEntry>()) where entry.itemIDs.contains(item.id) {
+            entry.remember(item)
+        }
         context.delete(item)
         try context.save()
     }

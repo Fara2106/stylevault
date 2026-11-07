@@ -100,6 +100,20 @@ private struct Offline: Error {}
         XCTAssertFalse(m.usesManualWeather(today: "2026-11-06"))
     }
 
+    func testSenzaReteTornandoSullaSchedaGliOutfitRestano() async {
+        let m = model()
+        let old = ForecastResult(days: [day("2026-11-06")], stale: true, fetchedAt: .now.addingTimeInterval(-86_400))
+        await m.loadForecast(for: milano, using: StubLoader(result: .success(old)))
+        m.generateIfNeeded(items: wardrobe, recentWear: [])
+        let shown = m.outfits
+        XCTAssertFalse(shown.isEmpty)
+        await m.loadForecast(for: milano, using: StubLoader(result: .success(old)))
+        XCTAssertEqual(m.outfits, shown)
+        await m.loadForecast(for: milano, using: StubLoader(result: .failure(Offline())))
+        XCTAssertEqual(m.outfits, shown)
+        XCTAssertFalse(m.weatherError)
+    }
+
     func testIlMeteoManualeSegueIlGiornoScelto() async {
         let m = model()
         await m.loadForecast(for: milano, using: StubLoader(result: .failure(Offline())))

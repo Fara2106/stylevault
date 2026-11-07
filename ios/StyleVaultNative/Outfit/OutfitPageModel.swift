@@ -105,17 +105,25 @@ enum PlaceKind { case fallback, position, manual }
     func loadForecast(for place: ForecastPlace, using loader: any ForecastLoading, now: Date = .now) async {
         if place == loadedPlace, let current = forecast, !current.stale,
            now.timeIntervalSince(current.fetchedAt) < Self.forecastLifetime { return }
-        loadedPlace = place
-        weatherError = false
-        forecast = nil
-        outfits = []
+        // Stesso luogo: quello che c'è resta a schermo finché non arriva di meglio. Senza rete non cambia nulla.
+        let isRefresh = place == loadedPlace && forecast != nil
+        if !isRefresh {
+            loadedPlace = place
+            weatherError = false
+            forecast = nil
+            outfits = []
+        }
         do {
             let result = try await loader.load(place: place)
             guard !Task.isCancelled else { return }
+            if isRefresh {
+                if result.stale { return }
+                outfits = []
+            }
             forecast = result
         } catch {
             guard !Task.isCancelled else { return }
-            weatherError = true
+            if !isRefresh { weatherError = true }
         }
     }
 

@@ -109,4 +109,49 @@ final class ExportTests: XCTestCase {
         let date = calendar.date(from: DateComponents(year: 2026, month: 11, day: 6))!
         XCTAssertEqual(ExportArchive.fileName(date: date, calendar: calendar), "StyleVault-2026-11-06.zip")
     }
+
+    private func zipFile(_ entries: [String: Data]) throws -> URL {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("\(UUID().uuidString).zip")
+        addTeardownBlock { try? FileManager.default.removeItem(at: url) }
+        let writer = try ZipWriter(url: url)
+        for (name, data) in entries { try writer.add(name: name, data: data) }
+        try writer.close()
+        return url
+    }
+
+    func testUnaFotoRovinataNonPassaPerBuona() throws {
+        let url = try zipFile(["a.jpg": Data([1, 2, 3, 4])])
+        var bytes = try Data(contentsOf: url)
+        let start = try XCTUnwrap(bytes.range(of: Data([1, 2, 3, 4]))).lowerBound
+        bytes[start] = 9
+        try bytes.write(to: url)
+        XCTAssertThrowsError(try ZipReader(url: url).data(name: "a.jpg")) { XCTAssertEqual($0 as? ZipError, .damaged) }
+    }
+
+    func testIlLimiteValeAncheSenzaCompressione() throws {
+        let url = try zipFile(["a.jpg": Data(repeating: 1, count: 100)])
+        XCTAssertThrowsError(try ZipReader(url: url, entryLimit: 10).data(name: "a.jpg")) { XCTAssertEqual($0 as? ZipError, .tooLarge) }
+        XCTAssertEqual(try ZipReader(url: url, entryLimit: 100).data(name: "a.jpg")?.count, 100)
+    }
+
+    func testIlCalendarioRicordaICapiPerNome() throws {
+        var bundle = ExportBundle()
+        bundle.calendar = [ExportCalendarEntry(id: "c", day: "2026-11-06", worn: true, outfitID: nil, itemIDs: [], createdAt: .now,
+                                               snapshot: [WornItem(id: "a", name: "Maglia", category: "tops")])]
+        let decoded = try ExportBundle.decode(bundle.encoded())
+        XCTAssertEqual(decoded.calendar.first?.snapshot, [WornItem(id: "a", name: "Maglia", category: "tops")])
+    }
+
+    func testUnFileSenzaIlRicordoDeiCapiSiLeggeUgualmente() throws {
+        var bundle = ExportBundle()
+        bundle.calendar = [ExportCalendarEntry(id: "c", day: "2026-11-06", worn: true, outfitID: nil, itemIDs: [], createdAt: .now)]
+        XCTAssertNil(try ExportBundle.decode(bundle.encoded()).calendar.first?.snapshot)
+    }
+
+    func testLeDateDeiFileSiControllano() {
+        XCTAssertTrue(CalendarMath.isValid("2026-11-07"))
+        XCTAssertFalse(CalendarMath.isValid("2026-13-40"))
+        XCTAssertFalse(CalendarMath.isValid("domani"))
+        XCTAssertEqual(CalendarMath.local.identifier, .gregorian)
+    }
 }
