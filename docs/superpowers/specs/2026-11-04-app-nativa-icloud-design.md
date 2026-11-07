@@ -76,6 +76,7 @@ Quindi l'app nativa si costruisce una fase alla volta su un ramo nuovo. Ogni fas
 - **iPhone Duo (pieghevole):** da provare prima dell'App Store, richiesta di Lorenzo del 2026-11-06: schermo esterno e interno, apertura e chiusura senza perdere lo stato, Split View. Lo schermo interno non rispetta gli orientamenti dichiarati, quindi il blocco in verticale di iPhone lì non basta. Si adatta con le size class, senza layout separati per il modello.
 - **Link dei negozi:** `LPMetadataProvider` (LinkPresentation) sul telefono al posto di microlink.io e della Edge Function.
 - **Feedback:** `MFMailComposeViewController` verso l'indirizzo di Lorenzo, con il ripiego "copia testo" se Mail non è configurata. Nessun server.
+  *Superato il 2026-11-06:* le segnalazioni passano dalla funzione `send-feedback` di Supabase e servono un account. Chi usa l'app senza account ha solo la pagina di supporto: da decidere con Lorenzo se aggiungere Mail come ripiego. Testo e diagnostica sono dichiarati in `PrivacyInfo.xcprivacy`.
 - **Avatar realistico e Mobile-VTON:** fuori dalla prima versione (decisione 6). La cartella `Realistic`, il consenso al download, i crediti e la scritta "Powered by Stability AI" di `AvatarView` non entrano nella build. Il codice sta nel tag `archivio-ibrida-e-sito`.
 
 ## Cosa sparisce

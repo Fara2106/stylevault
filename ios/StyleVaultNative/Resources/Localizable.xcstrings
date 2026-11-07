@@ -4954,13 +4954,13 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "L'account viene cancellato per sempre. I tuoi capi restano nel tuo iCloud."
+            "value": "L'account viene cancellato per sempre, con tutto ciò che è rimasto sul vecchio sito: se non l'hai ancora portato nell'app, fallo prima. Ciò che è già nell'app resta nel tuo iCloud."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your account will be deleted permanently. Your items stay in your iCloud."
+            "value": "Your account will be deleted permanently, along with anything left on the old website: if you haven't moved it into the app yet, do that first. What's already in the app stays in your iCloud."
           }
         }
       }

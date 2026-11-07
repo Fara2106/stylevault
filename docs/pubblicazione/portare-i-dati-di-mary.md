@@ -12,6 +12,6 @@ Serve una volta sola, per persona. Lo script legge da Supabase e non cambia null
 
 4. Il comando scrive quanti capi, outfit e foto ha salvato, e quali foto non è riuscito a scaricare.
 5. Manda `dati-mary.zip` a Mary con AirDrop. Dentro ci sono le sue foto, anche quelle del corpo, quindi evita chat e posta.
-6. Mary lo salva in File, poi nell'app apre Profilo → I tuoi dati → Importa da un file. L'import aggiunge e non cancella nulla, e si può ripetere senza creare doppioni.
+6. Mary lo salva in File, poi nell'app apre Profilo → I tuoi dati → Importa da un file. L'import aggiunge e non cancella nulla, e sullo stesso dispositivo si può ripetere senza creare doppioni. Va fatto su un solo dispositivo per Apple ID: importare lo stesso file su due dispositivi crea doppioni quando iCloud li unisce.
 
 Le categorie personali del sito stavano solo nel browser: i capi restano collegati, ma le categorie arrivano come "Categoria 1", "Categoria 2". L'app per ora non le rinomina: per cambiare nome si crea una categoria nuova e si spostano i capi.
