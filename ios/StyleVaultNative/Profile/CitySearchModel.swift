@@ -17,7 +17,7 @@ extension Profile {
     }
 }
 
-/// Stato della ricerca città. Applica la lunghezza minima, non `CitySearch.search`.
+/// Stato della ricerca città. Applica la lunghezza minima, non chi cerca.
 @MainActor @Observable final class CitySearchModel {
     enum Phase: Equatable { case idle, searching, results([City]), empty }
 

@@ -6542,13 +6542,13 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Serve per il meteo di dove sei. Usiamo una posizione approssimativa: le coordinate arrotondate vanno a Open-Meteo, il servizio delle previsioni, e non restano sul telefono. Puoi sempre scegliere una città a mano."
+            "value": "Serve per il meteo di dove sei. Usiamo una posizione approssimativa: le coordinate arrotondate vanno al Meteo di Apple e non restano sul telefono. Puoi sempre scegliere una città a mano."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "It is used for the weather where you are. We use an approximate location: rounded coordinates go to Open-Meteo, the forecast service, and are not kept on your phone. You can always pick a city by hand."
+            "value": "It is used for the weather where you are. We use an approximate location: rounded coordinates go to Apple Weather and are not kept on your phone. You can always pick a city by hand."
           }
         }
       }
@@ -9487,23 +9487,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Fog"
-          }
-        }
-      }
-    },
-    "weather.openMeteoCredit": {
-      "extractionState": "manual",
-      "localizations": {
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dati meteo: Open-Meteo.com (CC BY 4.0)"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Weather data: Open-Meteo.com (CC BY 4.0)"
           }
         }
       }

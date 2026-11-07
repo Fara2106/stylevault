@@ -23,8 +23,7 @@ struct AppleHour: Equatable {
     let condition: WeatherCondition
 }
 
-/// Il Meteo di Apple nella stessa forma del payload di Open-Meteo: lo legge lo stesso
-/// `Forecast.parse` (fasce, pioggia, consigli).
+/// Il Meteo di Apple nella forma che legge `Forecast.parse` (fasce, pioggia, consigli).
 enum AppleWeatherPayload {
     /// Le ore da chiedere a WeatherKit: da mezzanotte di oggi (ora del luogo) per
     /// 7 giorni. Senza intervallo WeatherKit dà solo ~25 ore da adesso.
@@ -56,7 +55,7 @@ enum AppleWeatherPayload {
         }
     }
 
-    static func openMeteoPayload(days: [AppleDay], hours: [AppleHour], utcOffsetSeconds: Int) -> [String: Any] {
+    static func payload(days: [AppleDay], hours: [AppleHour], utcOffsetSeconds: Int) -> [String: Any] {
         func optional(_ values: [Double?]) -> [Any] { values.map { $0.map { $0 as Any } ?? NSNull() } }
         func percent(_ chance: Double) -> Int { Int((chance * 100).rounded()) }
         return [

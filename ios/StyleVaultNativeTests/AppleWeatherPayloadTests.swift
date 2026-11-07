@@ -18,14 +18,14 @@ final class AppleWeatherPayloadTests: XCTestCase {
         XCTAssertEqual(AppleWeatherPayload.wmoCode(.hot), 3) // senza corrispondenza: nuvoloso
     }
 
-    func testPayloadComeOpenMeteo() throws {
+    func testPayloadPerIlLettore() throws {
         let day = AppleDay(date: "2026-11-04", high: 15, low: 8, apparentHigh: 14, apparentLow: 6,
                            precipitationChance: 0.6, condition: .rain, windKmh: 12, uv: 2)
         let hours = [8, 9, 10].map {
             AppleHour(time: String(format: "2026-11-04T%02d:00", $0), apparent: Double($0),
                       precipitationChance: 0.5, condition: .cloudy)
         }
-        let payload = AppleWeatherPayload.openMeteoPayload(days: [day], hours: hours, utcOffsetSeconds: 3600)
+        let payload = AppleWeatherPayload.payload(days: [day], hours: hours, utcOffsetSeconds: 3600)
         XCTAssertTrue(JSONSerialization.isValidJSONObject(payload))
         XCTAssertEqual(payload["utc_offset_seconds"] as? Int, 3600)
         let daily = try XCTUnwrap(payload["daily"] as? [String: Any])
@@ -51,13 +51,13 @@ final class AppleWeatherPayloadTests: XCTestCase {
         XCTAssertEqual(range.end, calendar.date(from: DateComponents(year: 2026, month: 11, day: 11)))
     }
 
-    func testIlPayloadPassaDalloStessoLettoreDiOpenMeteo() throws {
+    func testIlPayloadPassaDalLettoreDellePrevisioni() throws {
         let day = AppleDay(date: "2026-11-04", high: 15, low: 8, apparentHigh: nil, apparentLow: nil,
                            precipitationChance: 0.6, condition: .rain, windKmh: 12, uv: 2)
         let hours = (0..<24).map {
             AppleHour(time: String(format: "2026-11-04T%02d:00", $0), apparent: 10, precipitationChance: 0.1, condition: .cloudy)
         }
-        let payload = AppleWeatherPayload.openMeteoPayload(days: [day], hours: hours, utcOffsetSeconds: 3600)
+        let payload = AppleWeatherPayload.payload(days: [day], hours: hours, utcOffsetSeconds: 3600)
         let days = try Forecast.parse(JSONSerialization.data(withJSONObject: payload), city: "Roma",
                                       now: Date(timeIntervalSince1970: 1_793_000_000))
         XCTAssertEqual(days.first?.date, "2026-11-04")
@@ -80,35 +80,34 @@ final class WeatherLoaderTests: XCTestCase {
                     icon: .sun, descriptionKey: "weather.clear", rain: false, snow: false)
     }
 
-    func testPrimaIlMeteoDiApple() async throws {
+    func testRispondeIlMeteoDiApple() async throws {
         let days = [day("2026-11-07")]
-        let loader = WeatherLoader(apple: { _, _ in days }, openMeteo: { _, _ in XCTFail("non serve"); return [] }, defaultsSuite: suite)
-        let result = try await loader.load(place: roma)
-        XCTAssertEqual(result.source, .apple)
+        let result = try await WeatherLoader(apple: { _, _ in days }, defaultsSuite: suite).load(place: roma)
+        XCTAssertEqual(result.days, days)
         XCTAssertFalse(result.stale)
     }
 
-    func testSeAppleNonRispondeRestaOpenMeteo() async throws {
+    func testSenzaReteTornaLUltimaPrevisione() async throws {
         let days = [day("2026-11-07")]
-        let loader = WeatherLoader(apple: { _, _ in throw Rotto() }, openMeteo: { _, _ in days }, defaultsSuite: suite)
-        let result = try await loader.load(place: roma)
-        XCTAssertEqual(result.source, .openMeteo)
+        _ = try await WeatherLoader(apple: { _, _ in days }, defaultsSuite: suite).load(place: roma)
+        let result = try await WeatherLoader(apple: { _, _ in throw Rotto() }, defaultsSuite: suite).load(place: roma)
+        XCTAssertTrue(result.stale)
         XCTAssertEqual(result.days, days)
     }
 
-    func testSenzaReteTornaLUltimaPrevisioneConLaSuaFonte() async throws {
-        let days = [day("2026-11-07")]
-        _ = try await WeatherLoader(apple: { _, _ in days }, openMeteo: { _, _ in [] }, defaultsSuite: suite).load(place: roma)
-        let offline = WeatherLoader(apple: { _, _ in throw Rotto() }, openMeteo: { _, _ in throw Rotto() }, defaultsSuite: suite)
-        let result = try await offline.load(place: roma)
-        XCTAssertTrue(result.stale)
-        XCTAssertEqual(result.source, .apple)
+    func testUnaPrevisioneSalvataDaUnAltroServizioNonSiMostra() async throws {
+        struct Vecchia: Encodable { let fetchedAt: Date; let days: [DayForecast]; let source: String }
+        let data = try JSONEncoder().encode(Vecchia(fetchedAt: .now, days: [day("2026-11-07")], source: "openMeteo"))
+        UserDefaults(suiteName: suite)?.set(data, forKey: "forecast.41.90_12.50")
+        do {
+            _ = try await WeatherLoader(apple: { _, _ in throw Rotto() }, defaultsSuite: suite).load(place: roma)
+            XCTFail("doveva fallire")
+        } catch {}
     }
 
     func testSenzaNienteSiSegnalaLErrore() async {
-        let offline = WeatherLoader(apple: { _, _ in throw Rotto() }, openMeteo: { _, _ in throw Rotto() }, defaultsSuite: suite)
         do {
-            _ = try await offline.load(place: roma)
+            _ = try await WeatherLoader(apple: { _, _ in throw Rotto() }, defaultsSuite: suite).load(place: roma)
             XCTFail("doveva fallire")
         } catch {}
     }

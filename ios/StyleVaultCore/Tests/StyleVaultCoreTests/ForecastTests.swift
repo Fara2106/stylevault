@@ -140,16 +140,6 @@ final class ForecastTests: XCTestCase {
         XCTAssertEqual(days[1].parts?.contains(where: \.past), false)
     }
 
-    func testIndirizzoChiedeOreEArrotondaLePosizioni() throws {
-        let url = try XCTUnwrap(Forecast.url(latitude: 45.46423, longitude: 9.18951))
-        let query = try XCTUnwrap(url.query)
-        XCTAssertTrue(query.contains("latitude=45.46"), query)
-        XCTAssertTrue(query.contains("longitude=9.19"), query)
-        XCTAssertTrue(query.contains("hourly=apparent_temperature,precipitation_probability,weather_code"), query)
-        XCTAssertTrue(query.contains("forecast_days=7"), query)
-        XCTAssertTrue(query.contains("timezone=auto"), query)
-    }
-
     func testRisposteSenzaGiorni() throws {
         XCTAssertEqual(try Forecast.parse(Data("{}".utf8), city: "X", now: Date()), [])
     }
@@ -158,11 +148,5 @@ final class ForecastTests: XCTestCase {
         let days = try Forecast.parse(hourly(offset: 3600), city: "Milano", now: Date())
         let copy = try JSONDecoder().decode([DayForecast].self, from: JSONEncoder().encode(days))
         XCTAssertEqual(copy, days)
-    }
-
-    /// Senza limite la rotellina durerebbe un minuto, e fino ad allora l'outfit non si genera.
-    func testLaRichiestaDelMeteoSiArrendeDopoDieciSecondi() throws {
-        let request = try XCTUnwrap(Forecast.request(latitude: 45.46, longitude: 9.19))
-        XCTAssertEqual(request.timeoutInterval, 10)
     }
 }

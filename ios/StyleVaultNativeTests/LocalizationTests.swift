@@ -28,7 +28,7 @@ final class LocalizationTests: XCTestCase {
            "elevated", "uvHigh", "windStrong"].map { "advice.\($0)" }
         + ["title", "subtitle", "noOutfit", "planned", "worn", "markWorn", "assignOutfit", "pickOutfit", "noSavedOutfits",
            "customOutfit", "removeEntry"].map { "calendar.\($0)" }
-        + ["cloudy", "rainy", "snow", "clear", "partlyCloudy", "fog", "drizzle", "thunderstorm", "openMeteoCredit",
+        + ["cloudy", "rainy", "snow", "clear", "partlyCloudy", "fog", "drizzle", "thunderstorm",
            "part.morning", "part.afternoon", "part.evening", "partTitle.morning", "partTitle.afternoon", "partTitle.evening"]
             .map { "weather.\($0)" }
         + ["stats", "totalOutfits", "statsMostWorn", "statsLeastWorn", "statsByCategory", "statsByColor", "statsCostPerWear",

@@ -117,7 +117,7 @@ public enum DayParts {
     }
 }
 
-/// Le previsioni di Open-Meteo.
+/// Le previsioni: i codici WMO e la lettura dei giorni e delle ore.
 public enum Forecast {
     public struct CodeInfo: Equatable, Sendable {
         public let icon: WeatherIcon
@@ -133,10 +133,6 @@ public enum Forecast {
         }
     }
 
-    public struct HTTPError: Error, Equatable, Sendable {
-        public let statusCode: Int
-    }
-
     public static func mapCode(_ code: Int?) -> CodeInfo {
         guard let code else { return CodeInfo(.cloud, "weather.cloudy") }
         switch code {
@@ -150,22 +146,6 @@ public enum Forecast {
         case 95...99: return CodeInfo(.rain, "weather.thunderstorm", rain: true)
         default: return CodeInfo(.cloud, "weather.cloudy")
         }
-    }
-
-    /// Coordinate a due decimali: Open-Meteo non ha bisogno di sapere dove si è di preciso.
-    public static func url(latitude: Double, longitude: Double) -> URL? {
-        let round2 = { (value: Double) in String(format: "%.2f", locale: Locale(identifier: "en_US_POSIX"), value) }
-        var components = URLComponents(string: "https://api.open-meteo.com/v1/forecast")
-        components?.queryItems = [
-            URLQueryItem(name: "latitude", value: round2(latitude)),
-            URLQueryItem(name: "longitude", value: round2(longitude)),
-            URLQueryItem(name: "daily", value: "temperature_2m_max,temperature_2m_min,apparent_temperature_max,"
-                + "apparent_temperature_min,precipitation_probability_max,weather_code,wind_speed_10m_max,uv_index_max"),
-            URLQueryItem(name: "hourly", value: "apparent_temperature,precipitation_probability,weather_code"),
-            URLQueryItem(name: "timezone", value: "auto"),
-            URLQueryItem(name: "forecast_days", value: "7"),
-        ]
-        return components?.url
     }
 
     private struct Payload: Decodable {
@@ -245,19 +225,5 @@ public enum Forecast {
             }
             return day
         }
-    }
-
-    static func request(latitude: Double, longitude: Double) -> URLRequest? {
-        url(latitude: latitude, longitude: longitude).map { URLRequest(url: $0, timeoutInterval: 10) }
-    }
-
-    public static func fetch(latitude: Double, longitude: Double, city: String, now: Date = .now,
-                             session: URLSession = .shared) async throws -> [DayForecast] {
-        guard let request = request(latitude: latitude, longitude: longitude) else { throw URLError(.badURL) }
-        let (data, response) = try await session.data(for: request)
-        if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
-            throw HTTPError(statusCode: http.statusCode)
-        }
-        return try parse(data, city: city, now: now)
     }
 }

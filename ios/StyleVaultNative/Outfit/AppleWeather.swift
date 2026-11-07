@@ -4,14 +4,14 @@ import MapKit
 import StyleVaultCore
 import WeatherKit
 
-/// Meteo di Apple (WeatherKit). Se non risponde resta Open-Meteo: l'outfit non dipende da un solo servizio.
+/// Meteo di Apple (WeatherKit). Se non risponde restano l'ultima previsione salvata o il meteo a mano.
 enum AppleWeather {
     static let legalURL = URL(string: "https://weatherkit.apple.com/legal-attribution.html")!
 
     private struct TimedOut: Error {}
 
     @Sendable static func days(for place: ForecastPlace, now: Date) async throws -> [DayForecast] {
-        // A due decimali, come per Open-Meteo: al meteo non serve sapere dove si è di preciso.
+        // A due decimali: al meteo non serve sapere dove si è di preciso.
         let location = CLLocation(latitude: (place.latitude * 100).rounded() / 100,
                                   longitude: (place.longitude * 100).rounded() / 100)
         return try await withThrowingTaskGroup(of: [DayForecast].self) { group in
@@ -57,7 +57,7 @@ enum AppleWeather {
                              precipitationChance: hour.precipitationChance,
                              condition: hour.condition)
         }
-        return AppleWeatherPayload.openMeteoPayload(days: days, hours: hours, utcOffsetSeconds: zone.secondsFromGMT(for: now))
+        return AppleWeatherPayload.payload(days: days, hours: hours, utcOffsetSeconds: zone.secondsFromGMT(for: now))
     }
 
     private static func formatter(_ format: String, _ zone: TimeZone) -> DateFormatter {

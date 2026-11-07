@@ -7,9 +7,7 @@ struct CitySearchView: View {
 
     @Environment(\.dismiss) private var dismiss
     @State private var query = ""
-    @State private var model = CitySearchModel(search: { query in
-        try await CitySearch.search(query, language: Bundle.main.preferredLocalizations.first ?? "it")
-    })
+    @State private var model = CitySearchModel(search: AppleCitySearch.search)
 
     var body: some View {
         List {

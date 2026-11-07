@@ -20,6 +20,15 @@ Richiesta di Lorenzo: finire tutte le schermate nella notte e mandarla a Mary. F
 - Resta da fare prima dell'App Store: WeatherKit, iPhone Duo, schema CloudKit in Production (senza, in TestFlight i dati non passano fra dispositivi:
   da verificare), testi legali da riscrivere (la pagina privacy descrive ancora il sito).
 
+## Novità 2026-11-07 (sera) — Open-Meteo tolto
+
+Richiesta di Lorenzo dopo la conferma del meteo di Apple sul telefono. Sul ramo locale, **non ancora in una build**: la 1.0 (6) su TestFlight usa ancora Open-Meteo come ripiego.
+- Meteo: Apple, poi ultima previsione salvata da Apple, poi errore e impostazione a mano. L'outfit non si blocca. Una previsione salvata da un altro servizio non si mostra più.
+- Città: `Profile/AppleCitySearch.swift`, con `MKLocalSearchCompleter` e risoluzione dei primi 6 suggerimenti: il solo `MKLocalSearch` dava un risultato e rendeva irraggiungibili gli omonimi. Apple limita le richieste: oltre 50 in pochi secondi dà liste vuote per un po'.
+- Testi: privacy, supporto, schermate legali e crediti non nominano più Open-Meteo. Nei documenti storici il nome resta.
+- Prove sul codice definitivo: Core 179 verdi, iPad 275 su 275. iPhone 265 su 275 al primo lancio, 275 su 275 al secondo: nel primo, Arrivo, l'app di un'altra sessione, è entrata sullo stesso simulatore e compare in 8 dei 10 test rossi. `testSalvaIndossaEVedeTuttoNelCalendarioENelleStatistiche` e `testNuovaCategoria` non la mostrano nel log e non sono spiegati: sono passati al secondo lancio.
+- Non fatto: giri da utente da rifare da zero, schermata di ricerca usata a mano, telefono, iOS 17, testi legali da far rileggere a Lorenzo, voce `CoarseLocation` del manifest da rivedere.
+
 ## Novità 2026-11-07 — RC 1.0 (6) caricata
 
 Caricata il 07/11 alle 16:07 dal commit `99048c5`; alle 16:20 App Store Connect la dà pronta nel gruppo "Lorenzo e Marianna", nessuna installazione. Prove: iPhone e iPad 272 su 272, giri in chiaro, scuro, inglese e iPhone Duo passati, 33 schermate
@@ -37,7 +46,7 @@ Il primo `xcodebuild archive` è uscito senza errori nel log, dopo 2 righe; il s
 Il progetto ora sta in `/Users/lorenzofaraoni/Documents/Apps Mobile 📱/StyleVault`. Ramo `feat/app-nativa`, solo commit locali.
 Fatto sul ramo: correzioni della revisione, `stamp` e `DuplicateStore`, storico dei capi cancellati con `snapshot`, import più robusto, date gregoriane,
 Mail per chi segnala senza account, privacy e supporto dentro l'app (`scripts/testi-legali.py` genera schermate e `docs/pubblicazione/pagine/` da `testi-legali.md`),
-Meteo di Apple con ripiego su Open-Meteo, build 6 in `project.yml`. Report pre-invio: `docs/pubblicazione/2026-11-07-report-rc.md`.
+Meteo di Apple con ripiego su Open-Meteo (tolto la sera del 07/11, vedi sopra), build 6 in `project.yml`. Report pre-invio: `docs/pubblicazione/2026-11-07-report-rc.md`.
 **Non fatto:** build 6 non caricata; suite complete e giri fermati prima di dare un esito sul codice finale. Su Mary c'è ancora la 1.0 (5).
 Strumenti: `.superpowers/sdd/rc/` (ignorata da git): `round-rc.sh` fa suite iPhone e iPad e giri chiaro, scuro, inglese e iPhone Duo; `build6.sh` archivia ed esporta.
 `TempGiroTests.swift` viene copiato e tolto da `giro6.sh`, mai nel commit.

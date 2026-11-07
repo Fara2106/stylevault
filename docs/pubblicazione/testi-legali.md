@@ -28,7 +28,7 @@ Chi ha usato il vecchio sito ha i suoi dati ancora su Supabase, finché non elim
 
 #### Cosa esce dal dispositivo
 
-Meteo: per la previsione arrivano al Meteo di Apple oppure a Open-Meteo le coordinate arrotondate della posizione, se scegli "La mia posizione", o quelle della città scelta. Open-Meteo riceve anche il testo della ricerca delle città. Le coordinate non si salvano in nessun account.
+Meteo: per la previsione arrivano al Meteo di Apple le coordinate arrotondate della posizione, se scegli "La mia posizione", o quelle della città scelta. Apple riceve anche il testo della ricerca delle città. Le coordinate non si salvano in nessun account.
 
 Link dei negozi: se incolli un link, il tuo dispositivo apre direttamente quella pagina per leggerne titolo e immagine.
 
@@ -52,13 +52,11 @@ Non c'è pubblicità, non c'è tracciamento tra app o siti, non usiamo strumenti
 
 #### A chi affidiamo i dati
 
-Apple: iCloud, accesso con Apple, Meteo di Apple.
+Apple: iCloud, accesso con Apple, Meteo di Apple, ricerca delle città.
 
 Supabase: login e segnalazioni, con server nell'Unione Europea (Irlanda).
 
 Google: solo se accedi con Google.
-
-Open-Meteo: previsioni del meteo e ricerca delle città.
 
 Resend: invio per email delle segnalazioni, con sede negli Stati Uniti e le garanzie previste dal GDPR per i trasferimenti fuori dall'UE.
 
@@ -110,7 +108,7 @@ Il risultato dipende dalla luce della foto. Puoi correggere i colori trovati opp
 
 #### Crediti
 
-Dati meteo: Meteo di Apple e Open-Meteo.com (CC BY 4.0).
+Dati meteo: Meteo di Apple.
 
 ### Eliminare l'account
 
@@ -154,7 +152,7 @@ If you used the old website, your data is still on Supabase until you delete you
 
 #### What leaves your device
 
-Weather: for the forecast, Apple Weather or Open-Meteo receives the rounded coordinates of your position, if you choose "My location", or those of the chosen city. Open-Meteo also receives your city search text. Coordinates are not saved to any account.
+Weather: for the forecast, Apple Weather receives the rounded coordinates of your position, if you choose "My location", or those of the chosen city. Apple also receives your city search text. Coordinates are not saved to any account.
 
 Shop links: if you paste a link, your device opens that page directly to read its title and image.
 
@@ -178,13 +176,11 @@ There are no ads, no tracking across apps or websites, no analytics tools, and w
 
 #### Who processes data for us
 
-Apple: iCloud, Sign in with Apple, Apple Weather.
+Apple: iCloud, Sign in with Apple, Apple Weather, city search.
 
 Supabase: sign-in and reports, with servers in the European Union (Ireland).
 
 Google: only if you sign in with Google.
-
-Open-Meteo: weather forecasts and city search.
 
 Resend: sends reports by email, based in the United States with the safeguards the GDPR requires for transfers outside the EU.
 
@@ -236,7 +232,7 @@ The result depends on the light in the photo. You can correct the detected colou
 
 #### Credits
 
-Weather data: Apple Weather and Open-Meteo.com (CC BY 4.0).
+Weather data: Apple Weather.
 
 ### Delete your account
 

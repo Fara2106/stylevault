@@ -1,5 +1,22 @@
 # Giro da utente della bozza completa — 2026-11-07
 
+## Dopo la rimozione di Open-Meteo
+
+Sul ramo locale, nessuna build nuova. Solo suite e prove mirate, nessun giro.
+
+| Prova | Dove | Esito |
+|-------|------|-------|
+| Core | Mac | 179 verdi |
+| Suite completa, primo lancio | iPhone 18 Pro | 265 su 275 |
+| Suite completa, secondo lancio | iPhone 18 Pro | 275 su 275 |
+| Suite completa | iPad Pro 11" | 275 su 275 |
+| Ricerca vera su Mappe di Apple | iPhone 18 Pro | Milano, Forlì, São Paulo, Valencia, Springfield, Santa Maria, San Giorgio, Castel; testo senza risultati dà lista vuota |
+| Meteo di Apple sulla città trovata | iPhone 18 Pro | risponde |
+
+Nel primo lancio Arrivo, l'app di un'altra sessione, era sullo stesso simulatore: compare in 13 test, di cui 8 rossi, e i tocchi di quei test cadevano con l'app fuori schermo. Nel secondo non compare. Gli altri 2 rossi, `testSalvaIndossaEVedeTuttoNelCalendarioENelleStatistiche` e `testNuovaCategoria` (il foglio non si chiude dopo Salva), non la mostrano nel log: causa non dimostrata. Log del primo lancio: `.superpowers/sdd/rc/suite-iphone-con-arrivo.log`, fuori da git.
+
+Non provati: i giri, la schermata di ricerca usata a mano, il telefono, iOS 17 (senza filtro delle località).
+
 ## RC 1.0 (6)
 
 Build 1.0 (6), commit `99048c5`, ramo `feat/app-nativa`, iOS 27.2 simulato. Ogni giro parte da installazione nuova: i 26 passi
