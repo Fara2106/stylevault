@@ -46,11 +46,15 @@ final class OutfitFlowTests: XCTestCase {
         XCTAssertEqual(status.label, "Indossato")
 
         tab(app, "Profilo").tap()
+        // Il Profilo è lungo: le statistiche stanno sotto le foto e l'account.
+        // Su iPad la riga spunta appena dal bordo: esiste, ma lì il tocco non arriva.
         let stats = app.buttons["profile-stats"]
+        app.swipeUp()
+        for _ in 0..<8 where !(stats.exists && stats.isHittable) { app.swipeUp() }
         XCTAssertTrue(stats.waitForExistence(timeout: 10))
         stats.tap()
-        XCTAssertTrue(app.staticTexts["Per categoria"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.buttons["stats-item"].firstMatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Per categoria"].waitForExistence(timeout: 30))
+        XCTAssertTrue(app.buttons["stats-item"].firstMatch.waitForExistence(timeout: 10))
         XCTAssertFalse(app.staticTexts["stats-no-data"].exists)
     }
 

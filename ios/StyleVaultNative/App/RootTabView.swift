@@ -43,7 +43,9 @@ struct RootTabView: View {
     private var needsOnboarding: Bool {
         #if DEBUG
         let arguments = ProcessInfo.processInfo.arguments
-        if arguments.contains("-SVMemoryStore"), !arguments.contains("-SVShowOnboarding") { return false }
+        // I test si ripetono sullo stesso simulatore: la scelta salvata dal giro prima non conta.
+        if arguments.contains("-SVShowOnboarding") { return true }
+        if arguments.contains("-SVMemoryStore") { return false }
         #endif
         return !onboardingDone && items.isEmpty && bodyPhotos.isEmpty
     }
