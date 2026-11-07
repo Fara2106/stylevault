@@ -41,3 +41,21 @@ registrazione e reset password, Esci con un account vero, invio reale della segn
 password, importazione dal selettore file (provata solo negli unit test), iCloud tra dispositivi, Release su dispositivo.
 Lo script Supabase non è mai stato lanciato contro il servizio vero. iPad solo con la suite, nessun giro a mano;
 iPhone piccoli, testo grande, VoiceOver e iPhone Duo non provati su queste schermate.
+
+## Dopo la revisione esterna
+
+Il revisore ha lavorato su `26feb27..71245db`. Corretti: crash della scheda Outfit con due capi dallo stesso id, crash con un
+viso tagliato dal bordo della foto, meteo vecchio che spostava il giorno e il registro di "Indossa", scontorni in memoria senza
+limite, esporta e importa a blocchi, testo di "Elimina account", manifest privacy.
+
+Provato sul codice corretto: Core 182 verdi, iPhone 248 su 249 (il rosso era il test della privacy da aggiornare, ora verde),
+giro c3 in italiano chiaro passato. iPad 245 su 250: un rosso era lo stesso test della privacy e quattro erano crash di
+SpringBoard con il Mac a carico 900. Rilanciati, verdi; nel rilancio un altro test è caduto su un'attesa di 5 secondi ed è
+passato da solo. Il tema scuro e l'inglese non sono stati rifatti dopo queste correzioni.
+
+Non dimostrato: il minor consumo di memoria di esporta e importa non è stato misurato, e la nuova schermata di meteo a mano
+con previsione vecchia non è stata vista a schermo, solo nei test del modello. Il testo di "Elimina account" non compare nel giro,
+che non usa un account.
+
+Aperto: i doppioni restano possibili se lo stesso file si importa su due dispositivi. Non chiudono più l'app, ma vanno tolti con un
+campo nuovo prima di portare lo schema iCloud in Production.

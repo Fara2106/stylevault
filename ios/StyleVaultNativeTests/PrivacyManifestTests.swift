@@ -23,6 +23,8 @@ final class PrivacyManifestTests: XCTestCase {
         XCTAssertEqual(Set(collected.compactMap { $0["NSPrivacyCollectedDataType"] as? String }), [
             "NSPrivacyCollectedDataTypeEmailAddress", "NSPrivacyCollectedDataTypeName",
             "NSPrivacyCollectedDataTypeUserID", "NSPrivacyCollectedDataTypeCoarseLocation",
+            // Testo e diagnostica di una segnalazione.
+            "NSPrivacyCollectedDataTypeCustomerSupport", "NSPrivacyCollectedDataTypeOtherDiagnosticData",
         ])
         for type in collected {
             // Le coordinate arrotondate per il meteo non sono legate alla persona, l'account sì.

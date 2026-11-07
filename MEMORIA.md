@@ -20,6 +20,14 @@ Richiesta di Lorenzo: finire tutte le schermate nella notte e mandarla a Mary. F
 - Resta da fare prima dell'App Store: WeatherKit, iPhone Duo, schema CloudKit in Production (senza, in TestFlight i dati non passano fra dispositivi:
   da verificare), testi legali da riscrivere (la pagina privacy descrive ancora il sito).
 
+## Novità 2026-11-07 — Revisione esterna del ramo
+
+Sul ramo locale, non ancora in una build: correzioni dalla revisione (crash doppioni, crash viso a bordo foto, meteo vecchio, cache
+scontorni, esporta e importa a blocchi, testo "Elimina account", manifest privacy). Esito in `docs/verifiche/2026-11-07-bozza-completa/giro.md`.
+Decisioni e minori rimandati sono solo in `.superpowers/sdd/2026-11-05-app-nativa-fase-2/progress.md`, cartella ignorata da git: non cancellarla prima di averli riportati.
+Prima di portare lo schema CloudKit in Production: campo per scegliere la stessa copia sui doppioni, poi pulizia per id; fissare `VersionedSchema`; revoca token Apple.
+Da decidere con Lorenzo: Mail come ripiego per chi segnala senza account, comportamento dello storico dei capi cancellati.
+
 ## Novità 2026-11-07 — Build 1.0 (5) caricata per Mary
 
 Caricata il 07/11 alle 02:04 dal commit `e5003bb`; App Store Connect la dà pronta nel gruppo "Lorenzo e Marianna", 2 inviti, nessuna installazione alle 02:10. Verbale, screenshot e cosa non è provato: `docs/verifiche/2026-11-07-bozza-completa/giro.md`.
