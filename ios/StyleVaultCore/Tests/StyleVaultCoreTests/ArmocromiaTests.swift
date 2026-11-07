@@ -1,9 +1,22 @@
+import CoreGraphics
 import XCTest
 @testable import StyleVaultCore
 
 /// Gli stessi casi di `armocromiaClassifier.test.js`, `armocromiaWardrobe.test.js`,
 /// `colorSampling.test.js` e `shopLinks.test.js` del sito.
 final class ArmocromiaTests: XCTestCase {
+    /// Un viso tagliato dal bordo della foto dà punti fuori dall'immagine: non devono chiudere l'app.
+    func testUnPuntoFuoriDallaFotoNonChiudeLApp() throws {
+        let context = try XCTUnwrap(CGContext(data: nil, width: 20, height: 20, bitsPerComponent: 8, bytesPerRow: 0,
+                                              space: CGColorSpaceCreateDeviceRGB(),
+                                              bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
+        let grid = PixelGrid(try XCTUnwrap(context.makeImage()))
+        XCTAssertEqual(grid.disc(center: CGPoint(x: 100, y: 5), radius: 3), [])
+        XCTAssertEqual(grid.disc(center: CGPoint(x: 5, y: 100), radius: 3), [])
+        XCTAssertEqual(grid.disc(center: CGPoint(x: -100, y: -100), radius: 3), [])
+        XCTAssertFalse(grid.disc(center: CGPoint(x: 19, y: 19), radius: 3).isEmpty)
+    }
+
     private let fixtures: [String: FaceColors] = [
         "light-spring": .init(skin: "#f7dcc9", hair: "#e9c98f", eyes: "#8fb6a8"),
         "light-summer": .init(skin: "#f0d9d2", hair: "#cfc4b0", eyes: "#a9c1cf"),

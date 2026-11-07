@@ -85,7 +85,7 @@ public enum FaceColorAnalyzer {
 }
 
 /// Pixel RGBA leggibili con origine in alto a sinistra.
-private struct PixelGrid {
+struct PixelGrid {
     let width: Int
     let height: Int
     private let bytes: [UInt8]
@@ -117,9 +117,13 @@ private struct PixelGrid {
 
     func disc(center: CGPoint, radius: Double) -> [RGB] {
         let (cx, cy) = (Double(center.x), Double(center.y))
+        // Con il viso tagliato dal bordo il punto può cadere fuori dalla foto.
+        let (top, bottom) = (max(0, Int(cy - radius)), min(height - 1, Int(cy + radius)))
+        let (left, right) = (max(0, Int(cx - radius)), min(width - 1, Int(cx + radius)))
+        guard top <= bottom, left <= right else { return [] }
         var found: [RGB] = []
-        for y in max(0, Int(cy - radius))...max(0, min(height - 1, Int(cy + radius))) {
-            for x in max(0, Int(cx - radius))...max(0, min(width - 1, Int(cx + radius))) {
+        for y in top...bottom {
+            for x in left...right {
                 let (dx, dy) = (Double(x) - cx, Double(y) - cy)
                 if dx * dx + dy * dy <= radius * radius { found.append(color(x: x, y: y)) }
             }
