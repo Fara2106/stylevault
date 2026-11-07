@@ -197,11 +197,7 @@ struct ArmocromiaView: View {
             }
             section("armocromia.ui.neutralsTitle") { SwatchGrid(colors: season.neutrals, linked: true) }
             section("armocromia.ui.avoidTitle") { SwatchGrid(colors: season.avoid, linked: false) }
-            HStack(spacing: 4) {
-                Text("armocromia.ui.metalTitle")
-                Text(":")
-                Text(LocalizedStringKey(season.metalKey)).bold()
-            }
+            (Text("armocromia.ui.metalTitle") + Text(verbatim: ": ") + Text(LocalizedStringKey(season.metalKey)).bold())
             .font(.subheadline)
             .foregroundStyle(Palette.ink)
             section("armocromia.ui.outfitsTitle") { outfits(season) }
@@ -222,11 +218,7 @@ struct ArmocromiaView: View {
                 Text("armocromia.ui.byHandNote").font(.footnote).foregroundStyle(Palette.muted)
             } else {
                 let percent = Int(((verdict?.confidence ?? 0) * 100).rounded())
-                HStack(spacing: 4) {
-                    Text("armocromia.ui.confidence")
-                    Text(verbatim: ": \(percent)% —")
-                    Text(LocalizedStringKey(season.undertoneKey))
-                }
+                (Text("armocromia.ui.confidence") + Text(verbatim: ": \(percent)% — ") + Text(LocalizedStringKey(season.undertoneKey)))
                 .font(.footnote)
                 .foregroundStyle(Palette.muted)
                 if (verdict?.confidence ?? 0) < 0.25 {
@@ -320,11 +312,7 @@ struct ArmocromiaView: View {
                     }
                 }
             }
-            HStack(spacing: 4) {
-                Text("armocromia.ui.foundation")
-                Text(":")
-                Text(LocalizedStringKey(season.undertoneKey))
-            }
+            (Text("armocromia.ui.foundation") + Text(verbatim: ": ") + Text(LocalizedStringKey(season.undertoneKey)))
             .font(.subheadline)
             .foregroundStyle(Palette.muted)
             homeShops(.makeup)
