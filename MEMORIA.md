@@ -22,7 +22,7 @@ Richiesta di Lorenzo: finire tutte le schermate nella notte e mandarla a Mary. F
 
 ## Novità 2026-11-07 — Build 1.0 (5) caricata per Mary
 
-Caricata il 07/11 alle 02:04 dal commit `e5003bb`. Verbale, screenshot e cosa non è provato: `docs/verifiche/2026-11-07-bozza-completa/giro.md`.
+Caricata il 07/11 alle 02:04 dal commit `e5003bb`; App Store Connect la dà pronta nel gruppo "Lorenzo e Marianna", 2 inviti, nessuna installazione alle 02:10. Verbale, screenshot e cosa non è provato: `docs/verifiche/2026-11-07-bozza-completa/giro.md`.
 Giro pulito in italiano chiaro, italiano scuro e inglese; un difetto trovato e corretto (spazio prima dei due punti in Armocromia).
 Per Mary: i capi del sito non ci sono finché Lorenzo non lancia lo script e lei importa lo zip (`docs/pubblicazione/portare-i-dati-di-mary.md`).
 Il giro temporaneo sta nello scratchpad della sessione: se serve di nuovo, va riscritto (`TempGiroTests` + `giro5.sh`), senza metterlo nel commit.
