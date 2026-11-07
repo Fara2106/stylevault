@@ -22,6 +22,4 @@ enum AppConfig {
     static let recoveryCallback = URL(string: "svnativa://reset-password")!
     static let supportEmail = "lorefara97@gmail.com"
     static let supportMail = URL(string: "mailto:\(supportEmail)?subject=StyleVault")!
-    static let privacyURL = URL(string: "https://fara2106.github.io/stylevault/privacy")!
-    static let supportURL = URL(string: "https://fara2106.github.io/stylevault/supporto")!
 }

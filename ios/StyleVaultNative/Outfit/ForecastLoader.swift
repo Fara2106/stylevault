@@ -10,11 +10,14 @@ struct ForecastPlace: Equatable, Sendable {
     let isPosition: Bool
 }
 
+enum ForecastSource: String, Codable, Sendable { case apple, openMeteo }
+
 struct ForecastResult: Equatable, Sendable {
     let days: [DayForecast]
     /// Viene dalla cache: la rete non ha risposto.
     let stale: Bool
     let fetchedAt: Date
+    var source: ForecastSource = .openMeteo
 }
 
 protocol ForecastLoading: Sendable {
@@ -27,6 +30,8 @@ struct ForecastCache {
     private struct Entry: Codable {
         let fetchedAt: Date
         let days: [DayForecast]
+        /// Assente nelle previsioni salvate prima del Meteo di Apple.
+        var source: ForecastSource?
     }
 
     let defaults: UserDefaults
@@ -36,34 +41,44 @@ struct ForecastCache {
         return String(format: "forecast.%.2f_%.2f", locale: Locale(identifier: "en_US_POSIX"), place.latitude, place.longitude)
     }
 
-    func save(_ days: [DayForecast], for place: ForecastPlace, at date: Date) {
-        guard let data = try? JSONEncoder().encode(Entry(fetchedAt: date, days: days)) else { return }
+    func save(_ days: [DayForecast], source: ForecastSource = .openMeteo, for place: ForecastPlace, at date: Date) {
+        guard let data = try? JSONEncoder().encode(Entry(fetchedAt: date, days: days, source: source)) else { return }
         defaults.set(data, forKey: key(place))
     }
 
     func read(for place: ForecastPlace) -> ForecastResult? {
         guard let data = defaults.data(forKey: key(place)),
               let entry = try? JSONDecoder().decode(Entry.self, from: data) else { return nil }
-        return ForecastResult(days: entry.days, stale: true, fetchedAt: entry.fetchedAt)
+        return ForecastResult(days: entry.days, stale: true, fetchedAt: entry.fetchedAt, source: entry.source ?? .openMeteo)
     }
 }
 
-/// Open-Meteo: niente chiave e niente account. Riceve solo coordinate arrotondate.
-struct OpenMeteoLoader: ForecastLoading {
+/// Prima il Meteo di Apple, poi Open-Meteo, poi l'ultima previsione salvata. Senza nessuno dei tre si imposta a mano.
+struct WeatherLoader: ForecastLoading {
+    typealias Source = @Sendable (ForecastPlace, Date) async throws -> [DayForecast]
+
     private struct NoDays: Error {}
 
+    var apple: Source = AppleWeather.days
+    /// Niente chiave e niente account: riceve solo coordinate arrotondate.
+    var openMeteo: Source = { place, now in
+        try await Forecast.fetch(latitude: place.latitude, longitude: place.longitude, city: place.name, now: now)
+    }
+    var defaultsSuite: String?
+
+    private var cache: ForecastCache {
+        ForecastCache(defaults: defaultsSuite.flatMap(UserDefaults.init(suiteName:)) ?? .standard)
+    }
+
     func load(place: ForecastPlace) async throws -> ForecastResult {
-        let cache = ForecastCache(defaults: .standard)
-        do {
-            let now = Date.now
-            let days = try await Forecast.fetch(latitude: place.latitude, longitude: place.longitude, city: place.name, now: now)
-            guard !days.isEmpty else { throw NoDays() }
-            cache.save(days, for: place, at: now)
-            return ForecastResult(days: days, stale: false, fetchedAt: now)
-        } catch {
-            if let saved = cache.read(for: place) { return saved }
-            throw error
+        let now = Date.now
+        for (source, fetch) in [(ForecastSource.apple, apple), (.openMeteo, openMeteo)] {
+            guard let days = try? await fetch(place, now), !days.isEmpty else { continue }
+            cache.save(days, source: source, for: place, at: now)
+            return ForecastResult(days: days, stale: false, fetchedAt: now, source: source)
         }
+        if let saved = cache.read(for: place) { return saved }
+        throw NoDays()
     }
 }
 
@@ -112,7 +127,7 @@ struct FakePositionProvider: PositionProviding {
 #endif
 
 private struct ForecastLoaderKey: EnvironmentKey {
-    static let defaultValue: any ForecastLoading = OpenMeteoLoader()
+    static let defaultValue: any ForecastLoading = WeatherLoader()
 }
 
 private struct PositionProviderKey: EnvironmentKey {

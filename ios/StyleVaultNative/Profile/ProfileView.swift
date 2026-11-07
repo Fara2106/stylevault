@@ -130,10 +130,12 @@ struct ProfileView: View {
                     Text("feedback.title")
                 }
                 .accessibilityIdentifier("profile-feedback")
-                Link(destination: AppConfig.privacyURL) { Text("native.help.privacy").foregroundStyle(Palette.ink) }
+                NavigationLink { LegalView(kind: .privacy) } label: { Text("native.help.privacy") }
                     .accessibilityIdentifier("profile-privacy")
-                Link(destination: AppConfig.supportURL) { Text("native.help.support").foregroundStyle(Palette.ink) }
+                NavigationLink { LegalView(kind: .support) } label: { Text("native.help.support") }
                     .accessibilityIdentifier("profile-support")
+                NavigationLink { LegalView(kind: .deleteAccount) } label: { Text("native.help.deleteAccount") }
+                    .accessibilityIdentifier("profile-delete-help")
                 LabeledContent("native.help.version", value: Self.version)
                     .accessibilityIdentifier("profile-version")
             }

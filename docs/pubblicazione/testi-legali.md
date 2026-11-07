@@ -1,80 +1,74 @@
 # Testi legali di StyleVault
 
-Copia dei testi delle pagine pubbliche del sito: privacy, supporto ed eliminazione dell'account. Vengono da `src/pages/LegalPage/legalContent.js` (tag `archivio-ibrida-e-sito`), senza modifiche. Ultimo aggiornamento dei testi: 2026-11-04. Contatto pubblico: lorefara97@gmail.com, ancora da confermare con Lorenzo.
+Unica fonte dei testi di privacy, supporto ed eliminazione dell'account. Da qui `scripts/testi-legali.py` genera le schermate dell'app (`ios/StyleVaultNative/Profile/LegalContent.swift`) e le pagine pubbliche per App Store Connect (`docs/pubblicazione/pagine/`). Dopo una modifica va rilanciato lo script.
 
-**Da riscrivere prima dell'App Store.** I testi descrivono l'app ibrida e il sito, non la nativa. Vanno allineati a `ios/StyleVaultNative/Resources/PrivacyInfo.xcprivacy` e alle Privacy Labels. Da controllare almeno: guardaroba e foto su iCloud invece che su Supabase; niente modelli scaricati da jsDelivr, Google e GitHub; niente microlink.io e Resend se la nativa non li usa; niente avatar realistico e Mobile-VTON; niente crediti @imgly, MediaPipe e ONNX Runtime; la cancellazione dei dati su iCloud oltre a quella dell'account; il percorso del Profilo dove si elimina l'account.
-
-**Sede.** `AppConfig.privacyURL` e `AppConfig.supportURL` puntano ancora al sito (`fara2106.github.io/stylevault/privacy` e `/supporto`). Prima dell'App Store serve una nuova sede: vedi il design, `docs/superpowers/specs/2026-11-04-app-nativa-icloud-design.md`.
+Sono scritti da Claude a partire dal codice dell'app e non sono stati rivisti da un legale. Devono coincidere con `PrivacyInfo.xcprivacy` e con le Privacy Labels.
 
 ## Italiano
 
+Ultimo aggiornamento: 7 novembre 2026
+
 ### Informativa sulla privacy
 
-StyleVault è un guardaroba digitale: fotografi i tuoi capi, crei outfit e li provi su di te. Qui trovi quali dati usa, perché, dove finiscono e come cancellarli.
+StyleVault è un guardaroba digitale: fotografi i tuoi capi, crei outfit e li provi su di te. Qui trovi quali dati usa, dove stanno e come cancellarli.
 
 #### Chi è il titolare
 
 Lorenzo Faraoni, persona fisica con sede in Italia, che sviluppa StyleVault. Per qualsiasi domanda sulla privacy scrivi a lorefara97@gmail.com.
 
-#### Quali dati usiamo
+#### I tuoi dati stanno nel tuo iCloud
 
-Account: email, nome e password (la password è conservata solo in forma cifrata dal servizio di login).
+Capi, foto dei capi, outfit, calendario, foto del corpo, Armocromia e impostazioni si salvano sul dispositivo e nel tuo iCloud privato. Lo sviluppatore non può leggerli. L'app funziona anche senza iCloud: in quel caso restano solo sul dispositivo.
 
-Guardaroba: foto dei capi (fronte e retro), nome, categoria, colori, prezzo e link del negozio se li inserisci; outfit salvati e calendario.
+#### L'account è facoltativo
 
-Profilo: le foto del corpo (davanti, di lato, di spalle) e il risultato dell’Armocromia, la città predefinita, la lingua e il tema.
+Puoi usare StyleVault senza account. Se ne crei uno, con Apple, Google o email e password, il servizio di login conserva email, nome e un identificativo; la password è conservata solo in forma cifrata. L'account serve ad accedere e a inviare segnalazioni: i tuoi capi non passano da lì.
 
-Posizione: solo quando scegli “La mia posizione” per il meteo. Le coordinate servono per la previsione e non vengono salvate nel tuo account.
+Chi ha usato il vecchio sito ha i suoi dati ancora su Supabase, finché non elimina l'account.
 
-Segnalazioni: se usi “Segnala un problema o un’idea”, il testo che scrivi e alcune informazioni tecniche (app o sito, modello del dispositivo) arrivano via email allo sviluppatore.
+#### Cosa esce dal dispositivo
+
+Meteo: per la previsione arrivano al Meteo di Apple oppure a Open-Meteo le coordinate arrotondate della posizione, se scegli "La mia posizione", o quelle della città scelta. Open-Meteo riceve anche il testo della ricerca delle città. Le coordinate non si salvano in nessun account.
+
+Link dei negozi: se incolli un link, il tuo dispositivo apre direttamente quella pagina per leggerne titolo e immagine.
+
+Segnalazioni: se usi "Segnala un problema o un'idea", il testo che scrivi e alcune informazioni tecniche (versione dell'app, modello del dispositivo, versione di iOS, lingua) arrivano via email allo sviluppatore. Se scrivi via email, arriva ciò che scrivi tu.
+
+Negozi e servizi esterni: i collegamenti dell'Armocromia e di ChatGPT e Gemini aprono il browser o le app di quei servizi, che seguono le proprie regole.
+
+#### Le analisi avvengono sul dispositivo
+
+Lo scontorno dei capi, il controllo delle foto del corpo e l'Armocromia, che legge i colori del viso, usano Vision di Apple sul tuo dispositivo. Queste foto non vengono inviate a nessun servizio di intelligenza artificiale e non vengono usate per riconoscerti.
+
+#### Se provi i capi con ChatGPT o Gemini
+
+Il Prompt AI prepara un testo e le foto, ma l'app non invia nulla da sola. Solo se decidi tu di incollarli, quelle foto arrivano a OpenAI o a Google secondo le loro regole. Prima di continuare l'app te lo chiede. Usa solo foto tue o di chi ha dato il consenso.
 
 #### Perché li usiamo
 
-Per darti il servizio che chiedi: salvare il guardaroba, proporti outfit adatti al meteo e al tuo stile, mostrarti i capi su di te (base giuridica: esecuzione del contratto, art. 6.1.b GDPR).
+Per darti il servizio che chiedi (art. 6.1.b GDPR) e per rispondere alle segnalazioni e migliorare l'app (la tua richiesta e il legittimo interesse, art. 6.1.f).
 
-Per rispondere alle segnalazioni e migliorare l’app (base giuridica: la tua richiesta e il nostro legittimo interesse, art. 6.1.f).
-
-Non c’è pubblicità, non c’è tracciamento tra app o siti, non usiamo strumenti di analisi e non vendiamo dati a nessuno.
-
-#### Le analisi avvengono sul tuo dispositivo
-
-Lo scontorno dei capi, l’analisi del corpo, l’Armocromia (analisi dei colori del viso) e la versione realistica dell’avatar girano sul tuo telefono o nel tuo browser. Le tue foto non vengono inviate a servizi di intelligenza artificiale.
-
-I modelli che fanno queste analisi si scaricano la prima volta da jsDelivr, Google (MediaPipe) e GitHub: queste richieste non contengono le tue foto ma, come ogni richiesta su internet, rivelano l’indirizzo IP del dispositivo.
-
-Le foto del corpo servono solo a mostrarti i vestiti addosso e a stimare forma e proporzioni: non le usiamo per riconoscerti.
+Non c'è pubblicità, non c'è tracciamento tra app o siti, non usiamo strumenti di analisi e non vendiamo dati a nessuno.
 
 #### A chi affidiamo i dati
 
-Supabase: database, archivio delle foto e login, con server nell’Unione Europea (Irlanda).
+Apple: iCloud, accesso con Apple, Meteo di Apple.
 
-GitHub (Pages e Releases): ospita il sito e i modelli dell’avatar; riceve l’indirizzo IP quando li apri o li scarichi.
+Supabase: login e segnalazioni, con server nell'Unione Europea (Irlanda).
 
-Open-Meteo: previsioni del meteo e ricerca delle città; riceve le coordinate o il nome della città.
+Google: solo se accedi con Google.
 
-Apple: nell’app iPhone, i servizi di sistema di iOS (per esempio il Meteo di Apple, quando attivo).
+Open-Meteo: previsioni del meteo e ricerca delle città.
 
-microlink.io: quando incolli il link di un negozio, legge titolo e immagine della pagina; riceve solo il link.
-
-Resend: invia per email le segnalazioni.
-
-I fornitori con sede negli Stati Uniti (GitHub, Resend, microlink.io) trattano i dati con le garanzie previste dal GDPR per i trasferimenti fuori dall’UE.
-
-#### Dati salvati sul dispositivo
-
-Il sito e l’app salvano sul dispositivo solo ciò che serve a funzionare: la sessione di accesso, le preferenze, una copia dei tuoi dati per aprirsi più in fretta e i modelli scaricati. Non ci sono cookie di profilazione.
+Resend: invio per email delle segnalazioni, con sede negli Stati Uniti e le garanzie previste dal GDPR per i trasferimenti fuori dall'UE.
 
 #### Per quanto tempo
 
-Finché hai l’account. Se lo elimini, cancelliamo subito account, guardaroba, outfit, calendario, foto e Armocromia; le eventuali copie di sicurezza del fornitore si sovrascrivono entro pochi giorni.
-
-Le email delle segnalazioni restano nella casella dello sviluppatore per il tempo necessario a gestirle.
+I dati nel tuo iCloud restano finché li tieni tu. L'account resta finché non lo elimini: in quel momento cancelliamo account e dati rimasti sul vecchio sito, e le copie di sicurezza del fornitore si sovrascrivono entro pochi giorni. Le email delle segnalazioni restano nella casella dello sviluppatore per il tempo necessario a gestirle.
 
 #### I tuoi diritti
 
-Puoi chiedere accesso, correzione, cancellazione, portabilità dei dati, limitazione od opposizione al trattamento scrivendo a lorefara97@gmail.com. Puoi anche presentare reclamo al Garante per la protezione dei dati personali (garanteprivacy.it).
-
-Puoi eliminare l’account in qualsiasi momento da Profilo → Elimina account.
+Puoi chiedere accesso, correzione, cancellazione, portabilità, limitazione od opposizione scrivendo a lorefara97@gmail.com, e puoi presentare reclamo al Garante per la protezione dei dati personali. Da Profilo → Esporta i miei dati ottieni subito una copia di tutto in un file.
 
 #### Minori
 
@@ -82,190 +76,182 @@ StyleVault non è pensato per chi ha meno di 14 anni.
 
 #### Modifiche
 
-Se questa informativa cambia in modo importante te lo diremo nell’app. Qui sotto trovi la data dell’ultimo aggiornamento.
+Se questa informativa cambia in modo importante te lo diremo nell'app.
 
 ### Supporto
 
-Hai un problema o un’idea? Siamo qui.
+Hai un problema o un'idea? Siamo qui.
 
 #### Come contattarci
 
-Dall’app o dal sito: Profilo → “Segnala un problema o un’idea”.
+Dall'app: Profilo → "Segnala un problema o un'idea". Serve un account.
 
 Per email: lorefara97@gmail.com. Rispondiamo di solito entro pochi giorni.
 
+#### I miei capi non compaiono sull'altro dispositivo
+
+Controlla che entrambi usino lo stesso Apple ID e che iCloud sia attivo per StyleVault. La sincronizzazione può richiedere qualche minuto, e più tempo con molte foto.
+
+#### Cambio telefono
+
+Con lo stesso Apple ID i dati arrivano da soli. Per averne una copia, o per passare a un altro sistema, usa Profilo → Esporta i miei dati e poi Importa da un file. Importa un file su un solo dispositivo: iCloud pensa a portarlo sugli altri.
+
 #### Ho dimenticato la password
 
-Nell’app, nella schermata di accesso, tocca “Password dimenticata?”: ti arriva un’email con il link per sceglierne una nuova. Se sei già dentro, la cambi da Profilo → Cambia password.
+Nella schermata di accesso tocca "Password dimenticata?": ti arriva un'email con il link per sceglierne una nuova. Se sei già dentro, la cambi da Profilo → Cambia password.
 
 #### Voglio rifare le foto del corpo
 
-Profilo → Le tue foto: tocca la foto da cambiare.
+Profilo → Le tue foto: tocca la foto da cambiare. Meglio in piedi, dalla testa ai piedi, con luce naturale.
 
-#### La versione realistica dell’avatar occupa spazio
+#### L'Armocromia non mi convince
 
-I modelli occupano circa 1,3 GB e si scaricano solo quando lo confermi. Puoi eliminarli quando vuoi dai Crediti dell’avatar.
+Il risultato dipende dalla luce della foto. Puoi correggere i colori trovati oppure scegliere la stagione a mano.
 
-#### Eliminare l’account
+#### Crediti
 
-Profilo → Elimina account. Trovi tutti i dettagli nella pagina dedicata.
+Dati meteo: Meteo di Apple e Open-Meteo.com (CC BY 4.0).
 
-#### Crediti e licenze
+### Eliminare l'account
 
-Scontorno delle foto: @imgly/background-removal (licenza AGPL-3.0). Il codice sorgente completo di StyleVault è pubblico: github.com/Fara2106/stylevault.
+Puoi eliminare il tuo account StyleVault in qualsiasi momento.
 
-Analisi del corpo e del viso: MediaPipe di Google (Apache 2.0). Calcoli nel browser: ONNX Runtime (MIT).
+#### Dall'app
 
-Versione realistica dell’avatar (app iPhone): Mobile-VTON (CC BY-NC-SA 4.0), Powered by Stability AI (Stability AI Community License), CLIP/OpenCLIP (MIT), DINOv2 (Apache 2.0). Dettagli nei Crediti dell’avatar.
-
-Dati meteo: Open-Meteo.com (CC BY 4.0).
-
-### Eliminare l’account
-
-Puoi eliminare il tuo account StyleVault e tutti i dati collegati, in qualsiasi momento.
-
-#### Dall’app o dal sito
-
-Accedi, apri Profilo e tocca “Elimina account” in fondo alla pagina, poi conferma.
-
-L’eliminazione è immediata e definitiva: account, guardaroba, outfit, calendario, foto del corpo e dei capi, Armocromia.
-
-#### Se non riesci ad accedere
-
-Scrivi a lorefara97@gmail.com dall’indirizzo con cui ti sei registrato: eliminiamo l’account entro 30 giorni e te lo confermiamo.
+Accedi, apri Profilo e tocca "Elimina account", poi conferma. L'eliminazione è immediata e definitiva: cancella l'account e tutto ciò che è rimasto sul vecchio sito. Se avevi dati lì, portali prima nell'app.
 
 #### Cosa resta
 
-Nulla nel servizio. Le eventuali copie di sicurezza del fornitore si sovrascrivono entro pochi giorni; le email di segnalazioni che ci hai mandato possono restare nella nostra casella, e puoi chiederci di cancellarle.
+Ciò che è nell'app resta nel tuo iCloud, anche senza account. Per cancellarlo elimina i capi dall'app, oppure vai in Impostazioni → il tuo nome → iCloud → Gestisci spazio ed elimina i dati dell'app.
+
+Le copie di sicurezza del fornitore si sovrascrivono entro pochi giorni; le email di segnalazione che ci hai mandato possono restare nella nostra casella, e puoi chiederci di cancellarle.
+
+#### Se non riesci ad accedere
+
+Scrivi a lorefara97@gmail.com dall'indirizzo con cui ti sei registrato: eliminiamo l'account entro 30 giorni e te lo confermiamo.
 
 ## English
 
+Last updated: 7 November 2026
+
 ### Privacy policy
 
-StyleVault is a digital wardrobe: you photograph your clothes, build outfits and try them on yourself. Here is what data it uses, why, where it goes and how to delete it.
+StyleVault is a digital wardrobe: you photograph your clothes, build outfits and try them on yourself. Here is what data it uses, where it lives and how to delete it.
 
 #### Who is responsible
 
 Lorenzo Faraoni, an individual based in Italy who develops StyleVault. For any privacy question write to lorefara97@gmail.com.
 
-#### What data we use
+#### Your data lives in your iCloud
 
-Account: email, name and password (the password is only stored encrypted by the sign-in service).
+Items, item photos, outfits, calendar, body photos, colour analysis and settings are saved on your device and in your private iCloud. The developer cannot read them. The app also works without iCloud: in that case they stay on the device only.
 
-Wardrobe: photos of your clothes (front and back), name, category, colours, price and shop link if you add them; saved outfits and calendar.
+#### An account is optional
 
-Profile: body photos (front, side, back) and your colour analysis result, default city, language and theme.
+You can use StyleVault without an account. If you create one, with Apple, Google or email and password, the sign-in service keeps your email, name and an identifier; the password is only stored encrypted. The account is for signing in and sending reports: your items do not go through it.
 
-Location: only when you choose “My location” for the weather. The coordinates are used for the forecast and are not saved to your account.
+If you used the old website, your data is still on Supabase until you delete your account.
 
-Reports: if you use “Report a problem or an idea”, the text you write and some technical details (app or website, device model) reach the developer by email.
+#### What leaves your device
 
-#### Why we use it
+Weather: for the forecast, Apple Weather or Open-Meteo receives the rounded coordinates of your position, if you choose "My location", or those of the chosen city. Open-Meteo also receives your city search text. Coordinates are not saved to any account.
 
-To provide the service you ask for: saving your wardrobe, suggesting outfits for the weather and your style, showing clothes on you (legal basis: performance of a contract, Art. 6(1)(b) GDPR).
+Shop links: if you paste a link, your device opens that page directly to read its title and image.
 
-To answer reports and improve the app (legal basis: your request and our legitimate interest, Art. 6(1)(f)).
+Reports: if you use "Report a problem or an idea", the text you write and some technical details (app version, device model, iOS version, language) reach the developer by email. If you write by email, we receive what you write.
 
-There are no ads, no tracking across apps or websites, no analytics tools, and we never sell data.
+Shops and external services: the colour analysis links and those to ChatGPT and Gemini open the browser or those services' apps, under their own terms.
 
 #### Analysis happens on your device
 
-Garment cut-out, body analysis, colour analysis of your face and the realistic avatar run on your phone or in your browser. Your photos are not sent to artificial intelligence services.
+Garment cut-out, the check of your body photos and colour analysis, which reads the colours of your face, use Apple's Vision on your device. These photos are not sent to any artificial intelligence service and are not used to recognise you.
 
-The models behind these features are downloaded the first time from jsDelivr, Google (MediaPipe) and GitHub: these requests contain no photos but, like any internet request, reveal your device’s IP address.
+#### If you try clothes with ChatGPT or Gemini
 
-Body photos are only used to show clothes on you and estimate shape and proportions: we do not use them to recognise you.
+The AI prompt prepares a text and photos, but the app sends nothing by itself. Only if you choose to paste them do those photos reach OpenAI or Google, under their terms. The app asks you before continuing. Only use photos of yourself or of someone who agreed.
+
+#### Why we use it
+
+To provide the service you ask for (Art. 6(1)(b) GDPR) and to answer reports and improve the app (your request and legitimate interest, Art. 6(1)(f)).
+
+There are no ads, no tracking across apps or websites, no analytics tools, and we never sell data.
 
 #### Who processes data for us
 
-Supabase: database, photo storage and sign-in, with servers in the European Union (Ireland).
+Apple: iCloud, Sign in with Apple, Apple Weather.
 
-GitHub (Pages and Releases): hosts the website and the avatar models; receives your IP address when you open or download them.
+Supabase: sign-in and reports, with servers in the European Union (Ireland).
 
-Open-Meteo: weather forecasts and city search; receives coordinates or the city name.
+Google: only if you sign in with Google.
 
-Apple: in the iPhone app, iOS system services (for example Apple Weather, when enabled).
+Open-Meteo: weather forecasts and city search.
 
-microlink.io: when you paste a shop link, it reads the page title and image; it only receives the link.
-
-Resend: sends reports by email.
-
-Providers based in the United States (GitHub, Resend, microlink.io) process data with the safeguards the GDPR requires for transfers outside the EU.
-
-#### Data stored on your device
-
-The website and the app only store what they need to work: your sign-in session, preferences, a copy of your data so they open faster, and downloaded models. There are no profiling cookies.
+Resend: sends reports by email, based in the United States with the safeguards the GDPR requires for transfers outside the EU.
 
 #### How long we keep it
 
-For as long as you have an account. If you delete it, we immediately delete your account, wardrobe, outfits, calendar, photos and colour analysis; any provider backups are overwritten within a few days.
-
-Report emails stay in the developer’s mailbox for as long as needed to handle them.
+Data in your iCloud stays as long as you keep it. Your account stays until you delete it: at that point we delete the account and anything left on the old website, and the provider's backups are overwritten within a few days. Report emails stay in the developer's inbox for as long as needed to handle them.
 
 #### Your rights
 
-You can ask for access, correction, deletion, portability, restriction or objection by writing to lorefara97@gmail.com. You can also lodge a complaint with your data protection authority (in Italy, garanteprivacy.it).
-
-You can delete your account at any time from Profile → Delete account.
+You can ask for access, correction, deletion, portability, restriction or objection by writing to lorefara97@gmail.com, and you can complain to the Italian data protection authority (Garante). Profile → Export my data gives you a copy of everything in a file right away.
 
 #### Children
 
-StyleVault is not meant for anyone under 14.
+StyleVault is not meant for people under 14.
 
 #### Changes
 
-If this policy changes in an important way we will tell you in the app. The date of the last update is below.
+If this policy changes in an important way we will tell you in the app.
 
 ### Support
 
-A problem or an idea? We are here.
+Got a problem or an idea? We're here.
 
 #### How to reach us
 
-In the app or on the website: Profile → “Report a problem or an idea”.
+From the app: Profile → "Report a problem or an idea". You need an account.
 
 By email: lorefara97@gmail.com. We usually reply within a few days.
 
+#### My items don't show on my other device
+
+Check that both use the same Apple ID and that iCloud is on for StyleVault. Sync can take a few minutes, and longer with many photos.
+
+#### Changing phone
+
+With the same Apple ID your data arrives by itself. For a copy, or to move to another system, use Profile → Export my data and then Import from a file. Import a file on one device only: iCloud takes it to the others.
+
 #### I forgot my password
 
-In the app, on the sign-in screen, tap “Forgot password?”: you will get an email with a link to choose a new one. If you are signed in, change it from Profile → Change password.
+On the sign-in screen tap "Forgot password?": you'll get an email with a link to choose a new one. If you're already in, change it from Profile → Change password.
 
 #### I want to retake my body photos
 
-Profile → Your photos: tap the photo to change.
+Profile → Your photos: tap the photo to change. Best standing, head to toe, in natural light.
 
-#### The realistic avatar takes up space
+#### I'm not convinced by my colour analysis
 
-Its models take about 1.3 GB and are only downloaded after you confirm. You can delete them at any time from the avatar’s Credits.
+The result depends on the light in the photo. You can correct the detected colours or choose your season by hand.
 
-#### Deleting your account
+#### Credits
 
-Profile → Delete account. All details are on the dedicated page.
-
-#### Credits and licences
-
-Photo cut-out: @imgly/background-removal (AGPL-3.0 licence). StyleVault’s complete source code is public: github.com/Fara2106/stylevault.
-
-Body and face analysis: Google MediaPipe (Apache 2.0). In-browser computation: ONNX Runtime (MIT).
-
-Realistic avatar (iPhone app): Mobile-VTON (CC BY-NC-SA 4.0), Powered by Stability AI (Stability AI Community License), CLIP/OpenCLIP (MIT), DINOv2 (Apache 2.0). Details in the avatar’s Credits.
-
-Weather data: Open-Meteo.com (CC BY 4.0).
+Weather data: Apple Weather and Open-Meteo.com (CC BY 4.0).
 
 ### Delete your account
 
-You can delete your StyleVault account and all related data at any time.
+You can delete your StyleVault account at any time.
 
-#### From the app or the website
+#### From the app
 
-Sign in, open Profile and tap “Delete account” at the bottom of the page, then confirm.
+Sign in, open Profile and tap "Delete account", then confirm. Deletion is immediate and final: it removes the account and anything left on the old website. If you had data there, move it into the app first.
 
-Deletion is immediate and permanent: account, wardrobe, outfits, calendar, body and clothing photos, colour analysis.
+#### What stays
 
-#### If you cannot sign in
+What's in the app stays in your iCloud, even without an account. To delete it, remove the items from the app, or go to Settings → your name → iCloud → Manage storage and delete the app's data.
 
-Write to lorefara97@gmail.com from the address you signed up with: we delete the account within 30 days and confirm it to you.
+The provider's backups are overwritten within a few days; report emails you sent us may stay in our inbox, and you can ask us to delete them.
 
-#### What remains
+#### If you can't sign in
 
-Nothing in the service. Any provider backups are overwritten within a few days; report emails you sent us may remain in our mailbox, and you can ask us to delete them.
+Write to lorefara97@gmail.com from the address you registered with: we delete the account within 30 days and confirm it to you.

@@ -16,6 +16,7 @@ struct CalendarView: View {
     @State private var selected = CalendarMath.iso(.now)
     @State private var isPickerOpen = false
     @State private var forecast: [DayForecast] = []
+    @State private var forecastSource: ForecastSource = .openMeteo
     @State private var tryOn: TryOnSelection?
     @State private var removing: CalendarEntry?
     @AppStorage(TemperatureText.storageKey) private var temperatureUnit = "auto"
@@ -61,7 +62,9 @@ struct CalendarView: View {
             }
             .task(id: profileCity?.name) {
                 guard let city = profileCity else { return }
-                forecast = (try? await forecastLoader.load(place: city))?.days ?? []
+                let result = try? await forecastLoader.load(place: city)
+                forecast = result?.days ?? []
+                forecastSource = result?.source ?? .openMeteo
             }
         }
     }
@@ -169,6 +172,9 @@ struct CalendarView: View {
                         .foregroundStyle(Palette.muted)
                         .accessibilityIdentifier("calendar-forecast")
                 }
+            }
+            if forecast.contains(where: { $0.date == selected }) {
+                WeatherCredit(source: forecastSource)
             }
             if dayEntries.isEmpty {
                 Text("calendar.noOutfit").font(.footnote).foregroundStyle(Palette.muted)

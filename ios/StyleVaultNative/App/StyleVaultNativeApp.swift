@@ -69,7 +69,7 @@ struct StyleVaultNativeApp: App {
         if arguments.contains("-SVFakeForecast") { return FakeForecastLoader(fails: false) }
         if arguments.contains("-SVFakeForecastFail") { return FakeForecastLoader(fails: true) }
         #endif
-        return OpenMeteoLoader()
+        return WeatherLoader()
     }
 
     private static func makeBodyPhotoAnalyzer() -> any BodyPhotoAnalyzing {

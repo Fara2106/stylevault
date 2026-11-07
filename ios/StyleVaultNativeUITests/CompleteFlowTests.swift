@@ -90,6 +90,27 @@ final class CompleteFlowTests: XCTestCase {
         }
     }
 
+    func testPrivacyESupportoSiLeggonoNellApp() {
+        let app = launch(language: "it")
+        tab(app, "Profilo").tap()
+        reveal(app, "profile-privacy").tap()
+        XCTAssertTrue(element(app, "legal-title").waitForExistence(timeout: 30))
+        XCTAssertEqual(element(app, "legal-title").label, "Informativa sulla privacy")
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        reveal(app, "profile-support").tap()
+        XCTAssertTrue(reveal(app, "legal-email").exists)
+    }
+
+    func testDallAccessoSiLeggeLaPrivacy() {
+        let app = launch(language: "it", extra: ["-SVShowLogin"])
+        let privacy = element(app, "login-privacy")
+        XCTAssertTrue(privacy.waitForExistence(timeout: 30))
+        privacy.tap()
+        XCTAssertTrue(element(app, "legal-title").waitForExistence(timeout: 30))
+        app.buttons["Chiudi"].firstMatch.tap()
+        XCTAssertTrue(privacy.waitForExistence(timeout: 30))
+    }
+
     func testDalDettaglioSiVedeIlCapoAddosso() {
         let app = launch(language: "it", extra: ["-SVFakeBody", "-SVSeedBodyPhoto", "-SVSeedWardrobe"])
         let card = app.descendants(matching: .any).matching(identifier: "item-card").firstMatch

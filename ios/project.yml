@@ -40,6 +40,7 @@ targets:
         com.apple.developer.applesignin: [Default]
         com.apple.developer.icloud-container-identifiers: [iCloud.it.faraoni.stylevault]
         com.apple.developer.icloud-services: [CloudKit]
+        com.apple.developer.weatherkit: true
         aps-environment: development
     info:
       path: StyleVaultNative/Info.plist
@@ -50,7 +51,7 @@ targets:
         NSLocationDefaultAccuracyReduced: true
         CFBundleDisplayName: SV Nativa
         CFBundleShortVersionString: "1.0"
-        CFBundleVersion: "5"
+        CFBundleVersion: "6"
         SupabaseURL: $(SUPABASE_URL)
         SupabaseKey: $(SUPABASE_KEY)
         CFBundleURLTypes:

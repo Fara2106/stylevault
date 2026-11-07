@@ -199,7 +199,8 @@ struct OutfitView: View {
         if model.usesManualWeather(today: today) {
             manualWeather
         } else if let weather {
-            WeatherCard(weather: weather, stale: model.forecast?.stale ?? false, fetchedAt: model.forecast?.fetchedAt)
+            WeatherCard(weather: weather, stale: model.forecast?.stale ?? false, fetchedAt: model.forecast?.fetchedAt,
+                        source: model.forecast?.source ?? .openMeteo)
             if let parts = weather.parts { DayStripView(parts: parts) }
         } else {
             ProgressView { Text("common.loading") }

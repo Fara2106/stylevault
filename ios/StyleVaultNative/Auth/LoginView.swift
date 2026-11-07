@@ -13,6 +13,7 @@ struct LoginView: View {
     @State private var errorText: String?
     @State private var notice: String?
     @State private var busy = false
+    @State private var legal: LegalDocument.Kind?
     @State private var appleNonce = AppleNonce()
     @FocusState private var passwordFocused: Bool
 
@@ -134,8 +135,8 @@ struct LoginView: View {
                     .accessibilityIdentifier("login-skip")
 
                 HStack(spacing: 20) {
-                    Link(destination: AppConfig.privacyURL) { Text("native.auth.privacy") }
-                    Link(destination: AppConfig.supportURL) { Text("native.auth.support") }
+                    Button("native.auth.privacy") { legal = .privacy }.accessibilityIdentifier("login-privacy")
+                    Button("native.auth.support") { legal = .support }.accessibilityIdentifier("login-support")
                 }
                 .font(.caption.weight(.semibold))
                 .tint(Palette.muted)
@@ -147,6 +148,14 @@ struct LoginView: View {
         }
         .scrollDismissesKeyboard(.interactively)
         .background(Palette.bg.ignoresSafeArea())
+        .sheet(item: $legal) { kind in
+            NavigationStack {
+                LegalView(kind: kind)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) { Button("common.close") { legal = nil } }
+                    }
+            }
+        }
         .task { await auth.refreshProviders() }
     }
 

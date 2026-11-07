@@ -45,6 +45,7 @@ struct WeatherCard: View {
     let weather: DayForecast
     let stale: Bool
     let fetchedAt: Date?
+    var source: ForecastSource = .openMeteo
 
     var body: some View {
         Card {
@@ -68,11 +69,7 @@ struct WeatherCard: View {
                 }
                 .font(.footnote)
                 .foregroundStyle(Palette.muted)
-                if let url = URL(string: "https://open-meteo.com/") {
-                    // Licenza CC BY 4.0: la fonte va citata.
-                    Link(destination: url) { Text("weather.openMeteoCredit").font(.caption) }
-                        .tint(Palette.link)
-                }
+                WeatherCredit(source: source)
                 if stale, let fetchedAt {
                     Text("weather.staleNotice \(fetchedAt.formatted(date: .abbreviated, time: .shortened))")
                         .font(.caption)
@@ -110,6 +107,22 @@ struct DayStripView: View {
                 }
             }
             .accessibilityIdentifier("day-strip")
+        }
+    }
+}
+
+/// Da dove viene il meteo. Open-Meteo chiede la citazione (CC BY 4.0), Apple il suo marchio e il link legale.
+struct WeatherCredit: View {
+    let source: ForecastSource
+
+    var body: some View {
+        if source == .apple {
+            Link(destination: AppleWeather.legalURL) { Text(verbatim: "\u{F8FF} Weather").font(.caption) }
+                .tint(Palette.link)
+                .accessibilityIdentifier("weather-credit-apple")
+        } else if let url = URL(string: "https://open-meteo.com/") {
+            Link(destination: url) { Text("weather.openMeteoCredit").font(.caption) }
+                .tint(Palette.link)
         }
     }
 }
