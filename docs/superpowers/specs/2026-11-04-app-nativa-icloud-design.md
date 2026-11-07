@@ -131,6 +131,7 @@ Le due strade pensate prima sono escluse dall'audit: un login Supabase nell'app 
    - schema CloudKit promosso in Production;
    - Privacy Manifest (già fatto) aggiornato: niente email e nome, foto solo in iCloud, niente E174.1 se non resta nessun download;
    - audit `mobile-app-publishing` ripetuto, TestFlight, invio.
+   Stato al 2026-11-07, RC 1.0 (6): privacy e supporto dentro l'app e in `docs/pubblicazione/pagine/`, Meteo di Apple con ripiego su Open-Meteo, doppioni tolti con `stamp`, storico dei capi cancellati con `snapshot`. Report: `docs/pubblicazione/2026-11-07-report-rc.md`.
 
 Stima indicativa: le fasi 2, 3 e 5 sono le più pesanti, perché hanno più logica da portare. In tutto alcune settimane di lavoro a sessioni.
 
