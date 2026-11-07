@@ -20,6 +20,13 @@ Richiesta di Lorenzo: finire tutte le schermate nella notte e mandarla a Mary. F
 - Resta da fare prima dell'App Store: WeatherKit, iPhone Duo, schema CloudKit in Production (senza, in TestFlight i dati non passano fra dispositivi:
   da verificare), testi legali da riscrivere (la pagina privacy descrive ancora il sito).
 
+## Novità 2026-11-07 — Build 1.0 (5) caricata per Mary
+
+Caricata il 07/11 alle 02:04 dal commit `e5003bb`. Verbale, screenshot e cosa non è provato: `docs/verifiche/2026-11-07-bozza-completa/giro.md`.
+Giro pulito in italiano chiaro, italiano scuro e inglese; un difetto trovato e corretto (spazio prima dei due punti in Armocromia).
+Per Mary: i capi del sito non ci sono finché Lorenzo non lancia lo script e lei importa lo zip (`docs/pubblicazione/portare-i-dati-di-mary.md`).
+Il giro temporaneo sta nello scratchpad della sessione: se serve di nuovo, va riscritto (`TempGiroTests` + `giro5.sh`), senza metterlo nel commit.
+
 ## Novità 2026-11-06 — Ibrida e sito fuori dal repository
 
 Sul ramo `claude/togli-ibrida-e-sito-5d8100`, non fuso: nel repository restano `StyleVaultNative`, `StyleVaultCore`,
