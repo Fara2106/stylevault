@@ -20,7 +20,16 @@ Richiesta di Lorenzo: finire tutte le schermate nella notte e mandarla a Mary. F
 - Resta da fare prima dell'App Store: WeatherKit, iPhone Duo, schema CloudKit in Production (senza, in TestFlight i dati non passano fra dispositivi:
   da verificare), testi legali da riscrivere (la pagina privacy descrive ancora il sito).
 
-## Novità 2026-11-07 — RC 1.0 (6), prove da finire
+## Novità 2026-11-07 — RC 1.0 (6) caricata
+
+Caricata il 07/11 alle 16:07 dal commit `99048c5`. Prove: iPhone e iPad 272 su 272, giri in chiaro, scuro, inglese e iPhone Duo passati, 33 schermate
+ciascuno, tutte viste. Un difetto corretto: contrasto di titoli, note e segnaposto nei moduli di sistema. Verbale: `docs/verifiche/2026-11-07-bozza-completa/giro.md`.
+IPA controllata: 1.0 (6), Apple Distribution, WeatherKit, PrivacyInfo, nessuna copia numerata, argomenti `-SV` solo in `#if DEBUG`.
+Da chiedere a Lorenzo: Mail di ripiego e storico dei capi cancellati, testi legali da leggere, se lo spostamento di `Web (Apps)` era voluto.
+Copie numerate: `~/Documents` è su iCloud Drive, e con i file rigenerati nascono doppioni (`Info 3.plist`, `TempGiroTests 2.swift`, 21 copie di `StyleVault.xcodeproj`).
+Il primo `xcodebuild archive` è uscito senza errori nel log, dopo 2 righe; il secondo è passato. Causa non trovata.
+
+## Novità 2026-11-07 — RC 1.0 (6), prove da finire (superata dalla sezione sopra)
 
 Il progetto ora sta in `/Users/lorenzofaraoni/Documents/Apps Mobile 📱/StyleVault`. Ramo `feat/app-nativa`, solo commit locali.
 Fatto sul ramo: correzioni della revisione, `stamp` e `DuplicateStore`, storico dei capi cancellati con `snapshot`, import più robusto, date gregoriane,
