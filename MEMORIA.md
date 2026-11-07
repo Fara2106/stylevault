@@ -25,6 +25,8 @@ Richiesta di Lorenzo: finire tutte le schermate nella notte e mandarla a Mary. F
 Caricata il 07/11 alle 16:07 dal commit `99048c5`; alle 16:20 App Store Connect la dà pronta nel gruppo "Lorenzo e Marianna", nessuna installazione. Prove: iPhone e iPad 272 su 272, giri in chiaro, scuro, inglese e iPhone Duo passati, 33 schermate
 ciascuno, tutte viste. Un difetto corretto: contrasto di titoli, note e segnaposto nei moduli di sistema. Verbale: `docs/verifiche/2026-11-07-bozza-completa/giro.md`.
 Il gruppo interno ha la distribuzione automatica: la build 6 è "Test in corso", già disponibile a Mary, che al controllo aveva ancora la 1.0 (5). Lorenzo risulta "Invitato", invito non ancora accettato.
+Prova di Lorenzo sul telefono: il credito dice ancora Open-Meteo. Sul portale Apple WeatherKit è attivo in Capabilities ma spento in App Services dell'App ID `it.faraoni.stylevault.nativa`: causa probabile, non ancora provata.
+Da rivedere: nome sulla Home solo "Style Vault" (oggi "SV Nativa") e icona.
 IPA controllata: 1.0 (6), Apple Distribution, WeatherKit, PrivacyInfo, nessuna copia numerata, argomenti `-SV` solo in `#if DEBUG`.
 Da chiedere a Lorenzo: Mail di ripiego e storico dei capi cancellati, testi legali da leggere. `Web (Apps)` dentro `Apps Mobile 📱` è voluto: confermato il 07/11.
 Copie numerate: `~/Documents` è su iCloud Drive, e con i file rigenerati nascono doppioni (`Info 3.plist`, `TempGiroTests 2.swift`, 21 copie di `StyleVault.xcodeproj`).
