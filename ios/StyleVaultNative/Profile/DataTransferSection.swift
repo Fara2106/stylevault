@@ -9,6 +9,7 @@ struct DataTransferSection: View {
     @Environment(\.modelContext) private var context
     @State private var exported: URL?
     @State private var isBusy = false
+    @State private var isImporting = false
     @State private var isPickingFile = false
     @State private var pending: ExportArchive.Contents?
     @State private var summary: ImportSummary?
@@ -21,7 +22,7 @@ struct DataTransferSection: View {
             Button(action: export) {
                 HStack {
                     Text("native.data.export").foregroundStyle(Palette.ink)
-                    if isBusy {
+                    if isBusy, !isImporting {
                         Spacer()
                         ProgressView()
                     }
@@ -36,7 +37,15 @@ struct DataTransferSection: View {
                 }
                 .accessibilityIdentifier("data-share")
             }
-            Button { isPickingFile = true } label: { Text("native.data.import").foregroundStyle(Palette.ink) }
+            Button { isPickingFile = true } label: {
+                HStack {
+                    Text("native.data.import").foregroundStyle(Palette.ink)
+                    if isImporting {
+                        Spacer()
+                        ProgressView()
+                    }
+                }
+            }
                 .disabled(isBusy)
                 .accessibilityIdentifier("data-import")
             if let summary {
@@ -77,7 +86,7 @@ struct DataTransferSection: View {
             await Task.yield()
             defer { isBusy = false }
             do {
-                exported = try DataExporter.export(from: context)
+                exported = try await DataExporter.export(from: context)
             } catch {
                 logger.error("Esportazione non riuscita: \(error.localizedDescription, privacy: .public)")
                 errorKey = "native.data.exportFailed"
@@ -106,12 +115,20 @@ struct DataTransferSection: View {
     private func applyPending() {
         guard let contents = pending else { return }
         pending = nil
-        do {
-            summary = try DataImporter.apply(contents, to: context)
-        } catch {
-            logger.error("Importazione non riuscita: \(error.localizedDescription, privacy: .public)")
-            context.rollback()
-            errorKey = "native.data.importFailed"
+        isBusy = true
+        isImporting = true
+        Task {
+            defer {
+                isBusy = false
+                isImporting = false
+            }
+            do {
+                summary = try await DataImporter.apply(contents, to: context)
+            } catch {
+                logger.error("Importazione non riuscita: \(error.localizedDescription, privacy: .public)")
+                context.rollback()
+                errorKey = "native.data.importFailed"
+            }
         }
     }
 }

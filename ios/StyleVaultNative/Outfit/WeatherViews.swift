@@ -74,7 +74,7 @@ struct WeatherCard: View {
                         .tint(Palette.link)
                 }
                 if stale, let fetchedAt {
-                    Text("weather.staleNotice \(fetchedAt.formatted(date: .omitted, time: .shortened))")
+                    Text("weather.staleNotice \(fetchedAt.formatted(date: .abbreviated, time: .shortened))")
                         .font(.caption)
                         .foregroundStyle(Palette.muted)
                 }

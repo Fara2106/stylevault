@@ -4,35 +4,65 @@ import SwiftData
 
 /// Tutti i dati dell'utente in un file: serve per cambiare telefono, per passare ad Android e per la
 /// portabilità del GDPR. Il file resta sul dispositivo finché l'utente non decide dove mandarlo.
-@MainActor enum DataExporter {
-    static func export(from context: ModelContext, to folder: URL = FileManager.default.temporaryDirectory) throws -> URL {
-        var bundle = ExportBundle()
-        var photos: [String: Data] = [:]
+/// Le foto si spostano a blocchi, ognuno col suo contesto: così la memoria si libera fra un blocco e l'altro
+/// e l'interfaccia respira. Con un contesto solo resterebbero tutte in memoria fino alla fine.
+enum TransferBatch {
+    static let size = 20
 
-        func file(_ data: Data?, _ name: String) -> String? {
+    static func split<Element>(_ values: [Element]) -> [[Element]] {
+        stride(from: 0, to: values.count, by: size).map { Array(values[$0..<min($0 + size, values.count)]) }
+    }
+}
+
+@MainActor enum DataExporter {
+    static func export(from context: ModelContext, to folder: URL = FileManager.default.temporaryDirectory) async throws -> URL {
+        try context.save()
+        let url = folder.appendingPathComponent(ExportArchive.fileName())
+        try? FileManager.default.removeItem(at: url)
+        let writer = try ZipWriter(url: url)
+        var bundle = ExportBundle()
+
+        // Ogni foto finisce subito nel file: tenerle tutte in memoria chiude l'app con guardaroba grandi.
+        func file(_ data: Data?, _ name: String) throws -> String? {
             guard let data else { return nil }
             let path = "photos/\(name).jpg"
-            photos[path] = data
+            try writer.add(name: path, data: data)
             return path
         }
 
-        bundle.items = try context.fetch(FetchDescriptor<Item>()).map { item in
-            let id = item.id.uuidString
-            return ExportGarment(id: id, name: item.name, category: item.category, subcategory: item.subcategory,
-                                 brand: item.brand, size: item.size, colors: item.colors, season: item.season,
-                                 occasion: item.occasion, warmthLevel: item.warmthLevel, sourceURL: item.sourceURL,
-                                 price: item.price, favorite: item.favorite, createdAt: item.createdAt,
-                                 photoFront: file(item.photoFront, "\(id)-front"), photoBack: file(item.photoBack, "\(id)-back"),
-                                 cutout: file(item.cutout, "\(id)-cutout"))
+        for ids in TransferBatch.split(try context.fetchIdentifiers(FetchDescriptor<Item>())) {
+            try autoreleasepool {
+                let batch = ModelContext(context.container)
+                for modelID in ids {
+                    guard let item = batch.model(for: modelID) as? Item else { continue }
+                    let id = item.id.uuidString
+                    bundle.items.append(ExportGarment(
+                        id: id, name: item.name, category: item.category, subcategory: item.subcategory,
+                        brand: item.brand, size: item.size, colors: item.colors, season: item.season,
+                        occasion: item.occasion, warmthLevel: item.warmthLevel, sourceURL: item.sourceURL,
+                        price: item.price, favorite: item.favorite, createdAt: item.createdAt,
+                        photoFront: try file(item.photoFront, "\(id)-front"), photoBack: try file(item.photoBack, "\(id)-back"),
+                        cutout: try file(item.cutout, "\(id)-cutout")))
+                }
+            }
+            await Task.yield()
         }
-        bundle.wishlist = try context.fetch(FetchDescriptor<WishlistItem>()).map { item in
-            let id = item.id.uuidString
-            return ExportGarment(id: id, name: item.name, category: item.category, subcategory: item.subcategory,
-                                 brand: item.brand, size: item.size, colors: item.colors, season: item.season,
-                                 occasion: item.occasion, warmthLevel: item.warmthLevel, sourceURL: item.sourceURL,
-                                 price: item.price, favorite: nil, createdAt: item.createdAt,
-                                 photoFront: file(item.photoFront, "\(id)-front"), photoBack: file(item.photoBack, "\(id)-back"),
-                                 cutout: nil)
+        for ids in TransferBatch.split(try context.fetchIdentifiers(FetchDescriptor<WishlistItem>())) {
+            try autoreleasepool {
+                let batch = ModelContext(context.container)
+                for modelID in ids {
+                    guard let item = batch.model(for: modelID) as? WishlistItem else { continue }
+                    let id = item.id.uuidString
+                    bundle.wishlist.append(ExportGarment(
+                        id: id, name: item.name, category: item.category, subcategory: item.subcategory,
+                        brand: item.brand, size: item.size, colors: item.colors, season: item.season,
+                        occasion: item.occasion, warmthLevel: item.warmthLevel, sourceURL: item.sourceURL,
+                        price: item.price, favorite: nil, createdAt: item.createdAt,
+                        photoFront: try file(item.photoFront, "\(id)-front"), photoBack: try file(item.photoBack, "\(id)-back"),
+                        cutout: nil))
+                }
+            }
+            await Task.yield()
         }
         bundle.customCategories = try context.fetch(FetchDescriptor<CustomCategory>()).map {
             ExportCategory(id: $0.id, name: $0.name, createdAt: $0.createdAt)
@@ -46,16 +76,15 @@ import SwiftData
                                 itemIDs: $0.itemIDs.map(\.uuidString), createdAt: $0.createdAt)
         }
         bundle.bodyPhotos = try context.fetch(FetchDescriptor<BodyPhoto>()).compactMap { photo in
-            file(photo.photo, "body-\(photo.kind)").map { ExportBodyPhoto(kind: photo.kind, file: $0) }
+            try file(photo.photo, "body-\(photo.kind)").map { ExportBodyPhoto(kind: photo.kind, file: $0) }
         }
         let profile = try ProfileStore.current(in: context)
         bundle.profile = ExportProfile(theme: profile.theme, cityName: profile.cityName, cityLatitude: profile.cityLatitude,
                                        cityLongitude: profile.cityLongitude, cityCountry: profile.cityCountry,
                                        armocromia: profile.armocromia.map { String(decoding: $0, as: UTF8.self) })
 
-        let url = folder.appendingPathComponent(ExportArchive.fileName())
-        try? FileManager.default.removeItem(at: url)
-        try ExportArchive.write(bundle, photos: photos, to: url)
+        try writer.add(name: ExportArchive.documentName, data: bundle.encoded())
+        try writer.close()
         return url
     }
 }
@@ -71,9 +100,11 @@ struct ImportSummary: Equatable {
 }
 
 /// Aggiunge ai dati che ci sono già e non cancella nulla: ciò che esiste resta com'è, così importare due
-/// volte lo stesso file non crea doppioni.
+/// volte lo stesso file sullo stesso dispositivo non crea doppioni. Salva a blocchi: se si interrompe,
+/// riprovare aggiunge ciò che manca. Su un altro dispositivo con lo stesso iCloud il confronto non vede ciò
+/// che non è ancora arrivato: lì i doppioni restano possibili.
 @MainActor enum DataImporter {
-    static func apply(_ contents: ExportArchive.Contents, to context: ModelContext) throws -> ImportSummary {
+    static func apply(_ contents: ExportArchive.Contents, to context: ModelContext) async throws -> ImportSummary {
         let bundle = contents.bundle
         var summary = ImportSummary()
         // Le chiavi di altri sistemi possono non essere UUID: capi e outfit restano collegati fra loro.
@@ -93,61 +124,76 @@ struct ImportSummary: Equatable {
             value.createdAt = category.createdAt
             context.insert(value)
         }
+        try context.save()
 
         let knownItems = Set(try context.fetch(FetchDescriptor<Item>()).map(\.id))
-        for garment in bundle.items {
-            let id = uuid(garment.id)
-            guard !knownItems.contains(id) else {
-                summary.skipped += 1
-                continue
+        for chunk in TransferBatch.split(bundle.items) {
+            try autoreleasepool {
+                let batch = ModelContext(context.container)
+                for garment in chunk {
+                    let id = uuid(garment.id)
+                    guard !knownItems.contains(id) else {
+                        summary.skipped += 1
+                        continue
+                    }
+                    let item = Item()
+                    item.id = id
+                    item.name = garment.name
+                    item.category = garment.category
+                    item.subcategory = garment.subcategory
+                    item.brand = garment.brand
+                    item.size = garment.size
+                    item.colors = garment.colors
+                    item.season = garment.season
+                    item.occasion = garment.occasion
+                    item.warmthLevel = garment.warmthLevel
+                    item.sourceURL = garment.sourceURL
+                    item.price = garment.price
+                    item.favorite = garment.favorite ?? false
+                    item.createdAt = garment.createdAt
+                    item.photoFront = try contents.photo(garment.photoFront)
+                    item.photoBack = try contents.photo(garment.photoBack)
+                    item.cutout = try contents.photo(garment.cutout)
+                    batch.insert(item)
+                    summary.items += 1
+                }
+                try batch.save()
             }
-            let item = Item()
-            item.id = id
-            item.name = garment.name
-            item.category = garment.category
-            item.subcategory = garment.subcategory
-            item.brand = garment.brand
-            item.size = garment.size
-            item.colors = garment.colors
-            item.season = garment.season
-            item.occasion = garment.occasion
-            item.warmthLevel = garment.warmthLevel
-            item.sourceURL = garment.sourceURL
-            item.price = garment.price
-            item.favorite = garment.favorite ?? false
-            item.createdAt = garment.createdAt
-            item.photoFront = try contents.photo(garment.photoFront)
-            item.photoBack = try contents.photo(garment.photoBack)
-            item.cutout = try contents.photo(garment.cutout)
-            context.insert(item)
-            summary.items += 1
+            await Task.yield()
         }
 
         let knownWishes = Set(try context.fetch(FetchDescriptor<WishlistItem>()).map(\.id))
-        for garment in bundle.wishlist {
-            let id = uuid(garment.id)
-            guard !knownWishes.contains(id) else {
-                summary.skipped += 1
-                continue
+        for chunk in TransferBatch.split(bundle.wishlist) {
+            try autoreleasepool {
+                let batch = ModelContext(context.container)
+                for garment in chunk {
+                    let id = uuid(garment.id)
+                    guard !knownWishes.contains(id) else {
+                        summary.skipped += 1
+                        continue
+                    }
+                    let item = WishlistItem()
+                    item.id = id
+                    item.name = garment.name
+                    item.category = garment.category
+                    item.subcategory = garment.subcategory
+                    item.brand = garment.brand
+                    item.size = garment.size
+                    item.colors = garment.colors
+                    item.season = garment.season
+                    item.occasion = garment.occasion
+                    item.warmthLevel = garment.warmthLevel
+                    item.sourceURL = garment.sourceURL
+                    item.price = garment.price
+                    item.createdAt = garment.createdAt
+                    item.photoFront = try contents.photo(garment.photoFront)
+                    item.photoBack = try contents.photo(garment.photoBack)
+                    batch.insert(item)
+                    summary.wishlist += 1
+                }
+                try batch.save()
             }
-            let item = WishlistItem()
-            item.id = id
-            item.name = garment.name
-            item.category = garment.category
-            item.subcategory = garment.subcategory
-            item.brand = garment.brand
-            item.size = garment.size
-            item.colors = garment.colors
-            item.season = garment.season
-            item.occasion = garment.occasion
-            item.warmthLevel = garment.warmthLevel
-            item.sourceURL = garment.sourceURL
-            item.price = garment.price
-            item.createdAt = garment.createdAt
-            item.photoFront = try contents.photo(garment.photoFront)
-            item.photoBack = try contents.photo(garment.photoBack)
-            context.insert(item)
-            summary.wishlist += 1
+            await Task.yield()
         }
 
         let knownOutfits = Set(try context.fetch(FetchDescriptor<Outfit>()).map(\.id))

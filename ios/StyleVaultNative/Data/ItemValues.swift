@@ -18,6 +18,11 @@ struct ItemValues: Equatable {
 }
 
 extension Item {
+    /// CloudKit non ha vincoli `unique`: due record possono avere lo stesso id e qui non deve costare un crash.
+    static func byID(_ items: [Item]) -> [String: Item] {
+        Dictionary(items.map { ($0.id.uuidString, $0) }, uniquingKeysWith: { first, _ in first })
+    }
+
     func apply(_ values: ItemValues) {
         name = values.name
         category = values.category

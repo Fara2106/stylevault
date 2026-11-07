@@ -119,13 +119,27 @@ enum PlaceKind { case fallback, position, manual }
         }
     }
 
+    /// Il giorno scelto si cerca per data: una previsione rimasta in memoria può iniziare giorni fa.
+    private func forecastDay(today: String) -> DayForecast? {
+        guard let days = forecast?.days else { return nil }
+        if let match = days.first(where: { $0.date == DayText.adding(dayIndex, to: today) }) { return match }
+        // Un luogo già al giorno dopo (Tokyo, la sera da Milano) non ha il "nostro" oggi: conta la posizione.
+        if let first = days.first?.date, first > today, days.indices.contains(dayIndex) { return days[dayIndex] }
+        return nil
+    }
+
     func dayWeather(city: String, today: String) -> DayForecast? {
-        if let days = forecast?.days, days.indices.contains(dayIndex) { return days[dayIndex] }
-        guard weatherError else { return nil }
+        if let day = forecastDay(today: today) { return day }
+        guard usesManualWeather(today: today) else { return nil }
         return DayForecast(city: city, date: DayText.adding(dayIndex, to: today), tMin: nil, tMax: nil,
                            temperature: manualTemperature, windSpeed: 0, uvIndex: 0, precipProb: nil,
                            icon: manualRain ? .rain : .sun, descriptionKey: manualRain ? "weather.rainy" : "weather.clear",
                            rain: manualRain, snow: false)
+    }
+
+    /// Senza previsione per quel giorno si imposta a mano: l'outfit non resta mai bloccato.
+    func usesManualWeather(today: String) -> Bool {
+        weatherError || (forecast != nil && forecastDay(today: today) == nil)
     }
 
     func select(day: Int) {

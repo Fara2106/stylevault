@@ -65,6 +65,41 @@ private struct Offline: Error {}
         XCTAssertFalse(m.outfits.isEmpty)
     }
 
+    func testConUnaPrevisioneVecchiaOggiÈOggi() async {
+        let m = model()
+        let old = ForecastResult(days: ["2026-11-03", "2026-11-04", "2026-11-05", "2026-11-06"].map { day($0) },
+                                 stale: true, fetchedAt: .now)
+        await m.loadForecast(for: milano, using: StubLoader(result: .success(old)))
+        XCTAssertEqual(m.dayWeather(city: "Milano", today: "2026-11-06")?.date, "2026-11-06")
+        XCTAssertFalse(m.usesManualWeather(today: "2026-11-06"))
+    }
+
+    func testUnGiornoFuoriPrevisioneSiImpostaAMano() async {
+        let m = model()
+        await m.loadForecast(for: milano, using: StubLoader(result: .success(forecast(stale: true))))
+        m.select(day: 4)
+        XCTAssertEqual(m.dayWeather(city: "Milano", today: "2026-11-06")?.date, "2026-11-10")
+        XCTAssertTrue(m.usesManualWeather(today: "2026-11-06"))
+        m.generate(items: wardrobe, recentWear: [])
+        XCTAssertFalse(m.outfits.isEmpty)
+    }
+
+    func testUnaPrevisioneTuttaPassataSiImpostaAMano() async {
+        let m = model()
+        await m.loadForecast(for: milano, using: StubLoader(result: .success(forecast(stale: true))))
+        XCTAssertEqual(m.dayWeather(city: "Milano", today: "2026-11-20")?.date, "2026-11-20")
+        XCTAssertTrue(m.usesManualWeather(today: "2026-11-20"))
+    }
+
+    /// Da Milano la sera, a Tokyo è già domani: la previsione fresca non ha il "nostro" oggi.
+    func testUnLuogoGiàAlGiornoDopoTieneLaSuaPrevisione() async {
+        let m = model()
+        let ahead = ForecastResult(days: ["2026-11-07", "2026-11-08"].map { day($0) }, stale: false, fetchedAt: .now)
+        await m.loadForecast(for: milano, using: StubLoader(result: .success(ahead)))
+        XCTAssertEqual(m.dayWeather(city: "Milano", today: "2026-11-06")?.date, "2026-11-07")
+        XCTAssertFalse(m.usesManualWeather(today: "2026-11-06"))
+    }
+
     func testIlMeteoManualeSegueIlGiornoScelto() async {
         let m = model()
         await m.loadForecast(for: milano, using: StubLoader(result: .failure(Offline())))

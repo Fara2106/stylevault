@@ -28,7 +28,7 @@ struct OutfitView: View {
 
     private var today: String { CalendarMath.iso(.now) }
     private var pieces: [OutfitPiece] { items.map(\.piece) }
-    private var itemsByID: [String: Item] { Dictionary(uniqueKeysWithValues: items.map { ($0.id.uuidString, $0) }) }
+    private var itemsByID: [String: Item] { Item.byID(items) }
     private var recentWear: [RecentWear] { OutfitStore.recentWear(from: entries) }
 
     private var defaultCity: ForecastPlace {
@@ -196,7 +196,7 @@ struct OutfitView: View {
     }
 
     @ViewBuilder private var weatherSection: some View {
-        if model.weatherError {
+        if model.usesManualWeather(today: today) {
             manualWeather
         } else if let weather {
             WeatherCard(weather: weather, stale: model.forecast?.stale ?? false, fetchedAt: model.forecast?.fetchedAt)
@@ -337,7 +337,8 @@ struct OutfitView: View {
     }
 
     private func wear(_ outfit: GeneratedOutfit) {
-        let day = weather?.date ?? today
+        // Il giorno scelto, non quello della previsione: un luogo lontano può essere già a domani.
+        let day = DayText.adding(model.dayIndex, to: today)
         do {
             try OutfitStore.log(itemIDs: ids(of: outfit), outfitID: nil, day: day, today: today, in: context)
             model.markWorn(outfit, day: day)
