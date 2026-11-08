@@ -30,6 +30,11 @@ import SwiftData
     init() { stamp = UUID() }
 }
 
+extension Item {
+    /// Nelle schede e negli outfit: il capo scontornato appena c'è, se no la foto.
+    var shownPhoto: Data? { cutout ?? photoFront }
+}
+
 @Model final class WishlistItem {
     var id: UUID = UUID()
     var name: String = ""

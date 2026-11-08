@@ -20,6 +20,23 @@ Richiesta di Lorenzo: finire tutte le schermate nella notte e mandarla a Mary. F
 - Resta da fare prima dell'App Store: WeatherKit, iPhone Duo, schema CloudKit in Production (senza, in TestFlight i dati non passano fra dispositivi:
   da verificare), testi legali da riscrivere (la pagina privacy descrive ancora il sito).
 
+## Novità 2026-11-08 — Scontorno visibile nelle schede
+
+Mary: «ancora non scontorna». Causa probabile, letta dal codice e non vista sul suo telefono: l'app scontornava, ma griglia, outfit,
+calendario e statistiche mostravano sempre la foto originale. Lo scontorno compariva solo come terza pagina del dettaglio, come nel
+sito, dove serviva solo all'avatar. In più i capi senza scontorno, perché l'app era stata chiusa prima della fine o perché importati,
+non venivano mai ripresi. Vision sul telefono funziona: il 03/11 l'avatar aveva scontornato i capi sull'iPhone di Lorenzo.
+- Correzione:
+  - `Item.shownPhoto` (scontorno, se no foto) nelle schede e negli outfit; il dettaglio apre ancora sulla foto originale.
+  - `CutoutWorker.enqueueMissing()` all'avvio e dopo un'importazione; un capo in cui Vision non trova nulla non si riprova nella stessa sessione.
+  - Fondo `Palette.studio`, chiaro anche in modalità scura, dietro le immagini con trasparenza.
+  - Seme di prova `-SVSeedCutout`, solo DEBUG.
+- Verifica:
+  - Suite iPhone 279 su 279, compresi i 4 test nuovi del worker. iPad non rifatto.
+  - Griglia in modalità scura vista sul simulatore: `docs/verifiche/2026-11-08-scontorno/griglia-scuro.png`.
+  - Non visto con Vision vero sul telefono: i test del pacchetto non girano su un iPhone vero senza un'app che li ospiti.
+- Arriva a Mary solo con una nuova build.
+
 ## Novità 2026-11-08 — Nome "Style Vault"
 
 Richiesta di Lorenzo. Sul ramo locale, **non ancora in una build**: sulla Home e in tutti i testi dell'app ora c'è "Style Vault" (era "SV Nativa" sulla Home e "StyleVault" nei testi): `project.yml`, `Info.plist`, `InfoPlist.xcstrings`, 16 testi di `Localizable.xcstrings`, login, oggetto della mail, testi legali rigenerati da `testi-legali.md`. Identificativi, container iCloud e nomi dei file di esportazione restano "StyleVault".

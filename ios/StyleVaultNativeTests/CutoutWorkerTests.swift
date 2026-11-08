@@ -138,4 +138,59 @@ private actor FakeCut {
         let calls = await fake.calls
         XCTAssertEqual(calls, 1)
     }
+
+    // MARK: Capi rimasti senza scontorno
+
+    func testRecuperaICapiSenzaScontorno() async throws {
+        let c = try context()
+        let missing = try addItem(c)
+        let done = try addItem(c)
+        done.cutout = Data([9])
+        _ = try addItem(c, photo: nil)
+        try c.save()
+        let fake = FakeCut(result: Data([7]))
+        let w = worker(c, fake)
+        w.enqueueMissing()
+        await w.waitUntilIdle()
+        let calls = await fake.calls
+        XCTAssertEqual(calls, 1)
+        XCTAssertEqual(missing.cutout, Data([7]))
+        XCTAssertEqual(done.cutout, Data([9]))
+    }
+
+    func testNonRiprovaNellaStessaSessioneUnoScontornoFallito() async throws {
+        let c = try context()
+        _ = try addItem(c)
+        let fake = FakeCut(result: nil)
+        let w = worker(c, fake)
+        w.enqueueMissing()
+        await w.waitUntilIdle()
+        w.enqueueMissing()
+        await w.waitUntilIdle()
+        let calls = await fake.calls
+        XCTAssertEqual(calls, 1)
+    }
+
+    func testFotoCambiataRiprovaAncheDopoUnFallimento() async throws {
+        let c = try context()
+        let item = try addItem(c)
+        let fake = FakeCut(result: nil)
+        let w = worker(c, fake)
+        w.enqueueMissing()
+        await w.waitUntilIdle()
+        w.enqueue(item.id)
+        await w.waitUntilIdle()
+        let calls = await fake.calls
+        XCTAssertEqual(calls, 2)
+    }
+
+    // MARK: Foto mostrata
+
+    func testSiVedeLoScontornoQuandoCe() throws {
+        let c = try context()
+        let item = try addItem(c)
+        XCTAssertEqual(item.shownPhoto, Data([1]))
+        item.cutout = Data([7])
+        XCTAssertEqual(item.shownPhoto, Data([7]))
+    }
 }

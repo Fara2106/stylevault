@@ -5,6 +5,8 @@ import UIKit
 enum Palette {
     static let bg = dynamic(light: 0xFAF7F2, dark: 0x141210)
     static let surface = dynamic(light: 0xFFFFFF, dark: 0x1D1A17)
+    /// Dietro i capi scontornati, chiaro anche in modalità scura: un capo nero non sparisce.
+    static let studio = dynamic(light: 0xF1ECE4, dark: 0xE6E0D7)
     static let ink = dynamic(light: 0x1A1A1A, dark: 0xF2EDE6)
     static let muted = dynamic(light: 0x6B6560, dark: 0xA39B91)
     static let border = dynamic(light: 0xE5DFD6, dark: 0x3A342E)

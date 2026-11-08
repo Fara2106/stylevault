@@ -283,7 +283,7 @@ struct ArmocromiaView: View {
             ForEach(matches, id: \.id) { match in
                 if let item = items.first(where: { $0.id.uuidString == match.id }) {
                     HStack(spacing: 10) {
-                        ItemPhotoView(data: item.cutout ?? item.photoFront, name: item.name)
+                        ItemPhotoView(data: item.shownPhoto, name: item.name)
                             .frame(width: 44, height: 44)
                             .clipShape(RoundedRectangle(cornerRadius: 6))
                         Text(verbatim: item.name).font(.subheadline).foregroundStyle(Palette.ink)

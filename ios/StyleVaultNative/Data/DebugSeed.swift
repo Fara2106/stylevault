@@ -26,6 +26,29 @@ import UIKit
         }
     }
 
+    /// Il cappotto con una foto su fondo grigio e il suo scontorno, solo con `-SVSeedCutout`:
+    /// nel simulatore Vision non gira, e senza questo lo scontorno non si vede mai.
+    static func fillCutout(_ context: ModelContext) {
+        guard let coat = try? context.fetch(FetchDescriptor<Item>()).first(where: { $0.name == "Cappotto" }) else { return }
+        let size = CGSize(width: 600, height: 800)
+        let shape = UIBezierPath(roundedRect: CGRect(x: 150, y: 120, width: 300, height: 560), cornerRadius: 60)
+        func draw(background: UIColor?) -> UIImage {
+            let format = UIGraphicsImageRendererFormat()
+            format.opaque = background != nil
+            return UIGraphicsImageRenderer(size: size, format: format).image { renderer in
+                if let background {
+                    background.setFill()
+                    renderer.fill(CGRect(origin: .zero, size: size))
+                }
+                UIColor.black.setFill()
+                shape.fill()
+            }
+        }
+        coat.photoFront = draw(background: .systemGray).jpegData(compressionQuality: 0.8)
+        coat.cutout = draw(background: nil).pngData()
+        try? context.save()
+    }
+
     /// Una foto finta, solo con `-SVSeedBodyPhoto`.
     static func fillBodyPhoto(_ context: ModelContext) {
         let size = CGSize(width: 300, height: 600)

@@ -38,6 +38,7 @@ struct StyleVaultNativeApp: App {
         let opened = StoreFactory.open(preferred: preferred)
         #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("-SVSeedWardrobe") { DebugSeed.fill(opened.container.mainContext) }
+        if ProcessInfo.processInfo.arguments.contains("-SVSeedCutout") { DebugSeed.fillCutout(opened.container.mainContext) }
         if ProcessInfo.processInfo.arguments.contains("-SVSeedBodyPhoto") { DebugSeed.fillBodyPhoto(opened.container.mainContext) }
         #endif
         let monitor = SyncMonitor(health: opened.health)
@@ -138,6 +139,7 @@ struct StyleVaultNativeApp: App {
                 .background(LockThemeSync(controller: lockWindow))
                 .environment(appLock)
                 .environment(cutoutWorker)
+                .task { cutoutWorker.enqueueMissing() }
                 .environment(\.linkReader, Self.makeLinkReader())
                 .environment(\.forecastLoader, Self.makeForecastLoader())
                 .environment(\.positionProvider, Self.makePositionProvider())

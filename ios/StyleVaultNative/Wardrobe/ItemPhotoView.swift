@@ -39,7 +39,7 @@ struct ItemPhotoView: View {
 
     var body: some View {
         ZStack {
-            Palette.surface
+            isCutout ? Palette.studio : Palette.surface
             if let image {
                 Image(uiImage: image)
                     .resizable()
@@ -52,6 +52,14 @@ struct ItemPhotoView: View {
         }
         .clipped()
         .task(id: data) { await load() }
+    }
+
+    /// Lo scontorno è l'unica immagine con la trasparenza: le foto sono JPEG.
+    private var isCutout: Bool {
+        switch image?.cgImage?.alphaInfo {
+        case nil, .none?, .noneSkipLast?, .noneSkipFirst?: false
+        default: true
+        }
     }
 
     private func load() async {

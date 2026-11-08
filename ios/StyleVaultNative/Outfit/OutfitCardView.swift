@@ -9,7 +9,7 @@ struct OutfitThumbs: View {
     var body: some View {
         HStack(spacing: 8) {
             ForEach(items) { item in
-                ItemPhotoView(data: item.photoFront, name: item.name)
+                ItemPhotoView(data: item.shownPhoto, name: item.name)
                     .frame(width: size, height: size)
                     .clipShape(RoundedRectangle(cornerRadius: 8))
                     .accessibilityLabel(Text(verbatim: item.name))
@@ -101,7 +101,7 @@ struct OutfitCardView: View {
         if let item = items[piece.id] {
             let locked = lockedIDs.contains(piece.id)
             HStack(spacing: 12) {
-                ItemPhotoView(data: item.photoFront, name: item.name)
+                ItemPhotoView(data: item.shownPhoto, name: item.name)
                     .frame(width: 56, height: 56)
                     .clipShape(RoundedRectangle(cornerRadius: 8))
                 VStack(alignment: .leading, spacing: 2) {

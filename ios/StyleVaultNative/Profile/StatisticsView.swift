@@ -113,7 +113,7 @@ struct StatisticsView: View {
                             ItemDetailView(itemID: item.id)
                         } label: {
                             HStack(spacing: 10) {
-                                ItemPhotoView(data: item.photoFront, name: item.name)
+                                ItemPhotoView(data: item.shownPhoto, name: item.name)
                                     .frame(width: 40, height: 40)
                                     .clipShape(RoundedRectangle(cornerRadius: 6))
                                 Text(verbatim: item.name).font(.subheadline).foregroundStyle(Palette.ink).lineLimit(1)

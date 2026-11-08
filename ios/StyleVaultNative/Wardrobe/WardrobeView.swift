@@ -149,7 +149,7 @@ struct WardrobeView: View {
             NavigationLink {
                 ItemDetailView(itemID: item.id)
             } label: {
-                ItemCard(name: item.name, brand: item.brand, colors: item.colors, photo: item.photoFront)
+                ItemCard(name: item.name, brand: item.brand, colors: item.colors, photo: item.shownPhoto)
             }
             .buttonStyle(.plain)
             .accessibilityIdentifier("item-card")

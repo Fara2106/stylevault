@@ -7,6 +7,7 @@ import UniformTypeIdentifiers
 /// Esporta e importa dal Profilo. Importare aggiunge soltanto: non cancella nulla di ciò che c'è.
 struct DataTransferSection: View {
     @Environment(\.modelContext) private var context
+    @Environment(CutoutWorker.self) private var cutoutWorker
     @State private var exported: URL?
     @State private var isBusy = false
     @State private var isImporting = false
@@ -138,6 +139,8 @@ struct DataTransferSection: View {
             }
             do {
                 summary = try await DataImporter.apply(contents, to: context)
+                // I capi arrivati dal sito non hanno lo scontorno.
+                cutoutWorker.enqueueMissing()
             } catch {
                 logger.error("Importazione non riuscita: \(error.localizedDescription, privacy: .public)")
                 errorKey = "native.data.importFailed"
