@@ -48,6 +48,28 @@ final class VisionTests: XCTestCase {
         XCTAssertEqual(people, 1)
     }
 
+    // Foto di Unsplash (licenza Unsplash), ridotte a 1024: per strada un passante piccolo dietro non è una seconda persona,
+    // due persone vicine sì.
+    func testUnPassantePiccoloSulloSfondoNonConta() async throws {
+        let people = try await PersonCutout.peopleCount(try fixture("persona-passante"))
+        XCTAssertEqual(people, 1)
+    }
+
+    func testDuePersoneVicineContano() async throws {
+        let people = try await PersonCutout.peopleCount(try fixture("persona-coppia"))
+        XCTAssertEqual(people, 2)
+    }
+
+    // Altezze misurate sulle foto di prova del 08/11: passante 0,30 accanto a 0,93; coppia 0,53 accanto a 0,61.
+    func testContaSoloLePersoneAlteAlmenoMetaDellaPrincipale() {
+        XCTAssertEqual(PersonCutout.countedPeople(heights: []), 0)
+        XCTAssertEqual(PersonCutout.countedPeople(heights: [0.4]), 1)
+        XCTAssertEqual(PersonCutout.countedPeople(heights: [0.93, 0.30]), 1)
+        XCTAssertEqual(PersonCutout.countedPeople(heights: [0.30, 0.93]), 1, "l'ordine non conta")
+        XCTAssertEqual(PersonCutout.countedPeople(heights: [0.61, 0.53]), 2)
+        XCTAssertEqual(PersonCutout.countedPeople(heights: [0.8, 0.4]), 2, "a metà esatta conta ancora")
+    }
+
     func testScontornoDellaPersona() async throws {
         let start = Date()
         let cutout = try await PersonCutout.cutout(try fixture("persona"))

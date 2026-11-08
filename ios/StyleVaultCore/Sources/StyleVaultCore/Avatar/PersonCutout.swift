@@ -49,14 +49,24 @@ public enum PersonCutout {
         }.value
     }
 
-    /// Quante persone ci sono nella foto (corpo intero o parziale).
+    /// Quante persone ci sono nella foto (corpo intero o parziale), senza i passanti piccoli sullo sfondo.
     public static func peopleCount(_ image: CGImage) async throws -> Int {
         try await Task.detached(priority: .userInitiated) {
             let request = VNDetectHumanRectanglesRequest()
             request.upperBodyOnly = false
             try VNImageRequestHandler(cgImage: image).perform([request])
-            return request.results?.count ?? 0
+            return countedPeople(heights: (request.results ?? []).map { Double($0.boundingBox.height) })
         }.value
+    }
+
+    /// Per strada dietro c'è quasi sempre qualcuno: conta solo chi è alto almeno metà della persona principale.
+    /// Chi sta accanto, anche un passo indietro, resta sopra la metà (coppia di prova: 0,53 accanto a 0,61);
+    /// un passante lontano no (0,30 accanto a 0,93).
+    static let backgroundPersonRatio = 0.5
+
+    static func countedPeople(heights: [Double]) -> Int {
+        guard let tallest = heights.max() else { return 0 }
+        return heights.filter { $0 >= tallest * backgroundPersonRatio }.count
     }
 
     /// Etichetta del soggetto con più pixel nella maschera a bassa risoluzione.

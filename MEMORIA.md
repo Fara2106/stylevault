@@ -28,8 +28,17 @@ vero sul Mac, tramite un piccolo programma che usa `StyleVaultCore`. Fogli, esit
 - Capi: un capo da solo si scontorna bene anche su sfondo pieno (giacca su porta, borsa al bar con strada dietro, scarpe sul parquet, bomber
   tenuto in mano: la mano sparisce). Restano gruccia, gancio o sedia quando toccano il capo. Più capi vicini (flat lay, appendiabiti, stender)
   escono come un blocco unico. Letto disordinato con tanti oggetti: nessun soggetto, l'app mostra la foto originale.
-- Persone: scontorno pulito in tutte, anche in controluce e su muro dipinto. Foto di spalle riconosciuta. Basta un passante piccolo sullo
-  sfondo per "più persone" (`people > 1` in `BodyPhotosModel.validate`): da valutare con Lorenzo.
+- Persone: scontorno pulito in tutte, anche in controluce e su muro dipinto. Foto di spalle riconosciuta. Bastava un passante piccolo sullo
+  sfondo per "più persone" (`people > 1` in `BodyPhotosModel.validate`): corretto con l'ok di Lorenzo («Sì, correggi qui»), vedi sotto.
+- Correzione del passante: `PersonCutout.peopleCount` conta solo chi è alto almeno metà della persona principale (`backgroundPersonRatio` 0,5).
+  Altezze misurate: passante 0,30 accanto a 0,93; coppia 0,53 accanto a 0,61, che resta "più persone". Test: `countedPeople` con i numeri
+  misurati e due foto vere ridotte a 1024 (`Fixtures/persona-passante.jpg`, `persona-coppia.jpg`, Unsplash). Pacchetto 182 su 182.
+  - Sul banco del Mac la foto col passante ora non dà più "più persone" ma "non a figura intera": la posa non trova le caviglie (gambe tagliate
+    dal fotogramma). È la regola della posa già esistente, lasciata com'è.
+  - Suite iPhone passata. Giri da installazione pulita: scuro, inglese e iPhone Duo passati, 33 schermate ciascuno, tutte viste. Il chiaro si è
+    fermato al primo capo, foglio ancora aperto dopo Salva, con il Mac a carico 100: è la seconda volta (anche nella build 7). `save()` chiude
+    solo con nome e categoria validi, quindi è perso il tocco su Salva o quello sulla categoria; l'app si comporta bene. Rifatto da zero, passato, 33 schermate viste.
+  - Non è in nessuna build: la 7 in TestFlight conta ancora i passanti. Suite iPad non rifatta (la correzione è nel pacchetto, non nelle viste).
 - Avatar: buono con un capo fotografato bene (bomber); con un capo scontornato male (camicia con gruccia e camicie vicine) l'avatar incolla il
   blocco intero.
 - Non provato: lo stesso sull'iPhone (Vision del Mac, non del telefono) e la build 7 nelle mani di Mary.
