@@ -20,6 +20,14 @@ Richiesta di Lorenzo: finire tutte le schermate nella notte e mandarla a Mary. F
 - Resta da fare prima dell'App Store: WeatherKit, iPhone Duo, schema CloudKit in Production (senza, in TestFlight i dati non passano fra dispositivi:
   da verificare), testi legali da riscrivere (la pagina privacy descrive ancora il sito).
 
+## Novità 2026-11-08 (sera) — Build 1.0 (9) caricata
+
+Con l'ok di Lorenzo («Sì»). Caricata alle 21:49, va in TestFlight dopo l'elaborazione di Apple. Dentro c'è lo scontorno dei capi senza gli
+oggetti tagliati dal bordo (`f8a9bef`, sezione qui sotto); numero di build in `7e99dc3`.
+- IPA controllata: 1.0 (9), "Style Vault", Apple Distribution, WeatherKit, CloudKit e push in Production, PrivacyInfo, nessuna copia " 2",
+  nessun argomento `-SV`, niente Open-Meteo, nessuna eccezione ATS; `garmentInstances` presente nei simboli dell'archivio.
+- Non provato: la correzione sul telefono vero; suite iPad non rifatta.
+
 ## Novità 2026-11-08 (sera) — Secondo giro di scontorno: selfie allo specchio, foto da iPhone, accessori
 
 Richiesta di Lorenzo: «Fai altre simulazioni e dimmi che trovi e correggilo». 15 capi e 10 persone nuovi da Unsplash, con lo stesso banco
