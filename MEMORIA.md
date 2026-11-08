@@ -20,6 +20,26 @@ Richiesta di Lorenzo: finire tutte le schermate nella notte e mandarla a Mary. F
 - Resta da fare prima dell'App Store: WeatherKit, iPhone Duo, schema CloudKit in Production (senza, in TestFlight i dati non passano fra dispositivi:
   da verificare), testi legali da riscrivere (la pagina privacy descrive ancora il sito).
 
+## Novità 2026-11-08 (sera) — Secondo giro di scontorno: selfie allo specchio, foto da iPhone, accessori
+
+Richiesta di Lorenzo: «Fai altre simulazioni e dimmi che trovi e correggilo». 15 capi e 10 persone nuovi da Unsplash, con lo stesso banco
+del Mac del primo giro, più le foto come le salva l'iPhone (pixel coricati con orientamento EXIF 6, JPEG e HEIC). Programmi, esiti e
+immagini: `docs/verifiche/2026-11-08-scontorno-sfondi-2/`.
+- Trovato e corretto: per i capi l'app teneva tutti i soggetti di Vision, quindi occhiali sul tavolo uscivano con la tazzina e la tazza
+  tagliate dal bordo. Ora `PersonCutout.garmentInstances`: se un soggetto sta tutto dentro la foto, si scartano quelli che toccano almeno
+  due lati. Usata da `GarmentImage.cutout` e dall'avatar. Su 27 capi cambia solo quella foto; collana a tre fili e paio di stivali restano
+  interi. Test: `testQualiSoggettiTieneUnCapo` con i lati misurati e `testCapoSenzaGliOggettiTagliatiDalBordo` (fixture
+  `capo-occhiali-tazza.jpg`). Pacchetto 184 su 184. I capi già scontornati restano come sono: vale per le foto nuove.
+- Provato e già giusto: foto da iPhone dritte sia JPEG sia HEIC, e la foto del corpo passa il controllo; selfie allo specchio intero
+  accettato e avatar buono; gli altri selfie allo specchio e le foto con i piedi tagliati rifiutati come "non a figura intera" (giusto: i
+  piedi non si vedono); seduta rifiutata. Capi singoli puliti anche bianchi e neri: occhiali su bianco, jeans, stivale, top nero
+  nell'armadio, vestito su muro con ghirlande.
+- Limiti rimasti, da dire a Mary: capo indossato da una persona (esce la persona intera, viso compreso), collana indossata (nessun
+  soggetto, resta la foto), più camicie sullo stesso appendiabiti (blocco unico), gruccia attaccata al vestito, jeans piegati (l'avatar li
+  incolla piegati).
+- Dopo la correzione: suite iPhone passata; giri da installazione pulita in chiaro, scuro, inglese e su iPhone Duo passati, 33 schermate
+  ciascuno, tutte viste, nessun crash. Non provati: suite iPad, la correzione su un telefono vero (serve una build 1.0 (9)).
+
 ## Novità 2026-11-08 — Build 1.0 (8) caricata
 
 Con l'ok di Lorenzo («Sì, prepara la 8»). Caricata alle 17:39, va in TestFlight dopo l'elaborazione di Apple. Dentro c'è la correzione del passante sullo sfondo (`7120012`); numero di build in `678a7c9`.

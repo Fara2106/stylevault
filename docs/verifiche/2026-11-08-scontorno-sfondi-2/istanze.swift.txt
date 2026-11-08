@@ -1,0 +1,38 @@
+import CoreGraphics
+import Foundation
+import ImageIO
+import Vision
+import StyleVaultCore
+
+// Per ogni foto di capo: le istanze che trova Vision, con area, riquadro e lati della foto che toccano.
+for dir in CommandLine.arguments.dropFirst() {
+    for f in try FileManager.default.contentsOfDirectory(atPath: dir).filter({ $0.hasPrefix("capo") && $0.hasSuffix(".jpg") }).sorted() {
+        let raw = try Data(contentsOf: URL(fileURLWithPath: dir).appendingPathComponent(f))
+        let prepared = GarmentImage.prepared(raw)!
+        let src = CGImageSourceCreateWithData(prepared as CFData, nil)!
+        let img = CGImageSourceCreateThumbnailAtIndex(src, 0, [kCGImageSourceThumbnailMaxPixelSize: 1024, kCGImageSourceCreateThumbnailWithTransform: true, kCGImageSourceCreateThumbnailFromImageAlways: true] as CFDictionary)!
+        let req = VNGenerateForegroundInstanceMaskRequest()
+        try VNImageRequestHandler(cgImage: img).perform([req])
+        guard let obs = req.results?.first, !obs.allInstances.isEmpty else { print("\(f)\tnessuna"); continue }
+        let m = obs.instanceMask
+        CVPixelBufferLockBaseAddress(m, .readOnly)
+        let w = CVPixelBufferGetWidth(m), h = CVPixelBufferGetHeight(m), rb = CVPixelBufferGetBytesPerRow(m)
+        let base = CVPixelBufferGetBaseAddress(m)!.assumingMemoryBound(to: UInt8.self)
+        var stats = [Int: (n: Int, x0: Int, y0: Int, x1: Int, y1: Int)]()
+        for y in 0..<h { for x in 0..<w {
+            let l = Int(base[y * rb + x]); if l == 0 { continue }
+            var s = stats[l] ?? (0, w, h, -1, -1)
+            s.n += 1; s.x0 = min(s.x0, x); s.y0 = min(s.y0, y); s.x1 = max(s.x1, x); s.y1 = max(s.y1, y)
+            stats[l] = s
+        } }
+        CVPixelBufferUnlockBaseAddress(m, .readOnly)
+        let desc = stats.sorted { $0.value.n > $1.value.n }.map { l, s -> String in
+            var edges = ""
+            if s.x0 == 0 { edges += "S" }; if s.y0 == 0 { edges += "A" }
+            if s.x1 == w - 1 { edges += "D" }; if s.y1 == h - 1 { edges += "B" }
+            return String(format: "#%d %.1f%% c(%.2f,%.2f) bordi[%@]", l, Double(s.n) * 100 / Double(w * h),
+                          Double(s.x0 + s.x1) / 2 / Double(w), Double(s.y0 + s.y1) / 2 / Double(h), edges)
+        }
+        print("\(f)\tmaschera \(w)x\(h)\t" + desc.joined(separator: " | "))
+    }
+}

@@ -101,6 +101,40 @@ final class VisionTests: XCTestCase {
         XCTAssertLessThan(PersonCutout.transparentFraction(cutout.image), 0.9)
     }
 
+    // Foto Unsplash ridotta a 1024: occhiali sul tavolo, tazzina e tazza tagliate dal bordo. Prima l'app teneva anche le tazze.
+    func testCapoSenzaGliOggettiTagliatiDalBordo() async throws {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "capo-occhiali-tazza", withExtension: "jpg",
+                                                  subdirectory: "Fixtures"))
+        let png = await GarmentImage.cutout(try Data(contentsOf: url))
+        let data = try XCTUnwrap(png, "gli occhiali sono un soggetto")
+        let source = try XCTUnwrap(CGImageSourceCreateWithData(data as CFData, nil))
+        let image = try XCTUnwrap(CGImageSourceCreateImageAtIndex(source, 0, nil))
+        let bounds = PersonCutout.opaqueBounds(image)
+        // Gli occhiali stanno a destra (centro a 0,77), la tazzina a sinistra (0,23).
+        XCTAssertGreaterThan(bounds.minX, CGFloat(image.width) * 0.5, "la tazzina doveva sparire: \(bounds)")
+        XCTAssertGreaterThan(PersonCutout.transparentFraction(image), 0.8)
+    }
+
+    // Lati toccati misurati sulle foto di prova del 08/11.
+    func testQualiSoggettiTieneUnCapo() {
+        typealias Box = PersonCutout.InstanceBox
+        // Tazzina (sinistra, sopra, sotto) e occhiali tutti dentro: restano gli occhiali.
+        XCTAssertEqual(PersonCutout.keptGarmentLabels([Box(label: 1, pixels: 900, edges: 3),
+                                                       Box(label: 2, pixels: 300, edges: 0)]), [2])
+        // Un paio di stivali, tutti e due dentro: restano tutti e due.
+        XCTAssertEqual(PersonCutout.keptGarmentLabels([Box(label: 1, pixels: 500, edges: 0),
+                                                       Box(label: 2, pixels: 400, edges: 0)]), [1, 2])
+        // Collana a tre fili, tutti tagliati in alto: nessuno sta tutto dentro, restano tutti.
+        XCTAssertEqual(PersonCutout.keptGarmentLabels([Box(label: 1, pixels: 130, edges: 1),
+                                                       Box(label: 2, pixels: 50, edges: 1),
+                                                       Box(label: 3, pixels: 45, edges: 1)]), [1, 2, 3])
+        // Scarpa inquadrata stretta (tocca un lato) accanto all'altra: restano tutte e due.
+        XCTAssertEqual(PersonCutout.keptGarmentLabels([Box(label: 1, pixels: 500, edges: 1),
+                                                       Box(label: 2, pixels: 450, edges: 0)]), [1, 2])
+        // Un solo soggetto che riempie la foto: resta.
+        XCTAssertEqual(PersonCutout.keptGarmentLabels([Box(label: 1, pixels: 5000, edges: 3)]), [1])
+    }
+
     func testPosaDellaPersona() async throws {
         let pose = try await XCTUnwrapAsync(await BodyPose.detect(try fixture("persona")))
         for joint in [Joint.leftShoulder, .rightShoulder, .leftHip, .rightHip, .leftAnkle, .rightAnkle] {

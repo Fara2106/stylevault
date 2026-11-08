@@ -44,9 +44,10 @@ public enum GarmentImage {
                 let handler = VNImageRequestHandler(cgImage: image)
                 try handler.perform([request])
                 guard let observation = request.results?.first, !observation.allInstances.isEmpty else { return nil }
-                // Tutte le istanze: un paio di scarpe sono due soggetti.
+                // Più istanze: un paio di scarpe sono due soggetti. Senza gli oggetti di sfondo tagliati dal bordo.
                 let buffer = try observation.generateMaskedImage(
-                    ofInstances: observation.allInstances, from: handler, croppedToInstancesExtent: false)
+                    ofInstances: PersonCutout.garmentInstances(in: observation), from: handler,
+                    croppedToInstancesExtent: false)
                 let masked = CIImage(cvPixelBuffer: buffer)
                 guard let cgImage = CIContext().createCGImage(masked, from: masked.extent) else { return nil }
                 return encoded(cgImage, type: .png, quality: nil)

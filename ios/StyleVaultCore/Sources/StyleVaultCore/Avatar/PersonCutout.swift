@@ -24,7 +24,7 @@ public enum CutoutError: Error, Equatable {
 /// Scontorno con "stacca il soggetto" di iOS (VNGenerateForegroundInstanceMaskRequest).
 public enum PersonCutout {
     /// - allInstances: false per la persona (tiene il soggetto più grande),
-    ///   true per i capi (un paio di scarpe sono due soggetti).
+    ///   true per i capi (un paio di scarpe sono due soggetti; vedi `garmentInstances`).
     public static func cutout(_ image: CGImage, allInstances: Bool = false) async throws -> Cutout {
         try await Task.detached(priority: .userInitiated) {
             let request = VNGenerateForegroundInstanceMaskRequest()
@@ -34,7 +34,7 @@ public enum PersonCutout {
                 throw CutoutError.noSubject
             }
             let instances = allInstances
-                ? observation.allInstances
+                ? garmentInstances(in: observation)
                 : IndexSet(integer: largestInstance(in: observation))
             let buffer = try observation.generateMaskedImage(
                 ofInstances: instances, from: handler, croppedToInstancesExtent: false
@@ -45,7 +45,9 @@ public enum PersonCutout {
             }
             let bounds = opaqueBounds(masked)
             guard !bounds.isEmpty else { throw CutoutError.noSubject }
-            return Cutout(image: masked, bounds: bounds, instanceCount: observation.allInstances.count)
+            // Per un capo contano i soggetti tenuti (un paio di scarpe si disegna diverso da una scarpa sola).
+            return Cutout(image: masked, bounds: bounds,
+                          instanceCount: allInstances ? instances.count : observation.allInstances.count)
         }.value
     }
 
@@ -71,6 +73,29 @@ public enum PersonCutout {
 
     /// Etichetta del soggetto con più pixel nella maschera a bassa risoluzione.
     private static func largestInstance(in observation: VNInstanceMaskObservation) -> Int {
+        instanceBoxes(in: observation).max { $0.pixels < $1.pixels }?.label ?? observation.allInstances.first!
+    }
+
+    /// I soggetti da tenere per un capo. Un paio di scarpe o una collana a più fili sono più soggetti, e si tengono
+    /// tutti. Ma se un soggetto sta tutto dentro la foto, quelli tagliati da almeno due lati sono lo sfondo
+    /// (tazzina nell'angolo accanto agli occhiali): si scartano.
+    public static func garmentInstances(in observation: VNInstanceMaskObservation) -> IndexSet {
+        IndexSet(keptGarmentLabels(instanceBoxes(in: observation)))
+    }
+
+    struct InstanceBox: Equatable {
+        let label: Int
+        let pixels: Int
+        /// Quanti lati della foto tocca (0-4).
+        let edges: Int
+    }
+
+    static func keptGarmentLabels(_ boxes: [InstanceBox]) -> [Int] {
+        guard boxes.contains(where: { $0.edges == 0 }) else { return boxes.map(\.label) }
+        return boxes.filter { $0.edges < 2 }.map(\.label)
+    }
+
+    private static func instanceBoxes(in observation: VNInstanceMaskObservation) -> [InstanceBox] {
         let mask = observation.instanceMask
         CVPixelBufferLockBaseAddress(mask, .readOnly)
         defer { CVPixelBufferUnlockBaseAddress(mask, .readOnly) }
@@ -78,13 +103,19 @@ public enum PersonCutout {
         let rowBytes = CVPixelBufferGetBytesPerRow(mask)
         let base = CVPixelBufferGetBaseAddress(mask)!.assumingMemoryBound(to: UInt8.self)
         var counts = [Int: Int]()
+        var sides = [Int: Set<Int>]()  // 0 sinistra, 1 sopra, 2 destra, 3 sotto
         for y in 0..<height {
             for x in 0..<width {
                 let label = Int(base[y * rowBytes + x])
-                if label != 0 { counts[label, default: 0] += 1 }
+                guard label != 0 else { continue }
+                counts[label, default: 0] += 1
+                if x == 0 { sides[label, default: []].insert(0) }
+                if y == 0 { sides[label, default: []].insert(1) }
+                if x == width - 1 { sides[label, default: []].insert(2) }
+                if y == height - 1 { sides[label, default: []].insert(3) }
             }
         }
-        return counts.max { $0.value < $1.value }?.key ?? observation.allInstances.first!
+        return counts.keys.sorted().map { InstanceBox(label: $0, pixels: counts[$0]!, edges: sides[$0]?.count ?? 0) }
     }
 
     /// Frazione di pixel trasparenti (alpha < 10%).
