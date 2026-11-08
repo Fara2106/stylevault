@@ -20,6 +20,15 @@ Richiesta di Lorenzo: finire tutte le schermate nella notte e mandarla a Mary. F
 - Resta da fare prima dell'App Store: WeatherKit, iPhone Duo, schema CloudKit in Production (senza, in TestFlight i dati non passano fra dispositivi:
   da verificare), testi legali da riscrivere (la pagina privacy descrive ancora il sito).
 
+## Novità 2026-11-08 — Build 1.0 (8) caricata
+
+Con l'ok di Lorenzo («Sì, prepara la 8»). Caricata alle 17:39, va in TestFlight dopo l'elaborazione di Apple. Dentro c'è la correzione del passante sullo sfondo (`7120012`); numero di build in `678a7c9`.
+- IPA controllata: 1.0 (8), "Style Vault", Apple Distribution, WeatherKit, CloudKit e push in Production, PrivacyInfo, nessuna copia " 2",
+  nessun argomento `-SV`, niente Open-Meteo, nessuna eccezione ATS.
+- Prove: quelle della correzione qui sotto (suite iPhone, quattro giri da zero). Suite iPad non rifatta.
+- Non provato: la foto del corpo con un passante sul telefono vero. Prossimo passo per Lorenzo e Mary: aggiornare da TestFlight e riprovare
+  scontorno e foto del corpo.
+
 ## Novità 2026-11-08 — Scontorno provato con sfondi complessi
 
 Richiesta di Lorenzo mentre Mary non risponde. 12 foto di capi e 10 di persone da Unsplash (letti, strade, tavolini, appendiabiti),
@@ -38,7 +47,7 @@ vero sul Mac, tramite un piccolo programma che usa `StyleVaultCore`. Fogli, esit
   - Suite iPhone passata. Giri da installazione pulita: scuro, inglese e iPhone Duo passati, 33 schermate ciascuno, tutte viste. Il chiaro si è
     fermato al primo capo, foglio ancora aperto dopo Salva, con il Mac a carico 100: è la seconda volta (anche nella build 7). `save()` chiude
     solo con nome e categoria validi, quindi è perso il tocco su Salva o quello sulla categoria; l'app si comporta bene. Rifatto da zero, passato, 33 schermate viste.
-  - Non è in nessuna build: la 7 in TestFlight conta ancora i passanti. Suite iPad non rifatta (la correzione è nel pacchetto, non nelle viste).
+  - Entra nella build 1.0 (8); la 7 conta ancora i passanti. Suite iPad non rifatta (la correzione è nel pacchetto, non nelle viste).
 - Avatar: buono con un capo fotografato bene (bomber); con un capo scontornato male (camicia con gruccia e camicie vicine) l'avatar incolla il
   blocco intero.
 - Non provato: lo stesso sull'iPhone (Vision del Mac, non del telefono) e la build 7 nelle mani di Mary.
