@@ -20,6 +20,20 @@ Richiesta di Lorenzo: finire tutte le schermate nella notte e mandarla a Mary. F
 - Resta da fare prima dell'App Store: WeatherKit, iPhone Duo, schema CloudKit in Production (senza, in TestFlight i dati non passano fra dispositivi:
   da verificare), testi legali da riscrivere (la pagina privacy descrive ancora il sito).
 
+## Novità 2026-11-08 — Scontorno provato con sfondi complessi
+
+Richiesta di Lorenzo mentre Mary non risponde. 12 foto di capi e 10 di persone da Unsplash (letti, strade, tavolini, appendiabiti),
+passate alle stesse funzioni dell'app (`GarmentImage.prepared` + `cutout`, `BodyPhotoAnalyzer.analyze`, `AvatarRenderer.render`) con Vision
+vero sul Mac, tramite un piccolo programma che usa `StyleVaultCore`. Fogli, esiti e programma: `docs/verifiche/2026-11-08-scontorno-sfondi/`.
+- Capi: un capo da solo si scontorna bene anche su sfondo pieno (giacca su porta, borsa al bar con strada dietro, scarpe sul parquet, bomber
+  tenuto in mano: la mano sparisce). Restano gruccia, gancio o sedia quando toccano il capo. Più capi vicini (flat lay, appendiabiti, stender)
+  escono come un blocco unico. Letto disordinato con tanti oggetti: nessun soggetto, l'app mostra la foto originale.
+- Persone: scontorno pulito in tutte, anche in controluce e su muro dipinto. Foto di spalle riconosciuta. Basta un passante piccolo sullo
+  sfondo per "più persone" (`people > 1` in `BodyPhotosModel.validate`): da valutare con Lorenzo.
+- Avatar: buono con un capo fotografato bene (bomber); con un capo scontornato male (camicia con gruccia e camicie vicine) l'avatar incolla il
+  blocco intero.
+- Non provato: lo stesso sull'iPhone (Vision del Mac, non del telefono) e la build 7 nelle mani di Mary.
+
 ## Novità 2026-11-08 — Build 1.0 (7) caricata
 
 Con l'ok di Lorenzo («Fai tutto insieme»). Caricata su App Store Connect alle 13:41: va in TestFlight al gruppo interno dopo l'elaborazione di Apple.

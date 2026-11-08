@@ -1,0 +1,22 @@
+capo-01-letto-maglione-jeans-berretto.jpg	scontornato	soggetti 1	sfondo tolto 61%	riquadro 646x593 su 1024x682	0.7s
+capo-02-letto-due-jeans.jpg	NESSUN SOGGETTO (l'app mostra la foto)	0.1s
+capo-03-giacca-appesa-porta.jpg	scontornato	soggetti 1	sfondo tolto 87%	riquadro 222x654 su 1024x768	0.1s
+capo-04-giacca-pelle-gancio-legno.jpg	scontornato	soggetti 1	sfondo tolto 80%	riquadro 636x518 su 768x1024	0.1s
+capo-05-camicia-gruccia-legno.jpg	scontornato	soggetti 1	sfondo tolto 45%	riquadro 668x756 su 683x1024	0.2s
+capo-06-bomber-gruccia-in-mano.jpg	scontornato	soggetti 1	sfondo tolto 55%	riquadro 624x775 su 768x1024	0.2s
+capo-07-scarpe-pavimento-legno.jpg	scontornato	soggetti 1	sfondo tolto 93%	riquadro 353x258 su 791x1024	0.1s
+capo-08-borsa-tavolino-bar.jpg	scontornato	soggetti 1	sfondo tolto 87%	riquadro 244x430 su 1024x575	0.1s
+capo-09-borsa-e-caffe.jpg	scontornato	soggetti 1	sfondo tolto 75%	riquadro 606x409 su 1024x604	0.1s
+capo-10-maglioni-su-sedia.jpg	scontornato	soggetti 1	sfondo tolto 64%	riquadro 487x646 su 683x1024	0.1s
+capo-11-appendiabiti-cinque-giacche.jpg	scontornato	soggetti 1	sfondo tolto 55%	riquadro 788x566 su 1024x682	0.1s
+capo-12-stender-vestiti.jpg	scontornato	soggetti 1	sfondo tolto 22%	riquadro 1024x571 su 1024x682	0.1s
+persona-01-marciapiede.jpg	controllo: ok	avatar ok, capi mancanti 1
+persona-02-cappotto-distributore.jpg	controllo: ok	avatar ok, capi mancanti 1
+persona-03-muro-colorato.jpg	controllo: ok	avatar ok, capi mancanti 1
+persona-04-strada-semaforo.jpg	controllo: wrongView(seen: StyleVaultCore.BodyView.back, wanted: StyleVaultCore.BodyView.front)	avatar ok, capi mancanti 1
+persona-05-parcheggio.jpg	controllo: ok	avatar ok, capi mancanti 1
+persona-06-marciapiede-donna.jpg	controllo: multiplePeople	avatar ok, capi mancanti 1
+persona-07-ponte-legno.jpg	controllo: ok	avatar ok, capi mancanti 1
+persona-08-coppia.jpg	controllo: multiplePeople	avatar ok, capi mancanti 1
+persona-09-con-cane.jpg	controllo: ok	avatar ok, capi mancanti 1
+persona-10-controluce-finestra.jpg	controllo: ok	avatar ok, capi mancanti 1

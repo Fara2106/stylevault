@@ -1,0 +1,114 @@
+import CoreGraphics
+import Foundation
+import ImageIO
+import StyleVaultCore
+import UniformTypeIdentifiers
+
+// Stesse chiamate dell'app: GarmentImage.prepared + GarmentImage.cutout per i capi (CutoutWorker),
+// BodyPhotoAnalyzer.analyze per la foto del corpo, AvatarRenderer.render per l'avatar.
+let args = CommandLine.arguments
+let inDir = URL(fileURLWithPath: args[1]), outDir = URL(fileURLWithPath: args[2])
+try? FileManager.default.createDirectory(at: outDir, withIntermediateDirectories: true)
+
+func load(_ d: Data) -> CGImage? {
+    guard let s = CGImageSourceCreateWithData(d as CFData, nil) else { return nil }
+    return CGImageSourceCreateImageAtIndex(s, 0, nil)
+}
+func save(_ img: CGImage, _ name: String) {
+    let url = outDir.appendingPathComponent(name)
+    guard let dest = CGImageDestinationCreateWithURL(url as CFURL, UTType.jpeg.identifier as CFString, 1, nil) else { return }
+    CGImageDestinationAddImage(dest, img, [kCGImageDestinationLossyCompressionQuality: 0.8] as CFDictionary)
+    CGImageDestinationFinalize(dest)
+}
+func alphaStats(_ img: CGImage) -> (transparent: Double, bbox: CGRect) {
+    let w = img.width, h = img.height
+    var px = [UInt8](repeating: 0, count: w * h)
+    px.withUnsafeMutableBytes { b in
+        CGContext(data: b.baseAddress, width: w, height: h, bitsPerComponent: 8, bytesPerRow: w,
+                  space: CGColorSpaceCreateDeviceGray(), bitmapInfo: CGImageAlphaInfo.alphaOnly.rawValue)?
+            .draw(img, in: CGRect(x: 0, y: 0, width: w, height: h))
+    }
+    var t = 0, minX = w, minY = h, maxX = -1, maxY = -1
+    for y in 0..<h { for x in 0..<w {
+        if px[y * w + x] < 26 { t += 1 } else { minX = min(minX, x); maxX = max(maxX, x); minY = min(minY, y); maxY = max(maxY, y) }
+    } }
+    let box = maxX < 0 ? CGRect.zero : CGRect(x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1)
+    return (Double(t) / Double(w * h), box)
+}
+/// Pannelli affiancati alti 640: originale | risultato su scacchiera | risultato su magenta (si vede ogni avanzo di sfondo).
+func panel(_ images: [(CGImage, Int)]) -> CGImage? {
+    let H = 640.0
+    let widths = images.map { Double($0.0.width) * H / Double($0.0.height) }
+    let W = widths.reduce(0, +) + Double(images.count - 1) * 12
+    guard let ctx = CGContext(data: nil, width: Int(W), height: Int(H), bitsPerComponent: 8, bytesPerRow: 0,
+                              space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
+    ctx.setFillColor(CGColor(gray: 1, alpha: 1)); ctx.fill(CGRect(x: 0, y: 0, width: W, height: H))
+    var x = 0.0
+    for (i, (img, mode)) in images.enumerated() {
+        let r = CGRect(x: x, y: 0, width: widths[i], height: H)
+        if mode > 0 {
+            let magenta = mode == 2
+            if magenta { ctx.setFillColor(CGColor(red: 1, green: 0, blue: 1, alpha: 1)); ctx.fill(r) }
+            else {
+                let s = 16.0; var yy = 0.0; var row = 0
+                while yy < H { var xx = r.minX; var c = row
+                    while xx < r.maxX { ctx.setFillColor(CGColor(gray: c % 2 == 0 ? 0.85 : 0.98, alpha: 1))
+                        ctx.fill(CGRect(x: xx, y: yy, width: min(s, r.maxX - xx), height: s)); xx += s; c += 1 }
+                    yy += s; row += 1 }
+            }
+        }
+        ctx.draw(img, in: r)
+        x += widths[i] + 12
+    }
+    return ctx.makeImage()
+}
+
+let files = try FileManager.default.contentsOfDirectory(atPath: inDir.path).filter { $0.hasSuffix(".jpg") }.sorted()
+var report = [String]()
+var garmentPhotos = [String: Data]()
+
+for f in files where f.hasPrefix("capo") {
+    let raw = try Data(contentsOf: inDir.appendingPathComponent(f))
+    guard let prepared = GarmentImage.prepared(raw) else { report.append("\(f)\tnon leggibile"); continue }
+    garmentPhotos[f] = prepared
+    let t0 = Date()
+    let png = await GarmentImage.cutout(prepared)
+    let secs = Date().timeIntervalSince(t0)
+    let original = load(prepared)!
+    guard let png, let cut = load(png) else {
+        report.append(String(format: "%@\tNESSUN SOGGETTO (l'app mostra la foto)\t%.1fs", f, secs))
+        save(panel([(original, 0)])!, f.replacingOccurrences(of: ".jpg", with: "-esito.jpg")); continue
+    }
+    // Quanti soggetti: come l'avatar, via PersonCutout con allInstances
+    let n = (try? await PersonCutout.cutout(load(prepared)!, allInstances: true).instanceCount) ?? 0
+    let st = alphaStats(cut)
+    report.append(String(format: "%@\tscontornato\tsoggetti %d\tsfondo tolto %.0f%%\triquadro %.0fx%.0f su %dx%d\t%.1fs",
+                         f, n, st.transparent * 100, st.bbox.width, st.bbox.height, cut.width, cut.height, secs))
+    save(panel([(original, 0), (cut, 1), (cut, 2)])!, f.replacingOccurrences(of: ".jpg", with: "-esito.jpg"))
+}
+
+let outfit: [(String, String)] = [("outerwear", "capo-06-bomber-gruccia-in-mano.jpg"), ("bottom", "capo-02-letto-due-jeans.jpg"),
+                                  ("shoes", "capo-07-scarpe-pavimento-legno.jpg")]
+let cache = CutoutCache(folder: outDir.appendingPathComponent("cache"))
+for f in files where f.hasPrefix("persona") {
+    let raw = try Data(contentsOf: inDir.appendingPathComponent(f))
+    do {
+        let r = try await BodyPhotoAnalyzer.analyze(raw, view: .front)
+        var line = "\(f)\tcontrollo: \(r.check)"
+        var pieces: [(CGImage, Int)] = [(load(GarmentImage.prepared(raw, maxSide: 2048)!)!, 0)]
+        if let p = r.preview { pieces.append((p, 1)); pieces.append((p, 2)) }
+        // L'avatar si fa con la foto preparata anche se il controllo la scarterebbe, per vedere lo scontorno
+        let body = r.jpeg ?? GarmentImage.prepared(raw, maxSide: BodyPhotoAnalyzer.photoMaxSide)!
+        do {
+            let garments = outfit.compactMap { slot, name in garmentPhotos[name].map { AvatarGarment(slot: slot, photo: $0, key: name) } }
+            let a = try await AvatarRenderer.render(body: body, bodyKey: f, garments: garments, view: .front, cache: cache)
+            line += "\tavatar ok, capi mancanti \(a.unavailable)"
+            pieces.append((a.image, 0))
+        } catch { line += "\tavatar: \(error)" }
+        report.append(line)
+        save(panel(pieces)!, f.replacingOccurrences(of: ".jpg", with: "-esito.jpg"))
+    } catch { report.append("\(f)\terrore \(error)") }
+}
+let text = report.joined(separator: "\n")
+print(text)
+try text.write(to: outDir.appendingPathComponent("esiti.tsv"), atomically: true, encoding: .utf8)
