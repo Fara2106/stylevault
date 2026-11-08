@@ -4563,13 +4563,13 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dicci cosa non funziona o cosa miglioreresti in StyleVault. Leggiamo ogni segnalazione."
+            "value": "Dicci cosa non funziona o cosa miglioreresti in Style Vault. Leggiamo ogni segnalazione."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tell us what doesn't work or what you would improve in StyleVault. We read every report."
+            "value": "Tell us what doesn't work or what you would improve in Style Vault. We read every report."
           }
         }
       }
@@ -4818,13 +4818,13 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "La tua segnalazione è arrivata. Ci aiuta a migliorare StyleVault."
+            "value": "La tua segnalazione è arrivata. Ci aiuta a migliorare Style Vault."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your report has arrived. It helps us improve StyleVault."
+            "value": "Your report has arrived. It helps us improve Style Vault."
           }
         }
       }
@@ -6032,13 +6032,13 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Questo file non è un'esportazione di StyleVault."
+            "value": "Questo file non è un'esportazione di Style Vault."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This file isn't a StyleVault export."
+            "value": "This file isn't a Style Vault export."
           }
         }
       }
@@ -6372,13 +6372,13 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sblocca StyleVault"
+            "value": "Sblocca Style Vault"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Unlock StyleVault"
+            "value": "Unlock Style Vault"
           }
         }
       }
@@ -6389,13 +6389,13 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "StyleVault è bloccata"
+            "value": "Style Vault è bloccata"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "StyleVault is locked"
+            "value": "Style Vault is locked"
           }
         }
       }
@@ -6678,13 +6678,13 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Qui prepari un testo e le foto da portare in ChatGPT (OpenAI) o in Gemini (Google). Se decidi di farlo, la tua foto e quelle dei capi vanno a quel servizio, secondo le sue regole. StyleVault non manda nulla da sola: sei tu a incollare e inviare. Usa solo foto tue o di chi ha dato il consenso."
+            "value": "Qui prepari un testo e le foto da portare in ChatGPT (OpenAI) o in Gemini (Google). Se decidi di farlo, la tua foto e quelle dei capi vanno a quel servizio, secondo le sue regole. Style Vault non manda nulla da sola: sei tu a incollare e inviare. Usa solo foto tue o di chi ha dato il consenso."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Here you prepare a text and photos to take to ChatGPT (OpenAI) or Gemini (Google). If you do, your photo and the item photos go to that service, under its terms. StyleVault sends nothing by itself: you paste and send them. Only use photos of yourself or of someone who agreed."
+            "value": "Here you prepare a text and photos to take to ChatGPT (OpenAI) or Gemini (Google). If you do, your photo and the item photos go to that service, under its terms. Style Vault sends nothing by itself: you paste and send them. Only use photos of yourself or of someone who agreed."
           }
         }
       }
@@ -7195,13 +7195,13 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Benvenuto in StyleVault"
+            "value": "Benvenuto in Style Vault"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Welcome to StyleVault"
+            "value": "Welcome to Style Vault"
           }
         }
       }
@@ -7212,13 +7212,13 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ti diamo il benvenuto in StyleVault"
+            "value": "Ti diamo il benvenuto in Style Vault"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Welcome to StyleVault"
+            "value": "Welcome to Style Vault"
           }
         }
       }

@@ -20,6 +20,12 @@ Richiesta di Lorenzo: finire tutte le schermate nella notte e mandarla a Mary. F
 - Resta da fare prima dell'App Store: WeatherKit, iPhone Duo, schema CloudKit in Production (senza, in TestFlight i dati non passano fra dispositivi:
   da verificare), testi legali da riscrivere (la pagina privacy descrive ancora il sito).
 
+## Novità 2026-11-08 — Nome "Style Vault"
+
+Richiesta di Lorenzo. Sul ramo locale, **non ancora in una build**: sulla Home e in tutti i testi dell'app ora c'è "Style Vault" (era "SV Nativa" sulla Home e "StyleVault" nei testi): `project.yml`, `Info.plist`, `InfoPlist.xcstrings`, 16 testi di `Localizable.xcstrings`, login, oggetto della mail, testi legali rigenerati da `testi-legali.md`. Identificativi, container iCloud e nomi dei file di esportazione restano "StyleVault".
+Prove: suite iPhone 275 su 275, test del guardaroba su iPad 19 su 19, nome visto sulla Home del simulatore. Il primo lancio dopo il riavvio del Mac era 273 su 275: un'app che non partiva, con il Mac carico, e un tocco a vuoto del test. Lo scorrimento di `WardrobeFlowTests` continuava per inerzia e il chip della categoria finiva sotto l'intestazione del foglio; ora scorre lento, aspetta che si fermi e controlla l'intestazione. È probabilmente anche la causa di `testNuovaCategoria` del 07/11, che non è stata verificata.
+Prossimi passi: icona, giri da utente da zero, build 7 solo con l'ok di Lorenzo.
+
 ## Novità 2026-11-07 (sera) — Open-Meteo tolto
 
 Richiesta di Lorenzo dopo la conferma del meteo di Apple sul telefono. Sul ramo locale, **non ancora in una build**: la 1.0 (6) su TestFlight usa ancora Open-Meteo come ripiego.

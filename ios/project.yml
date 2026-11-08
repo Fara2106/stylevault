@@ -49,7 +49,7 @@ targets:
         NSFaceIDUsageDescription: Serve per sbloccare l'app, se attivi il blocco nel Profilo.
         NSLocationWhenInUseUsageDescription: Per mostrarti il meteo di dove sei e consigliarti cosa indossare.
         NSLocationDefaultAccuracyReduced: true
-        CFBundleDisplayName: SV Nativa
+        CFBundleDisplayName: Style Vault
         CFBundleShortVersionString: "1.0"
         CFBundleVersion: "6"
         SupabaseURL: $(SUPABASE_URL)

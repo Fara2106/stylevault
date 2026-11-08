@@ -20,7 +20,7 @@ struct LoginView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 14) {
-                Text(verbatim: "StyleVault")
+                Text(verbatim: "Style Vault")
                     .font(.display(34))
                     .foregroundStyle(Palette.ink)
                     .padding(.top, 48)

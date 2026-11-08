@@ -21,5 +21,5 @@ enum AppConfig {
     static let authCallback = URL(string: "svnativa://auth-callback")!
     static let recoveryCallback = URL(string: "svnativa://reset-password")!
     static let supportEmail = "lorefara97@gmail.com"
-    static let supportMail = URL(string: "mailto:\(supportEmail)?subject=StyleVault")!
+    static let supportMail = URL(string: "mailto:\(supportEmail)?subject=Style%20Vault")!
 }

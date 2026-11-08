@@ -108,12 +108,32 @@ final class WardrobeFlowTests: XCTestCase {
 
     // MARK: Lista e dettaglio
 
+    /// Lo scorrimento continua per inerzia: un tocco dato prima che si fermi va a vuoto, o trova l'elemento già sotto l'intestazione.
     private func scroll(_ app: XCUIApplication, to element: XCUIElement, down: Bool = true) {
         var tries = 0
         while !isReachable(app, element), tries < 12 {
-            if down { app.swipeUp() } else { app.swipeDown() }
+            let overshot = element.exists && element.frame.minY < top(app)
+            if down != overshot { app.swipeUp(velocity: .slow) } else { app.swipeDown(velocity: .slow) }
+            settle(element)
             tries += 1
         }
+    }
+
+    private func settle(_ element: XCUIElement) {
+        var last = element.frame
+        var still = 0
+        for _ in 0..<40 where still < 3 {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.15))
+            let now = element.frame
+            still = now == last ? still + 1 : 0
+            last = now
+        }
+    }
+
+    /// Nel foglio il contenuto scorre sotto l'intestazione con "Chiudi": lì un tocco prende l'intestazione.
+    private func top(_ app: XCUIApplication) -> CGFloat {
+        let close = app.buttons["item-close"]
+        return close.exists ? close.frame.maxY : app.frame.minY
     }
 
     /// `isHittable` dice sì anche a un elemento sotto la tastiera o oltre il bordo dello schermo.
@@ -131,7 +151,7 @@ final class WardrobeFlowTests: XCTestCase {
     }
 
     private func isReachable(_ app: XCUIApplication, _ element: XCUIElement) -> Bool {
-        guard element.isHittable else { return false }
+        guard element.isHittable, element.frame.minY >= top(app) else { return false }
         let keyboard = app.keyboards.firstMatch
         return element.frame.maxY <= (keyboard.exists ? keyboard.frame.minY : app.frame.maxY)
     }

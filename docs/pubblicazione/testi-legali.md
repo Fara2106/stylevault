@@ -1,4 +1,4 @@
-# Testi legali di StyleVault
+# Testi legali di Style Vault
 
 Unica fonte dei testi di privacy, supporto ed eliminazione dell'account. Da qui `scripts/testi-legali.py` genera le schermate dell'app (`ios/StyleVaultNative/Profile/LegalContent.swift`) e le pagine pubbliche per App Store Connect (`docs/pubblicazione/pagine/`). Dopo una modifica va rilanciato lo script.
 
@@ -10,11 +10,11 @@ Ultimo aggiornamento: 7 novembre 2026
 
 ### Informativa sulla privacy
 
-StyleVault è un guardaroba digitale: fotografi i tuoi capi, crei outfit e li provi su di te. Qui trovi quali dati usa, dove stanno e come cancellarli.
+Style Vault è un guardaroba digitale: fotografi i tuoi capi, crei outfit e li provi su di te. Qui trovi quali dati usa, dove stanno e come cancellarli.
 
 #### Chi è il titolare
 
-Lorenzo Faraoni, persona fisica con sede in Italia, che sviluppa StyleVault. Per qualsiasi domanda sulla privacy scrivi a lorefara97@gmail.com.
+Lorenzo Faraoni, persona fisica con sede in Italia, che sviluppa Style Vault. Per qualsiasi domanda sulla privacy scrivi a lorefara97@gmail.com.
 
 #### I tuoi dati stanno nel tuo iCloud
 
@@ -22,7 +22,7 @@ Capi, foto dei capi, outfit, calendario, foto del corpo, Armocromia e impostazio
 
 #### L'account è facoltativo
 
-Puoi usare StyleVault senza account. Se ne crei uno, con Apple, Google o email e password, il servizio di login conserva email, nome e un identificativo; la password è conservata solo in forma cifrata. L'account serve ad accedere e a inviare segnalazioni: i tuoi capi non passano da lì.
+Puoi usare Style Vault senza account. Se ne crei uno, con Apple, Google o email e password, il servizio di login conserva email, nome e un identificativo; la password è conservata solo in forma cifrata. L'account serve ad accedere e a inviare segnalazioni: i tuoi capi non passano da lì.
 
 Chi ha usato il vecchio sito ha i suoi dati ancora su Supabase, finché non elimina l'account.
 
@@ -70,7 +70,7 @@ Puoi chiedere accesso, correzione, cancellazione, portabilità, limitazione od o
 
 #### Minori
 
-StyleVault non è pensato per chi ha meno di 14 anni.
+Style Vault non è pensato per chi ha meno di 14 anni.
 
 #### Modifiche
 
@@ -88,7 +88,7 @@ Per email: lorefara97@gmail.com. Rispondiamo di solito entro pochi giorni.
 
 #### I miei capi non compaiono sull'altro dispositivo
 
-Controlla che entrambi usino lo stesso Apple ID e che iCloud sia attivo per StyleVault. La sincronizzazione può richiedere qualche minuto, e più tempo con molte foto.
+Controlla che entrambi usino lo stesso Apple ID e che iCloud sia attivo per Style Vault. La sincronizzazione può richiedere qualche minuto, e più tempo con molte foto.
 
 #### Cambio telefono
 
@@ -112,7 +112,7 @@ Dati meteo: Meteo di Apple.
 
 ### Eliminare l'account
 
-Puoi eliminare il tuo account StyleVault in qualsiasi momento.
+Puoi eliminare il tuo account Style Vault in qualsiasi momento.
 
 #### Dall'app
 
@@ -134,11 +134,11 @@ Last updated: 7 November 2026
 
 ### Privacy policy
 
-StyleVault is a digital wardrobe: you photograph your clothes, build outfits and try them on yourself. Here is what data it uses, where it lives and how to delete it.
+Style Vault is a digital wardrobe: you photograph your clothes, build outfits and try them on yourself. Here is what data it uses, where it lives and how to delete it.
 
 #### Who is responsible
 
-Lorenzo Faraoni, an individual based in Italy who develops StyleVault. For any privacy question write to lorefara97@gmail.com.
+Lorenzo Faraoni, an individual based in Italy who develops Style Vault. For any privacy question write to lorefara97@gmail.com.
 
 #### Your data lives in your iCloud
 
@@ -146,7 +146,7 @@ Items, item photos, outfits, calendar, body photos, colour analysis and settings
 
 #### An account is optional
 
-You can use StyleVault without an account. If you create one, with Apple, Google or email and password, the sign-in service keeps your email, name and an identifier; the password is only stored encrypted. The account is for signing in and sending reports: your items do not go through it.
+You can use Style Vault without an account. If you create one, with Apple, Google or email and password, the sign-in service keeps your email, name and an identifier; the password is only stored encrypted. The account is for signing in and sending reports: your items do not go through it.
 
 If you used the old website, your data is still on Supabase until you delete your account.
 
@@ -194,7 +194,7 @@ You can ask for access, correction, deletion, portability, restriction or object
 
 #### Children
 
-StyleVault is not meant for people under 14.
+Style Vault is not meant for people under 14.
 
 #### Changes
 
@@ -212,7 +212,7 @@ By email: lorefara97@gmail.com. We usually reply within a few days.
 
 #### My items don't show on my other device
 
-Check that both use the same Apple ID and that iCloud is on for StyleVault. Sync can take a few minutes, and longer with many photos.
+Check that both use the same Apple ID and that iCloud is on for Style Vault. Sync can take a few minutes, and longer with many photos.
 
 #### Changing phone
 
@@ -236,7 +236,7 @@ Weather data: Apple Weather.
 
 ### Delete your account
 
-You can delete your StyleVault account at any time.
+You can delete your Style Vault account at any time.
 
 #### From the app
 

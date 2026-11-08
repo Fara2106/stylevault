@@ -64,7 +64,7 @@ def page(languages, index):
     title = html.escape(languages['it']['documents'][index]['title'])
     return ('<!doctype html><html lang="it"><head><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width, initial-scale=1">'
-            f'<title>StyleVault — {title}</title><style>'
+            f'<title>Style Vault — {title}</title><style>'
             'body{margin:0;background:#FAF7F2;color:#1A1A1A;font:17px/1.55 -apple-system,system-ui,sans-serif}'
             'article{max-width:680px;margin:0 auto;padding:32px 16px}h1{font:600 30px/1.2 Georgia,serif}'
             'h2{font-size:18px;margin-top:28px}.d{color:#6B6560;font-size:14px}'
