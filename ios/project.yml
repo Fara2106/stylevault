@@ -51,7 +51,7 @@ targets:
         NSLocationDefaultAccuracyReduced: true
         CFBundleDisplayName: Style Vault
         CFBundleShortVersionString: "1.0"
-        CFBundleVersion: "6"
+        CFBundleVersion: "7"
         SupabaseURL: $(SUPABASE_URL)
         SupabaseKey: $(SUPABASE_KEY)
         CFBundleURLTypes:
