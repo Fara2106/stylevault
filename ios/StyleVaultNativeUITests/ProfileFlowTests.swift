@@ -83,10 +83,7 @@ final class ProfileFlowTests: XCTestCase {
         tab(first, "Profilo").tap()
         let toggle = first.switches["lock-toggle"]
         XCTAssertTrue(toggle.waitForExistence(timeout: 5))
-        toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
-        // L'autenticazione è asincrona: l'interruttore passa a acceso solo dopo.
-        let on = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == '1'"), object: toggle)
-        XCTAssertEqual(XCTWaiter().wait(for: [on], timeout: 30), .completed)
+        XCTAssertTrue(turnOn(toggle))
         first.terminate()
 
         let second = XCUIApplication()
@@ -105,9 +102,7 @@ final class ProfileFlowTests: XCTestCase {
         tab(app, "Profilo").tap()
         let toggle = app.switches["lock-toggle"]
         XCTAssertTrue(toggle.waitForExistence(timeout: 5))
-        toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
-        let on = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == '1'"), object: toggle)
-        XCTAssertEqual(XCTWaiter().wait(for: [on], timeout: 30), .completed)
+        XCTAssertTrue(turnOn(toggle))
         tab(app, "Aggiungi").tap()
         let sheet = app.otherElements["add-sheet"]
         XCTAssertTrue(sheet.waitForExistence(timeout: 3))
@@ -120,6 +115,18 @@ final class ProfileFlowTests: XCTestCase {
         app.buttons["Sblocca"].tap()
         XCTAssertTrue(waitForDisappearance(of: lock))
         XCTAssertTrue(sheet.exists, "Il foglio non va chiuso dal blocco")
+    }
+
+    /// L'autenticazione è asincrona: l'interruttore passa a acceso solo dopo. Sul simulatore iPad carico
+    /// il tocco sintetico a volte va perso (nel video l'interruttore non si muove): dopo 10 secondi si ritocca.
+    /// Un secondo tocco arrivato in ritardo non spegne: con `-SVFakeLockReset` la seconda autenticazione fallisce.
+    private func turnOn(_ toggle: XCUIElement) -> Bool {
+        for _ in 0..<3 {
+            toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+            let on = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == '1'"), object: toggle)
+            if XCTWaiter().wait(for: [on], timeout: 10) == .completed { return true }
+        }
+        return false
     }
 
     private func isDark(at offset: CGVector, in app: XCUIApplication) -> Bool {
