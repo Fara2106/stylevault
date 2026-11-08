@@ -20,6 +20,22 @@ Richiesta di Lorenzo: finire tutte le schermate nella notte e mandarla a Mary. F
 - Resta da fare prima dell'App Store: WeatherKit, iPhone Duo, schema CloudKit in Production (senza, in TestFlight i dati non passano fra dispositivi:
   da verificare), testi legali da riscrivere (la pagina privacy descrive ancora il sito).
 
+## Novità 2026-11-08 — Build 1.0 (7) caricata
+
+Con l'ok di Lorenzo («Fai tutto insieme»). Caricata su App Store Connect alle 13:41: va in TestFlight al gruppo interno dopo l'elaborazione di Apple.
+- Dentro: nome "Style Vault", icona nuova (gruccia e "SV", varianti scura e tinta, generatore in `tools/icona/icon.swift`), scontorno nelle
+  schede e negli outfit, meteo e ricerca delle città solo da Apple. Commit `073a127`.
+- IPA controllata: 1.0 (7), Apple Distribution, WeatherKit, CloudKit in Production, PrivacyInfo, nessuna copia " 2", nessun `-SV`, niente Open-Meteo.
+- Prove sul codice della build:
+  - Suite iPhone 279 su 279. Suite iPad 278 su 279: `testIlBloccoCopreIlFoglioAggiungi` falliva anche a Mac scarico.
+  - Il video del test mostra il tocco sintetico dentro l'interruttore, che non si muove: tocco perso dal simulatore iPad, è la causa di
+    `testBloccoConAutenticatoreFinto` annotata il 05/11. Il test ora ritocca dopo 10 secondi: i due test del blocco 10 su 10, con un tocco perso
+    e ripreso. Commit `ad3c0e8`.
+  - Giri da utente da installazione pulita, 33 schermate ciascuno, tutte viste: chiaro, scuro, inglese, iPhone Duo. Il chiaro era scaduto al
+    terzo capo (foglio non chiuso dopo Salva) con il Mac a carico 300; rifatto da zero, passato.
+- Non provato: lo scontorno vero con Vision su questa versione (serve il telefono), l'icona tinta sulla Home.
+- Prossimi passi per Lorenzo: provarla e farla provare a Mary, scontorno compreso; controllare il nome della scheda in App Store Connect.
+
 ## Novità 2026-11-08 — Scontorno visibile nelle schede
 
 Mary: «ancora non scontorna». Causa probabile, letta dal codice e non vista sul suo telefono: l'app scontornava, ma griglia, outfit,
@@ -35,13 +51,13 @@ non venivano mai ripresi. Vision sul telefono funziona: il 03/11 l'avatar aveva 
   - Suite iPhone 279 su 279, compresi i 4 test nuovi del worker. iPad non rifatto.
   - Griglia in modalità scura vista sul simulatore: `docs/verifiche/2026-11-08-scontorno/griglia-scuro.png`.
   - Non visto con Vision vero sul telefono: i test del pacchetto non girano su un iPhone vero senza un'app che li ospiti.
-- Arriva a Mary solo con una nuova build.
+- Entrato nella build 1.0 (7).
 
 ## Novità 2026-11-08 — Nome "Style Vault"
 
 Richiesta di Lorenzo. Sul ramo locale, **non ancora in una build**: sulla Home e in tutti i testi dell'app ora c'è "Style Vault" (era "SV Nativa" sulla Home e "StyleVault" nei testi): `project.yml`, `Info.plist`, `InfoPlist.xcstrings`, 16 testi di `Localizable.xcstrings`, login, oggetto della mail, testi legali rigenerati da `testi-legali.md`. Identificativi, container iCloud e nomi dei file di esportazione restano "StyleVault".
 Prove: suite iPhone 275 su 275, test del guardaroba su iPad 19 su 19, nome visto sulla Home del simulatore. Il primo lancio dopo il riavvio del Mac era 273 su 275: un'app che non partiva, con il Mac carico, e un tocco a vuoto del test. Lo scorrimento di `WardrobeFlowTests` continuava per inerzia e il chip della categoria finiva sotto l'intestazione del foglio; ora scorre lento, aspetta che si fermi e controlla l'intestazione. È probabilmente anche la causa di `testNuovaCategoria` del 07/11, che non è stata verificata.
-Prossimi passi: icona, giri da utente da zero, build 7 solo con l'ok di Lorenzo.
+Entrato nella build 1.0 (7).
 
 ## Novità 2026-11-07 (sera) — Open-Meteo tolto
 
