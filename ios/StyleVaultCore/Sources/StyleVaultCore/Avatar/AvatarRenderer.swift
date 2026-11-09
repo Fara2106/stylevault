@@ -93,6 +93,15 @@ public enum AvatarRenderer {
                 unavailable += 1
                 continue
             }
+            // Capo fotografato addosso a qualcuno: solo il capo, allineato al corpo
+            if let worn = await cache.piece(photo: image, cutout: cutout, key: garment.key, slot: garment.slot) {
+                let frame = CGRect(x: 0, y: 0, width: worn.image.width, height: worn.image.height)
+                let count = garment.slot == "shoes" ? 2 : cutout.instanceCount
+                pieces.append(AvatarComposer.Garment(slot: garment.slot,
+                                                     cutout: Cutout(image: worn.image, bounds: frame, instanceCount: count),
+                                                     pose: worn.pose))
+                continue
+            }
             pieces.append(AvatarComposer.Garment(slot: garment.slot, cutout: cutout))
         }
         guard let image = AvatarComposer.render(person: person, pose: pose, garments: pieces, view: view) else {

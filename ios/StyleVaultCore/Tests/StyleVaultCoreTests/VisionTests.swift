@@ -135,6 +135,54 @@ final class VisionTests: XCTestCase {
         XCTAssertEqual(PersonCutout.keptGarmentLabels([Box(label: 1, pixels: 5000, edges: 3)]), [1])
     }
 
+    // Foto Unsplash ridotte a 768: la maglia da negozio tagliata sotto il mento e i pantaloni di una foto a figura intera.
+    // Prima l'avatar riceveva tutta la modella, con pancia, braccia e scarpe.
+    func testDallaFotoDaNegozioRestaSoloLaMaglia() async throws {
+        let photo = try fixture("capo-indossato-negozio")
+        let cutout = try await PersonCutout.cutout(photo, allInstances: true)
+        let piece = try await XCTUnwrapAsync(await WornGarment.piece(from: cutout, photo: photo, slot: "top"))
+        XCTAssertNil(piece.pose, "senza testa Vision non dà la posa: vale il riquadro")
+        // La maglia finisce sopra l'ombelico: in basso restano pancia e jeans, tolti
+        XCTAssertLessThan(Double(piece.image.height), 0.7 * Double(photo.height))
+        XCTAssertGreaterThan(Double(piece.image.height), 0.45 * Double(photo.height))
+    }
+
+    func testDallaFotoPerStradaRestanoSoloIPantaloni() async throws {
+        let photo = try fixture("capo-indossato-strada")
+        let cutout = try await PersonCutout.cutout(photo, allInstances: true)
+        let piece = try await XCTUnwrapAsync(await WornGarment.piece(from: cutout, photo: photo, slot: "bottom"))
+        let pose = try XCTUnwrap(piece.pose)
+        XCTAssertNotNil(pose.points[.leftHip])
+        XCTAssertLessThan(Double(piece.image.height), 0.7 * Double(cutout.bounds.height), "niente testa e busto")
+    }
+
+    func testIlCapoDaSoloResta() async throws {
+        for name in ["maglione", "jeans", "sneakers"] {
+            let photo = try fixture(name)
+            let cutout = try await PersonCutout.cutout(photo, allInstances: true)
+            let piece = await WornGarment.piece(from: cutout, photo: photo, slot: "top")
+            XCTAssertNil(piece, "\(name): nessuna persona, il capo si usa intero")
+        }
+    }
+
+    func testAvatarConCapiIndossati() async throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let cache = CutoutCache(folder: folder)
+        func data(_ name: String) throws -> Data {
+            try Data(contentsOf: XCTUnwrap(Bundle.module.url(forResource: name, withExtension: "jpg", subdirectory: "Fixtures")))
+        }
+        let garments = [AvatarGarment(slot: "top", photo: try data("capo-indossato-negozio"), key: "negozio"),
+                        AvatarGarment(slot: "bottom", photo: try data("capo-indossato-strada"), key: "strada")]
+        let result = try await AvatarRenderer.render(body: try data("persona"), bodyKey: "persona", garments: garments,
+                                                     view: .front, cache: cache)
+        XCTAssertEqual(result.unavailable, 0)
+        dump(result.image, "avatar-capi-indossati")
+        // La seconda volta il ritaglio viene dal disco
+        let again = try await AvatarRenderer.render(body: try data("persona"), bodyKey: "persona", garments: garments,
+                                                    view: .front, cache: CutoutCache(folder: folder))
+        XCTAssertEqual(again.unavailable, 0)
+    }
+
     func testPosaDellaPersona() async throws {
         let pose = try await XCTUnwrapAsync(await BodyPose.detect(try fixture("persona")))
         for joint in [Joint.leftShoulder, .rightShoulder, .leftHip, .rightHip, .leftAnkle, .rightAnkle] {

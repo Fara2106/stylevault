@@ -119,6 +119,63 @@ enum GarmentLayout {
         }
     }
 
+    /// Un capo fotografato addosso: spalle su spalle e fianchi su fianchi (pantaloni: fianchi e caviglie, o
+    /// ginocchia). Le due foto misurano gli stessi giunti di Vision, quindi il rapporto tiene le proporzioni.
+    /// nil di lato o se mancano i giunti: allora vale `frame(for:)`.
+    static func wornTransform(slot: String, garment g: Pose, body b: Pose, view: BodyView) -> CGAffineTransform? {
+        guard view != .side else { return nil }
+        switch slot {
+        case "top", "outerwear", "dress":
+            guard let gs = shoulderLine(g), let bs = shoulderLine(b) else { return nil }
+            let gh = hipLine(g)?.center ?? CGPoint(x: gs.center.x, y: gs.center.y + 1.25 * gs.span)
+            let bh = hipLine(b)?.center ?? CGPoint(x: bs.center.x, y: bs.center.y + 1.25 * bs.span)
+            return mapping(from: (gs.center, gh, gs.span), to: (bs.center, bh, bs.span))
+        case "bottom":
+            guard let gh = hipLine(g), let bh = hipLine(b) else { return nil }
+            for joints in [(Joint.leftAnkle, Joint.rightAnkle), (.leftKnee, .rightKnee)] {
+                if let ga = mid(g.points[joints.0], g.points[joints.1]), let ba = mid(b.points[joints.0], b.points[joints.1]) {
+                    return mapping(from: (gh.center, ga, gh.span), to: (bh.center, ba, bh.span))
+                }
+            }
+            return nil
+        default:
+            return nil
+        }
+    }
+
+    /// Porta `top` su `top` e `bottom` su `bottom`; in larghezza segue il rapporto delle spalle (o dei fianchi),
+    /// ma senza allontanarsi troppo da quello in altezza (una foto girata di tre quarti ha le spalle strette).
+    static func mapping(from a: (top: CGPoint, bottom: CGPoint, span: CGFloat),
+                        to b: (top: CGPoint, bottom: CGPoint, span: CGFloat)) -> CGAffineTransform? {
+        let height = a.bottom.y - a.top.y
+        guard height > 1, a.span > 1, b.bottom.y > b.top.y else { return nil }
+        let sy = (b.bottom.y - b.top.y) / height
+        let sx = min(max(b.span / a.span, 0.75 * sy), 1.33 * sy)
+        // Inclinazione: il punto basso finisce sotto il suo corrispondente anche se il busto pende
+        let shear = min(max((b.bottom.x - b.top.x - sx * (a.bottom.x - a.top.x)) / height, -0.3), 0.3)
+        return CGAffineTransform(a: sx, b: 0, c: shear, d: sy,
+                                 tx: b.top.x - sx * a.top.x - shear * a.top.y, ty: b.top.y - sy * a.top.y)
+    }
+
+    /// Centro e larghezza delle spalle; se ne manca una la si ricava a specchio dal collo.
+    static func shoulderLine(_ pose: Pose) -> (center: CGPoint, span: CGFloat)? {
+        line(pose.points[.leftShoulder], pose.points[.rightShoulder], axis: pose.points[.neck]?.x)
+    }
+
+    static func hipLine(_ pose: Pose) -> (center: CGPoint, span: CGFloat)? {
+        line(pose.points[.leftHip], pose.points[.rightHip], axis: shoulderLine(pose)?.center.x)
+    }
+
+    private static func line(_ a: CGPoint?, _ b: CGPoint?, axis: CGFloat?) -> (center: CGPoint, span: CGFloat)? {
+        var a = a, b = b
+        if let axis {
+            if a == nil, let b { a = CGPoint(x: 2 * axis - b.x, y: b.y) }
+            if b == nil, let a { b = CGPoint(x: 2 * axis - a.x, y: a.y) }
+        }
+        guard let a, let b, abs(a.x - b.x) > 1 else { return nil }
+        return (CGPoint(x: (a.x + b.x) / 2, y: (a.y + b.y) / 2), abs(a.x - b.x))
+    }
+
     private static func mid(_ a: CGPoint?, _ b: CGPoint?) -> CGPoint? {
         switch (a, b) {
         case let (a?, b?): return CGPoint(x: (a.x + b.x) / 2, y: (a.y + b.y) / 2)

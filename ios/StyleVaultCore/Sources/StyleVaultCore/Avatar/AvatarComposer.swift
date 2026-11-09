@@ -7,10 +7,13 @@ public enum AvatarComposer {
     public struct Garment {
         public let slot: String
         public let cutout: Cutout
+        /// La posa di chi indossava il capo nella foto (coordinate di `cutout.image`): si allinea al corpo.
+        public let pose: Pose?
 
-        public init(slot: String, cutout: Cutout) {
+        public init(slot: String, cutout: Cutout, pose: Pose? = nil) {
             self.slot = slot
             self.cutout = cutout
+            self.pose = pose
         }
     }
 
@@ -45,6 +48,11 @@ public enum AvatarComposer {
         ctx.interpolationQuality = .high
         for slot in drawOrder {
             for garment in garments where garment.slot == slot {
+                if let worn = garment.pose, slot != "shoes",
+                   let transform = GarmentLayout.wornTransform(slot: slot, garment: worn, body: pose, view: view) {
+                    draw(garment.cutout.image, transform: transform, canvasHeight: H, on: ctx)
+                    continue
+                }
                 guard let piece = garment.cutout.image.cropping(to: garment.cutout.bounds.integral) else { continue }
                 if slot == "shoes" {
                     for shoe in GarmentLayout.shoeFrames(pose: pose, bodyBounds: person.bounds, shoe: Silhouette(piece),
@@ -61,6 +69,18 @@ public enum AvatarComposer {
             }
         }
         return ctx.makeImage()
+    }
+
+    /// `transform` porta i pixel del capo (origine in alto) su quelli dell'avatar (origine in alto).
+    private static func draw(_ image: CGImage, transform: CGAffineTransform, canvasHeight: CGFloat, on ctx: CGContext) {
+        ctx.saveGState()
+        ctx.translateBy(x: 0, y: canvasHeight)
+        ctx.scaleBy(x: 1, y: -1)
+        ctx.concatenate(transform)
+        ctx.translateBy(x: 0, y: CGFloat(image.height))
+        ctx.scaleBy(x: 1, y: -1)
+        ctx.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+        ctx.restoreGState()
     }
 
     private static func draw(_ image: CGImage, in rect: CGRect, mirrored: Bool, on ctx: CGContext) {
