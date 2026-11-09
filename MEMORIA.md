@@ -26,7 +26,7 @@ Con l'ok di Lorenzo («Sì»). Caricata alle 21:49, va in TestFlight dopo l'elab
 oggetti tagliati dal bordo (`f8a9bef`, sezione qui sotto); numero di build in `7e99dc3`.
 - IPA controllata: 1.0 (9), "Style Vault", Apple Distribution, WeatherKit, CloudKit e push in Production, PrivacyInfo, nessuna copia " 2",
   nessun argomento `-SV`, niente Open-Meteo, nessuna eccezione ATS; `garmentInstances` presente nei simboli dell'archivio.
-- Non provato: la correzione sul telefono vero; suite iPad non rifatta.
+- Suite iPad 279 su 279 sul codice della 9 (09/11), nessun crash. Non provato: la correzione sul telefono vero, la prova la fa Lorenzo da TestFlight.
 
 ## Novità 2026-11-08 (sera) — Secondo giro di scontorno: selfie allo specchio, foto da iPhone, accessori
 
