@@ -20,6 +20,15 @@ Richiesta di Lorenzo: finire tutte le schermate nella notte e mandarla a Mary. F
 - Resta da fare prima dell'App Store: WeatherKit, iPhone Duo, schema CloudKit in Production (senza, in TestFlight i dati non passano fra dispositivi:
   da verificare), testi legali da riscrivere (la pagina privacy descrive ancora il sito).
 
+## Novità 2026-11-09 (sera) — Build 1.0 (10) caricata
+
+Con l'ok di Lorenzo («Sì, caricala»). Caricata alle 19:48 (`build10.sh`, `upload10.sh` in `.superpowers/sdd/rc/`), numero di build in
+`0ed77e1`. Dentro c'è l'avatar con solo il capo indossato (`575e10e`, sezione qui sotto).
+- IPA controllata: 1.0 (10), "Style Vault", Apple Distribution, WeatherKit, CloudKit e push in Production, PrivacyInfo, nessuna copia " 2",
+  nessun argomento `-SV`, niente Open-Meteo, nessuna eccezione ATS; `WornGarment` presente nei simboli dell'archivio.
+- Non provato: sul telefono vero, la prova la fa Lorenzo da TestFlight. Da provare: un capo fotografato addosso a qualcuno (foto da negozio
+  o per strada) deve comparire sull'avatar senza viso, braccia e sfondo, steso su spalle e fianchi.
+
 ## Novità 2026-11-09 — Sull'avatar solo il capo indossato, allineato al corpo
 
 Screenshot di Lorenzo dalla build 9: maglia da negozio (modella tagliata sotto il mento) e foto a figura intera (gilet e pantaloni) finivano
