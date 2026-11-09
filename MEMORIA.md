@@ -20,6 +20,30 @@ Richiesta di Lorenzo: finire tutte le schermate nella notte e mandarla a Mary. F
 - Resta da fare prima dell'App Store: WeatherKit, iPhone Duo, schema CloudKit in Production (senza, in TestFlight i dati non passano fra dispositivi:
   da verificare), testi legali da riscrivere (la pagina privacy descrive ancora il sito).
 
+## Novità 2026-11-09 — Sull'avatar solo il capo indossato, allineato al corpo
+
+Screenshot di Lorenzo dalla build 9: maglia da negozio (modella tagliata sotto il mento) e foto a figura intera (gilet e pantaloni) finivano
+sull'avatar come rettangoli con la persona intera, testa e braccia comprese. Sue parole: le foto «hanno un campo bianco dietro, lui lo ha
+tolto ma non deve rimanere piatta la foto». Commit `575e10e`.
+- `WornGarment` (Core, `Avatar/`): se nella foto del capo c'è una persona (`VNDetectHumanRectanglesRequest`), tiene solo il capo del posto:
+  zone colore (k-means in Lab) prese sul petto per maglia e vestito, sulle maniche per la giacca (aperta mostra la pancia), sulle cosce per i
+  pantaloni, sotto le caviglie per le scarpe; tolti pelle (colore del naso) e capelli (colore in testa), tranne se sono il colore principale
+  del capo; righe limitate dal colletto all'orlo; solo le parti collegate, buchi chiusi, bordo sfumato.
+- Allineamento (`GarmentLayout.wornTransform`): spalle e fianchi della foto su spalle e fianchi dell'avatar (pantaloni: fianchi e caviglie,
+  o ginocchia), larghezza tenuta entro un terzo dell'altezza. Di lato, o senza posa (foto da negozio senza testa), vale il riquadro di prima
+  con il solo capo. Senza persona nella foto non cambia nulla.
+- Cache: `CutoutCache.piece`, file `<capo>-<posto>-capo1.png` + `.posa`, o `.nessuno` se il capo va intero. Il ritaglio lavora a 1600 px
+  (circa 25 byte per pixel).
+- Prove: pacchetto 201 su 201 (13 test nuovi senza Vision, 4 con Vision e due foto Unsplash). Banco del Mac su 16 foto di capi indossati e
+  10 capi da soli: i capi da soli restano interi (giacca appesa, bomber tenuto in mano, gruccia, stivali); gli avatar prima e dopo sono in
+  `docs/verifiche/2026-11-09-capo-indossato/`.
+- Limiti: braccia incrociate davanti alla maglia lasciano un buco; capelli lunghi sul petto dello stesso colore della gonna restano; scarpe
+  prese da una foto indossata portano l'orlo dei pantaloni se è dello stesso colore; maglia e pantaloni dello stesso colore non si separano
+  bene; i vestiti della foto del corpo restano visibili dove il capo nuovo non copre. Il capo esatto addosso lo dà solo "Prova con ChatGPT o
+  Gemini". Vale anche per i capi già nel guardaroba: il ritaglio si fa alla prima apertura dell'avatar.
+- Simulatore, dopo il riavvio del Mac (`.superpowers/sdd/rc/round-10.sh` e `round-10b.sh`): suite iPhone 53/53 e giri da installazione nuova in chiaro (`r10b`), scuro (`r10d`), inglese (`r10be`) e su iPhone Duo (`duo10`) passati, 33 schermate ciascuno, nessun crash. Al primo passaggio tre parti erano cadute per tempo con il Mac a carico 215-440 e quattro simulatori di altre sessioni accesi (segnalazione, primo tocco nel campo nome, foglio che non si chiudeva in 30 s): rifatte uguali, passate. La schermata «Vedilo addosso» è identica pixel per pixel a quella della build 9 (nel simulatore c'è il corpo finto).
+- Non provato: sul telefono vero, l'unico posto dove gira Vision. Serve la build 1.0 (10).
+
 ## Novità 2026-11-08 (sera) — Build 1.0 (9) caricata
 
 Con l'ok di Lorenzo («Sì»). Caricata alle 21:49, va in TestFlight dopo l'elaborazione di Apple. Dentro c'è lo scontorno dei capi senza gli
