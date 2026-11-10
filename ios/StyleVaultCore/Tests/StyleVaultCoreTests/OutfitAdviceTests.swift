@@ -55,8 +55,29 @@ final class OutfitAdviceTests: XCTestCase {
     }
 
     func testIndossatoDiRecente() {
-        let a = advice(outfitOf(), recentWear: [RecentWear(itemID: "top1", date: "2026-07-06")])
-        XCTAssertTrue(a.contains(.wornRecently(date: "2026-07-06")))
+        let a = advice(outfitOf(), weatherOf(date: "2026-07-08"), recentWear: [RecentWear(itemID: "top1", date: "2026-07-06")])
+        XCTAssertTrue(a.contains(.wornRecently(itemIDs: ["top1"], date: "2026-07-06")))
+    }
+
+    /// Dice quali capi, nell'ordine dell'outfit, e la data più vicina.
+    func testIndossatoDiRecenteDiceQualiCapi() {
+        let wear = [RecentWear(itemID: "shoes1", date: "2026-07-07"), RecentWear(itemID: "top1", date: "2026-07-05"),
+                    RecentWear(itemID: "top1", date: "2026-07-03"), RecentWear(itemID: "altro", date: "2026-07-07")]
+        let a = advice(outfitOf(), weatherOf(date: "2026-07-08"), recentWear: wear)
+        XCTAssertTrue(a.contains(.wornRecently(itemIDs: ["top1", "shoes1"], date: "2026-07-07")))
+    }
+
+    /// L'outfit appena registrato per quel giorno non è "già indossato": il giorno stesso non conta.
+    func testIlGiornoStessoNonEDiRecente() {
+        let a = advice(outfitOf(), weatherOf(date: "2026-07-08"), recentWear: [RecentWear(itemID: "top1", date: "2026-07-08")])
+        XCTAssertFalse(a.contains { if case .wornRecently = $0 { return true } else { return false } })
+    }
+
+    /// Oltre la settimana non è più "di recente", come per il punteggio.
+    func testUnMeseFaNonEDiRecente() {
+        let wear = [RecentWear(itemID: "top1", date: "2026-06-08"), RecentWear(itemID: "top1", date: "2026-07-20")]
+        let a = advice(outfitOf(), weatherOf(date: "2026-07-08"), recentWear: wear)
+        XCTAssertFalse(a.contains { if case .wornRecently = $0 { return true } else { return false } })
     }
 
     func testBlazerSuCasual() {

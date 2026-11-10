@@ -31,6 +31,20 @@ final class WardrobeStatisticsTests: XCTestCase {
         XCTAssertEqual(least[0].count, 0)
     }
 
+    /// Un capo già fra i più indossati non compare anche fra i dimenticati.
+    func testIDimenticatiNonRipetonoIPiuIndossati() {
+        let least = WardrobeStatistics.leastWorn(items + [mk("nuovo", "tops")], history)
+        XCTAssertEqual(least.map(\.item.id), ["nuovo"])
+        XCTAssertEqual(WardrobeStatistics.leastWorn(items, history), [])
+    }
+
+    /// Con tanti capi restano quelli fuori dai più indossati, dal meno usato.
+    func testIDimenticatiOltreIPiuIndossati() {
+        let many = (1...7).map { mk("c\($0)", "tops") }
+        let logs = (1...7).flatMap { n in (0..<n).map { _ in WearLog(date: "2026-07-01", worn: true, itemIDs: ["c\(n)"]) } }
+        XCTAssertEqual(WardrobeStatistics.leastWorn(many, logs).map(\.item.id), ["c1", "c2"])
+    }
+
     func testPerCategoria() {
         let first = WardrobeStatistics.categoryBreakdown(items + [mk("top2", "tops")])[0]
         XCTAssertEqual(first.key, "tops")

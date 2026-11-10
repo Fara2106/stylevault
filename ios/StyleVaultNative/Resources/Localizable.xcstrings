@@ -868,6 +868,23 @@
         }
       }
     },
+    "advice.wornRecentlyNamed %@ %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Di recente hai già messo %2$@ (%1$@)"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You recently wore %2$@ (%1$@)"
+          }
+        }
+      }
+    },
     "armocromia.colors.albicocca": {
       "extractionState": "manual",
       "localizations": {
@@ -6862,6 +6879,23 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "native.wardrobe.emptyHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fotografa un capo o incolla il link di un negozio. Con qualche capo, nella scheda Outfit trovi le proposte per il meteo del giorno."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take a photo of an item or paste a shop link. With a few items, the Outfit tab suggests looks for the day's weather."
           }
         }
       }

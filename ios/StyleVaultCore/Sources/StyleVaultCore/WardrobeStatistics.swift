@@ -72,7 +72,10 @@ public enum WardrobeStatistics {
 
     public static func leastWorn(_ items: [OutfitPiece], _ history: [WearLog], limit: Int = 5) -> [WornPiece] {
         let stats = wearStats(history)
-        return Array(stableSorted(items.map { WornPiece(item: $0, count: stats[$0.id]?.count ?? 0) }, by: \.count).prefix(limit))
+        // Chi è già fra i più indossati non è "dimenticato": con pochi capi le due liste sarebbero uguali.
+        let most = Set(mostWorn(items, history, limit: limit).map(\.item.id))
+        let rest = items.filter { !most.contains($0.id) }
+        return Array(stableSorted(rest.map { WornPiece(item: $0, count: stats[$0.id]?.count ?? 0) }, by: \.count).prefix(limit))
     }
 
     private static func breakdown(_ keys: [String]) -> [Breakdown] {

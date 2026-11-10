@@ -5,6 +5,19 @@ import SwiftUI
 
 enum WardrobeSection: Hashable { case wardrobe, wishlist }
 
+/// A guardaroba vuoto: come si aggiunge un capo e a cosa serve.
+struct EmptyWardrobeHint: View {
+    var body: some View {
+        Text("native.wardrobe.emptyHint")
+            .font(.footnote)
+            .foregroundStyle(Palette.muted)
+            .multilineTextAlignment(.center)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: 320)
+            .accessibilityIdentifier("wardrobe-empty-hint")
+    }
+}
+
 /// La schermata Guardaroba.
 struct WardrobeView: View {
     let onAdd: (AddDestination) -> Void
@@ -132,6 +145,7 @@ struct WardrobeView: View {
         VStack(spacing: 12) {
             if items.isEmpty {
                 Text("wardrobe.emptyState").font(.headline).foregroundStyle(Palette.ink)
+                EmptyWardrobeHint()
                 Button("wardrobe.emptyAction") { onAdd(.wardrobe) }
                     .buttonStyle(InkButtonStyle())
                     .accessibilityIdentifier("wardrobe-empty-add")

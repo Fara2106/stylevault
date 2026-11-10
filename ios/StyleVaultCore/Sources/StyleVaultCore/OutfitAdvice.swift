@@ -6,7 +6,8 @@ public enum OutfitAdvice: Equatable, Sendable {
     case layers(cold: Int, coldPart: DayPartKey, warm: Int, warmPart: DayPartKey)
     case rainLater(hour: String), rainShoes, rainOuter
     case uvHigh, windStrong
-    case wornRecently(date: String)
+    /// I capi dell'outfit già registrati nella settimana prima, e la data più vicina.
+    case wornRecently(itemIDs: [String], date: String)
     case elevated
 }
 
@@ -61,9 +62,13 @@ public enum OutfitAdvisor {
         if weather.uvIndex >= 8, !weather.rain { result.append(.uvHigh) }
         if weather.windSpeed > 25 { result.append(.windStrong) }
 
-        let ids = Set(pieces.map(\.id))
-        if let recent = recentWear.filter({ ids.contains($0.itemID) }).max(by: { $0.date < $1.date }) {
-            result.append(.wornRecently(date: recent.date))
+        // Stessa settimana che pesa sul punteggio. Il giorno stesso non conta: è l'outfit appena registrato.
+        let recent = recentWear.filter { wear in
+            CalendarMath.daysBetween(wear.date, and: weather.date).map { (1...7).contains($0) } ?? false
+        }
+        let wornIDs = pieces.map(\.id).filter { id in recent.contains { $0.itemID == id } }
+        if let latest = recent.filter({ wornIDs.contains($0.itemID) }).map(\.date).max() {
+            result.append(.wornRecently(itemIDs: wornIDs, date: latest))
         }
 
         if let subcategory = outfit.outerwear?.subcategory, elevatingOuterwear.contains(subcategory),

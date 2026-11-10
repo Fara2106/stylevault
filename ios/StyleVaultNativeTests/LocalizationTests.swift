@@ -33,7 +33,7 @@ final class LocalizationTests: XCTestCase {
             .map { "weather.\($0)" }
         + ["stats", "totalOutfits", "statsMostWorn", "statsLeastWorn", "statsByCategory", "statsByColor", "statsCostPerWear",
            "statsNoData", "statsNever"].map { "profile.\($0)" }
-        + ["native.outfit.saved.title", "native.outfit.saved.empty", "common.loading"]
+        + ["native.outfit.saved.title", "native.outfit.saved.empty", "common.loading", "native.wardrobe.emptyHint"]
         + ["bodyPhotosTitle", "bodyPhotosHintWeb", "bodyPhotoMissing", "bodyViewFront", "bodyViewSide", "bodyViewBack",
            "ownPhotoNotice"].map { "profile.\($0)" }
         + ["guide.front", "guide.side", "guide.back", "check.noPerson", "check.multiplePeople", "check.notFullBody",

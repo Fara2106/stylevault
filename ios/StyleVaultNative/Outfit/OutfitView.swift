@@ -258,6 +258,7 @@ struct OutfitView: View {
         if items.isEmpty {
             VStack(spacing: 12) {
                 Text("wardrobe.emptyState").font(.headline).foregroundStyle(Palette.ink)
+                EmptyWardrobeHint()
                 Button("wardrobe.emptyAction", action: onAddItem)
                     .buttonStyle(InkButtonStyle())
                     .accessibilityIdentifier("outfit-empty-add")
@@ -289,7 +290,7 @@ struct OutfitView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("outfit.adviceTitle").font(.caption).foregroundStyle(Palette.muted)
                     ForEach(Array(list.enumerated()), id: \.offset) { _, entry in
-                        Text(verbatim: "· \(entry.text)")
+                        Text(verbatim: "· \(entry.text(itemNames: itemsByID.mapValues(\.name)))")
                             .font(.footnote)
                             .foregroundStyle(Palette.ink)
                             .fixedSize(horizontal: false, vertical: true)

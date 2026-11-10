@@ -37,9 +37,19 @@ extension OutfitAdvice {
         case .rainOuter: return String(localized: "advice.rainOuter")
         case .uvHigh: return String(localized: "advice.uvHigh")
         case .windStrong: return String(localized: "advice.windStrong")
-        case .wornRecently(let date): return String(localized: "advice.wornRecently \(DayText.medium(date))")
+        case .wornRecently(_, let date): return String(localized: "advice.wornRecently \(DayText.medium(date))")
         case .elevated: return String(localized: "advice.elevated")
         }
+    }
+}
+
+extension OutfitAdvice {
+    /// Con i nomi dei capi, dove il consiglio parla di capi precisi.
+    func text(itemNames: [String: String]) -> String {
+        guard case .wornRecently(let ids, let date) = self else { return text }
+        let names = ids.compactMap { itemNames[$0] }
+        guard !names.isEmpty else { return text }
+        return String(localized: "advice.wornRecentlyNamed \(DayText.medium(date)) \(names.formatted(.list(type: .and)))")
     }
 }
 
