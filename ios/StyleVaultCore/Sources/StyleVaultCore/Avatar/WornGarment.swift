@@ -166,47 +166,25 @@ public enum WornGarment {
     static func extract(_ image: CGImage, pose: Pose?, slot: String) -> GarmentPiece? {
         let pixels = RGBAPixels(image)
         let subject = PersonCutout.opaqueBounds(image)
-        guard !subject.isEmpty, let regions = regions(slot: slot, pose: pose, subject: subject) else { return nil }
-        let w = pixels.width, h = pixels.height
+        guard !subject.isEmpty, let regions = regions(slot: slot, pose: pose, subject: subject),
+              let zones = ColorZones(pixels), let mask = mask(zones, regions: regions) else { return nil }
+        return pixels.piece(mask: mask, pose: pose)
+    }
 
-        // Zone colore della persona (k-means in Lab), con i colori ridotti a 15 bit
-        var table = ColorTable()
-        let keys = pixels.colorKeys()
-        let opaque = (0..<(w * h)).map { pixels.alpha($0) >= 128 }
-        let step = max(1, Int((Double(opaque.filter { $0 }.count) / 20_000).squareRoot()))
-        var samples = [Lab]()
-        for y in stride(from: 0, to: h, by: step) {
-            for x in stride(from: 0, to: w, by: step) where opaque[y * w + x] { samples.append(table.lab(keys[y * w + x])) }
-        }
-        guard samples.count >= 50 else { return nil }
-        let centers = kMeans(samples, k: 6)
-        var clusterOfKey = [UInt8](repeating: .max, count: 1 << 15)
-        let cluster = keys.map { key -> UInt8 in
-            if clusterOfKey[Int(key)] == .max { clusterOfKey[Int(key)] = UInt8(nearest(table.lab(key), centers)) }
-            return clusterOfKey[Int(key)]
-        }
-
-        func indices(in r: CGRect) -> [Int] {
-            let x0 = max(Int(r.minX), 0), x1 = min(Int(r.maxX), w - 1)
-            let y0 = max(Int(r.minY), 0), y1 = min(Int(r.maxY), h - 1)
-            guard x0 <= x1, y0 <= y1 else { return [] }
-            return (y0...y1).flatMap { y in (x0...x1).map { y * w + $0 } }.filter { opaque[$0] }
-        }
-        let seedPixels = regions.seeds.flatMap(indices)
+    /// I pixel del capo che sta nelle zone date: i colori delle zone sicure, senza pelle e capelli, solo le parti
+    /// collegate. nil se lì non c'è un capo riconoscibile.
+    static func mask(_ zones: ColorZones, regions: Regions) -> [Bool]? {
+        let w = zones.pixels.width, h = zones.pixels.height
+        let cluster = zones.cluster
+        let seedPixels = regions.seeds.flatMap(zones.indices)
         guard !seedPixels.isEmpty else { return nil }
-        var share = [Int](repeating: 0, count: centers.count)
+        var share = [Int](repeating: 0, count: zones.count)
         for i in seedPixels { share[Int(cluster[i])] += 1 }
         var garment = Set(share.indices.filter { Double(share[$0]) >= seedShare * Double(seedPixels.count) })
         // Pelle (colore del viso) e capelli (il colore più presente in testa oltre alla pelle) non sono del capo,
         // a meno che il capo non sia proprio di quel colore
-        func dominant(in r: CGRect?, except: Int?) -> Int? {
-            guard let r else { return nil }
-            var count = [Int](repeating: 0, count: centers.count)
-            for i in indices(in: r) where Int(cluster[i]) != except { count[Int(cluster[i])] += 1 }
-            return count.indices.max { count[$0] < count[$1] }.flatMap { count[$0] > 0 ? $0 : nil }
-        }
-        let skin = dominant(in: regions.face, except: nil)
-        let hair = dominant(in: regions.head, except: skin)
+        let skin = zones.dominant(in: regions.face, except: nil)
+        let hair = zones.dominant(in: regions.head, except: skin)
         // Il colore principale del capo resta anche se somiglia ai capelli (maglia marrone, capelli castani)
         let main = share.indices.filter { $0 != skin }.max { share[$0] < share[$1] }
         for part in [skin, hair == main ? nil : hair].compactMap({ $0 }) where Double(share[part]) < 0.6 * Double(seedPixels.count) {
@@ -218,7 +196,7 @@ public enum WornGarment {
         guard rowMin <= rowMax else { return nil }
         var mask = [Bool](repeating: false, count: w * h)
         for y in rowMin...rowMax {
-            for x in 0..<w where pixels.alpha(y * w + x) >= 26 && garment.contains(Int(cluster[y * w + x])) {
+            for x in 0..<w where zones.pixels.alpha(y * w + x) >= 26 && garment.contains(Int(cluster[y * w + x])) {
                 mask[y * w + x] = true
             }
         }
@@ -226,7 +204,28 @@ public enum WornGarment {
         mask = Morphology.close(mask, width: w, height: h, radius: radius)
         mask = Morphology.connected(mask, width: w, height: h, to: seedPixels)
         mask = Morphology.fillingHoles(mask, width: w, height: h)
-        return pixels.piece(mask: mask, pose: pose)
+        // Una ciocca sulla spalla lascerebbe uno strappo nel capo: i capelli che stanno dentro il suo profilo restano,
+        // come nella foto. La pelle no (una mano sul fianco non è del capo)
+        if let hair, !garment.contains(hair) {
+            let closed = Morphology.close(mask, width: w, height: h, radius: max(2, min(w, h) / 25))
+            for y in rowMin...rowMax {
+                for x in 0..<w where closed[y * w + x] && zones.opaque[y * w + x] && Int(cluster[y * w + x]) == hair {
+                    mask[y * w + x] = true
+                }
+            }
+            mask = Morphology.fillingHoles(mask, width: w, height: h)
+        }
+        // Le zone colore tagliano a denti di sega (pieghe, ombre, ciocche): il bordo si arrotonda, senza uscire
+        // dalla persona né dalle righe del capo
+        let smooth = Morphology.smoothed(mask, width: w, height: h, radius: max(2, min(w, h) / 150))
+        for y in 0..<h {
+            for x in 0..<w {
+                let i = y * w + x
+                mask[i] = smooth[i] && zones.pixels.alpha(i) >= 26 && (rowMin...rowMax).contains(y)
+            }
+        }
+        mask = Morphology.connected(mask, width: w, height: h, to: seedPixels)
+        return mask.contains(true) ? mask : nil
     }
 
     // MARK: - Colori
@@ -259,13 +258,61 @@ public enum WornGarment {
         return dL * dL + da * da + db * db
     }
 
-    private static func nearest(_ v: Lab, _ centers: [Lab]) -> Int {
+    static func nearest(_ v: Lab, _ centers: [Lab]) -> Int {
         var best = 0, bestDistance = Double.infinity
         for (i, c) in centers.enumerated() {
             let d = deltaE(v, c)
             if d < bestDistance { best = i; bestDistance = d }
         }
         return best
+    }
+}
+
+/// Le zone colore di uno scontorno (k-means in Lab, colori ridotti a 15 bit): ogni pixel visibile ha la sua.
+struct ColorZones {
+    let pixels: RGBAPixels
+    let opaque: [Bool]
+    let cluster: [UInt8]
+    let count: Int
+
+    /// nil se c'è troppo poco da guardare.
+    init?(_ pixels: RGBAPixels) {
+        let w = pixels.width, h = pixels.height
+        var table = ColorTable()
+        let keys = pixels.colorKeys()
+        let opaque = (0..<(w * h)).map { pixels.alpha($0) >= 128 }
+        let step = max(1, Int((Double(opaque.filter { $0 }.count) / 20_000).squareRoot()))
+        var samples = [Lab]()
+        for y in stride(from: 0, to: h, by: step) {
+            for x in stride(from: 0, to: w, by: step) where opaque[y * w + x] { samples.append(table.lab(keys[y * w + x])) }
+        }
+        guard samples.count >= 50 else { return nil }
+        let centers = WornGarment.kMeans(samples, k: 6)
+        var clusterOfKey = [UInt8](repeating: .max, count: 1 << 15)
+        self.cluster = keys.map { key -> UInt8 in
+            if clusterOfKey[Int(key)] == .max { clusterOfKey[Int(key)] = UInt8(WornGarment.nearest(table.lab(key), centers)) }
+            return clusterOfKey[Int(key)]
+        }
+        self.pixels = pixels
+        self.opaque = opaque
+        self.count = centers.count
+    }
+
+    /// I pixel visibili dentro il riquadro.
+    func indices(in r: CGRect) -> [Int] {
+        let w = pixels.width, h = pixels.height
+        let x0 = max(Int(r.minX), 0), x1 = min(Int(r.maxX), w - 1)
+        let y0 = max(Int(r.minY), 0), y1 = min(Int(r.maxY), h - 1)
+        guard x0 <= x1, y0 <= y1 else { return [] }
+        return (y0...y1).flatMap { y in (x0...x1).map { y * w + $0 } }.filter { opaque[$0] }
+    }
+
+    /// La zona colore più presente nel riquadro.
+    func dominant(in r: CGRect?, except: Int?) -> Int? {
+        guard let r else { return nil }
+        var found = [Int](repeating: 0, count: count)
+        for i in indices(in: r) where Int(cluster[i]) != except { found[Int(cluster[i])] += 1 }
+        return found.indices.max { found[$0] < found[$1] }.flatMap { found[$0] > 0 ? $0 : nil }
     }
 }
 
@@ -301,6 +348,14 @@ struct RGBAPixels {
     }
 
     func alpha(_ i: Int) -> UInt8 { data[i * 4 + 3] }
+
+    /// Il colore vero del pixel (non premoltiplicato), 0-255.
+    func color(_ i: Int) -> (Double, Double, Double) {
+        let a = Double(data[i * 4 + 3])
+        guard a > 0 else { return (0, 0, 0) }
+        return (min(255, Double(data[i * 4]) * 255 / a), min(255, Double(data[i * 4 + 1]) * 255 / a),
+                min(255, Double(data[i * 4 + 2]) * 255 / a))
+    }
 
     /// Il colore di ogni pixel a 5 bit per canale: bastano per le zone colore e la tabella resta piccola.
     func colorKeys() -> [UInt16] {
@@ -376,6 +431,45 @@ enum Morphology {
             }
         }
         return out
+    }
+
+    /// La media dei valori attorno a ogni pixel (quadrato di lato 2r+1), contando solo quelli con `weights`.
+    /// Dove attorno non ce ne sono vale la media di tutti.
+    static func average(_ values: [Double], weights: [Bool], width: Int, height: Int, radius: Int) -> [Double] {
+        // Somme cumulate: il conto non dipende dal raggio
+        let stride = width + 1
+        var sums = [Double](repeating: 0, count: stride * (height + 1))
+        var counts = [Double](repeating: 0, count: stride * (height + 1))
+        var total = 0.0, number = 0.0
+        for y in 0..<height {
+            var row = 0.0, rowCount = 0.0
+            for x in 0..<width {
+                if weights[y * width + x] { row += values[y * width + x]; rowCount += 1 }
+                sums[(y + 1) * stride + x + 1] = sums[y * stride + x + 1] + row
+                counts[(y + 1) * stride + x + 1] = counts[y * stride + x + 1] + rowCount
+            }
+            total += row
+            number += rowCount
+        }
+        let fallback = number > 0 ? total / number : 0
+        var out = [Double](repeating: fallback, count: width * height)
+        for y in 0..<height {
+            let y0 = max(0, y - radius), y1 = min(height - 1, y + radius) + 1
+            for x in 0..<width {
+                let x0 = max(0, x - radius), x1 = min(width - 1, x + radius) + 1
+                let n = counts[y1 * stride + x1] - counts[y0 * stride + x1] - counts[y1 * stride + x0] + counts[y0 * stride + x0]
+                guard n > 0 else { continue }
+                out[y * width + x] = (sums[y1 * stride + x1] - sums[y0 * stride + x1] - sums[y1 * stride + x0] + sums[y0 * stride + x0]) / n
+            }
+        }
+        return out
+    }
+
+    /// Arrotonda il bordo: resta pieno dove attorno (quadrato di lato 2r+1) è pieno più di metà.
+    /// Toglie i denti di sega e le lingue sottili, riempie le tacche; un bordo dritto non si sposta.
+    static func smoothed(_ mask: [Bool], width: Int, height: Int, radius: Int) -> [Bool] {
+        let all = [Bool](repeating: true, count: mask.count)
+        return average(mask.map { $0 ? 1 : 0 }, weights: all, width: width, height: height, radius: radius).map { $0 > 0.5 }
     }
 
     /// Media 3×3 ripetuta due volte: da 0/1 a una sfumatura di due pixel.

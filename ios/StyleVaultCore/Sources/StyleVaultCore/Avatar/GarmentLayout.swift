@@ -85,6 +85,14 @@ enum GarmentLayout {
         }
     }
 
+    /// Dove arriva in alto un capo sotto: la stessa riga usata da `frame(for:)`.
+    static func waistY(pose: Pose, bodyBounds: CGRect) -> CGFloat {
+        let p = pose.points
+        let shoulderY = mid(p[.leftShoulder], p[.rightShoulder])?.y ?? bodyBounds.minY + 0.18 * bodyBounds.height
+        let hipY = mid(p[.leftHip], p[.rightHip])?.y ?? bodyBounds.minY + 0.5 * bodyBounds.height
+        return hipY - 0.1 * max(hipY - shoulderY, 0)
+    }
+
     /// Scarpe. Le foto prodotto di solito mostrano UNA scarpa di lato: va
     /// disegnata su ciascun piede, lunga quanto un piede (~15% dell'altezza),
     /// con la punta verso fuori (davanti, spalle) o dove guarda la persona (lato).

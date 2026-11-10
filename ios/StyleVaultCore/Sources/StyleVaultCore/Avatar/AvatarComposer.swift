@@ -42,7 +42,9 @@ public enum AvatarComposer {
                                            width: person.bounds.width * 1.1,
                                            height: person.bounds.height * 0.03)))
 
-        ctx.draw(person.image, in: CGRect(x: 0, y: 0, width: width, height: height))
+        // Sotto i pantaloni nuovi quelli della foto non devono spuntare
+        let base = BodyBase.prepared(person.image, pose: pose, slots: Set(garments.map(\.slot)))
+        ctx.draw(base, in: CGRect(x: 0, y: 0, width: width, height: height))
 
         let body = Silhouette(person.image)
         ctx.interpolationQuality = .high

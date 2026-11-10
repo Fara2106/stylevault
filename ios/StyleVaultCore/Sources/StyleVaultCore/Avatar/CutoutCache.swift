@@ -78,7 +78,7 @@ public actor CutoutCache {
     }
 
     /// Cambia quando cambia il modo di ritagliare: i ritagli vecchi non si usano più.
-    static let pieceVersion = "capo1"
+    static let pieceVersion = "capo2"
     private var pieces = [String: GarmentPiece]()
     private var pieceUsage: [String] = []
 
