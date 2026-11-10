@@ -20,6 +20,66 @@ Richiesta di Lorenzo: finire tutte le schermate nella notte e mandarla a Mary. F
 - Resta da fare prima dell'App Store: WeatherKit, iPhone Duo, schema CloudKit in Production (senza, in TestFlight i dati non passano fra dispositivi:
   da verificare), testi legali da riscrivere (la pagina privacy descrive ancora il sito).
 
+## Novità 2026-11-10 — FASHN misurato sull'iPhone, usabilità, pantaloni della foto
+
+Richieste di Lorenzo nella stessa sessione: «Analizza l'app e migliorala», poi «il problema è lo scontorno dei capi e dell'avatar»,
+poi, visto il confronto, «non è precisissimo, non so se si possa risolvere» e infine «mettiamo questo FASHN VTON v1.5» → «Sì, misuralo».
+Sul ramo locale, **non in una build**: la 1.0 (10) su TestFlight non ha niente di questo.
+
+**FASHN VTON v1.5 sull'iPhone 18 Pro Max** (`docs/verifiche/2026-11-10-fashn-iphone/prova-iphone.md`, app di prova in
+`tools/avatar-fashn/bench/`, installata sul telefono con l'ok di Lorenzo, bundle `it.faraoni.stylevault.bench`):
+- Generazione intera a 6 bit (704 MB) sulla GPU: **30 passi 121,7 s, 20 passi 81,1 s, 12 passi 49,5 s**, circa 3,9 s a passo.
+  Picco di memoria misurato 669-854 MB (`phys_footprint`: la GPU potrebbe non esserci tutta). Immagine uguale a quella del Mac.
+- A 20 passi le trecce del maglione restano; a 12 la forma è giusta ma la trama sparisce.
+- Non misurato: 15 Pro di Mary, iPad, senza permesso di memoria aumentata, Neural Engine, capi indossati, pantaloni, vestiti,
+  più generazioni di fila. **DWPose non è convertito**: le pose vengono ancora dal Mac, la catena intera sul telefono non esiste.
+- Licenze, ricontrollate il 10/11 sul repository: codice e pesi Apache 2.0, DWPose e YOLOX Apache 2.0, origine dei dati di
+  addestramento non dichiarata (18 milioni di coppie più 4 milioni di terne sintetiche). Il parser (solo ricerca) non serve.
+- **Deciso da Lorenzo il 10/11 dopo la misura:** prima «non mi fido ancora di questi FASHN», poi «lasciala ai prossimi passi».
+  FASHN non entra nella 1.0. Dopo l'uscita, nell'ordine: Lorenzo scrive a FASHN per l'origine dei dati; posa sul telefono
+  nell'app di prova; misura sul 15 Pro di Mary. Solo con tre risposte buone entra in un aggiornamento, come download facoltativo.
+  Non riproporlo prima e non integrarlo senza che lo dica lui.
+- Da chiudere prima di integrarlo: rischio sui dati di addestramento (consigliato scrivere a FASHN), 704 MB da
+  scaricare e dove ospitarli, 80-120 s di attesa a immagine. Poi: posa sul telefono (DWPose o Apple Vision), etichetta
+  «generato con IA», segnalazione, esclusione di intimo e costumi, crediti, note per il revisore. La decisione 6 del design
+  (prima versione senza avatar realistico) vale finché Lorenzo non la cambia.
+- Gli script del Mac (`convert_coreml.py`, `coreml_pipeline.py`, `guard.sh`, README) stanno nel commit `68c2f5a`; i modelli
+  convertiti in `tools/avatar-fashn/out/` (fuori da git).
+
+**Avatar a collage** (`docs/verifiche/2026-11-10-pantaloni-della-foto/`, banco del Mac con Vision vero su 4 foto del corpo):
+- `BodyBase` (Core, `Avatar/`): quando si mette un capo sotto, i pantaloni della foto del corpo si tolgono dalla vita in giù
+  (stessa riga di `GarmentLayout.waistY`), pelle esclusa. Prima spuntavano tra le gambe e ai lati dei pantaloni nuovi.
+- Il sopra non si tocca. Colorare «color pelle» maglia e braccia della foto è stato provato e scartato: macchie marroni, e in
+  un caso anche la gonna dello stesso colore della giacca (`persona-18-color-pelle-scartato.jpg`).
+- `WornGarment.mask` (estratta da `extract`, zone colore in `ColorZones`): bordo arrotondato (`Morphology.smoothed`) e ciocche di
+  capelli dentro il profilo del capo tenute, se la testa è nella foto. Sul banco i ritagli cambiano poco. Cache `capo2`.
+- Limite che resta: è un collage, il capo non prende la forma del corpo e sopra restano i vestiti della foto.
+
+**Usabilità** (dalle 33 schermate dell'ultimo giro e dal codice):
+- Consiglio «già indossato»: solo i sette giorni prima, mai il giorno stesso (compariva sull'outfit appena registrato e anche per
+  capi messi mesi fa) e con i nomi dei capi: «Di recente hai già messo Jeans chiari (9 nov 2026)».
+- Statistiche: «Dimenticati nell'armadio» non ripete «I più indossati».
+- Guardaroba vuoto: una riga che dice come aggiungere un capo e a cosa serve, anche nella scheda Outfit.
+
+**Verifiche del 10/11** (Mac a carico 300-900 per le altre sessioni, quindi in più passate):
+- Core 212/212 (`swift test`). Test dell'app 226 passati.
+- Suite UI iPhone: 53 test, tutti passati ma non in una sola esecuzione. In `round-12b` 50 su 53; i tre caduti su attese
+  scadute (`testIlProfiloHaLeTreFoto…`, `testLaSegnalazioneBloccaIDatiSensibili…` con «main thread busy for 30s»,
+  `testPosizioneNegataRestaSullaCitta`) rifatti da soli in `round-12c`: 3 su 3.
+- Giri da utente da installazione pulita, 33 schermate: Duo, italiano chiaro, inglese, italiano scuro. Guardati i fogli:
+  suggerimento nel guardaroba vuoto (it, en, scuro), niente «già messo» sull'outfit appena indossato, «Dimenticati» senza ripetizioni.
+- Il giro scuro è caduto due volte al salvataggio del quarto capo (il foglio «aggiungi» resta aperto dopo «Salva», app che
+  risponde) ed è passato alla terza. Causa non vista: lo script ora scatta `salva-non-chiude-N` se ricapita. Ipotesi: tocco sulla
+  categoria andato a vuoto mentre il modulo scorre, quindi errore «categoria mancante». Se ricapita, guardare quella schermata.
+- Nessun crash nei DiagnosticReports. Non provato: telefono vero, iPad, nessuna build nuova.
+- `tools/avatar-fashn/bench/` (app «Fashn Bench» della misura) è nel repo per i prossimi passi; i modelli restano in `out/`,
+  fuori da git. L'app di prova è ancora installata sull'iPhone di Lorenzo.
+
+**Trovato e non ancora corretto:** un capo nuovo parte sempre con calore 2 (`ItemFormModel.warmthLevel`), anche un cappotto.
+Chi non tocca i pallini riceve «Troppo leggero per 12°: aggiungi uno strato» con il cappotto addosso, e proposte peggiori col freddo.
+
+**TestFlight, letto il 10/11:** build 10 «Pronta per l'invio», gruppo «Lorenzo e Marianna», 1 installazione; anche la 9 ha il gruppo.
+
 ## Novità 2026-11-09 (sera) — Build 1.0 (10) caricata
 
 Con l'ok di Lorenzo («Sì, caricala»). Caricata alle 19:48 (`build10.sh`, `upload10.sh` in `.superpowers/sdd/rc/`), numero di build in
