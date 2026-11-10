@@ -97,6 +97,39 @@ private actor Gate {
         XCTAssertEqual(m.category, "shoes")
     }
 
+    func testIlCaloreParteDalTipoDiCapo() {
+        let m = ItemFormModel(mode: .add(.wardrobe), prepare: { $0 })
+        XCTAssertEqual(m.warmthLevel, 2)
+        m.name = "Cappotto"
+        m.selectCategory("outerwear")
+        XCTAssertEqual(m.warmthLevel, 4)
+        m.subcategory = "coat"
+        XCTAssertEqual(m.warmthLevel, 5)
+        XCTAssertEqual(m.validatedValues()?.warmthLevel, 5)
+    }
+
+    func testIlCaloreSceltoNonCambiaConIlTipo() {
+        let m = filled()
+        m.warmthLevel = 1
+        m.subcategory = "puffer"
+        m.selectCategory("tops")
+        XCTAssertEqual(m.warmthLevel, 1)
+        XCTAssertEqual(m.validatedValues()?.warmthLevel, 1)
+    }
+
+    func testInModificaIlCaloreSalvatoResta() throws {
+        let built = try StoreFactory.build(.memory)
+        container = built
+        var v = ItemValues()
+        v.name = "Cappotto"; v.category = "outerwear"; v.subcategory = "coat"; v.warmthLevel = 2
+        let item = try WardrobeStore.addItem(v, in: built.mainContext)
+        let m = ItemFormModel(mode: .edit(item), prepare: { $0 })
+        XCTAssertEqual(m.warmthLevel, 2)
+        XCTAssertFalse(m.isDirty)
+        m.subcategory = "puffer"
+        XCTAssertEqual(m.warmthLevel, 2)
+    }
+
     func testColoriSiAccendonoESiSpengono() {
         let m = filled()
         m.toggleColor("navy"); m.toggleColor("white"); m.toggleColor("navy")

@@ -21,7 +21,12 @@ enum LinkState: Equatable { case idle, loading, success, failure }
     private(set) var colors: [String] = []
     var season = "all"
     var occasion = "casual"
-    var warmthLevel = 2
+    /// Finché non lo si sceglie, il calore segue il tipo di capo: un cappotto non parte «leggero».
+    var warmthLevel: Int {
+        get { chosenWarmth ?? Catalog.defaultWarmth(category: category, subcategory: subcategory) }
+        set { chosenWarmth = newValue }
+    }
+    private var chosenWarmth: Int?
     var priceText = "" { didSet { errors.remove(.price) } }
     var linkText = ""
     var destination: AddDestination = .wardrobe

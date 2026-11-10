@@ -75,8 +75,16 @@ Sul ramo locale, **non in una build**: la 1.0 (10) su TestFlight non ha niente d
 - `tools/avatar-fashn/bench/` (app «Fashn Bench» della misura) è nel repo per i prossimi passi; i modelli restano in `out/`,
   fuori da git. L'app di prova è ancora installata sull'iPhone di Lorenzo.
 
-**Trovato e non ancora corretto:** un capo nuovo parte sempre con calore 2 (`ItemFormModel.warmthLevel`), anche un cappotto.
-Chi non tocca i pallini riceve «Troppo leggero per 12°: aggiungi uno strato» con il cappotto addosso, e proposte peggiori col freddo.
+**Calore di partenza (corretto la sera del 10/11):** un capo nuovo partiva sempre con calore 2, anche un cappotto: chi non
+toccava i pallini riceveva «Troppo leggero per 12°: aggiungi uno strato» con il cappotto addosso, e proposte peggiori col freddo.
+- Ora `Catalog.defaultWarmth(category:subcategory:)` (Core) dà il punto di partenza sulla scala di `warmthTarget`: cappotto e
+  piumino 5, maglione, felpa, giacca e stivali 4, jeans e sneakers 3, canotta, shorts e sandali 1; senza tipo vale la categoria
+  (capispalla 4, pantaloni e scarpe 3, il resto 2).
+- `ItemFormModel.warmthLevel` segue il tipo finché non si sceglie a mano; in modifica resta il valore salvato. I capi già nel
+  guardaroba non cambiano: chi ha cappotti a 2 li corregge dalla scheda del capo.
+- `round-13`, dopo la correzione: Core 216/216; suite iPhone 229 + 53 passati in una sola esecuzione; giri chiaro, scuro,
+  inglese passati al primo colpo; Duo caduto su un'attesa (`profile-temperature`, carico 560-650) e passato rifatto. Sui fogli
+  `foglio-r13-4`: stesso guardaroba, a 12° niente più «Troppo leggero», punteggio da 60 a 73. Nessun crash. Non sul telefono vero.
 
 **TestFlight, letto il 10/11:** build 10 «Pronta per l'invio», gruppo «Lorenzo e Marianna», 1 installazione; anche la 9 ha il gruppo.
 

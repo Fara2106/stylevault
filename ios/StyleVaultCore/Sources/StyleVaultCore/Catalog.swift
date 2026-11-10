@@ -162,4 +162,23 @@ public enum Catalog {
     public static func color(id: String) -> ClothingColor? {
         colors.first { $0.id == id }
     }
+
+    /// Il calore da cui parte un capo nuovo, da 1 (leggero) a 5 (pesante), sulla stessa scala di
+    /// `OutfitEngine.warmthTarget`: un cappotto lasciato a 2 farebbe dire «troppo leggero» con il cappotto addosso.
+    /// È solo il punto di partenza del modulo: chi aggiunge il capo può cambiarlo.
+    public static func defaultWarmth(category: String, subcategory: String?) -> Int {
+        if let subcategory, let level = warmthBySubcategory[subcategory] { return level }
+        return warmthByCategory[category] ?? 2
+    }
+
+    private static let warmthByCategory: [String: Int] = ["tops": 2, "bottoms": 3, "outerwear": 4, "dresses": 2, "shoes": 3]
+
+    private static let warmthBySubcategory: [String: Int] = [
+        "tshirt": 2, "shirt": 2, "hoodie": 4, "sweater": 4, "tank": 1, "polo": 2, "croptop": 1, "blouse": 2,
+        "jeans": 3, "trousers": 3, "shorts": 1, "skirt": 2, "joggers": 3, "leggings": 3, "dresspants": 3,
+        "jacket": 4, "coat": 5, "puffer": 5, "blazer": 3, "trench": 3, "vest": 3, "raincoat": 3, "cardigan": 3,
+        "shortdress": 2, "longdress": 2, "jumpsuit": 3, "eveningdress": 2,
+        "sneakers": 3, "boots": 4, "loafers": 3, "sandals": 1, "heels": 2, "ankleboots": 4, "pumps": 2,
+        "scarf": 4,
+    ]
 }
