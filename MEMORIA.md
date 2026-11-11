@@ -28,8 +28,9 @@ alle 20:04 («Upload succeeded», `build12.sh`, `upload12.sh`, `controlla12.sh` 
   CloudKit e push in Production, `get-task-allow` falso, PrivacyInfo, firma valida, `FashnTryOn.mlmodelc` presente e identico
   al sorgente, nessuna copia " 2", nessun argomento `-SV`, nessun generatore finto, niente Open-Meteo, nessuna eccezione ATS,
   i 20 testi nuovi in it e en.
-- **TestFlight non riletto:** nel browser la sessione di App Store Connect è scaduta e serve il login di Lorenzo. Il gruppo
-  «Lorenzo e Marianna» ha la distribuzione automatica: finita l'elaborazione di Apple la build arriva a tutti e due da sola.
+- **TestFlight riletto l'11/11 in serata** (App Store Connect in Chrome, login fatto da Lorenzo): la build 12 è «Pronta per
+  l'invio», assegnata al gruppo «Lorenzo e Marianna», 2 inviti. Lorenzo ha installato la 1.0 (12) sull'iPhone 18 Pro Max
+  (iOS 27.2.1). **Mary è ancora sulla 1.0 (11)**, iPhone 15 Pro, iOS 27.2: la 12 le è disponibile ma non l'ha aggiornata.
 - **Prima prova vera sul telefono, da fare da TestFlight:** aprire un outfit o un capo con foto → «Vedilo addosso» → «Versione
   realistica» → «Genera l'immagine». Deve comparire la barra con la percentuale e alla fine l'immagine (circa 70 s a capo sul
   18 Pro Max). Serve la foto del corpo di fronte nel Profilo e almeno un sopra o un sotto con foto. Sul 15 Pro di Mary tempi
