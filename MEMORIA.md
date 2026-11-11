@@ -20,6 +20,18 @@ Richiesta di Lorenzo: finire tutte le schermate nella notte e mandarla a Mary. F
 - Resta da fare prima dell'App Store: WeatherKit, iPhone Duo, schema CloudKit in Production (senza, in TestFlight i dati non passano fra dispositivi:
   da verificare), testi legali da riscrivere (la pagina privacy descrive ancora il sito).
 
+## Novità 2026-11-11 — Build 1.0 (11) caricata
+
+Con l'ok di Lorenzo («Sì, build 11»). Caricata alle 09:37 (`build11.sh`, `upload11.sh` in `.superpowers/sdd/rc/`). Dentro ci sono
+le correzioni del 10/11 (sezione qui sotto): pantaloni della foto tolti sotto un capo nuovo, consiglio «già messo», statistiche,
+guardaroba vuoto, calore di partenza dal tipo di capo.
+- IPA controllata: 1.0 (11), "Style Vault", Apple Distribution, WeatherKit, CloudKit e push in Production, PrivacyInfo, nessuna copia
+  " 2", nessun argomento `-SV`, niente Open-Meteo, nessuna eccezione ATS; `BodyBase`, `defaultWarmth` e `EmptyWardrobeHint` nei
+  simboli, i due testi nuovi in it e en. Nel binario c'è `http://localhost:9999`, identico nella 10 e non del codice dell'app.
+- Non provato: sul telefono vero, la prova la fa Lorenzo da TestFlight. Da provare: avatar con un paio di pantaloni (quelli della
+  foto del corpo non devono spuntare); un cappotto nuovo deve partire «Pesante»; il consiglio «già messo» il giorno dopo un outfit
+  indossato deve dire quali capi. I cappotti già salvati a «Leggero» si correggono a mano dalla scheda del capo.
+
 ## Novità 2026-11-10 — FASHN misurato sull'iPhone, usabilità, pantaloni della foto
 
 Richieste di Lorenzo nella stessa sessione: «Analizza l'app e migliorala», poi «il problema è lo scontorno dei capi e dell'avatar»,
