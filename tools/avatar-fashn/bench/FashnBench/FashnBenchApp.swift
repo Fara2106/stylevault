@@ -1,13 +1,16 @@
 import SwiftUI
 import UIKit
 
-/// Banco di prova: carica FASHN VTON, genera un'immagine sugli ingressi catturati sul Mac e misura tempi e memoria.
-/// Argomenti: `--units gpu|all|ne|cpu` (di base gpu), `--steps N` (di base 30), `--manuale` per non partire da solo,
+/// App di prova di FASHN VTON. Di base: scegli una foto della persona e una del capo e genera (`TryOnView`).
+/// Con `--misura`: genera sugli ingressi catturati sul Mac e misura tempi e memoria. Altri argomenti della misura: `--units gpu|all|ne|cpu` (di base gpu), `--steps N` (di base 30), `--manuale` per non partire da solo,
 /// `--esci` per chiudersi alla fine.
 @main
 struct FashnBenchApp: App {
     var body: some Scene {
-        WindowGroup { BenchView() }
+        // Con `--misura` resta il banco che misura tempi e memoria sugli ingressi catturati sul Mac
+        WindowGroup {
+            if CommandLine.arguments.contains("--misura") { BenchView() } else { TryOnView() }
+        }
     }
 }
 

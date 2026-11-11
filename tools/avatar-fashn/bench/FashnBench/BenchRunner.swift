@@ -1,76 +1,11 @@
 import CoreGraphics
 import CoreML
+import FashnKit
 import Foundation
 import ImageIO
 import Observation
 import os
 import UniformTypeIdentifiers
-
-/// Un file .npy di numpy: forma e dati grezzi (little endian, ordine C).
-struct NumpyArray {
-    let shape: [Int]
-    let descr: String
-    let data: Data
-
-    init(contentsOf url: URL) throws {
-        let raw = try Data(contentsOf: url, options: .mappedIfSafe)
-        guard raw.count > 12, raw[0] == 0x93, String(data: raw[1..<6], encoding: .ascii) == "NUMPY" else {
-            throw BenchError.input("\(url.lastPathComponent): non è un .npy")
-        }
-        let major = raw[6]
-        let headerLength = major == 1 ? Int(raw[8]) | Int(raw[9]) << 8
-            : Int(raw[8]) | Int(raw[9]) << 8 | Int(raw[10]) << 16 | Int(raw[11]) << 24
-        let start = major == 1 ? 10 : 12
-        guard let header = String(data: raw[start..<(start + headerLength)], encoding: .ascii) else {
-            throw BenchError.input("\(url.lastPathComponent): intestazione illeggibile")
-        }
-        guard !header.contains("'fortran_order': True") else { throw BenchError.input("ordine Fortran non gestito") }
-        func field(_ name: String, until end: Character) -> String? {
-            guard let range = header.range(of: "'\(name)':") else { return nil }
-            let rest = header[range.upperBound...].drop { $0 == " " || $0 == "'" || $0 == "(" }
-            return String(rest.prefix { $0 != end })
-        }
-        descr = field("descr", until: "'") ?? ""
-        shape = (field("shape", until: ")") ?? "").split(separator: ",").compactMap { Int($0.trimmingCharacters(in: .whitespaces)) }
-        data = raw.subdata(in: (start + headerLength)..<raw.count)
-    }
-
-    /// I numeri del primo elemento del lotto (la metà condizionata), come Float.
-    func firstBatchFloats() throws -> [Float] {
-        guard descr == "<f4" else { throw BenchError.input("atteso <f4, trovato \(descr)") }
-        let count = shape.dropFirst().reduce(1, *)
-        return data.withUnsafeBytes { Array($0.bindMemory(to: Float.self).prefix(count)) }
-    }
-
-    func firstInteger() throws -> Int {
-        switch descr {
-        case "<i8": return data.withUnsafeBytes { Int($0.loadUnaligned(as: Int64.self)) }
-        case "<i4": return data.withUnsafeBytes { Int($0.loadUnaligned(as: Int32.self)) }
-        default: throw BenchError.input("intero atteso, trovato \(descr)")
-        }
-    }
-}
-
-enum BenchError: Error, CustomStringConvertible {
-    case input(String)
-    case model(String)
-
-    var description: String {
-        switch self {
-        case .input(let text), .model(let text): return text
-        }
-    }
-}
-
-/// La stessa schedule della pipeline originale (`get_rf_schedule`, mu 1,5): da 0 (rumore) a 1 (immagine).
-func rectifiedFlowSchedule(steps: Int, mu: Double = 1.5) -> [Double] {
-    let shift = exp(-mu)
-    let values = (0...steps).map { index -> Double in
-        let t = 1 - Double(index) / Double(steps)
-        return t <= 0 ? 0 : shift / (shift + (1 / t - 1))
-    }
-    return values.reversed()
-}
 
 /// Memoria dell'app come la conta iOS per chiuderla (phys_footprint), in MB.
 func memoryFootprintMB() -> Double {
@@ -134,7 +69,7 @@ func memoryFootprintMB() -> Double {
     private func run(unitsName: String, steps: Int) async throws {
         // La cartella entra nel pacchetto col nome che ha su disco
         guard let payload = Bundle.main.url(forResource: "bench-payload", withExtension: nil) else {
-            throw BenchError.input("manca Payload nel pacchetto")
+            throw FashnError.image("manca Payload nel pacchetto")
         }
         let kind = (try? String(contentsOf: payload.appendingPathComponent("modello.txt"), encoding: .utf8))?
             .trimmingCharacters(in: .whitespacesAndNewlines) ?? "?"
@@ -170,7 +105,7 @@ func memoryFootprintMB() -> Double {
         func load(_ name: String) throws -> NumpyArray { try NumpyArray(contentsOf: inputs.appendingPathComponent("\(name).npy")) }
         let noise = try load("x")
         let shape = [1] + Array(noise.shape.dropFirst())
-        guard shape.count == 4 else { throw BenchError.input("forma di x inattesa: \(noise.shape)") }
+        guard shape.count == 4 else { throw FashnError.image("forma di x inattesa: \(noise.shape)") }
         var images = try noise.firstBatchFloats()
         let names = ["ca_images", "garment_images", "person_poses", "garment_poses"]
         var cond = [String: MLMultiArray](), uncond = [String: MLMultiArray]()
@@ -203,7 +138,7 @@ func memoryFootprintMB() -> Double {
                     for (name, value) in parts { features[name] = value }
                     let output = try model.prediction(from: MLDictionaryFeatureProvider(dictionary: features))
                     guard let out = output.featureValue(for: "velocity")?.multiArrayValue else {
-                        throw BenchError.model("manca l'uscita velocity")
+                        throw FashnError.model("manca l'uscita velocity")
                     }
                     return Self.floats(out)
                 }
@@ -213,7 +148,7 @@ func memoryFootprintMB() -> Double {
                 let free = try predict(uncondInputs, category: 0)
                 return zip(free, conditioned).map { $0 + guidance * ($1 - $0) }
             }.value
-            guard velocity.count == images.count else { throw BenchError.model("uscita di \(velocity.count) numeri, attesi \(images.count)") }
+            guard velocity.count == images.count else { throw FashnError.model("uscita di \(velocity.count) numeri, attesi \(images.count)") }
             let dt = Float(tPrev - tCurr)
             for i in images.indices { images[i] += dt * velocity[i] }
             stepSeconds.append(Date().timeIntervalSince(stepStart))

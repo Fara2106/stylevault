@@ -1,0 +1,10 @@
+preparazione 0.74 s, punti del corpo 18 su 18, persona 576×720 nel riquadro
+ca_images forma [2, 3, 864, 576]: differenza media 0.38 su 255
+garment_images forma [2, 3, 864, 576]: differenza media 0.20 su 255
+person_poses forma [2, 1, 864, 576]: differenza media 1.19 su 255
+posa: sovrapposizione 53% dei pixel disegnati, stesso grigio nel 92% di quelli in comune
+garment_poses forma [2, 1, 864, 576]: differenza media 0.00 su 255
+categoria originale 1, mia 1
+modello caricato in 5.0 s
+generazione 271.4 s
+rc=0

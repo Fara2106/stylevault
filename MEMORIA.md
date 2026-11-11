@@ -20,6 +20,27 @@ Richiesta di Lorenzo: finire tutte le schermate nella notte e mandarla a Mary. F
 - Resta da fare prima dell'App Store: WeatherKit, iPhone Duo, schema CloudKit in Production (senza, in TestFlight i dati non passano fra dispositivi:
   da verificare), testi legali da riscrivere (la pagina privacy descrive ancora il sito).
 
+## Novità 2026-11-11 (pomeriggio) — FASHN: catena intera in Swift, prova sul telefono
+
+Lorenzo ha cambiato idea rispetto al 10/11: «Proviamo a metterci quell'IA on device e vediamo come va, prima di pubblicarla.
+Facciamo questo test», e durante la generazione vuole «una barra che indichi il caricamento, con la percentuale accanto».
+È una prova: nessuna decisione di pubblicarla. Style Vault non è toccata, la 1.0 (11) resta com'è.
+
+- **Perché nell'app di prova e non dentro Style Vault:** una build di debug di Style Vault sul telefono userebbe l'iCloud di
+  sviluppo (guardaroba vuoto) e sostituirebbe quella di TestFlight; una build TestFlight porterebbe 704 MB anche a Mary. La
+  qualità si giudica uguale scegliendo le foto vere dalla libreria. Se convince, il passo dopo è «Vedilo addosso».
+- **`tools/avatar-fashn/FashnKit`** (pacchetto Swift, iOS 18 e macOS 14): `Frame` (riquadro 576×864 e bordi come l'originale),
+  `PoseSketch` (disegno della posa in grigio, come `draw_pose`), `VisionPose` (corpo, mani e viso con Apple Vision al posto di
+  DWPose), `FashnPrepare` (foto → tensori, uscita → immagine senza bordi), `FashnSampler` (Eulero, guida 1,5, avanzamento a
+  passaggi), `fashn-confronto` (strumento del Mac). Test 15/15.
+- **Confronto sul Mac** (`docs/verifiche/2026-11-11-fashn-catena-swift/`): foto preparate a 0,2-0,4 su 255 dall'originale; posa
+  di Vision 18 punti su 18, quasi sovrapposta a DWPose; immagine finale a 30 passi con lo stesso rumore equivalente a occhio
+  a quella della pipeline originale. Il dubbio «posa sul telefono» del 10/11 sul Mac è chiuso; sull'iPhone va ancora visto.
+- **App di prova** (`tools/avatar-fashn/bench`): scelta di persona e capo dalle foto, tipo di capo, capo indossato sì/no, 12/20/30
+  passi, barra con percentuale, risultato da salvare, posa vista dal telefono. `--misura` riapre il banco dei tempi.
+- Restano del 10/11: origine dei dati di addestramento (mail a FASHN), 15 Pro di Mary, 704 MB da ospitare, etichetta «generato
+  con IA», esclusione di intimo e costumi. Il modello non lavora con l'app in secondo piano.
+
 ## Novità 2026-11-11 — Build 1.0 (11) caricata
 
 Con l'ok di Lorenzo («Sì, build 11»). Caricata alle 09:37 (`build11.sh`, `upload11.sh` in `.superpowers/sdd/rc/`). Dentro ci sono

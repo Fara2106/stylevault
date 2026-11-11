@@ -36,3 +36,4 @@ __pycache__/
 
 # Prova tecnica FASHN VTON: uscite e modelli convertiti
 tools/avatar-fashn/out/
+tools/avatar-fashn/FashnKit/.build/

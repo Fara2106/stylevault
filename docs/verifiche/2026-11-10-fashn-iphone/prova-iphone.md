@@ -37,5 +37,5 @@ La generazione è intera: 2 passaggi a passo, 1 all'ultimo, schedule originale r
 ## Per rifarla
 
 `tools/avatar-fashn/bench/prepara.sh 6bit`, poi progetto generato fuori da Documents e lancio con
-`xcrun devicectl device process launch --console … it.faraoni.stylevault.bench -- --units gpu --steps 30 --esci`.
+`xcrun devicectl device process launch --console … it.faraoni.stylevault.bench -- --misura --units gpu --steps 30 --esci`.
 Il risultato sta in `Documents/fashn-result.json` e `.png` dell'app.
