@@ -51,6 +51,8 @@ Facciamo questo test», e durante la generazione vuole «una barra che indichi i
   attiva (difetto della schermata, non suo): ora il riconoscimento è automatico, come in Style Vault. **A telefono caldo e in
   carica 20 passi durano 160 s (8 s a passo, il doppio che a freddo)** con iOS che segna ancora «normale»/«tiepido»: i tempi
   del 10/11 valgono solo a freddo. Va rimisurato a freddo e a caldo con i secondi a passo che l'app ora scrive.
+- **Permesso dell'11/11:** finché dura questa prova «Fashn Bench» si può reinstallare sull'iPhone di Lorenzo senza chiedere ogni
+  volta («Sì, aggiorna pure»). Solo quell'app e solo quel telefono: per Style Vault resta «mai una build di debug senza chiedere».
 - Restano del 10/11: origine dei dati di addestramento (mail a FASHN), 15 Pro di Mary, 704 MB da ospitare, etichetta «generato
   con IA», esclusione di intimo e costumi. Il modello non lavora con l'app in secondo piano.
 
