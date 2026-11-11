@@ -28,6 +28,7 @@ guardaroba vuoto, calore di partenza dal tipo di capo.
 - IPA controllata: 1.0 (11), "Style Vault", Apple Distribution, WeatherKit, CloudKit e push in Production, PrivacyInfo, nessuna copia
   " 2", nessun argomento `-SV`, niente Open-Meteo, nessuna eccezione ATS; `BodyBase`, `defaultWarmth` e `EmptyWardrobeHint` nei
   simboli, i due testi nuovi in it e en. Nel binario c'è `http://localhost:9999`, identico nella 10 e non del codice dell'app.
+- TestFlight, letto alle 09:50 dell'11/11: build 11 «Pronta per l'invio», gruppo «Lorenzo e Marianna», 2 inviti, 0 installazioni.
 - Non provato: sul telefono vero, la prova la fa Lorenzo da TestFlight. Da provare: avatar con un paio di pantaloni (quelli della
   foto del corpo non devono spuntare); un cappotto nuovo deve partire «Pesante»; il consiglio «già messo» il giorno dopo un outfit
   indossato deve dire quali capi. I cappotti già salvati a «Leggero» si correggono a mano dalla scheda del capo.
