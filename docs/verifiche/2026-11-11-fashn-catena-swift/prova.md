@@ -81,8 +81,30 @@ e pelle della persona, maglietta e jeans credibili, scarpe e viso intatti. È il
   mostrava solo la temperatura di partenza e di arrivo) oppure iOS che taglia la GPU durante una chiamata a telefono già caldo.
   Ora la riga riporta anche la temperatura massima e i secondi di pausa per il caldo.
 
+## Quarto giro sul telefono (16:16-16:23): i tempi spiegati
+
+`iphone-quarto-giro-12-20-30-passi.jpg`. Maglietta arancione isolata, tre generazioni di fila. Tutte giuste, pelle compresa.
+
+| Passi | Totale | Passo più veloce / di mezzo / più lento | Pausa per il caldo | Fuori dal primo piano | Calcolo al netto |
+|---|---|---|---|---|---|
+| 12 | 44 s | 3,3 / 3,9 / 4,4 s | nessuna (massimo «tiepido») | no | 44 s |
+| 20 | 136 s | 3,1 / 3,7 / 67,1 s | 39 s (massimo «caldo») | 25 s | circa 72 s |
+| 30 | 267 s | 3,1 / 3,6 / 88,1 s | 163 s (massimo «caldo») | no | circa 104 s |
+
+- **I 274 s del terzo giro erano la pausa per il caldo**, non iOS: il calcolo resta a 3,1-3,9 s a passo anche a telefono caldo.
+  Al netto: 12 passi 44 s, 20 passi circa 72 s, 30 passi circa 104 s, come le misure a freddo del 10/11.
+- **Il caldo arriva alla seconda o terza generazione di fila.** La prima, da «tiepido», resta «tiepido». Dalla seconda iOS sale a
+  «caldo» e l'app aspetta: 39 s, poi 163 s. Una generazione ogni tanto non lo fa scattare; tante di fila sì.
+- Gli 8 s a passo delle 15:32-15:35 (senza pausa, telefono in carica) restano l'unico caso in cui il calcolo stesso era lento.
+- **Uscire dall'app non rompe più la generazione**: 25 s fuori dal primo piano, pausa e ripresa, risultato giusto.
+- Memoria di picco 786-794 MB con anche lo scontorno del capo.
+- La batteria letta dall'app va a scatti del 5% (80 → 80, 80 → 75, 75 → 75): non serve a misurare una generazione. Dalle
+  schermate: 78% alle 16:16, 75% alle 16:23, circa 3 punti per 62 passi.
+- Qualità su questa maglietta a tinta unita: 12, 20 e 30 passi vanno tutti bene. Su una trama (il maglione a trecce del
+  10/11) 12 passi la perdevano: non è una prova che 12 bastino sempre.
+
 ## Non provato
 
-- Sul telefono: la pausa per il caldo e fuori dal primo piano, il tempo a freddo senza interruzioni, foto vere di Lorenzo.
+- Sul telefono: foto vere di Lorenzo (finora solo la persona di prova in studio), capi con trama a 12 passi.
 - Foto con più persone, di spalle o tagliate; vestiti interi veri; 15 Pro di Mary; iPad.
 - Il modello non lavora con l'app in secondo piano: va tenuta aperta.

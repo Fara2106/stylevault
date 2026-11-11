@@ -57,6 +57,11 @@ Facciamo questo test», e durante la generazione vuole «una barra che indichi i
   L'app ora misura passo più veloce, di mezzo e più lento, conta i secondi fuori dal primo piano e lì va in pausa.
   Lorenzo: l'app era sempre aperta davanti, quindi non era il secondo piano. Ipotesi rimaste: la pausa per il caldo scattata a
   metà (la riga non la riportava) o iOS che frena la GPU in chiamata. La riga ora dà temperatura massima e secondi di pausa.
+- **Quarto giro (16:16-16:23), tempi spiegati:** i 274 s erano la pausa per il caldo, non iOS. Il calcolo resta a 3,1-3,9 s a
+  passo anche a telefono caldo: **12 passi 44 s, 20 passi circa 72 s, 30 passi circa 104 s** al netto. Il caldo («caldo» di iOS)
+  arriva alla seconda o terza generazione di fila e lì l'app aspetta (39 s, poi 163 s); una generazione sola da tiepido non lo
+  tocca. Uscire dall'app non rompe la generazione (25 s fuori, pausa e ripresa). Picco 790 MB. La batteria letta dall'app va a
+  scatti del 5%, inutile per una generazione. Manca ancora una foto vera di Lorenzo: finora solo la persona di prova in studio.
 - **Permesso dell'11/11:** finché dura questa prova «Fashn Bench» si può reinstallare sull'iPhone di Lorenzo senza chiedere ogni
   volta («Sì, aggiorna pure»). Solo quell'app e solo quel telefono: per Style Vault resta «mai una build di debug senza chiedere».
 - Restano del 10/11: origine dei dati di addestramento (mail a FASHN), 15 Pro di Mary, 704 MB da ospitare, etichetta «generato
