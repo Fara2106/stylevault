@@ -20,7 +20,19 @@ struct TryOnView: View {
                         Text("Intero").tag(GarmentCategory.onePieces)
                     }
                     .pickerStyle(.segmented)
-                    Toggle("Nella foto il capo è indossato", isOn: $model.garmentIsWorn)
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Nella foto il capo è").font(.footnote).foregroundStyle(.secondary)
+                        Picker("Foto del capo", selection: $model.garmentKind) {
+                            Text("Da solo").tag(TryOnModel.GarmentPhotoKind.alone)
+                            Text("Indossato").tag(TryOnModel.GarmentPhotoKind.wornIsolated)
+                            Text("Indossato, intera").tag(TryOnModel.GarmentPhotoKind.wornWhole)
+                        }
+                        .pickerStyle(.segmented)
+                        if model.garmentKind == .wornWhole {
+                            Text("La foto entra intera: nel risultato può finire anche la pelle di chi indossa il capo.")
+                                .font(.footnote).foregroundStyle(.secondary)
+                        }
+                    }
                     Picker("Passi", selection: $model.steps) {
                         Text("12 · veloce").tag(12)
                         Text("20").tag(20)
@@ -80,6 +92,7 @@ struct TryOnView: View {
         case .preparing: return "Preparo le foto e cerco la posa…"
         case .loadingModel: return "Carico il modello…"
         case .generating:
+            if model.coolingDown { return "In pausa: il telefono è caldo, aspetto che si raffreddi" }
             guard let progress = model.progress, progress.step > 0 else { return "Avvio la generazione…" }
             return "Passo \(progress.step) di \(progress.steps)"
         default: return ""
@@ -99,6 +112,17 @@ struct TryOnView: View {
                 Label("Salva o condividi", systemImage: "square.and.arrow.up").frame(maxWidth: .infinity)
             }
             .buttonStyle(.bordered)
+            Button { model.useResultAsPerson() } label: {
+                Label("Aggiungi un altro capo a questo risultato", systemImage: "plus.square.on.square").frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
+            if let garment = model.isolatedGarment {
+                DisclosureGroup("Capo isolato dato al modello") {
+                    Image(uiImage: UIImage(cgImage: garment)).resizable().scaledToFit().frame(maxHeight: 280)
+                        .background(Color.white, in: RoundedRectangle(cornerRadius: 8))
+                }
+                .font(.footnote)
+            }
             if let sketch = model.poseSketch {
                 DisclosureGroup("Posa vista dal telefono") {
                     Image(uiImage: UIImage(cgImage: sketch)).resizable().scaledToFit().frame(maxHeight: 280)

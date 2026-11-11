@@ -38,6 +38,15 @@ Facciamo questo test», e durante la generazione vuole «una barra che indichi i
   a quella della pipeline originale. Il dubbio «posa sul telefono» del 10/11 sul Mac è chiuso; sull'iPhone va ancora visto.
 - **App di prova** (`tools/avatar-fashn/bench`): scelta di persona e capo dalle foto, tipo di capo, capo indossato sì/no, 12/20/30
   passi, barra con percentuale, risultato da salvare, posa vista dal telefono. `--misura` riapre il banco dei tempi.
+- **Prima prova di Lorenzo sul telefono (11/11, 15:10-15:18)**, quattro generazioni a 30 passi con le foto di prova: maglione e
+  jeans da soli buoni (116 e 119 s, picco 716 MB), outfit intero buono (136 s), maglietta indossata sbagliata (pelle chiara
+  della modella su braccia e pancia). Posa di Vision 18 su 18. **«Questa generazione ha fatto scaldare non poco il telefono»**;
+  batteria 76% → 71% in quattro generazioni. È il costo da pesare insieme al tempo: funzione occasionale sì, anteprima di ogni
+  outfit no.
+- **Correzioni dopo la prova:** il capo indossato si isola con lo scontorno di Style Vault (`FashnWorn` usa `WornGarment` del
+  Core, senza modificarlo) prima di darlo al modello: sul Mac la pelle torna quella della persona. L'app di prova ha «Da solo /
+  Indossato / Indossato, intera», «Aggiungi un altro capo a questo risultato», pausa quando iOS segnala «caldo», temperatura e
+  batteria a fine generazione. Con «Intero» su un outfit di due capi l'isolamento prende mezzo outfit: si fanno sopra e sotto.
 - Restano del 10/11: origine dei dati di addestramento (mail a FASHN), 15 Pro di Mary, 704 MB da ospitare, etichetta «generato
   con IA», esclusione di intimo e costumi. Il modello non lavora con l'app in secondo piano.
 
