@@ -172,6 +172,8 @@ struct BodyPhotoEditorView: View {
     private func forgetCutouts() {
         let prefix = "body-\(view.rawValue)-"
         Task { await CutoutCache.shared.removeAll(prefix: prefix) }
+        // Con una foto del corpo nuova le immagini generate con la vecchia non valgono più
+        RealisticCache.removeAll()
     }
 
     private func reset() {

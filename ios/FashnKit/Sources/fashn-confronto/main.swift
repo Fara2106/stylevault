@@ -4,12 +4,13 @@ import FashnKit
 import FashnWorn
 import Foundation
 import ImageIO
+import StyleVaultCore
 import UniformTypeIdentifiers
 
 // Confronta gli ingressi preparati in Swift (posa di Apple Vision) con quelli catturati dalla pipeline originale
 // (posa di DWPose), e se serve genera l'immagine sul Mac.
 // Uso: fashn-confronto <persona> <capo> <uscita> [--originali <cartella dei .npy>] [--categoria tops|bottoms|one-pieces]
-//        [--indossato-intero] [--genera <FashnTryOn.mlmodelc>] [--passi N] [--rumore-originale]
+//        [--indossato-intero] [--genera <FashnTryOn.mlmodelc>] [--passi N] [--rumore-originale] [--outfit <capo sotto> [--come-app]]
 
 func savePNG(_ image: CGImage, _ url: URL) {
     guard let dest = CGImageDestinationCreateWithURL(url as CFURL, UTType.png.identifier as CFString, 1, nil) else { return }
@@ -52,6 +53,13 @@ func meanAbsoluteDifference(_ a: [Float], _ b: [Float]) -> Double {
     var sum = 0.0
     for i in a.indices { sum += Double(abs(a[i] - b[i])) }
     return sum / Double(a.count) * 127.5
+}
+
+/// Per stampare l'avanzamento una volta ogni dieci punti.
+final class Printed: @unchecked Sendable {
+    private let lock = NSLock()
+    private var last = -1
+    func isNew(_ value: Int) -> Bool { lock.withLock { if value == last { return false }; last = value; return true } }
 }
 
 func run() async throws {
@@ -116,6 +124,40 @@ func run() async throws {
 
     guard let modelPath = option("--genera") else { return }
     let steps = option("--passi").flatMap(Int.init) ?? 20
+
+    // --outfit <capo sotto>: sopra e poi sotto, come fa Style Vault, con una sola barra
+    if let second = option("--outfit") {
+        let sampler = try FashnSampler(modelURL: URL(fileURLWithPath: modelPath))
+        let start = Date()
+        let printed = Printed()
+        var person = try FashnPrepare.loadImage(URL(fileURLWithPath: args[1]))
+        var garments = [TryOnGarment(photo: try FashnPrepare.loadImage(URL(fileURLWithPath: args[2])), category: category),
+                        TryOnGarment(photo: try FashnPrepare.loadImage(URL(fileURLWithPath: second)), category: .bottoms)]
+        // --come-app: le stesse immagini che Style Vault dà al modello. La persona ritagliata nel suo riquadro,
+        // ogni capo scontornato e, se è addosso a qualcuno, solo il capo (`SystemRealisticGenerator`).
+        if args.contains("--come-app") {
+            let bounds = (try? await PersonCutout.cutout(person, allInstances: false))?.bounds ?? .zero
+            person = PersonFraming.cropped(person, around: bounds)
+            savePNG(person, out.appendingPathComponent("app-persona.png"))
+            for (index, garment) in garments.enumerated() {
+                guard let cutout = try? await PersonCutout.cutout(garment.photo, allInstances: true) else { continue }
+                let slot = garment.category == .bottoms ? "bottom" : garment.category == .tops ? "top" : "dress"
+                let image = await WornGarment.piece(from: cutout, photo: garment.photo, slot: slot)?.image ?? cutout.image
+                garments[index] = TryOnGarment(photo: image, category: garment.category)
+                savePNG(image, out.appendingPathComponent("app-capo-\(index + 1).png"))
+            }
+        }
+        let result = try await OutfitTryOn.generate(
+            person: person, garments: garments,
+            steps: steps, seed: 42, sampler: sampler) { value in
+                guard printed.isNew(value.percent / 10) else { return }
+                print(String(format: "%3d%%  capo %d di %d, %.0f s", value.percent, value.garment, value.garments, Date().timeIntervalSince(start)))
+                fflush(stdout)
+            }
+        print(String(format: "outfit in %.1f s", Date().timeIntervalSince(start)))
+        savePNG(result, out.appendingPathComponent("outfit-\(steps).png"))
+        return
+    }
     let loadStart = Date()
     let sampler = try FashnSampler(modelURL: URL(fileURLWithPath: modelPath))
     print(String(format: "modello caricato in %.1f s", Date().timeIntervalSince(loadStart)))

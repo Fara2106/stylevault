@@ -27,6 +27,18 @@ public struct FashnInputs: Sendable {
     public let personPoseSketch: GrayCanvas
     /// Quanti punti del corpo ha visto Vision, su 18.
     public let bodyPointsFound: Int
+
+    public init(person: [Float], garment: [Float], personPose: [Float], garmentPose: [Float], category: GarmentCategory,
+                personFrame: Frame, personPoseSketch: GrayCanvas, bodyPointsFound: Int) {
+        self.person = person
+        self.garment = garment
+        self.personPose = personPose
+        self.garmentPose = garmentPose
+        self.category = category
+        self.personFrame = personFrame
+        self.personPoseSketch = personPoseSketch
+        self.bodyPointsFound = bodyPointsFound
+    }
 }
 
 public enum FashnPrepare {

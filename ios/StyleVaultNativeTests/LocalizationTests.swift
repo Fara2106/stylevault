@@ -34,6 +34,9 @@ final class LocalizationTests: XCTestCase {
         + ["stats", "totalOutfits", "statsMostWorn", "statsLeastWorn", "statsByCategory", "statsByColor", "statsCostPerWear",
            "statsNoData", "statsNever"].map { "profile.\($0)" }
         + ["native.outfit.saved.title", "native.outfit.saved.empty", "common.loading", "native.wardrobe.emptyHint"]
+        + ["native.avatar.realistic"]
+        + ["title", "intro", "time", "generate", "again", "keepOpen", "pausedHeat", "pausedBackground", "failed", "aiLabel",
+           "imageLabel", "share", "report", "stopTitle", "stopConfirm", "stopKeep"].map { "native.realistic.\($0)" }
         + ["bodyPhotosTitle", "bodyPhotosHintWeb", "bodyPhotoMissing", "bodyViewFront", "bodyViewSide", "bodyViewBack",
            "ownPhotoNotice"].map { "profile.\($0)" }
         + ["guide.front", "guide.side", "guide.back", "check.noPerson", "check.multiplePeople", "check.notFullBody",

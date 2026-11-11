@@ -5373,6 +5373,23 @@
         }
       }
     },
+    "native.avatar.realistic": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versione realistica"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Realistic version"
+          }
+        }
+      }
+    },
     "native.avatar.title": {
       "extractionState": "manual",
       "localizations": {
@@ -6770,6 +6787,329 @@
           "stringUnit": {
             "state": "translated",
             "value": "Your phone's share sheet opens: pick ChatGPT or Gemini. Photo 1 is you, the others are the items."
+          }
+        }
+      }
+    },
+    "native.realistic.again": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Genera di nuovo"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Generate again"
+          }
+        }
+      }
+    },
+    "native.realistic.aiLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Immagine generata con IA sul tuo dispositivo. È una simulazione: vestibilità e colori reali possono essere diversi."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI-generated image, made on your device. It is a simulation: real fit and colours may differ."
+          }
+        }
+      }
+    },
+    "native.realistic.failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'immagine non è stata generata. Riprova tra poco."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The image was not generated. Try again in a moment."
+          }
+        }
+      }
+    },
+    "native.realistic.generate": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Genera l'immagine"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Generate the image"
+          }
+        }
+      }
+    },
+    "native.realistic.imageLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Immagine generata con i capi addosso"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Generated image wearing the items"
+          }
+        }
+      }
+    },
+    "native.realistic.intro": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'app genera un'immagine di te con questi capi addosso. Tutto avviene sul tuo dispositivo: le foto non vengono inviate a nessuno."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The app generates an image of you wearing these items. Everything happens on your device: your photos are not sent to anyone."
+          }
+        }
+      }
+    },
+    "native.realistic.keepOpen": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tieni l'app aperta finché non finisce."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep the app open until it finishes."
+          }
+        }
+      }
+    },
+    "native.realistic.leftOut %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non compaiono nell'immagine: %@."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not shown in the image: %@."
+          }
+        }
+      }
+    },
+    "native.realistic.pausedBackground": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In pausa: riprende quando l'app torna in primo piano."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paused: it resumes when the app is back in the foreground."
+          }
+        }
+      }
+    },
+    "native.realistic.pausedHeat": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In pausa: il dispositivo è caldo. Riprende da solo quando si raffredda."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paused: your device is warm. It resumes on its own once it cools down."
+          }
+        }
+      }
+    },
+    "native.realistic.pieces %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capi nell'immagine: %@."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Items in the image: %@."
+          }
+        }
+      }
+    },
+    "native.realistic.report": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Segnala questa immagine"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report this image"
+          }
+        }
+      }
+    },
+    "native.realistic.share": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salva o condividi"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save or share"
+          }
+        }
+      }
+    },
+    "native.realistic.stopConfirm": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ferma e chiudi"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop and close"
+          }
+        }
+      }
+    },
+    "native.realistic.stopKeep": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continua"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep going"
+          }
+        }
+      }
+    },
+    "native.realistic.stopTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fermare la generazione? L'immagine non verrà salvata."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop generating? The image will not be saved."
+          }
+        }
+      }
+    },
+    "native.realistic.time": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servono alcuni minuti e il dispositivo può scaldarsi. L'immagine è una simulazione."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It takes a few minutes and your device may get warm. The image is a simulation."
+          }
+        }
+      }
+    },
+    "native.realistic.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versione realistica"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Realistic version"
+          }
+        }
+      }
+    },
+    "native.realistic.working %lld %lld %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capo %1$lld di %2$lld: %3$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item %1$lld of %2$lld: %3$@"
           }
         }
       }

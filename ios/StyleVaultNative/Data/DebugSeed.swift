@@ -49,6 +49,23 @@ import UIKit
         try? context.save()
     }
 
+    /// Una foto finta per i capi che non ne hanno, solo con `-SVSeedGarmentPhotos`: senza foto la versione realistica
+    /// non ha niente da generare.
+    static func fillGarmentPhotos(_ context: ModelContext) {
+        guard let items = try? context.fetch(FetchDescriptor<Item>()) else { return }
+        let size = CGSize(width: 300, height: 400)
+        for item in items where item.photoFront == nil {
+            let image = UIGraphicsImageRenderer(size: size).image { renderer in
+                UIColor.white.setFill()
+                renderer.fill(CGRect(origin: .zero, size: size))
+                UIColor.systemIndigo.setFill()
+                UIBezierPath(roundedRect: CGRect(x: 60, y: 60, width: 180, height: 280), cornerRadius: 30).fill()
+            }
+            item.photoFront = image.jpegData(compressionQuality: 0.8)
+        }
+        try? context.save()
+    }
+
     /// Una foto finta, solo con `-SVSeedBodyPhoto`.
     static func fillBodyPhoto(_ context: ModelContext) {
         let size = CGSize(width: 300, height: 600)

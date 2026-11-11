@@ -11,6 +11,9 @@ packages:
     from: 2.0.0
   StyleVaultCore:
     path: StyleVaultCore
+  # FASHN VTON v1.5 sul dispositivo: la versione realistica di "Vedilo addosso"
+  FashnKit:
+    path: FashnKit
 settings:
   base:
     # Apple Developer Program di Lorenzo (attivo dal 2026-11-05): firma automatica
@@ -31,6 +34,27 @@ targets:
     dependencies:
       - package: StyleVaultCore
       - package: Supabase
+      - package: FashnKit
+        product: FashnKit
+      - package: FashnKit
+        product: FashnWorn
+    postCompileScripts:
+      # Il modello (704 MB, fuori da git) entra solo nelle build Release per un dispositivo vero. Simulatore e Debug non lo
+      # portano: lì il modello non gira e 704 MB a ogni installazione rallentano i test. Senza modello l'app nasconde la funzione.
+      - name: Modello della versione realistica
+        basedOnDependencyAnalysis: false
+        script: |
+          MODEL="${SRCROOT}/../tools/avatar-fashn/out/bench-payload/FashnTryOn.mlmodelc"
+          DEST="${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FashnTryOn.mlmodelc"
+          if [ "${CONFIGURATION}" = "Release" ] && [ "${PLATFORM_NAME}" = "iphoneos" ]; then
+            if [ -d "$MODEL" ]; then
+              rsync -a --delete "$MODEL/" "$DEST/"
+            else
+              echo "warning: manca $MODEL: la versione realistica resta spenta in questa build"
+            fi
+          else
+            rm -rf "$DEST"
+          fi
     configFiles:
       Debug: Config/Secrets.xcconfig
       Release: Config/Secrets.xcconfig
@@ -72,6 +96,8 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: it.faraoni.stylevault.nativa
         TARGETED_DEVICE_FAMILY: "1,2"
         SWIFT_EMIT_LOC_STRINGS: YES
+        # Lo script che copia il modello scrive nel pacchetto dell'app
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
   StyleVaultNativeTests:
     type: bundle.unit-test
     platform: iOS

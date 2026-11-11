@@ -40,6 +40,7 @@ struct StyleVaultNativeApp: App {
         if ProcessInfo.processInfo.arguments.contains("-SVSeedWardrobe") { DebugSeed.fill(opened.container.mainContext) }
         if ProcessInfo.processInfo.arguments.contains("-SVSeedCutout") { DebugSeed.fillCutout(opened.container.mainContext) }
         if ProcessInfo.processInfo.arguments.contains("-SVSeedBodyPhoto") { DebugSeed.fillBodyPhoto(opened.container.mainContext) }
+        if ProcessInfo.processInfo.arguments.contains("-SVSeedGarmentPhotos") { DebugSeed.fillGarmentPhotos(opened.container.mainContext) }
         #endif
         let monitor = SyncMonitor(health: opened.health)
         container = opened.container
@@ -101,6 +102,13 @@ struct StyleVaultNativeApp: App {
         return SystemAvatarRenderer()
     }
 
+    private static func makeRealisticGenerator() -> any RealisticGenerating {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-SVFakeTryOn") { return FakeRealisticGenerator() }
+        #endif
+        return SystemRealisticGenerator()
+    }
+
     private static func makePositionProvider() -> any PositionProviding {
         #if DEBUG
         let arguments = ProcessInfo.processInfo.arguments
@@ -145,6 +153,7 @@ struct StyleVaultNativeApp: App {
                 .environment(\.positionProvider, Self.makePositionProvider())
                 .environment(\.bodyPhotoAnalyzer, Self.makeBodyPhotoAnalyzer())
                 .environment(\.avatarRenderer, Self.makeAvatarRenderer())
+                .environment(\.realisticGenerator, Self.makeRealisticGenerator())
                 .environment(\.faceAnalyzer, Self.makeFaceAnalyzer())
                 .environment(\.feedbackSender, Self.makeFeedbackSender())
                 .onChange(of: covered, initial: true) { _, value in lockWindow.setVisible(value) }

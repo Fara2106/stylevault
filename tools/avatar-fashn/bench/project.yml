@@ -1,7 +1,7 @@
 # App di prova di FASHN VTON v1.5 su iPhone: una sola app, fuori dal progetto di Style Vault.
-# Il progetto Xcode si genera fuori da Documents (è su iCloud e raddoppia i file rigenerati): si copiano lì `bench/` e
-# `FashnKit/` una accanto all'altra, con `out` come collegamento alla cartella vera, e si lancia `xcodegen generate` nella copia.
-# FashnKit usa lo scontorno di Style Vault: tre cartelle sopra la copia serve anche `ios/StyleVaultCore`.
+# Il progetto Xcode si genera fuori da Documents (è su iCloud e raddoppia i file rigenerati). Nella copia servono:
+# `<base>/fashnbench/src/bench` (questa cartella), `<base>/fashnbench/src/out` come collegamento a `tools/avatar-fashn/out`,
+# `<base>/ios/FashnKit` e `<base>/ios/StyleVaultCore`. Poi `xcodegen generate` dentro `bench`.
 name: FashnBench
 options:
   bundleIdPrefix: it.faraoni
@@ -14,7 +14,7 @@ settings:
     SWIFT_VERSION: "5.10"
 packages:
   FashnKit:
-    path: ../FashnKit
+    path: ../../../ios/FashnKit
 targets:
   FashnBench:
     type: application

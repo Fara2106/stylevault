@@ -20,6 +20,49 @@ Richiesta di Lorenzo: finire tutte le schermate nella notte e mandarla a Mary. F
 - Resta da fare prima dell'App Store: WeatherKit, iPhone Duo, schema CloudKit in Production (senza, in TestFlight i dati non passano fra dispositivi:
   da verificare), testi legali da riscrivere (la pagina privacy descrive ancora il sito).
 
+## Novità 2026-11-11 (sera) — «Versione realistica» dentro Style Vault
+
+Dopo le prove sul telefono Lorenzo: «mettila dentro l'app e poi inviamola a Mary». FASHN entra in «Vedilo addosso» come pulsante
+in più, sotto l'avatar: l'avatar a ritagli resta la prima cosa che si vede, il prompt per ChatGPT/Gemini resta.
+
+- **Dove sta il codice:** il pacchetto è passato da `tools/avatar-fashn/FashnKit` a `ios/FashnKit` (dipende da `StyleVaultCore`
+  per lo scontorno). Nuovo `FashnWorn/OutfitTryOn.swift`: più capi uno dopo l'altro, il risultato di uno è la persona del
+  successivo, un solo avanzamento da 0 a 100. Nell'app: `Avatar/RealisticPlan.swift` (quali capi e in che ordine),
+  `RealisticServices.swift` (generatore vero e finto, pause), `RealisticCache.swift`, `RealisticTryOnView.swift`.
+- **Regole scelte qui:** vestito intero → solo il vestito; altrimenti sopra e poi sotto. Capospalla, scarpe, accessori e capi
+  senza foto restano fuori e la schermata lo dice («Non compaiono nell'immagine: …»). Con intimo o costumi il pulsante non c'è
+  (stessa regola del prompt, `TryOnPrompt.hasSwimwear`). 20 passi fissi. La foto del corpo si ritaglia a 2:3 intorno alla persona.
+- **Chi lo vede:** solo iOS 18 o più, almeno 6,5 GB di memoria (dal 15 Pro in su), modello presente nel pacchetto, foto del
+  corpo di fronte e almeno un capo con foto. Altrimenti il pulsante non compare e «Vedilo addosso» resta com'era: niente è bloccato.
+- **Durante la generazione:** barra con percentuale accanto, «Capo 1 di 2», schermo che non si spegne, pausa se iOS segnala
+  «caldo» o se l'app esce dal primo piano (con il testo che lo spiega), «Annulla»; chiudendo a metà chiede «Ferma e chiudi» /
+  «Continua». Alla fine: etichetta «Immagine generata con IA sul tuo dispositivo. È una simulazione…», «Salva o condividi»,
+  «Segnala questa immagine». L'ultima
+  immagine resta in cache (cartella Caches, si svuota quando cambia la foto del corpo) e si rivede senza rigenerare.
+- **Il modello (704 MB) non è nel repo:** `project.yml` lo copia da `tools/avatar-fashn/out/bench-payload/FashnTryOn.mlmodelc`
+  solo nelle build Release per iPhone vero. Sul simulatore e in Debug non c'è: i test usano `-SVFakeTryOn` (finto, solo DEBUG).
+  Un Mac senza quella cartella produce una build senza versione realistica, con un avviso in compilazione.
+- **Testi legali:** privacy (it/en) con la sezione sulla versione realistica (tutto sul dispositivo, nessuna foto esce), crediti
+  con FASHN VTON v1.5 (Apache 2.0) e il disegno della posa. Data 11 novembre 2026. Rigenerati `LegalContent.swift` e le pagine.
+- **Verificato:** test di `FashnKit` 19/19 (compreso l'outfit di due capi), sul Mac un outfit vero di due capi con il modello
+  (215 s a 12 passi); test dell'app nuovi 23/23, test dell'interfaccia 5/5 (barra e percentuale, etichetta IA, riapertura dalla
+  cache, annulla, chiusura a metà, pulsante assente senza modello e senza foto dei capi), schermate chiaro/scuro/inglese.
+- **Le immagini che l'app dà al modello, provate sul Mac** (`fashn-confronto --outfit … --come-app`, 20 passi): persona
+  ritagliata con `PersonFraming` (ora in `FashnWorn`, lo usano app e strumento), maglione isolato da una foto indossata, jeans
+  scontornati → outfit giusto. Sul simulatore la catena vera non gira: Vision lì non calcola la posa del corpo.
+- **Giri da zero dopo l'integrazione (round-14, 17:30-19:48):** Core 216/216, FashnKit 19/19, suite iPhone 58 test con 1
+  fallito per il simulatore («Failed to terminate», `testPianificaUnGiornoFuturoESegnaIndossato`) e passato rifatto da solo;
+  giri da installazione nuova chiaro, scuro, inglese e iPhone Duo 33 schermate ciascuno; schermate della versione realistica
+  in chiaro, scuro e inglese (`giro-realistica.sh`, generatore finto). Nessun crash nei rapporti di oggi.
+- **NON verificato:** il modello vero dentro Style Vault. `SystemRealisticGenerator` non ha mai girato su un telefono: la prima
+  volta sarà la build TestFlight sul telefono di Lorenzo. Mai provato il 15 Pro di Mary (8 GB: memoria e tempi da vedere),
+  l'iPad, una foto vera del corpo (finora solo la persona di prova in studio).
+- **Da chiudere prima dell'App Store (non per TestFlight):** la pagina privacy pubblica sta in «Web (Apps)» ed è indietro
+  rispetto al testo nell'app (non si tocca senza chiedere); testo intero della licenza Apache non incluso (c'è il link nei
+  crediti); 704 MB nel pacchetto invece che scaricati a richiesta; origine dei dati di addestramento da chiedere a FASHN.
+- I 25 secondi «fuori dal primo piano» del quarto giro restano senza spiegazione: Lorenzo dice di non essere mai uscito
+  dall'app (c'era una chiamata in corso). La generazione era ripresa da sola.
+
 ## Novità 2026-11-11 (pomeriggio) — FASHN: catena intera in Swift, prova sul telefono
 
 Lorenzo ha cambiato idea rispetto al 10/11: «Proviamo a metterci quell'IA on device e vediamo come va, prima di pubblicarla.

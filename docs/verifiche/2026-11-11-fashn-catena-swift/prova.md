@@ -1,7 +1,7 @@
 # FASHN VTON: catena intera in Swift, con la posa di Apple Vision
 
 11/11/2026. Finora la posa (DWPose) e la preparazione delle foto venivano dal Mac, in Python. Ora stanno in
-`tools/avatar-fashn/FashnKit` (pacchetto Swift, fuori dal progetto di Style Vault): riquadro e bordi, disegno della posa,
+`ios/FashnKit` (pacchetto Swift; fino all'11/11 pomeriggio stava in `tools/avatar-fashn/FashnKit`): riquadro e bordi, disegno della posa,
 posa con Apple Vision (corpo, mani, viso), campionamento Core ML con avanzamento.
 
 ## Confronto sul Mac (Vision vero), stessa coppia della prova originale
@@ -102,6 +102,20 @@ e pelle della persona, maglietta e jeans credibili, scarpe e viso intatti. È il
   schermate: 78% alle 16:16, 75% alle 16:23, circa 3 punti per 62 passi.
 - Qualità su questa maglietta a tinta unita: 12, 20 e 30 passi vanno tutti bene. Su una trama (il maglione a trecce del
   10/11) 12 passi la perdevano: non è una prova che 12 bastino sempre.
+
+## Le immagini che Style Vault dà al modello (11/11, 17:24, sul Mac)
+
+Con la versione realistica dentro Style Vault il modello non riceve le foto com'erano nell'app di prova: la persona è
+ritagliata nel suo riquadro 2:3 (`PersonFraming`) e ogni capo passa dallo scontorno dell'app (solo il capo, se è addosso
+a qualcuno). `fashn-confronto … --outfit <sotto> --come-app` prepara le stesse immagini e genera con il modello vero.
+
+- Persona di prova, maglione giallo fotografato addosso in strada, jeans fotografati da soli; 20 passi, 310 s sul Mac.
+- Risultato giusto: maglione a maniche lunghe con zip e tasca, jeans, viso e pelle della persona di partenza
+  (`come-app-outfit-20-passi.jpg`; `come-app-persona-ritagliata.jpg`, `come-app-capo-sopra-isolato.png`).
+- Il maglione isolato è piccolo (181×175 pixel, la foto di partenza è piccola): il modello lo regge.
+- **Sul simulatore la catena dell'app non si può provare**: Vision lì non calcola la posa del corpo
+  («Unable to setup request in VNDetectHumanBodyPoseRequest») e lo scontorno non c'è. Il modello si carica (34 s), poi
+  la generazione si ferma alla posa. Per questo la verifica è sul Mac, e il primo giro vero dentro Style Vault sarà sul telefono.
 
 ## Non provato
 

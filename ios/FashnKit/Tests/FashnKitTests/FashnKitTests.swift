@@ -1,6 +1,7 @@
 import CoreGraphics
 import XCTest
 @testable import FashnKit
+import FashnWorn
 
 final class FashnKitTests: XCTestCase {
     func testUnaFotoDueTerziRiempieIlRiquadro() {
@@ -131,6 +132,109 @@ final class FashnKitTests: XCTestCase {
         let plane = FashnModel.width * FashnModel.height
         let image = try XCTUnwrap(FashnPrepare.image(fromOutput: [Float](repeating: 1, count: 3 * plane), frame: frame))
         XCTAssertEqual([image.width, image.height], [576, 576])
+    }
+
+    // MARK: - Outfit di più capi
+
+    /// Finto modello: segna cosa riceve e restituisce un'immagine a tinta unita, diversa per ogni categoria.
+    private final class FakeSampler: TryOnSampling, @unchecked Sendable {
+        private let lock = NSLock()
+        private(set) var categories: [GarmentCategory] = []
+        private(set) var personValues: [Float] = []
+        var failAt: Int?
+
+        func generate(_ inputs: FashnInputs, steps: Int, seed: UInt64, progress: (FashnProgress) -> Void) throws -> [Float] {
+            let call = lock.withLock { () -> Int in
+                categories.append(inputs.category)
+                personValues.append(inputs.person.first ?? 0)
+                return categories.count
+            }
+            if failAt == call { throw FashnError.model("finto errore") }
+            let total = FashnProgress.passes(steps: steps)
+            for pass in 0...total { progress(FashnProgress(step: (pass + 1) / 2, steps: steps, passesDone: pass, passesTotal: total)) }
+            return [Float](repeating: Float(inputs.category.rawValue) / 4, count: 3 * FashnModel.width * FashnModel.height)
+        }
+    }
+
+    private static let fakePrepare: OutfitTryOn.Prepare = { person, garment in
+        let frame = Frame(sourceWidth: person.width, sourceHeight: person.height)
+        let plane = FashnModel.width * FashnModel.height
+        return FashnInputs(person: try FashnPrepare.colorTensor(person, frame: frame), garment: [], personPose: [], garmentPose: [],
+                           category: garment.category, personFrame: frame,
+                           personPoseSketch: GrayCanvas(width: FashnModel.width, height: FashnModel.height), bodyPointsFound: plane > 0 ? 18 : 0)
+    }
+
+    private final class Collected: @unchecked Sendable {
+        private let lock = NSLock()
+        private var values: [OutfitProgress] = []
+        private var count = 0
+        func add(_ value: OutfitProgress) { lock.withLock { values.append(value) } }
+        func tick() { lock.withLock { count += 1 } }
+        var all: [OutfitProgress] { lock.withLock { values } }
+        var ticks: Int { lock.withLock { count } }
+    }
+
+    func testDueCapiUnoDopoLAltroConUnaSolaBarra() async throws {
+        let person = try XCTUnwrap(Self.solid(width: 576, height: 864, red: 10, green: 10, blue: 10))
+        let photo = try XCTUnwrap(Self.solid(width: 100, height: 100, red: 200, green: 0, blue: 0))
+        let sampler = FakeSampler()
+        let seen = Collected()
+        let result = try await OutfitTryOn.generate(person: person, garments: [TryOnGarment(photo: photo, category: .tops),
+                                                                                TryOnGarment(photo: photo, category: .bottoms)],
+                                                    steps: 4, seed: 1, sampler: sampler, prepare: Self.fakePrepare,
+                                                    betweenPasses: { seen.tick() }, progress: { seen.add($0) })
+        XCTAssertEqual(sampler.categories, [.tops, .bottoms])
+        // Il secondo capo parte dal risultato del primo, non dalla foto di partenza
+        XCTAssertEqual(sampler.personValues[1], Float(UInt8((0.25 + 1) * 127.5)) / 127.5 - 1, accuracy: 0.02)
+        XCTAssertNotEqual(sampler.personValues[0], sampler.personValues[1])
+        XCTAssertEqual([result.width, result.height], [576, 864])
+
+        let all = seen.all
+        XCTAssertEqual(all.first, OutfitProgress(garment: 1, garments: 2, passesDone: 0, passesTotal: 14))
+        XCTAssertEqual(all.last, OutfitProgress(garment: 2, garments: 2, passesDone: 14, passesTotal: 14))
+        XCTAssertEqual(all.last?.percent, 100)
+        // La barra non torna mai indietro, nemmeno quando comincia il secondo capo
+        XCTAssertEqual(all.map(\.passesDone), all.map(\.passesDone).sorted())
+        XCTAssertTrue(all.contains(OutfitProgress(garment: 2, garments: 2, passesDone: 7, passesTotal: 14)))
+        XCTAssertEqual(seen.ticks, 16)
+    }
+
+    func testSenzaCapiRestaLaPersona() async throws {
+        let person = try XCTUnwrap(Self.solid(width: 40, height: 60, red: 1, green: 2, blue: 3))
+        let sampler = FakeSampler()
+        let result = try await OutfitTryOn.generate(person: person, garments: [], steps: 4, seed: 1, sampler: sampler, prepare: Self.fakePrepare)
+        XCTAssertTrue(result === person)
+        XCTAssertTrue(sampler.categories.isEmpty)
+    }
+
+    func testUnErroreAlSecondoCapoFermaTutto() async throws {
+        let person = try XCTUnwrap(Self.solid(width: 576, height: 864, red: 10, green: 10, blue: 10))
+        let sampler = FakeSampler()
+        sampler.failAt = 2
+        do {
+            _ = try await OutfitTryOn.generate(person: person, garments: [TryOnGarment(photo: person, category: .tops),
+                                                                         TryOnGarment(photo: person, category: .bottoms)],
+                                               steps: 4, seed: 1, sampler: sampler, prepare: Self.fakePrepare)
+            XCTFail("doveva fermarsi")
+        } catch {
+            XCTAssertEqual(sampler.categories.count, 2)
+        }
+    }
+
+    func testAnnullareFermaPrimaDelCapoSuccessivo() async throws {
+        let person = try XCTUnwrap(Self.solid(width: 576, height: 864, red: 10, green: 10, blue: 10))
+        let sampler = FakeSampler()
+        let task = Task {
+            try await OutfitTryOn.generate(person: person, garments: [TryOnGarment(photo: person, category: .tops)],
+                                           steps: 4, seed: 1, sampler: sampler, prepare: Self.fakePrepare)
+        }
+        task.cancel()
+        do {
+            _ = try await task.value
+            XCTFail("doveva essere annullata")
+        } catch is CancellationError {
+            XCTAssertTrue(sampler.categories.isEmpty)
+        }
     }
 
     private static func solid(width: Int, height: Int, red: UInt8, green: UInt8, blue: UInt8) -> CGImage? {

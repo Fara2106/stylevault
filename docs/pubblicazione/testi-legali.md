@@ -6,7 +6,7 @@ Sono scritti da Claude a partire dal codice dell'app e non sono stati rivisti da
 
 ## Italiano
 
-Ultimo aggiornamento: 7 novembre 2026
+Ultimo aggiornamento: 11 novembre 2026
 
 ### Informativa sulla privacy
 
@@ -39,6 +39,10 @@ Negozi e servizi esterni: i collegamenti dell'Armocromia e di ChatGPT e Gemini a
 #### Le analisi avvengono sul dispositivo
 
 Lo scontorno dei capi, il controllo delle foto del corpo e l'Armocromia, che legge i colori del viso, usano Vision di Apple sul tuo dispositivo. Queste foto non vengono inviate a nessun servizio di intelligenza artificiale e non vengono usate per riconoscerti.
+
+#### La versione realistica di "Vedilo addosso"
+
+Sui dispositivi che la supportano puoi generare un'immagine di te con i capi addosso. La crea un modello di intelligenza artificiale che gira sul tuo dispositivo: la foto del corpo e le foto dei capi non vengono inviate a nessuno. L'immagine è una simulazione ed è sempre indicata come generata con IA; resta sul dispositivo finché non decidi tu di salvarla o condividerla. Usa solo foto tue o di chi ha dato il consenso. Se un'immagine non va bene puoi segnalarla dall'app.
 
 #### Se provi i capi con ChatGPT o Gemini
 
@@ -110,6 +114,8 @@ Il risultato dipende dalla luce della foto. Puoi correggere i colori trovati opp
 
 Dati meteo: Meteo di Apple.
 
+Versione realistica di "Vedilo addosso": modello FASHN VTON v1.5 di FASHN AI, con licenza Apache 2.0 (https://www.apache.org/licenses/LICENSE-2.0), convertito e compresso per girare sul dispositivo. Il disegno della posa è adattato da DWPose, con licenza Apache 2.0.
+
 ### Eliminare l'account
 
 Puoi eliminare il tuo account Style Vault in qualsiasi momento.
@@ -130,7 +136,7 @@ Scrivi a lorefara97@gmail.com dall'indirizzo con cui ti sei registrato: eliminia
 
 ## English
 
-Last updated: 7 November 2026
+Last updated: 11 November 2026
 
 ### Privacy policy
 
@@ -163,6 +169,10 @@ Shops and external services: the colour analysis links and those to ChatGPT and 
 #### Analysis happens on your device
 
 Garment cut-out, the check of your body photos and colour analysis, which reads the colours of your face, use Apple's Vision on your device. These photos are not sent to any artificial intelligence service and are not used to recognise you.
+
+#### The realistic version of "See it on you"
+
+On devices that support it you can generate an image of yourself wearing your items. It is made by an artificial intelligence model that runs on your device: your body photo and your item photos are not sent to anyone. The image is a simulation and is always marked as AI-generated; it stays on your device until you choose to save or share it. Only use photos of yourself or of someone who gave their consent. If an image is not appropriate you can report it from the app.
 
 #### If you try clothes with ChatGPT or Gemini
 
@@ -233,6 +243,8 @@ The result depends on the light in the photo. You can correct the detected colou
 #### Credits
 
 Weather data: Apple Weather.
+
+Realistic version of "See it on you": FASHN VTON v1.5 model by FASHN AI, under the Apache 2.0 licence (https://www.apache.org/licenses/LICENSE-2.0), converted and compressed to run on device. The pose drawing is adapted from DWPose, under the Apache 2.0 licence.
 
 ### Delete your account
 

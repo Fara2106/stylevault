@@ -5,6 +5,7 @@ import SwiftUI
 
 /// "Vedilo addosso": la persona scontornata con i capi veri sopra, davanti, di lato e di spalle.
 /// Non è un'immagine generata: è un collage fatto sul dispositivo con le foto di chi usa l'app.
+/// Da qui si apre anche la versione realistica, generata sul dispositivo, dove il dispositivo la regge.
 struct AvatarView: View {
     let garments: TryOnSelection
 
@@ -14,6 +15,7 @@ struct AvatarView: View {
     }
 
     @Environment(\.avatarRenderer) private var renderer
+    @Environment(\.realisticGenerator) private var realistic
     @Environment(\.dismiss) private var dismiss
     @Query private var photos: [BodyPhoto]
 
@@ -21,6 +23,7 @@ struct AvatarView: View {
     @State private var selection = BodyView.front
     @State private var editing: BodyView?
     @State private var isPromptOpen = false
+    @State private var isRealisticOpen = false
 
     private let logger = Logger(subsystem: "it.faraoni.stylevault.nativa", category: "avatar")
 
@@ -41,6 +44,11 @@ struct AvatarView: View {
                 if case let .ready(_, unavailable)? = pages[selection], unavailable > 0 {
                     Text("native.avatar.unavailable \(unavailable)").font(.footnote).foregroundStyle(Palette.muted)
                 }
+                if canShowRealistic {
+                    Button { isRealisticOpen = true } label: { SecondaryLabel("native.avatar.realistic") }
+                        .buttonStyle(.plain)
+                        .accessibilityIdentifier("avatar-realistic")
+                }
                 Button("native.avatar.withAI") { isPromptOpen = true }
                     .font(.subheadline)
                     .tint(Palette.link)
@@ -57,6 +65,12 @@ struct AvatarView: View {
         .task(id: photoKeys) { await build() }
         .sheet(item: $editing) { view in BodyPhotoEditorView(view: view) }
         .sheet(isPresented: $isPromptOpen) { TryOnPromptView(selection: garments) }
+        .sheet(isPresented: $isRealisticOpen) { RealisticTryOnView(selection: garments) }
+    }
+
+    /// Serve la foto di fronte, almeno un capo che il modello sa mettere e nessun costume.
+    private var canShowRealistic: Bool {
+        realistic.isAvailable && byView[.front]?.photo != nil && RealisticPlan.make(garments).canGenerate
     }
 
     @ViewBuilder private func page(_ view: BodyView) -> some View {
