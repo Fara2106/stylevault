@@ -20,6 +20,22 @@ Richiesta di Lorenzo: finire tutte le schermate nella notte e mandarla a Mary. F
 - Resta da fare prima dell'App Store: WeatherKit, iPhone Duo, schema CloudKit in Production (senza, in TestFlight i dati non passano fra dispositivi:
   da verificare), testi legali da riscrivere (la pagina privacy descrive ancora il sito).
 
+## Novità 2026-11-11 (sera) — Build 1.0 (12) caricata, con la versione realistica
+
+Su richiesta di Lorenzo («mettila dentro l'app e poi inviamola a Mary»). Dal commit `a1312b3`, archiviata alle 19:48 e caricata
+alle 20:04 («Upload succeeded», `build12.sh`, `upload12.sh`, `controlla12.sh` in `.superpowers/sdd/rc/`).
+- IPA controllata: 1.0 (12), "Style Vault", 679 MB (la 11 era 5 MB: il resto è il modello), Apple Distribution, WeatherKit,
+  CloudKit e push in Production, `get-task-allow` falso, PrivacyInfo, firma valida, `FashnTryOn.mlmodelc` presente e identico
+  al sorgente, nessuna copia " 2", nessun argomento `-SV`, nessun generatore finto, niente Open-Meteo, nessuna eccezione ATS,
+  i 20 testi nuovi in it e en.
+- **TestFlight non riletto:** nel browser la sessione di App Store Connect è scaduta e serve il login di Lorenzo. Il gruppo
+  «Lorenzo e Marianna» ha la distribuzione automatica: finita l'elaborazione di Apple la build arriva a tutti e due da sola.
+- **Prima prova vera sul telefono, da fare da TestFlight:** aprire un outfit o un capo con foto → «Vedilo addosso» → «Versione
+  realistica» → «Genera l'immagine». Deve comparire la barra con la percentuale e alla fine l'immagine (circa 70 s a capo sul
+  18 Pro Max). Serve la foto del corpo di fronte nel Profilo e almeno un sopra o un sotto con foto. Sul 15 Pro di Mary tempi
+  e memoria non sono mai stati misurati: se il pulsante non compare o la generazione si chiude, è un dato da riportare.
+- Scaricare l'aggiornamento chiede circa 700 MB: meglio in Wi-Fi.
+
 ## Novità 2026-11-11 (sera) — «Versione realistica» dentro Style Vault
 
 Dopo le prove sul telefono Lorenzo: «mettila dentro l'app e poi inviamola a Mary». FASHN entra in «Vedilo addosso» come pulsante
