@@ -76,7 +76,9 @@ struct TryOnView: View {
                 Spacer()
                 Text("\(Int(model.elapsed)) s").font(.footnote.monospacedDigit()).foregroundStyle(.secondary)
             }
-            Text("Tieni l'app aperta in primo piano finché non finisce.").font(.footnote).foregroundStyle(.secondary)
+            Text(model.pausedInBackground ? "L'app era uscita dal primo piano: la generazione ha aspettato e ora riprende."
+                 : "Tieni l'app aperta in primo piano finché non finisce.")
+                .font(.footnote).foregroundStyle(model.pausedInBackground ? .orange : .secondary)
             Button("Annulla", role: .cancel) { model.cancel() }.buttonStyle(.bordered)
         }
         .padding()

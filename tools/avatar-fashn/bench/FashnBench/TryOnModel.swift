@@ -34,6 +34,8 @@ import SwiftUI
     private(set) var elapsed: TimeInterval = 0
     /// Il telefono è troppo caldo: la generazione aspetta che si raffreddi.
     private(set) var coolingDown = false
+    /// L'app è uscita dal primo piano durante la generazione: lì la GPU non lavora e la generazione ha aspettato.
+    private(set) var pausedInBackground = false
 
     /// Lo stato termico in parole: la generazione tiene la GPU al massimo per un paio di minuti.
     static func thermalName(_ state: ProcessInfo.ThermalState) -> String {
@@ -136,10 +138,14 @@ import SwiftUI
                 UIDevice.current.isBatteryMonitoringEnabled = true
                 let batteryBefore = UIDevice.current.batteryLevel
                 let times = StepTimes()
+                let foreground = ForegroundWatch()
+                pausedInBackground = false
                 let work = Task.detached(priority: .userInitiated) {
                     try sampler.generate(inputs, steps: steps, seed: seed) { value in
                         Task { @MainActor in self.progress = value }
                         times.mark(step: value.step)
+                        // In secondo piano iOS non lascia usare la GPU: si aspetta qui invece di far fallire o trascinare il passo
+                        if foreground.waitUntilActive() { Task { @MainActor in self.pausedInBackground = true } }
                         // Da «caldo» in su si aspetta tra un passaggio e l'altro: meglio più lenta che un telefono che scotta
                         var waited = false
                         while ProcessInfo.processInfo.thermalState.rawValue >= ProcessInfo.ThermalState.serious.rawValue, !Task.isCancelled {
@@ -157,7 +163,10 @@ import SwiftUI
                                  steps, generationSeconds, prepareSeconds, loadSeconds, peak.value, inputs.bodyPointsFound) + note
                 let batteryAfter = UIDevice.current.batteryLevel
                 // Se il telefono rallenta per il caldo si vede qui: gli ultimi passi durano più dei primi
-                if let pace = times.pace { summary += String(format: " A passo: %.1f s i primi, %.1f s gli ultimi.", pace.early, pace.late) }
+                if let pace = times.pace {
+                    summary += String(format: " A passo: %.1f s il più veloce, %.1f s a metà, %.1f s il più lento.", pace.fastest, pace.median, pace.slowest)
+                }
+                if foreground.secondsAway >= 1 { summary += String(format: " App fuori dal primo piano per %.0f s.", foreground.secondsAway) }
                 summary += " Temperatura: da \(Self.thermalName(thermalBefore)) a \(Self.thermalName(ProcessInfo.processInfo.thermalState))."
                 if batteryBefore >= 0, batteryAfter >= 0 {
                     summary += String(format: " Batteria: %.0f%% → %.0f%%.", batteryBefore * 100, batteryAfter * 100)
@@ -211,7 +220,7 @@ import SwiftUI
     }
 }
 
-/// Quanto dura ogni passo, per vedere se il telefono rallenta scaldandosi.
+/// Quanto dura ogni passo, per vedere se il telefono rallenta.
 final class StepTimes: @unchecked Sendable {
     private let lock = NSLock()
     private var finished: [Int: Date] = [:]
@@ -223,19 +232,52 @@ final class StepTimes: @unchecked Sendable {
         lock.withLock { finished[step] = Date() }
     }
 
-    /// Media dei passi dal secondo al quinto e degli ultimi quattro pieni (l'ultimo ha un passaggio solo).
-    var pace: (early: Double, late: Double)? {
+    /// Il passo più veloce, quello di mezzo e il più lento, senza il primo (prepara la GPU) e l'ultimo (un passaggio solo).
+    var pace: (fastest: Double, median: Double, slowest: Double)? {
         let ends = lock.withLock { finished }
-        guard let last = ends.keys.max(), last >= 10 else { return nil }
-        func duration(_ step: Int) -> Double? {
-            guard let end = ends[step], let before = step == 1 ? start : ends[step - 1] else { return nil }
+        guard let last = ends.keys.max(), last >= 5 else { return nil }
+        let durations = (2..<last).compactMap { step -> Double? in
+            guard let end = ends[step], let before = ends[step - 1] else { return nil }
             return end.timeIntervalSince(before)
+        }.sorted()
+        guard let fastest = durations.first, let slowest = durations.last else { return nil }
+        return (fastest, durations[durations.count / 2], slowest)
+    }
+}
+
+/// Sa se l'app è in primo piano e per quanto ne è uscita.
+final class ForegroundWatch: @unchecked Sendable {
+    private let lock = NSLock()
+    private var away = false
+    private var leftAt: Date?
+    private var total: TimeInterval = 0
+    private var tokens: [NSObjectProtocol] = []
+
+    init() {
+        let center = NotificationCenter.default
+        tokens.append(center.addObserver(forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: nil) { [weak self] _ in
+            self?.lock.withLock { self?.away = true; self?.leftAt = Date() }
+        })
+        tokens.append(center.addObserver(forName: UIApplication.willEnterForegroundNotification, object: nil, queue: nil) { [weak self] _ in
+            self?.lock.withLock {
+                if let left = self?.leftAt { self?.total += Date().timeIntervalSince(left) }
+                self?.away = false
+                self?.leftAt = nil
+            }
+        })
+    }
+
+    deinit { tokens.forEach(NotificationCenter.default.removeObserver) }
+
+    var secondsAway: TimeInterval { lock.withLock { total + (leftAt.map { Date().timeIntervalSince($0) } ?? 0) } }
+
+    /// Aspetta che l'app torni in primo piano. Dice se ha dovuto aspettare.
+    func waitUntilActive() -> Bool {
+        var waited = false
+        while lock.withLock({ away }), !Task.isCancelled {
+            waited = true
+            Thread.sleep(forTimeInterval: 0.5)
         }
-        func mean(_ steps: ClosedRange<Int>) -> Double? {
-            let values = steps.compactMap(duration)
-            return values.isEmpty ? nil : values.reduce(0, +) / Double(values.count)
-        }
-        guard let early = mean(2...5), let late = mean((last - 4)...(last - 1)) else { return nil }
-        return (early, late)
+        return waited
     }
 }

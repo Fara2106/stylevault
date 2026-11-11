@@ -67,8 +67,18 @@ in quel caso isola il capo. Sul Mac riconosce giuste le sette foto di prova (qua
   10/11 (81 s a 20 passi) valgono solo a telefono freddo. L'app ora scrive i secondi a passo all'inizio e alla fine.
 - Picco di memoria 895 MB alla prima generazione dopo l'avvio (carica il modello), 703 MB alla seconda.
 
+## Terzo giro sul telefono (15:52, 20 passi, riconoscimento automatico)
+
+`iphone-terzo-giro-capo-isolato-e-jeans.jpg`: maglietta arancione isolata, poi jeans aggiunti sul risultato. **Giusto:** braccia
+e pelle della persona, maglietta e jeans credibili, scarpe e viso intatti. È il primo outfit di due capi fatto tutto sul telefono.
+- Tempo della seconda generazione: 274 s, con 3,5 s a passo all'inizio (come a freddo) e 32,5 s di media sugli ultimi quattro.
+  Temperatura «tiepido», telefono in chiamata (da 9 minuti). Causa non accertata: la media non distingue un rallentamento da
+  un passo rimasto fermo, per esempio con l'app fuori dal primo piano, dove la GPU non lavora.
+- Da allora l'app scrive il passo più veloce, quello di mezzo e il più lento, conta i secondi fuori dal primo piano e lì si
+  mette in pausa invece di trascinare il passo.
+
 ## Non provato
 
-- Sul telefono: il capo isolato, due capi uno dopo l'altro, la pausa per il caldo, 20 passi con foto vere di Lorenzo.
+- Sul telefono: la pausa per il caldo e fuori dal primo piano, il tempo a freddo senza interruzioni, foto vere di Lorenzo.
 - Foto con più persone, di spalle o tagliate; vestiti interi veri; 15 Pro di Mary; iPad.
 - Il modello non lavora con l'app in secondo piano: va tenuta aperta.
