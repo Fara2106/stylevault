@@ -139,6 +139,7 @@ import SwiftUI
                 let batteryBefore = UIDevice.current.batteryLevel
                 let times = StepTimes()
                 let foreground = ForegroundWatch()
+                let heat = HeatWatch()
                 pausedInBackground = false
                 let work = Task.detached(priority: .userInitiated) {
                     try sampler.generate(inputs, steps: steps, seed: seed) { value in
@@ -148,9 +149,11 @@ import SwiftUI
                         if foreground.waitUntilActive() { Task { @MainActor in self.pausedInBackground = true } }
                         // Da «caldo» in su si aspetta tra un passaggio e l'altro: meglio più lenta che un telefono che scotta
                         var waited = false
+                        heat.note(ProcessInfo.processInfo.thermalState)
                         while ProcessInfo.processInfo.thermalState.rawValue >= ProcessInfo.ThermalState.serious.rawValue, !Task.isCancelled {
                             if !waited { waited = true; Task { @MainActor in self.coolingDown = true } }
                             Thread.sleep(forTimeInterval: 1)
+                            heat.waited(1)
                         }
                         if waited { Task { @MainActor in self.coolingDown = false } }
                     }
@@ -167,7 +170,8 @@ import SwiftUI
                     summary += String(format: " A passo: %.1f s il più veloce, %.1f s a metà, %.1f s il più lento.", pace.fastest, pace.median, pace.slowest)
                 }
                 if foreground.secondsAway >= 1 { summary += String(format: " App fuori dal primo piano per %.0f s.", foreground.secondsAway) }
-                summary += " Temperatura: da \(Self.thermalName(thermalBefore)) a \(Self.thermalName(ProcessInfo.processInfo.thermalState))."
+                summary += " Temperatura: da \(Self.thermalName(thermalBefore)) a \(Self.thermalName(ProcessInfo.processInfo.thermalState)), massimo \(Self.thermalName(heat.highest))."
+                if heat.secondsWaited >= 1 { summary += String(format: " In pausa per il caldo %.0f s.", heat.secondsWaited) }
                 if batteryBefore >= 0, batteryAfter >= 0 {
                     summary += String(format: " Batteria: %.0f%% → %.0f%%.", batteryBefore * 100, batteryAfter * 100)
                 }
@@ -280,4 +284,16 @@ final class ForegroundWatch: @unchecked Sendable {
         }
         return waited
     }
+}
+
+/// Quanto si è scaldato il telefono durante la generazione e quanto si è aspettato per questo.
+final class HeatWatch: @unchecked Sendable {
+    private let lock = NSLock()
+    private var top = ProcessInfo.ThermalState.nominal
+    private var waitedSeconds: TimeInterval = 0
+
+    func note(_ state: ProcessInfo.ThermalState) { lock.withLock { if state.rawValue > top.rawValue { top = state } } }
+    func waited(_ seconds: TimeInterval) { lock.withLock { waitedSeconds += seconds } }
+    var highest: ProcessInfo.ThermalState { lock.withLock { top } }
+    var secondsWaited: TimeInterval { lock.withLock { waitedSeconds } }
 }

@@ -55,6 +55,8 @@ Facciamo questo test», e durante la generazione vuole «una barra che indichi i
   della persona compresa: primo outfit di due capi tutto sul telefono. Tempo anomalo: 274 s a 20 passi, 3,5 s a passo all'inizio
   e 32,5 s di media alla fine, con il telefono in chiamata; causa non accertata (rallentamento o app fuori dal primo piano).
   L'app ora misura passo più veloce, di mezzo e più lento, conta i secondi fuori dal primo piano e lì va in pausa.
+  Lorenzo: l'app era sempre aperta davanti, quindi non era il secondo piano. Ipotesi rimaste: la pausa per il caldo scattata a
+  metà (la riga non la riportava) o iOS che frena la GPU in chiamata. La riga ora dà temperatura massima e secondi di pausa.
 - **Permesso dell'11/11:** finché dura questa prova «Fashn Bench» si può reinstallare sull'iPhone di Lorenzo senza chiedere ogni
   volta («Sì, aggiorna pure»). Solo quell'app e solo quel telefono: per Style Vault resta «mai una build di debug senza chiedere».
 - Restano del 10/11: origine dei dati di addestramento (mail a FASHN), 15 Pro di Mary, 704 MB da ospitare, etichetta «generato

@@ -76,6 +76,10 @@ e pelle della persona, maglietta e jeans credibili, scarpe e viso intatti. È il
   un passo rimasto fermo, per esempio con l'app fuori dal primo piano, dove la GPU non lavora.
 - Da allora l'app scrive il passo più veloce, quello di mezzo e il più lento, conta i secondi fuori dal primo piano e lì si
   mette in pausa invece di trascinare il passo.
+- Lorenzo conferma che l'app è rimasta sempre aperta davanti: non era il secondo piano. Restano due cause possibili, non
+  distinte: la pausa per il caldo aggiunta poco prima (se a metà generazione iOS è salito a «caldo», l'app ha aspettato; la riga
+  mostrava solo la temperatura di partenza e di arrivo) oppure iOS che taglia la GPU durante una chiamata a telefono già caldo.
+  Ora la riga riporta anche la temperatura massima e i secondi di pausa per il caldo.
 
 ## Non provato
 
