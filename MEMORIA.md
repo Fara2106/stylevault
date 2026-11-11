@@ -47,6 +47,10 @@ Facciamo questo test», e durante la generazione vuole «una barra che indichi i
   Core, senza modificarlo) prima di darlo al modello: sul Mac la pelle torna quella della persona. L'app di prova ha «Da solo /
   Indossato / Indossato, intera», «Aggiungi un altro capo a questo risultato», pausa quando iOS segnala «caldo», temperatura e
   batteria a fine generazione. Con «Intero» su un outfit di due capi l'isolamento prende mezzo outfit: si fanno sopra e sotto.
+- **Secondo giro di Lorenzo (15:32-15:35, 20 passi):** maglietta ancora sbagliata perché la scelta «Indossato» a mano non era
+  attiva (difetto della schermata, non suo): ora il riconoscimento è automatico, come in Style Vault. **A telefono caldo e in
+  carica 20 passi durano 160 s (8 s a passo, il doppio che a freddo)** con iOS che segna ancora «normale»/«tiepido»: i tempi
+  del 10/11 valgono solo a freddo. Va rimisurato a freddo e a caldo con i secondi a passo che l'app ora scrive.
 - Restano del 10/11: origine dei dati di addestramento (mail a FASHN), 15 Pro di Mary, 704 MB da ospitare, etichetta «generato
   con IA», esclusione di intimo e costumi. Il modello non lavora con l'app in secondo piano.
 

@@ -9,7 +9,7 @@ import UniformTypeIdentifiers
 // Confronta gli ingressi preparati in Swift (posa di Apple Vision) con quelli catturati dalla pipeline originale
 // (posa di DWPose), e se serve genera l'immagine sul Mac.
 // Uso: fashn-confronto <persona> <capo> <uscita> [--originali <cartella dei .npy>] [--categoria tops|bottoms|one-pieces]
-//        [--indossato | --indossato-intero] [--genera <FashnTryOn.mlmodelc>] [--passi N] [--rumore-originale]
+//        [--indossato-intero] [--genera <FashnTryOn.mlmodelc>] [--passi N] [--rumore-originale]
 
 func savePNG(_ image: CGImage, _ url: URL) {
     guard let dest = CGImageDestinationCreateWithURL(url as CFURL, UTType.png.identifier as CFString, 1, nil) else { return }
@@ -57,7 +57,7 @@ func meanAbsoluteDifference(_ a: [Float], _ b: [Float]) -> Double {
 func run() async throws {
     let args = CommandLine.arguments
     guard args.count >= 4 else {
-        print("uso: fashn-confronto <persona> <capo> <uscita> [--originali <cartella>] [--categoria tops] [--indossato | --indossato-intero] [--genera <mlmodelc>] [--passi N] [--rumore-originale]")
+        print("uso: fashn-confronto <persona> <capo> <uscita> [--originali <cartella>] [--categoria tops] [--indossato-intero] [--genera <mlmodelc>] [--passi N] [--rumore-originale]")
         exit(2)
     }
     func option(_ name: String) -> String? { args.firstIndex(of: name).flatMap { args.indices.contains($0 + 1) ? args[$0 + 1] : nil } }
@@ -67,13 +67,17 @@ func run() async throws {
 
     let start = Date()
     var garment = try FashnPrepare.loadImage(URL(fileURLWithPath: args[2]))
-    // --indossato: il capo si isola da chi lo indossa; --indossato-intero: la foto entra com'è, con la sua posa
+    // Di base il capo indossato si riconosce e si isola da solo; --indossato-intero: la foto entra com'è, con la sua posa
     var wholeWornPhoto = args.contains("--indossato-intero")
-    if args.contains("--indossato") {
+    if !wholeWornPhoto {
         let prepared = await WornGarmentPhoto.prepared(garment, category: category)
-        print(prepared.isolated ? "capo isolato da chi lo indossa: \(prepared.image.width)×\(prepared.image.height)" : "capo non isolato: entra la foto intera")
+        switch prepared.outcome {
+        case .alone: print("capo da solo")
+        case .isolated: print("capo isolato da chi lo indossa: \(prepared.image.width)×\(prepared.image.height)")
+        case .notIsolated: print("capo indossato ma non isolato: entra la foto intera")
+        }
         garment = prepared.image
-        wholeWornPhoto = !prepared.isolated
+        wholeWornPhoto = prepared.outcome == .notIsolated
     }
     let inputs = try FashnPrepare.inputs(person: try FashnPrepare.loadImage(URL(fileURLWithPath: args[1])),
                                          garment: garment, category: category, garmentIsWorn: wholeWornPhoto)

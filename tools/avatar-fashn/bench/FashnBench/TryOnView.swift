@@ -21,16 +21,12 @@ struct TryOnView: View {
                     }
                     .pickerStyle(.segmented)
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("Nella foto il capo è").font(.footnote).foregroundStyle(.secondary)
-                        Picker("Foto del capo", selection: $model.garmentKind) {
-                            Text("Da solo").tag(TryOnModel.GarmentPhotoKind.alone)
-                            Text("Indossato").tag(TryOnModel.GarmentPhotoKind.wornIsolated)
-                            Text("Indossato, intera").tag(TryOnModel.GarmentPhotoKind.wornWhole)
-                        }
-                        .pickerStyle(.segmented)
-                        if model.garmentKind == .wornWhole {
-                            Text("La foto entra intera: nel risultato può finire anche la pelle di chi indossa il capo.")
-                                .font(.footnote).foregroundStyle(.secondary)
+                        Text("Se nella foto il capo è addosso a qualcuno, l'app lo isola da sola.")
+                            .font(.footnote).foregroundStyle(.secondary)
+                        Toggle("Usa la foto del capo intera", isOn: $model.useWholeGarmentPhoto).font(.footnote)
+                        if model.useWholeGarmentPhoto {
+                            Text("Solo per confronto: nel risultato può finire anche la pelle di chi indossa il capo.")
+                                .font(.footnote).foregroundStyle(.orange)
                         }
                     }
                     Picker("Passi", selection: $model.steps) {

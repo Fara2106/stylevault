@@ -52,7 +52,20 @@ solo ricerca; qui lo isola lo scontorno di Style Vault (`WornGarment`, tramite `
   mezza gamba di pantaloni: per un outfit di due capi «Intero» non va, si fanno sopra e sotto uno dopo l'altro.
 - `maglietta-foto-intera-sinistra-capo-isolato-destra.jpg`: sul Mac, 20 passi, con il capo isolato braccia e pancia restano
   della persona. La maglietta perde il taglio corto e l'arancione è più acceso.
-- Nell'app: «Da solo / Indossato / Indossato, intera» e «Aggiungi un altro capo a questo risultato».
+- Nell'app: riconoscimento automatico del capo indossato, «Usa la foto del capo intera» solo per confronto, «Aggiungi un altro
+  capo a questo risultato».
+
+## Secondo giro sul telefono (15:32-15:35, 20 passi)
+
+`iphone-secondo-giro-capo-non-isolato.jpg`. La maglietta arancione è uscita ancora con la pelle della modella: nella riga sotto
+il risultato manca «Capo isolato», quindi la scelta «Indossato» non era attiva e la foto è entrata intera. La scelta a mano era
+un difetto della schermata: ora l'app guarda da sola se nella foto del capo c'è una persona (stesso controllo di Style Vault) e
+in quel caso isola il capo. Sul Mac riconosce giuste le sette foto di prova (quattro capi da soli, tre indossati).
+- Il secondo capo sul risultato funziona (jeans aggiunti), ma partiva dall'immagine sbagliata.
+- **Tempi peggiorati col telefono già caldo e in carica: 20 passi in 160 e 158 s, cioè 8 s a passo contro 3,9 a freddo.**
+  iOS segnava «normale» e «tiepido», quindi la pausa per il caldo non è scattata: il rallentamento arriva prima. I tempi del
+  10/11 (81 s a 20 passi) valgono solo a telefono freddo. L'app ora scrive i secondi a passo all'inizio e alla fine.
+- Picco di memoria 895 MB alla prima generazione dopo l'avvio (carica il modello), 703 MB alla seconda.
 
 ## Non provato
 
