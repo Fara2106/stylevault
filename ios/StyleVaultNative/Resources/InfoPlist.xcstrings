@@ -68,6 +68,23 @@
           }
         }
       }
+    },
+    "NSPhotoLibraryAddUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Per salvare tra le tue foto le immagini che scegli di tenere."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To save the images you choose to keep to your photos."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

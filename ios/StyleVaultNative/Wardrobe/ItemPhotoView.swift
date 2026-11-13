@@ -48,6 +48,8 @@ struct ItemPhotoView: View {
                 Text(verbatim: ItemText.placeholderInitial(name))
                     .font(.display(44))
                     .foregroundStyle(Palette.muted)
+                    // Decorativa: il nome sta scritto accanto, VoiceOver non deve leggere anche la lettera.
+                    .accessibilityHidden(true)
             }
         }
         .clipped()

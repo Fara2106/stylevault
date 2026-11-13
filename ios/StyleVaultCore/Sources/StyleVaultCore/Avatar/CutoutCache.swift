@@ -128,6 +128,20 @@ public actor CutoutCache {
         }
     }
 
+    /// Tiene solo gli scontorni delle foto del corpo che esistono ancora. Una foto cancellata o cambiata su un
+    /// altro dispositivo arriva da iCloud senza passare dall'editor: qui i suoi scontorni resterebbero.
+    public func keepBodyCutouts(for keys: Set<String>) {
+        func isStale(_ name: String) -> Bool { name.hasPrefix("body-") && !keys.contains { name.hasPrefix($0) } }
+        memory = memory.filter { !isStale($0.key) }
+        usage.removeAll(where: isStale)
+        pieces = pieces.filter { !isStale($0.key) }
+        pieceUsage.removeAll(where: isStale)
+        let names = (try? FileManager.default.contentsOfDirectory(atPath: folder.path)) ?? []
+        for name in names where isStale(name) {
+            try? FileManager.default.removeItem(at: folder.appendingPathComponent(name))
+        }
+    }
+
     private func file(_ key: String) -> URL { folder.appendingPathComponent("\(key).png") }
     private func countFile(_ key: String) -> URL { folder.appendingPathComponent("\(key).count") }
 

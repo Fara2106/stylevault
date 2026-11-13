@@ -11,7 +11,15 @@ final class CompleteFlowTests: XCTestCase {
 
     private func reveal(_ app: XCUIApplication, _ id: String) -> XCUIElement {
         let target = element(app, id)
-        for _ in 0..<10 where !(target.exists && target.isHittable) { app.swipeUp() }
+        for _ in 0..<10 where !(target.exists && target.isHittable) {
+            // Con la tastiera aperta, sugli schermi piccoli, il centro dello schermo sono i tasti: si trascina dall'alto
+            if app.keyboards.firstMatch.exists {
+                app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.30))
+                    .press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.08)))
+            } else {
+                app.swipeUp()
+            }
+        }
         XCTAssertTrue(target.waitForExistence(timeout: 30), id)
         return target
     }

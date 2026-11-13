@@ -46,6 +46,8 @@
 	<true/>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Per mostrarti il meteo di dove sei e consigliarti cosa indossare.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Per salvare tra le tue foto le immagini che scegli di tenere.</string>
 	<key>SupabaseKey</key>
 	<string>$(SUPABASE_KEY)</string>
 	<key>SupabaseURL</key>

@@ -92,4 +92,15 @@ final class LocalizationTests: XCTestCase {
                               "NSCameraUsageDescription", language)
         }
     }
+
+    /// Senza questo motivo «Salva immagine», nel foglio di condivisione della versione realistica, non può scrivere tra le foto.
+    func testSalvareTraLeFotoHaIlMotivoNelleDueLingue() throws {
+        XCTAssertNotNil(Bundle.main.object(forInfoDictionaryKey: "NSPhotoLibraryAddUsageDescription"))
+        for language in ["it", "en"] {
+            let path = try XCTUnwrap(Bundle.main.path(forResource: language, ofType: "lproj"))
+            let bundle = try XCTUnwrap(Bundle(path: path))
+            XCTAssertNotEqual(bundle.localizedString(forKey: "NSPhotoLibraryAddUsageDescription", value: nil, table: "InfoPlist"),
+                              "NSPhotoLibraryAddUsageDescription", language)
+        }
+    }
 }

@@ -116,7 +116,7 @@ struct ItemDetailView: View {
     private func info(of item: Item) -> some View {
         VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(verbatim: item.name).font(.display(26)).foregroundStyle(Palette.ink)
+                Text(verbatim: item.name).displayFont(26).foregroundStyle(Palette.ink)
                 if let brand = item.brand {
                     Text(verbatim: brand).font(.footnote).foregroundStyle(Palette.muted)
                 }
@@ -133,7 +133,7 @@ struct ItemDetailView: View {
                 .buttonStyle(.bordered)
                 .tint(Palette.ink)
                 .accessibilityIdentifier("detail-avatar")
-            HStack(spacing: 12) {
+            AdaptiveRow(alignment: .leading) {
                 Button("common.edit") { isEditing = true }
                     .buttonStyle(.bordered)
                     .tint(Palette.ink)

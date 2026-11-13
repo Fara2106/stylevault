@@ -64,6 +64,12 @@ struct ItemFormView: View {
                     guard let field = model.firstError else { return }
                     withAnimation { proxy.scrollTo(field, anchor: .top) }
                 }
+                // Il prezzo è l'ultimo campo: sugli schermi piccoli con iOS 18 il sistema porta sopra la tastiera
+                // solo la riga del testo e il bordo del campo resta sotto i tasti. Qui si porta su tutto il campo.
+                .onChange(of: bottomField) {
+                    guard bottomField == .price else { return }
+                    withAnimation { proxy.scrollTo(FormField.price, anchor: .center) }
+                }
             }
             .scrollDismissesKeyboard(.interactively)
             .background { Palette.bg.ignoresSafeArea().accessibilityIdentifier("add-sheet") }
@@ -118,7 +124,8 @@ struct ItemFormView: View {
     // MARK: Sorgente
 
     private var sourcePicker: some View {
-        HStack(spacing: 8) {
+        // Con il testo al massimo i due tasti affiancati spezzavano «Foto» a metà: lì vanno uno sotto l'altro
+        AdaptiveRow(spacing: 8) {
             sourceButton("addItem.photo", icon: "camera", isSelected: !model.showsLink, id: "mode-photo") {
                 model.showsLink = false
             }
@@ -238,25 +245,30 @@ struct ItemFormView: View {
     }
 
     private var backPhoto: some View {
-        HStack(spacing: 12) {
-            if let back = model.photoBack {
-                ItemPhotoView(data: back, name: model.name)
-                    .frame(width: 44, height: 58)
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
+        // Con il testo molto grande il pulsante scende sotto la spiegazione, che altrimenti resta in una colonna stretta.
+        AccessibleRow(spacing: 12) {
+            HStack(spacing: 12) {
+                if let back = model.photoBack {
+                    ItemPhotoView(data: back, name: model.name)
+                        .frame(width: 44, height: 58)
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    fieldLabel("addItem.photoBack")
+                    Text("addItem.photoBackHint").font(.footnote).foregroundStyle(Palette.muted)
+                }
+                Spacer(minLength: 8)
             }
-            VStack(alignment: .leading, spacing: 2) {
-                fieldLabel("addItem.photoBack")
-                Text("addItem.photoBackHint").font(.footnote).foregroundStyle(Palette.muted)
-            }
-            Spacer(minLength: 8)
-            photoMenu(.back) {
-                Text(LocalizedStringKey(model.photoBack == nil ? "addItem.photoBackAdd" : "addItem.changePhoto"))
-                    .foregroundStyle(Palette.link)
-            }
-            if model.photoBack != nil {
-                Button { model.removeBack() } label: { Image(systemName: "xmark") }
-                    .accessibilityLabel(Text("addItem.photoBackRemove"))
-                    .foregroundStyle(Palette.muted)
+            HStack(spacing: 12) {
+                photoMenu(.back) {
+                    Text(LocalizedStringKey(model.photoBack == nil ? "addItem.photoBackAdd" : "addItem.changePhoto"))
+                        .foregroundStyle(Palette.link)
+                }
+                if model.photoBack != nil {
+                    Button { model.removeBack() } label: { Image(systemName: "xmark") }
+                        .accessibilityLabel(Text("addItem.photoBackRemove"))
+                        .foregroundStyle(Palette.muted)
+                }
             }
         }
     }
@@ -283,6 +295,8 @@ struct ItemFormView: View {
             fieldLabel("addItem.itemName")
             TextField("", text: $model.name)
                 .modifier(FieldBox(minHeight: 40, inset: 10))
+                // Il titolo è un testo a parte: senza questo VoiceOver annuncia un campo senza nome.
+                .accessibilityLabel(Text("addItem.itemName"))
                 .accessibilityIdentifier("item-name")
             if model.errors.contains(.name) { errorText("addItem.nameRequired") }
         }
@@ -402,12 +416,14 @@ struct ItemFormView: View {
                 fieldLabel("addItem.brand")
                 TextField("", text: $model.brand)
                     .modifier(FieldBox(minHeight: 40, inset: 10))
+                    .accessibilityLabel(Text("addItem.brand"))
                     .focused($bottomField, equals: .brand)
             }
             VStack(alignment: .leading, spacing: 6) {
                 fieldLabel("addItem.size")
                 TextField("", text: $model.size)
                     .modifier(FieldBox(minHeight: 40, inset: 10))
+                    .accessibilityLabel(Text("addItem.size"))
                     .focused($bottomField, equals: .size)
             }
         }
@@ -421,6 +437,8 @@ struct ItemFormView: View {
                 .keyboardType(.decimalPad)
                 .modifier(FieldBox(minHeight: 40, inset: 10))
                 .focused($bottomField, equals: .price)
+                // Senza questo VoiceOver lo chiama «Facoltativo», che è solo il suggerimento.
+                .accessibilityLabel(Text("addItem.price"))
                 .accessibilityIdentifier("item-price")
             if model.errors.contains(.price) { errorText("native.form.priceInvalid") }
         }

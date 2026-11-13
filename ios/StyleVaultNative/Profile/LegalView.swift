@@ -34,7 +34,7 @@ struct LegalView: View {
             VStack(alignment: .leading, spacing: 12) {
                 if let document {
                     Text(verbatim: document.title)
-                        .font(.display(28))
+                        .displayFont(28)
                         .foregroundStyle(Palette.ink)
                         .accessibilityIdentifier("legal-title")
                     Text(verbatim: language == "it" ? LegalContent.itUpdated : LegalContent.enUpdated)

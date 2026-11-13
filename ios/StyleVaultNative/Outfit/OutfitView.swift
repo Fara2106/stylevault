@@ -29,7 +29,10 @@ struct OutfitView: View {
     private var today: String { CalendarMath.iso(.now) }
     private var pieces: [OutfitPiece] { items.map(\.piece) }
     private var itemsByID: [String: Item] { Item.byID(items) }
-    private var recentWear: [RecentWear] { OutfitStore.recentWear(from: entries) }
+    /// Gli outfit si generano da oggi in avanti: conta solo ciò che è stato messo dalla settimana scorsa in poi.
+    private var recentWear: [RecentWear] {
+        OutfitStore.recentWear(from: entries, since: CalendarMath.window(before: today, days: 7)?.lowerBound)
+    }
 
     private var defaultCity: ForecastPlace {
         let profile = ProfileStore.survivor(of: profiles)
@@ -114,14 +117,14 @@ struct OutfitView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("nav.outfit").font(.display(30)).foregroundStyle(Palette.ink)
+            Text("nav.outfit").displayFont(30).foregroundStyle(Palette.ink)
                 .accessibilityIdentifier("outfit-title")
             Text("outfit.subtitle").font(.footnote).foregroundStyle(Palette.muted)
         }
     }
 
     private var placeRow: some View {
-        HStack(spacing: 8) {
+        AccessibleRow(spacing: 8) {
             Button { isCitySearchOpen = true } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "magnifyingglass").foregroundStyle(Palette.muted)
@@ -402,7 +405,8 @@ struct SavedOutfitRow: View {
     let outfit: Outfit
     let items: [Item]
 
-    private var pieces: [Item] { outfit.itemIDs.compactMap { id in items.first { $0.id == id } } }
+    /// Se ne mostrano cinque: non serve cercarli tutti.
+    private var pieces: [Item] { Array(outfit.itemIDs.lazy.compactMap { id in items.first { $0.id == id } }.prefix(5)) }
 
     private var caption: Text {
         let occasion = Catalog.occasions.first { $0.id == outfit.occasion }
@@ -417,7 +421,7 @@ struct SavedOutfitRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            OutfitThumbs(items: Array(pieces.prefix(5)), size: 48)
+            OutfitThumbs(items: pieces, size: 48)
             caption.font(.caption).foregroundStyle(Palette.muted)
         }
         .padding(.vertical, 4)

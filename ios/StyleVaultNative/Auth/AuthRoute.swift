@@ -26,7 +26,7 @@ extension AuthErrorKind {
     }
 
     var localizedMessage: String? {
-        if case let .appleFailed(code) = self { return String(localized: "native.auth.appleFailed \(code)") }
+        if case let .appleFailed(code) = self { return String(localized: "native.auth.appleFailed \(String(code))") }
         return localizationKey.map { String(localized: String.LocalizationValue($0)) } ?? message
     }
 }

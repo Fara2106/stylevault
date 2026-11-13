@@ -16,6 +16,8 @@ import UIKit
     private(set) var isFromCache = false
 
     @ObservationIgnored private var task: Task<Void, Never>?
+    /// Quale generazione è quella in corso: i risultati di una annullata non contano più.
+    @ObservationIgnored private var run = 0
     @ObservationIgnored private let cacheFolder: URL
     @ObservationIgnored private let keepAwake: (Bool) -> Void
     private let logger = Logger(subsystem: "it.faraoni.stylevault.nativa", category: "realistic")
@@ -43,34 +45,57 @@ import UIKit
         progress = RealisticProgress(fraction: 0, garment: 1, garments: plan.pieces.count)
         let pieces = plan.pieces
         let key = RealisticCache.key(bodyKey: bodyKey, pieces: pieces)
-        // La generazione dura minuti: lo schermo non deve spegnersi
-        keepAwake(true)
+        run += 1
+        let current = run
+        // Una generazione annullata può metterci secondi a fermarsi (il modello si sta caricando): la nuova aspetta,
+        // così il modello non è mai in memoria due volte
+        let previous = task
         task = Task {
+            await previous?.value
+            guard current == run else { return }
+            // La generazione dura minuti: lo schermo non deve spegnersi
+            keepAwake(true)
             defer { keepAwake(false) }
             do {
                 let image = try await generator.generate(body: body, bodyKey: bodyKey, pieces: pieces) { value in
                     Task { @MainActor [weak self] in
-                        guard let self, self.phase == .generating else { return }
+                        guard let self, self.run == current, self.phase == .generating else { return }
                         // I passaggi arrivano da un altro filo: la barra non deve mai tornare indietro
                         if value.fraction >= (self.progress?.fraction ?? 0) { self.progress = value }
                     }
                 }
-                guard !Task.isCancelled else { return phase = .idle }
+                // Annullata nel frattempo: l'immagine arrivata tardi non si mostra e non si salva
+                guard current == run else { return }
                 RealisticCache.save(image, key: key, in: cacheFolder)
                 result = image
                 isFromCache = false
                 phase = .done
-            } catch is CancellationError {
-                phase = result == nil ? .idle : .done
             } catch {
+                guard current == run else { return }
                 logger.error("Versione realistica non generata: \(error)")
                 phase = .failed
             }
         }
     }
 
+    /// Chi tocca «Annulla» lo vede subito, anche se il modello impiega qualche secondo a fermarsi davvero.
     func cancel() {
+        guard isGenerating else { return }
         task?.cancel()
+        run += 1
+        progress = nil
+        phase = result == nil ? .idle : .done
+    }
+
+    /// La foto del corpo è cambiata o sparita, anche da un altro dispositivo: ciò che si sta generando o
+    /// mostrando è fatto con quella di prima. Non si mostra più e, se arriva tardi, non si salva.
+    func forget() {
+        task?.cancel()
+        run += 1
+        progress = nil
+        result = nil
+        isFromCache = false
+        phase = .idle
     }
 
     /// Per i test: aspetta la fine della generazione in corso.
@@ -134,6 +159,7 @@ struct RealisticTryOnView: View {
         .interactiveDismissDisabled(model.isGenerating)
         .onAppear { if let front { model.restore(bodyKey: BodyPhotoStore.key(of: front)) } }
         .onDisappear { model.cancel() }
+        .onChange(of: front.map(BodyPhotoStore.key(of:))) { model.forget() }
         .sheet(isPresented: $isReporting) { NavigationStack { FeedbackView() }.tint(Palette.ink) }
     }
 
@@ -229,6 +255,7 @@ struct RealisticTryOnView: View {
                 .accessibilityIdentifier("realistic-share")
                 Button("native.realistic.report") { isReporting = true }
                     .font(.subheadline)
+                    .multilineTextAlignment(.leading)
                     .tint(Palette.link)
                     .frame(minHeight: 44)
                     .accessibilityIdentifier("realistic-report")

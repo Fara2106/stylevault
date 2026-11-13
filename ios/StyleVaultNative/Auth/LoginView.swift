@@ -21,7 +21,7 @@ struct LoginView: View {
         ScrollView {
             VStack(spacing: 14) {
                 Text(verbatim: "Style Vault")
-                    .font(.display(34))
+                    .displayFont(34)
                     .foregroundStyle(Palette.ink)
                     .padding(.top, 48)
                 Text(registering ? "auth.registerSubtitle" : "auth.loginSubtitle")

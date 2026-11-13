@@ -33,6 +33,10 @@ struct TryOnPromptView: View {
         }
         .tint(Palette.ink)
         .task(id: accepted) { if accepted { prepareFiles() } }
+        // Le copie sono state tolte perché una foto del corpo è cambiata o sparita: si rifanno con quelle di adesso.
+        .onReceive(NotificationCenter.default.publisher(for: TemporaryFiles.photosForgotten)) { _ in
+            if accepted { prepareFiles() }
+        }
     }
 
     private var consent: some View {
@@ -78,7 +82,7 @@ struct TryOnPromptView: View {
                     .accessibilityIdentifier("prompt-share")
                 Text("native.prompt.shareHint").font(.footnote).foregroundStyle(Palette.muted)
             }
-            HStack(spacing: 12) {
+            AdaptiveRow {
                 link("tryon.promptOpenChatgpt", "https://chatgpt.com/")
                 link("tryon.promptOpenGemini", "https://gemini.google.com/")
             }

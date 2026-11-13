@@ -37,3 +37,10 @@ __pycache__/
 # Prova tecnica FASHN VTON: uscite e modelli convertiti
 tools/avatar-fashn/out/
 ios/FashnKit/.build/
+
+# Segreti e dati personali: non devono poter finire in un commit per sbaglio
+.env
+.env.*
+supabase/.temp/
+# Esportazioni con i dati e le foto di una persona (script esporta-da-supabase, Profilo → Esporta)
+/*.zip

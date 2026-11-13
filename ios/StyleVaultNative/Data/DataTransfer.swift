@@ -7,10 +7,27 @@ import SwiftData
 /// portabilità del GDPR. Il file resta sul dispositivo finché l'utente non decide dove mandarlo.
 /// Le copie temporanee contengono foto, anche del corpo: non devono sopravvivere a chi le ha cancellate.
 enum TemporaryFiles {
+    /// Parte quando le copie con le foto sono state tolte: chi mostra un file esportato smette di offrirlo.
+    static let photosForgotten = Notification.Name("it.faraoni.stylevault.nativa.photosForgotten")
+
     static func sweep(_ folder: URL = FileManager.default.temporaryDirectory) {
+        remove(from: folder) { $0.hasPrefix("importa-") || isPhotoCopy($0) }
+    }
+
+    /// Dopo aver cancellato o cambiato una foto del corpo: il file esportato prima e le foto preparate per la
+    /// prova la contengono ancora. Un'importazione in corso non si tocca.
+    static func forgetPhotos(in folder: URL = FileManager.default.temporaryDirectory) {
+        remove(from: folder, where: isPhotoCopy)
+        NotificationCenter.default.post(name: photosForgotten, object: nil)
+    }
+
+    private static func isPhotoCopy(_ name: String) -> Bool {
+        name == "prova" || (name.hasPrefix("StyleVault-") && name.hasSuffix(".zip"))
+    }
+
+    private static func remove(from folder: URL, where matches: (String) -> Bool) {
         let names = (try? FileManager.default.contentsOfDirectory(atPath: folder.path)) ?? []
-        for name in names where name.hasPrefix("importa-") || name == "prova"
-            || (name.hasPrefix("StyleVault-") && name.hasSuffix(".zip")) {
+        for name in names where matches(name) {
             try? FileManager.default.removeItem(at: folder.appendingPathComponent(name))
         }
     }
@@ -88,8 +105,10 @@ enum TransferBatch {
                                 itemIDs: $0.itemIDs.map(\.uuidString), createdAt: $0.createdAt,
                                 snapshot: $0.wornItems.isEmpty ? nil : $0.wornItems)
         }
+        // Solo le viste che l'app conosce: il tipo finisce nel nome del file.
         bundle.bodyPhotos = try context.fetch(FetchDescriptor<BodyPhoto>()).compactMap { photo in
-            try file(photo.photo, "body-\(photo.kind)").map { ExportBodyPhoto(kind: photo.kind, file: $0) }
+            guard BodyView(rawValue: photo.kind) != nil else { return nil }
+            return try file(photo.photo, "body-\(photo.kind)").map { ExportBodyPhoto(kind: photo.kind, file: $0) }
         }
         let profile = try ProfileStore.current(in: context)
         bundle.profile = ExportProfile(theme: profile.theme, cityName: profile.cityName, cityLatitude: profile.cityLatitude,
@@ -109,6 +128,8 @@ struct ImportSummary: Equatable {
     var calendar = 0
     var skipped = 0
     var missingPhotos = 0
+    /// Foto arrivate a capi che c'erano già ma erano rimasti senza.
+    var recoveredPhotos = 0
 
     var added: Int { items + wishlist + outfits + calendar }
 }
@@ -118,6 +139,33 @@ struct ImportSummary: Equatable {
 /// riprovare aggiunge ciò che manca. Su un altro dispositivo con lo stesso iCloud il confronto non vede ciò
 /// che non è ancora arrivato: lì i doppioni restano possibili.
 @MainActor enum DataImporter {
+    struct TooManyRecords: Error {}
+
+    /// Molto più di qualsiasi guardaroba vero: fermano un file costruito per riempire il telefono e iCloud.
+    static let recordLimit = 50_000
+    static let photoBudget = 4 * 1024 * 1024 * 1024
+    /// Il tetto sui record non dice quanto è grande ciascuno: un outfit vero ha pochi capi, un giorno poche
+    /// voci, un nome poche parole. Il resto si taglia, così le schede non devono mai contare milioni di voci.
+    static let piecesLimit = 24
+    static let entriesPerDayLimit = 20
+    static let textLimit = 500
+    static let linkLimit = 2048
+    static let colorsLimit = 24
+
+    static func clipped(_ text: String, to limit: Int = textLimit) -> String {
+        text.count > limit ? String(text.prefix(limit)) : text
+    }
+
+    static func clipped(_ text: String?, to limit: Int = textLimit) -> String? {
+        text.map { clipped($0, to: limit) }
+    }
+
+    /// I capi di un outfit o di un giorno: i primi, senza ripetizioni.
+    static func pieces(_ keys: [String]) -> [UUID] {
+        var seen = Set<UUID>()
+        return keys.prefix(piecesLimit).map(stableID).filter { seen.insert($0).inserted }
+    }
+
     static func apply(_ contents: ExportArchive.Contents, to context: ModelContext) async throws -> ImportSummary {
         do {
             return try await add(contents, to: context)
@@ -141,61 +189,83 @@ struct ImportSummary: Equatable {
         let bundle = contents.bundle
         var summary = ImportSummary()
         func uuid(_ text: String) -> UUID { stableID(text) }
-        // Una foto mancante o rovinata non ferma tutto il resto: si conta e si dice.
+        guard bundle.items.count + bundle.wishlist.count + bundle.outfits.count + bundle.calendar.count
+            + bundle.customCategories.count <= recordLimit else { throw TooManyRecords() }
+        var stored = 0
+        // In un file vero ogni foto appartiene a un record solo: la stessa voce citata due volte non si salva
+        // due volte, altrimenti un file piccolo riempirebbe il telefono.
+        var usedPhotos = Set<String>()
+        // Una foto mancante, rovinata o che non è una foto non ferma tutto il resto: si conta e si dice.
+        // Il file può venire da chiunque: entra solo ciò che `GarmentImage.imported` riconosce come foto.
         func photo(_ name: String?) -> Data? {
             guard let name else { return nil }
-            guard let data = try? contents.photo(name) else {
+            // Finito lo spazio concesso non si apre più nulla: nemmeno il lavoro di leggere e decodificare.
+            guard stored < photoBudget, usedPhotos.insert(name).inserted,
+                  let raw = try? contents.photo(name), let data = GarmentImage.imported(raw),
+                  stored + data.count <= photoBudget else {
                 summary.missingPhotos += 1
                 return nil
             }
+            stored += data.count
+            return data
+        }
+        // Lo scontorno che non convince si lascia perdere senza dirlo: l'app lo rifà.
+        func cutout(_ name: String?) -> Data? {
+            guard let name, stored < photoBudget, usedPhotos.insert(name).inserted,
+                  let raw = try? contents.photo(name), let data = GarmentImage.importedCutout(raw),
+                  stored + data.count <= photoBudget else { return nil }
+            stored += data.count
             return data
         }
         func warmth(_ level: Int) -> Int { min(5, max(1, level)) }
 
-        let knownCategories = Set(try context.fetch(FetchDescriptor<CustomCategory>()).map(\.id))
-        for category in bundle.customCategories where !knownCategories.contains(category.id) {
+        var knownCategories = Set(try context.fetch(FetchDescriptor<CustomCategory>()).map(\.id))
+        for category in bundle.customCategories where knownCategories.insert(category.id).inserted {
             let value = CustomCategory()
             value.id = category.id
-            value.name = category.name
+            value.name = clipped(category.name)
             value.createdAt = category.createdAt
             context.insert(value)
         }
         try context.save()
 
-        let knownItems = Set(try context.fetch(FetchDescriptor<Item>()).map(\.id))
+        // Gli id già visti si aggiornano strada facendo: lo stesso id ripetuto nel file non crea due record.
+        var knownItems = Set(try context.fetch(FetchDescriptor<Item>()).map(\.id))
         for chunk in TransferBatch.split(bundle.items) {
             try autoreleasepool {
                 let batch = ModelContext(context.container)
                 for garment in chunk {
                     let id = uuid(garment.id)
-                    guard !knownItems.contains(id) else {
+                    guard knownItems.insert(id).inserted else {
                         summary.skipped += 1
-                        // Se la prima volta una foto è mancata, ripetere l'import la recupera.
-                        if let existing = try batch.fetch(FetchDescriptor<Item>(predicate: #Predicate { $0.id == id })).first {
-                            existing.photoFront = existing.photoFront ?? photo(garment.photoFront)
+                        // Se la prima volta una foto è mancata, ripetere l'import la recupera. Solo per un capo
+                        // rimasto senza foto: chi ne ha già una resta com'è, come promette la conferma.
+                        if let existing = try batch.fetch(FetchDescriptor<Item>(predicate: #Predicate { $0.id == id })).first,
+                           existing.photoFront == nil, let front = photo(garment.photoFront) {
+                            existing.photoFront = front
                             existing.photoBack = existing.photoBack ?? photo(garment.photoBack)
-                            existing.cutout = existing.cutout ?? photo(garment.cutout)
+                            summary.recoveredPhotos += 1
                         }
                         continue
                     }
                     let item = Item()
                     item.id = id
-                    item.name = garment.name
-                    item.category = garment.category
-                    item.subcategory = garment.subcategory
-                    item.brand = garment.brand
-                    item.size = garment.size
-                    item.colors = garment.colors
-                    item.season = garment.season
-                    item.occasion = garment.occasion
+                    item.name = clipped(garment.name)
+                    item.category = clipped(garment.category)
+                    item.subcategory = clipped(garment.subcategory)
+                    item.brand = clipped(garment.brand)
+                    item.size = clipped(garment.size)
+                    item.colors = garment.colors.prefix(colorsLimit).map { clipped($0) }
+                    item.season = clipped(garment.season)
+                    item.occasion = clipped(garment.occasion)
                     item.warmthLevel = warmth(garment.warmthLevel)
-                    item.sourceURL = garment.sourceURL
+                    item.sourceURL = clipped(garment.sourceURL, to: linkLimit)
                     item.price = garment.price
                     item.favorite = garment.favorite ?? false
                     item.createdAt = garment.createdAt
                     item.photoFront = photo(garment.photoFront)
                     item.photoBack = photo(garment.photoBack)
-                    item.cutout = photo(garment.cutout)
+                    item.cutout = cutout(garment.cutout)
                     batch.insert(item)
                     summary.items += 1
                 }
@@ -204,32 +274,34 @@ struct ImportSummary: Equatable {
             await Task.yield()
         }
 
-        let knownWishes = Set(try context.fetch(FetchDescriptor<WishlistItem>()).map(\.id))
+        var knownWishes = Set(try context.fetch(FetchDescriptor<WishlistItem>()).map(\.id))
         for chunk in TransferBatch.split(bundle.wishlist) {
             try autoreleasepool {
                 let batch = ModelContext(context.container)
                 for garment in chunk {
                     let id = uuid(garment.id)
-                    guard !knownWishes.contains(id) else {
+                    guard knownWishes.insert(id).inserted else {
                         summary.skipped += 1
-                        if let existing = try batch.fetch(FetchDescriptor<WishlistItem>(predicate: #Predicate { $0.id == id })).first {
-                            existing.photoFront = existing.photoFront ?? photo(garment.photoFront)
+                        if let existing = try batch.fetch(FetchDescriptor<WishlistItem>(predicate: #Predicate { $0.id == id })).first,
+                           existing.photoFront == nil, let front = photo(garment.photoFront) {
+                            existing.photoFront = front
                             existing.photoBack = existing.photoBack ?? photo(garment.photoBack)
+                            summary.recoveredPhotos += 1
                         }
                         continue
                     }
                     let item = WishlistItem()
                     item.id = id
-                    item.name = garment.name
-                    item.category = garment.category
-                    item.subcategory = garment.subcategory
-                    item.brand = garment.brand
-                    item.size = garment.size
-                    item.colors = garment.colors
-                    item.season = garment.season
-                    item.occasion = garment.occasion
+                    item.name = clipped(garment.name)
+                    item.category = clipped(garment.category)
+                    item.subcategory = clipped(garment.subcategory)
+                    item.brand = clipped(garment.brand)
+                    item.size = clipped(garment.size)
+                    item.colors = garment.colors.prefix(colorsLimit).map { clipped($0) }
+                    item.season = clipped(garment.season)
+                    item.occasion = clipped(garment.occasion)
                     item.warmthLevel = warmth(garment.warmthLevel)
-                    item.sourceURL = garment.sourceURL
+                    item.sourceURL = clipped(garment.sourceURL, to: linkLimit)
                     item.price = garment.price
                     item.createdAt = garment.createdAt
                     item.photoFront = photo(garment.photoFront)
@@ -242,45 +314,56 @@ struct ImportSummary: Equatable {
             await Task.yield()
         }
 
-        let knownOutfits = Set(try context.fetch(FetchDescriptor<Outfit>()).map(\.id))
+        var knownOutfits = Set(try context.fetch(FetchDescriptor<Outfit>()).map(\.id))
         for outfit in bundle.outfits {
             let id = uuid(outfit.id)
-            guard !knownOutfits.contains(id) else {
+            guard knownOutfits.insert(id).inserted else {
                 summary.skipped += 1
                 continue
             }
             let value = Outfit()
             value.id = id
-            value.occasion = outfit.occasion
+            value.occasion = clipped(outfit.occasion)
             value.score = outfit.score
-            value.itemIDs = outfit.itemIDs.map(uuid)
+            value.itemIDs = pieces(outfit.itemIDs)
             value.createdAt = outfit.createdAt
             context.insert(value)
             summary.outfits += 1
         }
 
-        let knownEntries = Set(try context.fetch(FetchDescriptor<CalendarEntry>()).map(\.id))
+        let entries = try context.fetch(FetchDescriptor<CalendarEntry>())
+        var knownEntries = Set(entries.map(\.id))
+        var entriesPerDay = Dictionary(entries.map { ($0.day, 1) }, uniquingKeysWith: +)
         for entry in bundle.calendar {
             let id = uuid(entry.id)
-            guard !knownEntries.contains(id), CalendarMath.isValid(entry.day) else {
+            // Un giorno con più voci di quante se ne possano scrivere a mano non viene da un calendario vero.
+            guard CalendarMath.isValid(entry.day), entriesPerDay[entry.day, default: 0] < entriesPerDayLimit,
+                  knownEntries.insert(id).inserted else {
                 summary.skipped += 1
                 continue
             }
+            entriesPerDay[entry.day, default: 0] += 1
             let value = CalendarEntry()
             value.id = id
             value.day = entry.day
             value.worn = entry.worn
             value.outfitID = entry.outfitID.map(uuid)
-            value.itemIDs = entry.itemIDs.map(uuid)
+            value.itemIDs = pieces(entry.itemIDs)
             value.createdAt = entry.createdAt
-            value.snapshot = entry.snapshot.flatMap { try? JSONEncoder().encode($0) }
+            value.snapshot = entry.snapshot.flatMap { worn in
+                try? JSONEncoder().encode(worn.prefix(piecesLimit).map {
+                    WornItem(id: clipped($0.id), name: clipped($0.name), category: clipped($0.category))
+                })
+            }
             context.insert(value)
             summary.calendar += 1
         }
 
-        let knownPhotos = Set(try context.fetch(FetchDescriptor<BodyPhoto>()).map(\.kind))
-        for file in bundle.bodyPhotos where !knownPhotos.contains(file.kind) {
+        // Una foto per vista, e solo le viste che l'app conosce: le altre resterebbero nascoste e incancellabili.
+        var knownPhotos = Set(try context.fetch(FetchDescriptor<BodyPhoto>()).map(\.kind))
+        for file in bundle.bodyPhotos where BodyView(rawValue: file.kind) != nil && !knownPhotos.contains(file.kind) {
             guard let bodyPhoto = photo(file.file) else { continue }
+            knownPhotos.insert(file.kind)
             let value = BodyPhoto()
             value.kind = file.kind
             value.photo = bodyPhoto
@@ -291,8 +374,10 @@ struct ImportSummary: Equatable {
             let profile = try ProfileStore.current(in: context)
             // Il Profilo di chi importa vince: arriva solo ciò che manca.
             if profile.armocromia == nil, let text = incoming.armocromia {
-                let verdict = ArmocromiaVerdict.decode(Data(text.utf8))
-                if ArmocromiaSeasons.season(id: verdict?.season) != nil { profile.armocromia = Data(text.utf8) }
+                // Si salva il verdetto riscritto dall'app, non il testo ricevuto: ciò che non conosce si perde.
+                if let verdict = ArmocromiaVerdict.decode(Data(text.utf8)), ArmocromiaSeasons.season(id: verdict.season) != nil {
+                    profile.armocromia = try? verdict.encoded()
+                }
             }
             if profile.updatedAt == Date(timeIntervalSince1970: 0) {
                 profile.theme = incoming.theme

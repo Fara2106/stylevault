@@ -212,14 +212,14 @@ struct ArmocromiaView: View {
     private func verdictCard(_ season: ArmocromiaSeason) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(LocalizedStringKey(season.nameKey))
-                .font(.display(26))
+                .displayFont(26)
                 .foregroundStyle(Palette.ink)
                 .accessibilityIdentifier("armocromia-season-name")
             Text(LocalizedStringKey(season.descKey)).foregroundStyle(Palette.ink)
             if verdict?.chosenByHand == true {
                 Text("armocromia.ui.byHandNote").font(.footnote).foregroundStyle(Palette.muted)
             } else {
-                let percent = Int(((verdict?.confidence ?? 0) * 100).rounded())
+                let percent = Int((min(1, max(0, verdict?.confidence ?? 0)) * 100).rounded())
                 (Text("armocromia.ui.confidence") + Text(verbatim: ": \(percent)% — ") + Text(LocalizedStringKey(season.undertoneKey)))
                 .font(.footnote)
                 .foregroundStyle(Palette.muted)
@@ -249,7 +249,7 @@ struct ArmocromiaView: View {
                         let text = "\(parts[part]) \(localized(color.nameKey))"
                         HStack(spacing: 8) {
                             Circle().fill(Color(hex: color.hex)).frame(width: 18, height: 18)
-                                .overlay(Circle().stroke(Palette.border))
+                                .overlay(Circle().stroke(Palette.muted, lineWidth: 1))
                             Text(verbatim: text).font(.subheadline).foregroundStyle(Palette.ink)
                             Spacer()
                             if let link = ShopLinks.one(shop: shops[(index + part) % shops.count], query: text,
@@ -267,9 +267,11 @@ struct ArmocromiaView: View {
     }
 
     private func homeShops(_ kind: ShopKind) -> some View {
-        HStack(spacing: 10) {
+        AccessibleRow(spacing: 10) {
             Text("armocromia.ui.alsoOn").font(.footnote).foregroundStyle(Palette.muted)
-            ForEach(ShopLinks.home(kind: kind, language: ShopLanguage.current)) { ShopLinkView(link: $0) }
+            AdaptiveRow(spacing: 10, alignment: .leading) {
+                ForEach(ShopLinks.home(kind: kind, language: ShopLanguage.current)) { ShopLinkView(link: $0) }
+            }
         }
     }
 
@@ -289,7 +291,7 @@ struct ArmocromiaView: View {
                         Text(verbatim: item.name).font(.subheadline).foregroundStyle(Palette.ink)
                         Spacer()
                         Circle().fill(Color(hex: match.paletteHex)).frame(width: 18, height: 18)
-                            .overlay(Circle().stroke(Palette.border))
+                            .overlay(Circle().stroke(Palette.muted, lineWidth: 1))
                     }
                     .accessibilityIdentifier("armocromia-wardrobe-item")
                 }
@@ -308,7 +310,7 @@ struct ArmocromiaView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(LocalizedStringKey(title)).font(.subheadline).foregroundStyle(Palette.muted)
                     SwatchGrid(colors: colors, linked: false)
-                    HStack(spacing: 12) {
+                    AdaptiveRow(spacing: 12, alignment: .leading) {
                         ForEach(ShopLinks.search(kind: .makeup, query: "\(localized(query)) \(localized(colors[0].nameKey))",
                                                  language: ShopLanguage.current)) { ShopLinkView(link: $0) }
                     }
@@ -349,8 +351,11 @@ private struct SwatchGrid: View {
     let colors: [SeasonColor]
     let linked: Bool
 
+    /// Con il testo molto grande le colonne si allargano: i nomi dei colori non si spezzano a metà parola.
+    @ScaledMetric(relativeTo: .caption) private var scaledSide: CGFloat = 78
+
     var body: some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: 78), alignment: .top)], alignment: .leading, spacing: 10) {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: min(scaledSide, 160)), alignment: .top)], alignment: .leading, spacing: 10) {
             ForEach(Array(colors.enumerated()), id: \.offset) { _, color in
                 if linked, let link = ShopLinks.one(shop: "zalando", query: localized(color.nameKey),
                                                     language: ShopLanguage.current) {
@@ -365,7 +370,7 @@ private struct SwatchGrid: View {
     private func swatch(_ color: SeasonColor) -> some View {
         VStack(spacing: 4) {
             Circle().fill(Color(hex: color.hex)).frame(width: 40, height: 40)
-                .overlay(Circle().stroke(Palette.border))
+                .overlay(Circle().stroke(Palette.muted, lineWidth: 1))
             Text(LocalizedStringKey(color.nameKey))
                 .font(.caption)
                 .foregroundStyle(Palette.ink)

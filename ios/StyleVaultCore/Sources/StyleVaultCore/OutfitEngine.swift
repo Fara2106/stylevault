@@ -185,8 +185,10 @@ public enum OutfitEngine {
 
     private static func penalties(_ recentWear: [RecentWear], reference: String) -> [String: Double] {
         var result: [String: Double] = [:]
+        // Lo storico può essere lungo anni: ciò che è fuori dalla settimana si scarta prima dei conti di calendario
+        var before = CalendarMath.DaysBefore(reference, within: 7)
         for wear in recentWear {
-            guard let days = CalendarMath.daysBetween(wear.date, and: reference), (0...7).contains(days) else { continue }
+            guard let days = before.days(from: wear.date), (0...7).contains(days) else { continue }
             result[wear.itemID] = max(result[wear.itemID] ?? 0, max(0, 12 - 1.5 * Double(days)))
         }
         return result

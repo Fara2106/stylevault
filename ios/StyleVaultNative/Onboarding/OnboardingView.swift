@@ -24,7 +24,7 @@ struct OnboardingView: View {
                         .font(.caption)
                         .foregroundStyle(Palette.muted)
                         .accessibilityIdentifier("onboarding-step")
-                    Text("onboarding.welcomeNeutral").font(.display(30)).foregroundStyle(Palette.ink)
+                    Text("onboarding.welcomeNeutral").displayFont(30).foregroundStyle(Palette.ink)
                     if step == 0 { photoStep } else { cityStep }
                 }
                 .padding(24)

@@ -8,6 +8,11 @@ struct StatisticsView: View {
     @Query private var entries: [CalendarEntry]
     @Query private var customCategories: [CustomCategory]
 
+    @Environment(\.dynamicTypeSize) private var typeSize
+    @ScaledMetric(relativeTo: .footnote) private var scaledLabelWidth: CGFloat = 110
+    /// Con il testo molto grande il nome della categoria si allarga, ma lascia posto alla barra.
+    private var labelWidth: CGFloat { min(scaledLabelWidth, 190) }
+
     private var pieces: [OutfitPiece] { items.map(\.piece) }
     private var history: [WearLog] { entries.map(\.wearLog) }
     private var hasWearData: Bool { entries.contains(where: \.worn) }
@@ -67,8 +72,9 @@ struct StatisticsView: View {
                         (CategoryChoice.find(row.key, custom: customCategories)?.text ?? Text(verbatim: row.key))
                             .font(.footnote)
                             .foregroundStyle(Palette.ink)
-                            .frame(width: 110, alignment: .leading)
                             .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                            .frame(width: labelWidth, alignment: .leading)
                         GeometryReader { geometry in
                             Capsule().fill(Palette.ink)
                                 .frame(width: geometry.size.width * CGFloat(row.count) / CGFloat(largest))
@@ -116,7 +122,8 @@ struct StatisticsView: View {
                                 ItemPhotoView(data: item.shownPhoto, name: item.name)
                                     .frame(width: 40, height: 40)
                                     .clipShape(RoundedRectangle(cornerRadius: 6))
-                                Text(verbatim: item.name).font(.subheadline).foregroundStyle(Palette.ink).lineLimit(1)
+                                Text(verbatim: item.name).font(.subheadline).foregroundStyle(Palette.ink)
+                                    .lineLimit(typeSize.isAccessibilitySize ? 3 : 1)
                                 Spacer()
                                 detail.font(.footnote).foregroundStyle(Palette.muted)
                             }

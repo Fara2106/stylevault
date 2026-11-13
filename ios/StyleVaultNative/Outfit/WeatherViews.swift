@@ -51,13 +51,13 @@ struct WeatherCard: View {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 12) {
                     Image(systemName: weather.icon.symbol).font(.title).foregroundStyle(Palette.ink)
-                    Text(verbatim: TemperatureText.string(weather.temperature)).font(.display(34)).foregroundStyle(Palette.ink)
+                    Text(verbatim: TemperatureText.string(weather.temperature)).displayFont(34).foregroundStyle(Palette.ink)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(verbatim: weather.city).font(.subheadline.weight(.medium)).foregroundStyle(Palette.ink)
                         Text(LocalizedStringKey(weather.descriptionKey)).font(.footnote).foregroundStyle(Palette.muted)
                     }
                 }
-                HStack(spacing: 12) {
+                AdaptiveRow(spacing: 12, alignment: .leading) {
                     if let low = weather.tMin, let high = weather.tMax {
                         Text(verbatim: "\(TemperatureText.string(low)) / \(TemperatureText.string(high))")
                     }
@@ -113,8 +113,14 @@ struct DayStripView: View {
 /// Da dove viene il meteo: Apple chiede il suo marchio e il link legale.
 struct WeatherCredit: View {
     var body: some View {
-        Link(destination: AppleWeather.legalURL) { Text(verbatim: "\u{F8FF} Weather").font(.caption) }
-            .tint(Palette.link)
-            .accessibilityIdentifier("weather-credit-apple")
+        // Il testo è alto 14 punti: l'area di tocco si allarga a 44 senza spostare ciò che sta intorno.
+        Link(destination: AppleWeather.legalURL) {
+            Text(verbatim: "\u{F8FF} Weather").font(.caption)
+                .padding(.vertical, 15)
+                .contentShape(Rectangle())
+        }
+        .padding(.vertical, -15)
+        .tint(Palette.link)
+        .accessibilityIdentifier("weather-credit-apple")
     }
 }

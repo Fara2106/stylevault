@@ -25,6 +25,7 @@ struct ItemCard: View {
     let brand: String?
     let colors: [String]
     let photo: Data?
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -32,10 +33,11 @@ struct ItemCard: View {
                 .aspectRatio(3 / 4, contentMode: .fit)
                 .overlay { ItemPhotoView(data: photo, name: name) }
                 .clipShape(RoundedRectangle(cornerRadius: 10))
+            // Con il testo molto grande in una riga sta una parola sola: due righe, riservate perché le schede restino allineate.
             Text(verbatim: name)
                 .font(.subheadline)
                 .foregroundStyle(Palette.ink)
-                .lineLimit(1)
+                .lineLimit(typeSize.isAccessibilitySize ? 2 : 1, reservesSpace: typeSize.isAccessibilitySize)
             if let brand {
                 Text(verbatim: brand)
                     .font(.caption)

@@ -174,6 +174,8 @@ struct BodyPhotoEditorView: View {
         Task { await CutoutCache.shared.removeAll(prefix: prefix) }
         // Con una foto del corpo nuova le immagini generate con la vecchia non valgono più
         RealisticCache.removeAll()
+        // Il file esportato prima e le foto preparate per la prova contengono ancora quella vecchia
+        TemporaryFiles.forgetPhotos()
     }
 
     private func reset() {

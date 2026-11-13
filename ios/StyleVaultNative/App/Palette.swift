@@ -32,3 +32,17 @@ extension Font {
     /// Titoli editoriali: il serif di sistema (New York).
     static func display(_ size: CGFloat) -> Font { .system(size: size, weight: .regular, design: .serif) }
 }
+
+/// Il titolo editoriale che cresce con la misura del testo scelta nel telefono, piano come i titoli grandi di sistema
+/// (a AX3 una volta e mezza): con la misura fissa restava più piccolo del testo che gli sta sotto.
+private struct DisplayFont: ViewModifier {
+    @ScaledMetric private var size: CGFloat
+
+    init(size: CGFloat) { _size = ScaledMetric(wrappedValue: size, relativeTo: .largeTitle) }
+
+    func body(content: Content) -> some View { content.font(.display(size)) }
+}
+
+extension View {
+    func displayFont(_ size: CGFloat) -> some View { modifier(DisplayFont(size: size)) }
+}

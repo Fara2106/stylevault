@@ -154,4 +154,30 @@ final class ExportTests: XCTestCase {
         XCTAssertFalse(CalendarMath.isValid("domani"))
         XCTAssertEqual(CalendarMath.local.identifier, .gregorian)
     }
+
+
+    func testUnaFotoHaUnTettoPiuBassoDelDocumento() throws {
+        let url = try zipFile(["a.jpg": Data(repeating: 1, count: 100)])
+        let reader = try ZipReader(url: url)
+        XCTAssertThrowsError(try reader.data(name: "a.jpg", limit: 10)) { XCTAssertEqual($0 as? ZipError, .tooLarge) }
+        XCTAssertEqual(try reader.data(name: "a.jpg", limit: 100)?.count, 100)
+        // Il tetto per voce non alza mai quello del lettore
+        XCTAssertThrowsError(try ZipReader(url: url, entryLimit: 10).data(name: "a.jpg", limit: 1000))
+    }
+
+    func testUnNomeCheNonStaNelCampoSiRifiuta() throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        addTeardownBlock { try? FileManager.default.removeItem(at: folder) }
+        let url = folder.appendingPathComponent("lungo.zip")
+        let writer = try ZipWriter(url: url)
+        // Troncato a 16 bit darebbe un file che l'app stessa non riesce a rileggere
+        XCTAssertThrowsError(try writer.add(name: String(repeating: "A", count: 65_536), data: Data([1]))) {
+            XCTAssertEqual($0 as? ZipError, .tooLarge)
+        }
+        try writer.add(name: String(repeating: "A", count: 65_535), data: Data([1]))
+        try writer.add(name: "b", data: Data([2]))
+        try writer.close()
+        XCTAssertEqual(try ZipReader(url: url).data(name: "b"), Data([2]))
+    }
 }

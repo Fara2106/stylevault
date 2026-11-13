@@ -55,6 +55,12 @@ struct DataTransferSection: View {
                     .font(.footnote)
                     .foregroundStyle(Palette.muted)
                     .accessibilityIdentifier("data-result")
+                if summary.recoveredPhotos > 0 {
+                    Text("native.data.recoveredPhotos \(summary.recoveredPhotos)")
+                        .font(.footnote)
+                        .foregroundStyle(Palette.muted)
+                        .accessibilityIdentifier("data-recovered-photos")
+                }
                 if summary.missingPhotos > 0 {
                     Text("native.data.missingPhotos \(summary.missingPhotos)")
                         .font(.footnote)
@@ -73,6 +79,8 @@ struct DataTransferSection: View {
         } footer: {
             Text("native.data.footer").foregroundStyle(Palette.muted)
         }
+        // Cancellata o cambiata una foto del corpo, il file esportato prima non c'è più: non si offre.
+        .onReceive(NotificationCenter.default.publisher(for: TemporaryFiles.photosForgotten)) { _ in exported = nil }
         .fileImporter(isPresented: $isPickingFile, allowedContentTypes: [.zip]) { result in
             if case let .success(url) = result { open(url) }
         }
@@ -84,7 +92,8 @@ struct DataTransferSection: View {
             Button("native.data.confirm", action: applyPending)
         } message: {
             if let bundle = pending?.bundle {
-                Text("native.data.confirmMessage \(bundle.items.count) \(bundle.outfits.count) \(bundle.calendar.count)")
+                // Tutto ciò che il file porta, comprese le foto del corpo: chi conferma deve saperlo prima.
+                Text("native.data.confirmMessage \(bundle.items.count) \(bundle.wishlist.count) \(bundle.outfits.count) \(bundle.calendar.count) \(Set(bundle.bodyPhotos.map(\.kind).filter { BodyView(rawValue: $0) != nil }).count)")
             }
         }
     }
@@ -97,7 +106,10 @@ struct DataTransferSection: View {
             await Task.yield()
             defer { isBusy = false }
             do {
-                exported = try await DataExporter.export(from: context)
+                let url = try await DataExporter.export(from: context)
+                // Se nel frattempo le copie temporanee sono state tolte, il file non c'è: meglio dirlo che offrirlo.
+                guard FileManager.default.fileExists(atPath: url.path) else { throw CocoaError(.fileNoSuchFile) }
+                exported = url
             } catch {
                 logger.error("Esportazione non riuscita: \(error.localizedDescription, privacy: .public)")
                 errorKey = "native.data.exportFailed"

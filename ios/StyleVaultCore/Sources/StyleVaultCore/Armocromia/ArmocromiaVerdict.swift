@@ -35,7 +35,9 @@ extension ArmocromiaVerdict: Codable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         season = try c.decode(String.self, forKey: .season)
         detected = try c.decodeIfPresent(FaceColors.self, forKey: .detected) ?? FaceColors()
-        confidence = try c.decodeIfPresent(Double.self, forKey: .confidence) ?? 0
+        // Il verdetto può arrivare da un file importato: l'affidabilità resta fra 0 e 1, qualunque numero ci sia scritto.
+        let raw = try c.decodeIfPresent(Double.self, forKey: .confidence) ?? 0
+        confidence = raw.isFinite ? min(1, max(0, raw)) : 0
         chosenByHand = try c.decodeIfPresent(Bool.self, forKey: .chosenByHand) ?? false
         let text = try c.decodeIfPresent(String.self, forKey: .updatedAt) ?? ""
         updatedAt = Self.date(from: text) ?? .now

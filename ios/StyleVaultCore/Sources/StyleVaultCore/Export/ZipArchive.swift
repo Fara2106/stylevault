@@ -55,8 +55,11 @@ public final class ZipWriter {
     }
 
     public func add(name: String, data: Data) throws {
-        guard offset + UInt64(data.count) < UInt64(UInt32.max) else { throw ZipError.tooLarge }
-        let entry = Entry(name: Data(name.utf8), crc: CRC32.checksum(data), size: UInt32(data.count), offset: UInt32(offset))
+        let nameBytes = Data(name.utf8)
+        // I campi dello zip sono a 16 e 32 bit: ciò che non ci sta si rifiuta, non si tronca.
+        guard nameBytes.count <= 0xFFFF, entries.count < 0xFFFF,
+              offset + UInt64(30 + nameBytes.count) + UInt64(data.count) < UInt64(UInt32.max) else { throw ZipError.tooLarge }
+        let entry = Entry(name: nameBytes, crc: CRC32.checksum(data), size: UInt32(data.count), offset: UInt32(offset))
         var header = Data()
         header.append32(0x0403_4B50)
         header.append16(20) // versione minima
@@ -77,6 +80,8 @@ public final class ZipWriter {
 
     public func close() throws {
         let start = offset
+        let directory = entries.reduce(UInt64(0)) { $0 + 46 + UInt64($1.name.count) }
+        guard start + directory < UInt64(UInt32.max) else { throw ZipError.tooLarge }
         for entry in entries {
             var record = Data()
             record.append32(0x0201_4B50)
@@ -156,8 +161,10 @@ public final class ZipReader {
         return nil
     }
 
-    public func data(name: String) throws -> Data? {
+    /// `limit` abbassa il tetto per questa voce: una foto non ha bisogno di quello del documento.
+    public func data(name: String, limit: Int? = nil) throws -> Data? {
         guard let entry = entries[name] else { return nil }
+        let entryLimit = min(limit ?? entryLimit, entryLimit)
         // `size` e `compressed` si dichiarano nel file: valgono entrambi.
         guard entry.size <= entryLimit, entry.compressed <= entryLimit else { throw ZipError.tooLarge }
         guard entry.offset + 30 <= file.count, file.read32(entry.offset) == 0x0403_4B50 else { throw ZipError.damaged }

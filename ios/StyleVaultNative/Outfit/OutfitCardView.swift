@@ -76,23 +76,38 @@ struct OutfitCardView: View {
         .accessibilityIdentifier("outfit-card")
     }
 
+    /// Con il testo grande punteggio e percentuali non stanno su una riga: le percentuali scendono sotto.
     private var header: some View {
-        HStack(alignment: .firstTextBaseline) {
-            VStack(alignment: .leading, spacing: 0) {
-                Text(verbatim: "\(outfit.score)").font(.display(34)).foregroundStyle(Palette.ink)
-                    .accessibilityIdentifier("outfit-score")
-                Text("outfit.outfitScore").font(.caption).foregroundStyle(Palette.muted)
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .firstTextBaseline) {
+                score
+                Spacer()
+                metric(outfit.weatherMatch, "outfit.weatherMatch")
+                metric(outfit.colorHarmony, "outfit.colorMatch")
             }
-            Spacer()
-            metric(outfit.weatherMatch, "outfit.weatherMatch")
-            metric(outfit.colorHarmony, "outfit.colorMatch")
+            VStack(alignment: .leading, spacing: 8) {
+                score
+                HStack(alignment: .firstTextBaseline, spacing: 0) {
+                    metric(outfit.weatherMatch, "outfit.weatherMatch", alignment: .leading).padding(.leading, -12)
+                    metric(outfit.colorHarmony, "outfit.colorMatch", alignment: .leading)
+                    Spacer()
+                }
+            }
         }
     }
 
-    private func metric(_ value: Int, _ label: LocalizedStringKey) -> some View {
-        VStack(alignment: .trailing, spacing: 0) {
+    private var score: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(verbatim: "\(outfit.score)").displayFont(34).foregroundStyle(Palette.ink)
+                .accessibilityIdentifier("outfit-score")
+            Text("outfit.outfitScore").font(.caption).foregroundStyle(Palette.muted).fixedSize()
+        }
+    }
+
+    private func metric(_ value: Int, _ label: LocalizedStringKey, alignment: HorizontalAlignment = .trailing) -> some View {
+        VStack(alignment: alignment, spacing: 0) {
             Text(verbatim: "\(value)%").font(.subheadline.weight(.medium)).foregroundStyle(Palette.ink)
-            Text(label).font(.caption).foregroundStyle(Palette.muted)
+            Text(label).font(.caption).foregroundStyle(Palette.muted).fixedSize()
         }
         .padding(.leading, 12)
     }
@@ -133,7 +148,7 @@ struct OutfitCardView: View {
     }
 
     private var wearActions: some View {
-        HStack(spacing: 8) {
+        AdaptiveRow(spacing: 8) {
             Button(action: onSave) {
                 Label(saved ? "outfit.saved" : "common.save", systemImage: saved ? "checkmark" : "heart")
             }

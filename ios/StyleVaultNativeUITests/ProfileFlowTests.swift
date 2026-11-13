@@ -25,7 +25,7 @@ final class ProfileFlowTests: XCTestCase {
     func testIlTemaSiCambiaDalProfilo() {
         let app = launch(language: "it")
         tab(app, "Profilo").tap()
-        let picker = app.segmentedControls["theme-picker"]
+        let picker = reach(app, app.segmentedControls["theme-picker"])
         XCTAssertTrue(picker.waitForExistence(timeout: 5))
         picker.buttons["Scuro"].tap()
         XCTAssertTrue(picker.buttons["Scuro"].isSelected)
@@ -81,7 +81,7 @@ final class ProfileFlowTests: XCTestCase {
         first.launchArguments = ["-SVMemoryStore", "-SVFakeLock", "-SVFakeLockReset", "-AppleLanguages", "(it)"]
         first.launch()
         tab(first, "Profilo").tap()
-        let toggle = first.switches["lock-toggle"]
+        let toggle = reach(first, first.switches["lock-toggle"])
         XCTAssertTrue(toggle.waitForExistence(timeout: 5))
         XCTAssertTrue(turnOn(toggle))
         first.terminate()
@@ -100,7 +100,7 @@ final class ProfileFlowTests: XCTestCase {
         app.launchArguments = ["-SVMemoryStore", "-SVFakeLock", "-SVFakeLockReset", "-AppleLanguages", "(it)"]
         app.launch()
         tab(app, "Profilo").tap()
-        let toggle = app.switches["lock-toggle"]
+        let toggle = reach(app, app.switches["lock-toggle"])
         XCTAssertTrue(toggle.waitForExistence(timeout: 5))
         XCTAssertTrue(turnOn(toggle))
         tab(app, "Aggiungi").tap()
@@ -148,7 +148,7 @@ final class ProfileFlowTests: XCTestCase {
         XCTAssertTrue(skip.waitForExistence(timeout: 10))
         skip.tap()
         tab(app, "Profilo").tap()
-        let picker = app.segmentedControls["theme-picker"]
+        let picker = reach(app, app.segmentedControls["theme-picker"])
         XCTAssertTrue(picker.waitForExistence(timeout: 5))
         picker.buttons.element(boundBy: 1).tap()
         let login = app.buttons["account-login"]

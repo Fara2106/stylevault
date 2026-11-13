@@ -14,10 +14,17 @@ enum RealisticCache {
         FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0].appendingPathComponent("realistic", isDirectory: true)
     }
 
-    /// Stessa foto del corpo e stessi capi nello stesso ordine: stessa chiave.
+    /// Stessa foto del corpo e stessi capi nello stesso ordine: stessa chiave. Il nome comincia con il segno
+    /// della foto del corpo, così dal nome del file si sa con quale foto è stata fatta l'immagine.
     static func key(bodyKey: String, pieces: [RealisticPlan.Piece]) -> String {
         let text = ([version, bodyKey] + pieces.map { "\($0.slot):\($0.key)" }).joined(separator: "|")
-        return SHA256.hash(data: Data(text.utf8)).map { String(format: "%02x", $0) }.joined()
+        return owner(bodyKey) + hex(text)
+    }
+
+    private static func owner(_ bodyKey: String) -> String { "\(hex(bodyKey).prefix(16))-" }
+
+    private static func hex(_ text: String) -> String {
+        SHA256.hash(data: Data(text.utf8)).map { String(format: "%02x", $0) }.joined()
     }
 
     static func load(_ key: String, in folder: URL = folder) -> CGImage? {
@@ -36,5 +43,18 @@ enum RealisticCache {
     /// Quando cambia la foto del corpo le immagini generate non valgono più.
     static func removeAll(in folder: URL = folder) {
         try? FileManager.default.removeItem(at: folder)
+    }
+
+    /// Le immagini valgono per una foto del corpo: quelle fatte con un'altra, da qualsiasi dispositivo sia
+    /// arrivata la modifica, si tolgono. Si guarda il nome di ogni file, non un segno salvato a parte: così
+    /// anche un'immagine arrivata tardi, o una pulizia non riuscita, si sistema al controllo dopo.
+    /// `bodyKey` è vuota quando la foto non c'è.
+    static func keep(for bodyKey: String, in folder: URL = folder) {
+        guard !bodyKey.isEmpty else { return removeAll(in: folder) }
+        let mine = owner(bodyKey)
+        let names = (try? FileManager.default.contentsOfDirectory(atPath: folder.path)) ?? []
+        for name in names where !name.hasPrefix(mine) {
+            try? FileManager.default.removeItem(at: folder.appendingPathComponent(name))
+        }
     }
 }

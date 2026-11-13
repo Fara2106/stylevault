@@ -71,6 +71,18 @@ final class WardrobeFlowTests: XCTestCase {
         XCTAssertTrue(label.waitForExistence(timeout: 3))
     }
 
+    /// I titoli dei campi sono testi a parte: senza un nome VoiceOver annuncia solo «campo di testo».
+    func testICampiHannoUnNomePerVoiceOver() {
+        let app = launch(language: "it")
+        _ = openForm(app)
+        XCTAssertEqual(app.textFields["item-name"].label, "Nome del capo")
+        let price = app.textFields["item-price"]
+        scroll(app, to: price)
+        XCTAssertEqual(price.label, "Prezzo (€)")
+        XCTAssertTrue(app.textFields["Brand"].exists)
+        XCTAssertTrue(app.textFields["Taglia"].exists)
+    }
+
     func testSalvaPortaAlPrimoErrore() {
         let app = launch(language: "it")
         _ = openForm(app)

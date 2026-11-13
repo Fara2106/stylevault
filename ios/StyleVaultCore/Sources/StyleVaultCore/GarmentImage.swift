@@ -27,6 +27,45 @@ public enum GarmentImage {
         return encoded(flattened, type: .jpeg, quality: jpegQuality)
     }
 
+    /// Limiti per le foto che arrivano da un file importato, cioè da fuori dell'app.
+    public static let importedMaxBytes = 32 * 1024 * 1024
+    public static let importedMaxPixels = 64_000_000
+    static let importedKeptBytes = 8 * 1024 * 1024
+    static let importedKeptSide = 2048
+
+    /// Una foto arrivata da un file importato. Passano solo JPEG, PNG e HEIC di dimensioni credibili: quelle
+    /// come le fa l'app restano com'erano, le altre si rifanno come le foto scelte dalla galleria.
+    /// `nil` se non è una foto accettabile: il file può venire da chiunque.
+    public static func imported(_ data: Data, maxSide: Int = photoMaxSide) -> Data? {
+        guard let found = inspected(data) else { return nil }
+        if found.type == UTType.jpeg.identifier, max(found.width, found.height) <= importedKeptSide,
+           data.count <= importedKeptBytes {
+            return data
+        }
+        return prepared(data, maxSide: maxSide)
+    }
+
+    /// Lo scontorno di un file importato: solo un PNG come quelli dell'app. Se non lo è, l'app lo rifà da sola.
+    public static func importedCutout(_ data: Data) -> Data? {
+        guard let found = inspected(data), found.type == UTType.png.identifier,
+              max(found.width, found.height) <= importedKeptSide, data.count <= importedKeptBytes else { return nil }
+        return data
+    }
+
+    /// Tipo e misure dichiarate, lette dall'intestazione senza decodificare l'immagine.
+    private static func inspected(_ data: Data) -> (type: String, width: Int, height: Int)? {
+        let accepted = [UTType.jpeg, .png, .heic, .heif].map(\.identifier)
+        guard data.count <= importedMaxBytes,
+              let source = CGImageSourceCreateWithData(data as CFData, nil),
+              let type = CGImageSourceGetType(source) as String?, accepted.contains(type),
+              let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+              let width = properties[kCGImagePropertyPixelWidth] as? Int,
+              let height = properties[kCGImagePropertyPixelHeight] as? Int,
+              width > 0, height > 0, width <= importedMaxPixels, height <= importedMaxPixels,
+              width * height <= importedMaxPixels else { return nil }
+        return (type, width, height)
+    }
+
     public static func thumbnail(_ data: Data, maxSide: Int = thumbnailMaxSide) -> CGImage? {
         decoded(data, maxSide: maxSide)
     }

@@ -4,7 +4,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { makeZip, outfitItemIds, toBundle } from './esporta-da-supabase.mjs';
+import { isPublicHttpsUrl, makeZip, outfitItemIds, ownedObjectURL, toBundle } from './esporta-da-supabase.mjs';
 
 const photos = {
   front: (row) => (row.photo_path ? `photos/${row.id}-front.jpg` : null),
@@ -71,4 +71,25 @@ test('lo zip si apre con gli strumenti standard', () => {
   writeFileSync(path, makeZip([['stylevault-export.json', Buffer.from('{"ok":true}')], ['photos/a.jpg', Buffer.from([1, 2, 3])]]));
   execFileSync('unzip', ['-tq', path]);
   assert.equal(execFileSync('unzip', ['-p', path, 'stylevault-export.json']).toString(), '{"ok":true}');
+});
+
+test('con la chiave si scaricano solo le foto nella cartella della persona', () => {
+  const me = '11111111-2222-3333-4444-555555555555';
+  const other = '99999999-2222-3333-4444-555555555555';
+  const address = (path) => ownedObjectURL('https://x.supabase.co', 'wardrobe-photos', me, path);
+  assert.equal(address(`${me}/a.jpg`), `https://x.supabase.co/storage/v1/object/wardrobe-photos/${me}/a.jpg`);
+  assert.equal(address(`${me}/vecchie/a-1.jpg`), `https://x.supabase.co/storage/v1/object/wardrobe-photos/${me}/vecchie/a-1.jpg`);
+  for (const path of [`${other}/a.jpg`, `${me}/../${other}/a.jpg`, `../profile-photos/${other}/a.jpg`, `${me}/a.jpg?download=1`,
+    `${me}/%2e%2e/${other}/a.jpg`, `${me}/a.jpg#x`, `${me}//a.jpg`, `${me}\\a.jpg`, `${me}`, `/${me}/a.jpg`, '', null, 7]) {
+    assert.equal(address(path), null, String(path));
+  }
+});
+
+test('le foto fuori da Storage si scaricano solo da un indirizzo https pubblico', () => {
+  assert.equal(isPublicHttpsUrl('https://negozio.example.com/foto.jpg'), true);
+  for (const address of ['http://negozio.example.com/foto.jpg', 'https://localhost/a.jpg', 'https://localhost./a.jpg',
+    'https://127.0.0.1/a.jpg', 'https://192.168.1.1/a.jpg', 'https://[::1]/a.jpg', 'https://stampante.lan/a.jpg',
+    'https://db.internal./a.jpg', 'https://utente:segreto@negozio.example.com/a.jpg', 'file:///etc/passwd', 'ftp://example.com/a', 'non un indirizzo', '']) {
+    assert.equal(isPublicHttpsUrl(address), false, address);
+  }
 });

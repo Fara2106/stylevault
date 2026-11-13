@@ -1,3 +1,4 @@
+import StyleVaultCore
 import SwiftData
 import SwiftUI
 
@@ -7,8 +8,10 @@ struct SyncNotice: View {
 
     var body: some View {
         if let key {
+            // Sta fisso sopra ogni schermata, come la barra delle tab: oltre questa misura toglierebbe un quinto dello schermo.
             Text(LocalizedStringKey(key))
                 .font(.footnote)
+                .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                 .foregroundStyle(Palette.ink)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 16)
@@ -37,6 +40,8 @@ struct RootTabView: View {
     @Query private var bodyPhotos: [BodyPhoto]
     @State private var router = TabRouter()
     @State private var isOnboardingOpen = false
+    /// Le foto del corpo viste l'ultima volta: all'avvio non c'è nulla da confrontare.
+    @State private var seenBodyKeys: [String]?
     @AppStorage("onboarding.done") private var onboardingDone = false
 
     /// Solo a chi parte da zero: chi ha già capi o foto non deve rifare i primi passi.
@@ -89,5 +94,18 @@ struct RootTabView: View {
         .task(id: profiles.count) { _ = try? ProfileStore.current(in: context) }
         // I doppioni arrivano da iCloud dopo l'avvio: si riguarda ogni volta che cambia il numero dei capi.
         .task(id: items.count) { try? DuplicateStore.clean(in: context) }
+        // Una foto del corpo cancellata o cambiata su un altro dispositivo arriva da iCloud: qui restano da
+        // togliere i suoi scontorni, le immagini generate con lei e le copie temporanee che la contengono
+        // (il file esportato prima, le foto preparate per la prova).
+        .task(id: bodyKeys) {
+            if let seenBodyKeys, seenBodyKeys != bodyKeys { TemporaryFiles.forgetPhotos() }
+            seenBodyKeys = bodyKeys
+            await CutoutCache.shared.keepBodyCutouts(for: Set(bodyKeys))
+            RealisticCache.keep(for: BodyPhotoStore.byView(bodyPhotos)[.front].map(BodyPhotoStore.key(of:)) ?? "")
+        }
+    }
+
+    private var bodyKeys: [String] {
+        BodyPhotoStore.byView(bodyPhotos).values.map(BodyPhotoStore.key(of:)).sorted()
     }
 }

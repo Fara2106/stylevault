@@ -228,7 +228,7 @@ public enum ExportArchive {
 
         public func photo(_ name: String?) throws -> Data? {
             guard let name else { return nil }
-            return try reader.data(name: name)
+            return try reader.data(name: name, limit: GarmentImage.importedMaxBytes)
         }
     }
 

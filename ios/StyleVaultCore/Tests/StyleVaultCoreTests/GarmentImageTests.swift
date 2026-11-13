@@ -113,4 +113,46 @@ final class GarmentImageTests: XCTestCase {
         let out = await GarmentImage.cutout(plain)
         XCTAssertNil(out)
     }
+
+
+    // MARK: Foto da un file importato
+
+    func testUnaFotoComeQuelleDellAppEntraComE() throws {
+        let photo = encode(makeImage(width: 400, height: 300), type: .jpeg)
+        XCTAssertEqual(GarmentImage.imported(photo), photo)
+    }
+
+    func testUnaFotoInUnAltroFormatoOTroppoGrandeSiRifa() throws {
+        let png = try XCTUnwrap(GarmentImage.imported(encode(makeImage(width: 300, height: 200), type: .png)))
+        XCTAssertEqual(CGImageSourceGetType(try XCTUnwrap(CGImageSourceCreateWithData(png as CFData, nil))) as String?, UTType.jpeg.identifier)
+        let big = try XCTUnwrap(GarmentImage.imported(encode(makeImage(width: 3000, height: 2000), type: .jpeg)))
+        XCTAssertEqual(try decode(big).width, 1600)
+    }
+
+    func testCiòCheNonEUnaFotoNonEntra() throws {
+        XCTAssertNil(GarmentImage.imported(Data([1, 2, 3])))
+        XCTAssertNil(GarmentImage.imported(Data()))
+        // Formati che l'app non produce: il file può venire da chiunque, meglio non darli in pasto al decodificatore
+        XCTAssertNil(GarmentImage.imported(encode(makeImage(width: 40, height: 30), type: .tiff)))
+        XCTAssertNil(GarmentImage.imported(encode(makeImage(width: 40, height: 30), type: .gif)))
+        XCTAssertNil(GarmentImage.imported(encode(makeImage(width: 40, height: 30), type: .bmp)))
+    }
+
+    func testUnaFotoCheDichiaraMisureEnormiNonEntra() throws {
+        // Un PNG piccolo che nell'intestazione dichiara 60.000 × 60.000 pixel
+        var png = encode(makeImage(width: 40, height: 30), type: .png)
+        let header = try XCTUnwrap(png.range(of: Data("IHDR".utf8)))
+        let side: [UInt8] = [0x00, 0x00, 0xEA, 0x60]
+        png.replaceSubrange(header.upperBound..<(header.upperBound + 8), with: side + side)
+        XCTAssertNil(GarmentImage.imported(png))
+        XCTAssertNil(GarmentImage.importedCutout(png))
+    }
+
+    func testLoScontornoImportatoESoloUnPNG() throws {
+        let png = encode(makeImage(width: 200, height: 300, alpha: 0.5), type: .png)
+        XCTAssertEqual(GarmentImage.importedCutout(png), png)
+        XCTAssertNil(GarmentImage.importedCutout(encode(makeImage(width: 200, height: 300), type: .jpeg)))
+        XCTAssertNil(GarmentImage.importedCutout(encode(makeImage(width: 3000, height: 300), type: .png)))
+        XCTAssertNil(GarmentImage.importedCutout(Data([4])))
+    }
 }

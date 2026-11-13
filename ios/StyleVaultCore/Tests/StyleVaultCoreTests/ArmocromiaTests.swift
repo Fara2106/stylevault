@@ -152,4 +152,12 @@ final class ArmocromiaTests: XCTestCase {
         XCTAssertNil(ShopLinks.one(shop: "boh", query: "x", language: "it"))
         XCTAssertEqual(ShopLinks.home(kind: .makeup, language: "it").map(\.label), ["Sephora", "Douglas"])
     }
+
+
+    func testUnAffidabilitaFuoriScalaTornaFraZeroEUno() throws {
+        // Il verdetto può arrivare da un file importato: con 1e18 la schermata si chiudeva
+        XCTAssertEqual(ArmocromiaVerdict.decode(Data(#"{"season":"deep-winter","confidence":1e18}"#.utf8))?.confidence, 1)
+        XCTAssertEqual(ArmocromiaVerdict.decode(Data(#"{"season":"deep-winter","confidence":-3}"#.utf8))?.confidence, 0)
+        XCTAssertEqual(ArmocromiaVerdict.decode(Data(#"{"season":"deep-winter","confidence":0.4}"#.utf8))?.confidence, 0.4)
+    }
 }

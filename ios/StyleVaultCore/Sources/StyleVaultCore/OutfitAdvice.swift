@@ -63,9 +63,8 @@ public enum OutfitAdvisor {
         if weather.windSpeed > 25 { result.append(.windStrong) }
 
         // Stessa settimana che pesa sul punteggio. Il giorno stesso non conta: è l'outfit appena registrato.
-        let recent = recentWear.filter { wear in
-            CalendarMath.daysBetween(wear.date, and: weather.date).map { (1...7).contains($0) } ?? false
-        }
+        var before = CalendarMath.DaysBefore(weather.date, within: 7)
+        let recent = recentWear.filter { wear in before.days(from: wear.date).map { (1...7).contains($0) } ?? false }
         let wornIDs = pieces.map(\.id).filter { id in recent.contains { $0.itemID == id } }
         if let latest = recent.filter({ wornIDs.contains($0.itemID) }).map(\.date).max() {
             result.append(.wornRecently(itemIDs: wornIDs, date: latest))

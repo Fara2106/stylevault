@@ -152,6 +152,8 @@ final class OutfitFlowTests: XCTestCase {
         let add = app.buttons["outfit-empty-add"]
         XCTAssertTrue(add.waitForExistence(timeout: 15))
         XCTAssertFalse(app.buttons["outfit-generate"].exists)
+        // Sugli schermi piccoli sta più in basso: deve bastare scorrere, senza restare sotto la barra
+        reach(app, add, tries: 2)
         XCTAssertTrue(add.isHittable, "il tasto per aggiungere non deve finire sotto la barra")
         add.tap()
         XCTAssertTrue(app.otherElements["add-sheet"].waitForExistence(timeout: 5))

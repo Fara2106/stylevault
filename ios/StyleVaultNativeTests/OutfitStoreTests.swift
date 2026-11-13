@@ -98,4 +98,27 @@ import XCTest
         planned.itemIDs = [UUID()]
         XCTAssertEqual(OutfitStore.recentWear(from: [worn, planned]), [RecentWear(itemID: id.uuidString, date: "2026-11-01")])
     }
+
+    func testLoStoricoVecchioEIDoppioniNonSiPreparano() throws {
+        _ = try context()
+        let old = CalendarEntry()
+        old.day = "2026-10-01"
+        old.itemIDs = [UUID()]
+        let recent = CalendarEntry()
+        recent.day = "2026-11-10"
+        let id = UUID()
+        recent.itemIDs = Array(repeating: id, count: 1_000)
+        XCTAssertEqual(OutfitStore.recentWear(from: [old, recent], since: "2026-11-05"),
+                       [RecentWear(itemID: id.uuidString, date: "2026-11-10")])
+        XCTAssertEqual(OutfitStore.recentWear(from: [old, recent]).count, 2)
+    }
+
+    func testUnCapoScrittoDueVolteNelGiornoSiMostraUnaVolta() throws {
+        _ = try context()
+        let item = Item()
+        let other = Item()
+        let entry = CalendarEntry()
+        entry.itemIDs = [item.id, other.id, item.id, item.id]
+        XCTAssertEqual(entry.present(in: [item, other]).map(\.id), [item.id, other.id])
+    }
 }

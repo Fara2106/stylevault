@@ -72,6 +72,7 @@ targets:
         NSCameraUsageDescription: Per fotografare te e i tuoi capi.
         NSFaceIDUsageDescription: Serve per sbloccare l'app, se attivi il blocco nel Profilo.
         NSLocationWhenInUseUsageDescription: Per mostrarti il meteo di dove sei e consigliarti cosa indossare.
+        NSPhotoLibraryAddUsageDescription: Per salvare tra le tue foto le immagini che scegli di tenere.
         NSLocationDefaultAccuracyReduced: true
         CFBundleDisplayName: Style Vault
         CFBundleShortVersionString: "1.0"

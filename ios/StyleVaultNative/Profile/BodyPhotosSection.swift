@@ -35,7 +35,7 @@ struct BodyPhotosSection: View {
                         } else {
                             VStack(spacing: 4) {
                                 Image(systemName: "camera")
-                                Text("profile.bodyPhotoMissing").font(.caption)
+                                Text("profile.bodyPhotoMissing").font(.caption).lineLimit(1).minimumScaleFactor(0.5)
                             }
                             .foregroundStyle(Palette.muted)
                         }
@@ -43,6 +43,7 @@ struct BodyPhotosSection: View {
                     .clipShape(RoundedRectangle(cornerRadius: 10))
                     .overlay(RoundedRectangle(cornerRadius: 10).stroke(Palette.border))
                 Text(LocalizedStringKey(view.labelKey)).font(.caption).foregroundStyle(Palette.ink)
+                    .lineLimit(1).minimumScaleFactor(0.5)
             }
             .contentShape(Rectangle())
         }

@@ -11,7 +11,7 @@ struct NewPasswordView: View {
         ScrollView {
             VStack(spacing: 14) {
                 Text("native.auth.newPassword")
-                    .font(.display(26))
+                    .displayFont(26)
                     .foregroundStyle(Palette.ink)
                     .padding(.top, 60)
                 if let email = auth.session?.user.email {

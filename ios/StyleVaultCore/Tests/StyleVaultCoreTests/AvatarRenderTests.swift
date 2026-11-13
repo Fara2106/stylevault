@@ -113,6 +113,28 @@ final class AvatarRenderTests: XCTestCase {
         XCTAssertTrue(names.contains { $0.hasPrefix("item-") })
     }
 
+    func testRestanoSoloGliScontorniDelleFotoDelCorpoCheEsistono() async throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let cache = CutoutCache(folder: folder)
+        let photo = try fixture("maglione")
+        _ = try await cache.cutout(image: photo, key: "body-front-A-1", allInstances: false)
+        _ = try await cache.cutout(image: photo, key: "body-front-A-2", allInstances: false)
+        _ = try await cache.cutout(image: photo, key: "item-1", allInstances: true)
+        // La foto è stata cambiata su un altro dispositivo: vale solo la chiave nuova
+        await cache.keepBodyCutouts(for: ["body-front-A-2"])
+        var names = try FileManager.default.contentsOfDirectory(atPath: folder.path)
+        XCTAssertFalse(names.contains { $0.hasPrefix("body-front-A-1") })
+        XCTAssertTrue(names.contains { $0.hasPrefix("body-front-A-2") })
+        XCTAssertTrue(names.contains { $0.hasPrefix("item-") })
+        let kept = await cache.keysInMemory
+        XCTAssertFalse(kept.contains("body-front-A-1"))
+        // Cancellata: non resta nessuno scontorno del corpo
+        await cache.keepBodyCutouts(for: [])
+        names = try FileManager.default.contentsOfDirectory(atPath: folder.path)
+        XCTAssertFalse(names.contains { $0.hasPrefix("body-") })
+        XCTAssertTrue(names.contains { $0.hasPrefix("item-") })
+    }
+
     private func solidJPEG() throws -> Data {
         let ctx = try XCTUnwrap(CGContext(data: nil, width: 300, height: 300, bitsPerComponent: 8, bytesPerRow: 0,
                                           space: CGColorSpaceCreateDeviceRGB(),

@@ -11,6 +11,10 @@ struct CalendarView: View {
     @Query(sort: \Item.createdAt) private var items: [Item]
     @Query private var profiles: [Profile]
 
+    /// Lato del cerchio del giorno: cresce con il testo, ma sette colonne devono stare nello schermo.
+    @ScaledMetric(relativeTo: .subheadline) private var scaledDaySide: CGFloat = 32
+    private var daySide: CGFloat { min(scaledDaySide, 44) }
+
     @State private var year = CalendarMath.local.component(.year, from: .now)
     @State private var month = CalendarMath.local.component(.month, from: .now)
     @State private var selected = CalendarMath.iso(.now)
@@ -36,7 +40,7 @@ struct CalendarView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("calendar.title").font(.display(30)).foregroundStyle(Palette.ink)
+                        Text("calendar.title").displayFont(30).foregroundStyle(Palette.ink)
                         Text("calendar.subtitle").font(.footnote).foregroundStyle(Palette.muted)
                     }
                     monthCard
@@ -137,8 +141,11 @@ struct CalendarView: View {
             VStack(spacing: 2) {
                 Text(verbatim: "\(day)")
                     .font(.subheadline)
+                    // Con il testo grande «30» non entra nel cerchio: si rimpicciolisce quanto basta invece di diventare «…»
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.4)
                     .foregroundStyle(isSelected ? Palette.bg : Palette.ink)
-                    .frame(width: 32, height: 32)
+                    .frame(width: daySide, height: daySide)
                     .background(isSelected ? Palette.ink : Color.clear, in: Circle())
                     .overlay {
                         if iso == today, !isSelected { Circle().stroke(Palette.ink) }
@@ -200,7 +207,10 @@ struct CalendarView: View {
     }
 
     private func repeatDate(for entry: CalendarEntry) -> String? {
-        CalendarMath.repeatDate(for: entry.repeatLog, in: entries.map(\.repeatLog))
+        // Conta solo la settimana prima: il resto dello storico non si prepara nemmeno
+        let week = CalendarMath.window(before: entry.day, days: 7)
+        let near = entries.filter { $0.day != entry.day && !CalendarMath.isSurelyOutside($0.day, week) }
+        return CalendarMath.repeatDate(for: entry.repeatLog, in: near.map(\.repeatLog))
     }
 
     private func card(for entry: CalendarEntry) -> some View {

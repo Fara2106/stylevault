@@ -24,6 +24,22 @@ extension XCTestCase {
         }
     }
 
+    /// Sugli schermi piccoli un controllo può stare più in basso: si scorre finché si può toccare.
+    /// Con la tastiera aperta si trascina dalla parte alta, dove c'è ancora il contenuto.
+    @discardableResult func reach(_ app: XCUIApplication, _ element: XCUIElement, tries: Int = 8) -> XCUIElement {
+        // Sugli schermi grandi c'è già: prima di scorrere si lascia alla schermata il tempo di comparire
+        _ = element.waitForExistence(timeout: 3)
+        for _ in 0..<tries where !(element.exists && element.isHittable) {
+            if app.keyboards.firstMatch.exists {
+                app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.30))
+                    .press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.08)))
+            } else {
+                app.swipeUp(velocity: .slow)
+            }
+        }
+        return element
+    }
+
     func waitForDisappearance(of element: XCUIElement) -> Bool {
         let p = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: element)
         let gone = XCTWaiter().wait(for: [p], timeout: 4) == .completed

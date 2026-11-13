@@ -95,7 +95,7 @@ struct FeedbackView: View {
     private var sent: some View {
         VStack(spacing: 14) {
             Image(systemName: "checkmark.circle").font(.system(size: 36)).foregroundStyle(Palette.ink)
-            Text("feedback.sentTitle").font(.display(24)).foregroundStyle(Palette.ink)
+            Text("feedback.sentTitle").displayFont(24).foregroundStyle(Palette.ink)
                 .accessibilityIdentifier("feedback-sent")
             Text("feedback.sentText").foregroundStyle(Palette.muted).multilineTextAlignment(.center)
             Button { dismiss() } label: { PrimaryLabel("feedback.backToProfile") }.buttonStyle(.plain)

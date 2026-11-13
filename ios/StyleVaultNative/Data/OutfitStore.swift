@@ -30,7 +30,9 @@ extension CalendarEntry {
     /// I capi di questo giorno che ci sono ancora, nell'ordine in cui sono stati registrati.
     func present(in items: [Item]) -> [Item] {
         let known = Item.byID(items)
-        return itemIDs.compactMap { known[$0.uuidString] }
+        // Lo stesso capo scritto due volte nello stesso giorno si mostra una volta
+        var seen = Set<UUID>()
+        return itemIDs.filter { seen.insert($0).inserted }.compactMap { known[$0.uuidString] }
     }
 
     /// I nomi dei capi cancellati, per quelli che si conoscono.
@@ -91,9 +93,10 @@ extension CalendarEntry {
     }
 
     /// Per la penalità di ripetizione e il consiglio "già indossato".
-    static func recentWear(from entries: [CalendarEntry]) -> [RecentWear] {
-        entries.filter(\.worn).flatMap { entry in
-            entry.itemIDs.map { RecentWear(itemID: $0.uuidString, date: entry.day) }
+    /// `since`: i giorni prima non servono a chi chiede (i giorni si confrontano come testo) e non si preparano.
+    static func recentWear(from entries: [CalendarEntry], since: String? = nil) -> [RecentWear] {
+        entries.filter { entry in entry.worn && (since.map { entry.day >= $0 } ?? true) }.flatMap { entry in
+            Set(entry.itemIDs).map { RecentWear(itemID: $0.uuidString, date: entry.day) }
         }
     }
 }

@@ -26,6 +26,52 @@ private final class ScriptedGenerator: RealisticGenerating, @unchecked Sendable 
     }
 }
 
+/// Finto generatore che, come il modello vero mentre si carica, non si accorge dell'annullamento finché non lo si lascia andare.
+private final class GatedGenerator: RealisticGenerating, @unchecked Sendable {
+    struct Failure: Error {}
+
+    var isAvailable = true
+    var failsWhenReleased = false
+    private let lock = NSLock()
+    private var isOpen = false
+    private var waiting: [CheckedContinuation<Void, Never>] = []
+    private var running = 0
+    private var startedCount = 0
+    private var peak = 0
+
+    var started: Int { lock.withLock { startedCount } }
+    var mostTogether: Int { lock.withLock { peak } }
+
+    func release() {
+        let resumed = lock.withLock {
+            isOpen = true
+            defer { waiting = [] }
+            return waiting
+        }
+        resumed.forEach { $0.resume() }
+    }
+
+    func generate(body: Data, bodyKey: String, pieces: [RealisticPlan.Piece],
+                  progress: @escaping @Sendable (RealisticProgress) -> Void) async throws -> CGImage {
+        lock.withLock {
+            running += 1
+            startedCount += 1
+            peak = max(peak, running)
+        }
+        defer { lock.withLock { running -= 1 } }
+        await withCheckedContinuation { continuation in
+            let goes = lock.withLock {
+                if isOpen { return true }
+                waiting.append(continuation)
+                return false
+            }
+            if goes { continuation.resume() }
+        }
+        if failsWhenReleased { throw Failure() }
+        return RealisticTryOnTests.solid(width: 20, height: 30)
+    }
+}
+
 @MainActor final class RealisticTryOnTests: XCTestCase {
     private var container: ModelContainer?
     private var folder: URL!
@@ -170,6 +216,29 @@ private final class ScriptedGenerator: RealisticGenerating, @unchecked Sendable 
         XCTAssertNil(RealisticCache.load("k", in: folder))
     }
 
+    func testLeImmaginiValgonoSoloPerLaFotoDelCorpoDiAdesso() throws {
+        let pieces = plan([try item("Maglia", "tops")]).pieces
+        let image = Self.solid(width: 20, height: 30)
+        let first = RealisticCache.key(bodyKey: "body-front-A-1", pieces: pieces)
+        let second = RealisticCache.key(bodyKey: "body-front-A-2", pieces: pieces)
+        RealisticCache.save(image, key: first, in: folder)
+        // Stessa foto: l'immagine resta
+        RealisticCache.keep(for: "body-front-A-1", in: folder)
+        XCTAssertNotNil(RealisticCache.load(first, in: folder))
+        // Foto cambiata su un altro dispositivo: l'immagine era fatta con quella di prima
+        RealisticCache.keep(for: "body-front-A-2", in: folder)
+        XCTAssertNil(RealisticCache.load(first, in: folder))
+        // Un'immagine fatta con la foto di prima e salvata dopo la pulizia sparisce al controllo dopo; quella di adesso resta
+        RealisticCache.save(image, key: first, in: folder)
+        RealisticCache.save(image, key: second, in: folder)
+        RealisticCache.keep(for: "body-front-A-2", in: folder)
+        XCTAssertNil(RealisticCache.load(first, in: folder))
+        XCTAssertNotNil(RealisticCache.load(second, in: folder))
+        // Foto cancellata
+        RealisticCache.keep(for: "", in: folder)
+        XCTAssertNil(RealisticCache.load(second, in: folder))
+    }
+
     // MARK: - Generazione
 
     private func model(_ items: [Item], awake: @escaping (Bool) -> Void = { _ in }) -> RealisticTryOnModel {
@@ -231,6 +300,108 @@ private final class ScriptedGenerator: RealisticGenerating, @unchecked Sendable 
         XCTAssertEqual(made.phase, .idle)
         XCTAssertNil(made.result)
         XCTAssertNil(RealisticCache.load(RealisticCache.key(bodyKey: "body-1", pieces: made.plan.pieces), in: folder))
+    }
+
+    // MARK: - Annullare
+
+    /// Aspetta che una condizione diventi vera, senza un tempo fisso.
+    private func eventually(_ condition: () -> Bool) async {
+        for _ in 0..<500 where !condition() { try? await Task.sleep(for: .milliseconds(10)) }
+    }
+
+    func testAnnullareEImmediatoAncheSeIlModelloNonSiFermaSubito() async throws {
+        var awake: [Bool] = []
+        let made = model([try item("Maglia", "tops")]) { awake.append($0) }
+        let generator = GatedGenerator()
+        made.generate(body: Data([9]), bodyKey: "body-1", with: generator)
+        await eventually { generator.started == 1 }
+        made.cancel()
+        // Il modello sta ancora caricando e non può fermarsi: chi ha toccato «Annulla» lo vede subito lo stesso
+        XCTAssertEqual(made.phase, .idle)
+        XCTAssertNil(made.progress)
+        generator.release()
+        await made.waitUntilFinished()
+        // L'immagine arrivata dopo l'annullamento non si mostra e non si salva
+        XCTAssertEqual(made.phase, .idle)
+        XCTAssertNil(made.result)
+        XCTAssertNil(RealisticCache.load(RealisticCache.key(bodyKey: "body-1", pieces: made.plan.pieces), in: folder))
+        XCTAssertEqual(awake, [true, false])
+    }
+
+    func testCambiataLaFotoDelCorpoLImmagineInArrivoNonSiSalva() async throws {
+        let made = model([try item("Maglia", "tops")])
+        let generator = GatedGenerator()
+        made.generate(body: Data([9]), bodyKey: "body-1", with: generator)
+        await eventually { generator.started == 1 }
+        // La foto del corpo sparisce (anche da un altro dispositivo) mentre il modello lavora
+        made.forget()
+        XCTAssertEqual(made.phase, .idle)
+        generator.release()
+        await made.waitUntilFinished()
+        XCTAssertEqual(made.phase, .idle)
+        XCTAssertNil(made.result)
+        XCTAssertNil(RealisticCache.load(RealisticCache.key(bodyKey: "body-1", pieces: made.plan.pieces), in: folder))
+    }
+
+    func testCambiataLaFotoDelCorpoLImmagineMostrataSparisce() async throws {
+        let made = model([try item("Maglia", "tops")])
+        made.generate(body: Data([9]), bodyKey: "body-1", with: ScriptedGenerator())
+        await made.waitUntilFinished()
+        XCTAssertEqual(made.phase, .done)
+        made.forget()
+        XCTAssertEqual(made.phase, .idle)
+        XCTAssertNil(made.result)
+        XCTAssertFalse(made.isFromCache)
+    }
+
+    func testUnErroreArrivatoDopoLAnnullamentoNonSiMostra() async throws {
+        let made = model([try item("Maglia", "tops")])
+        let generator = GatedGenerator()
+        generator.failsWhenReleased = true
+        made.generate(body: Data([9]), bodyKey: "body-1", with: generator)
+        await eventually { generator.started == 1 }
+        made.cancel()
+        generator.release()
+        await made.waitUntilFinished()
+        XCTAssertEqual(made.phase, .idle)
+    }
+
+    func testDopoUnAnnullamentoLaNuovaGenerazioneAspettaLaVecchia() async throws {
+        var awake: [Bool] = []
+        let made = model([try item("Maglia", "tops")]) { awake.append($0) }
+        let generator = GatedGenerator()
+        made.generate(body: Data([9]), bodyKey: "body-1", with: generator)
+        await eventually { generator.started == 1 }
+        made.cancel()
+        made.generate(body: Data([9]), bodyKey: "body-1", with: generator)
+        XCTAssertTrue(made.isGenerating)
+        // La vecchia non ha ancora lasciato il modello: la nuova non parte, altrimenti sarebbe in memoria due volte
+        try await Task.sleep(for: .milliseconds(200))
+        XCTAssertEqual(generator.started, 1)
+        generator.release()
+        await made.waitUntilFinished()
+        XCTAssertEqual(generator.started, 2)
+        XCTAssertEqual(generator.mostTogether, 1)
+        XCTAssertEqual(made.phase, .done)
+        XCTAssertNotNil(made.result)
+        // Lo schermo resta acceso fino alla fine della seconda
+        XCTAssertEqual(awake, [true, false, true, false])
+    }
+
+    func testAnnullareUnaRigenerazioneLasciaLImmagineDiPrima() async throws {
+        let made = model([try item("Maglia", "tops")])
+        made.generate(body: Data([9]), bodyKey: "body-1", with: ScriptedGenerator())
+        await made.waitUntilFinished()
+        XCTAssertEqual(made.phase, .done)
+        let generator = GatedGenerator()
+        made.generate(body: Data([9]), bodyKey: "body-1", with: generator)
+        await eventually { generator.started == 1 }
+        made.cancel()
+        XCTAssertEqual(made.phase, .done)
+        XCTAssertNotNil(made.result)
+        generator.release()
+        await made.waitUntilFinished()
+        XCTAssertEqual(made.phase, .done)
     }
 
     func testLaPercentualeNonSuperaCentoENonScendeSottoZero() {

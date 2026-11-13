@@ -32,4 +32,18 @@ final class CalendarMathTests: XCTestCase {
         XCTAssertEqual(CalendarMath.repeatDate(for: entry, in: logs + [entry]), "2026-07-07")
         XCTAssertNil(CalendarMath.repeatDate(for: RepeatLog(id: "f", date: "2026-07-08", itemIDs: ["z"]), in: logs))
     }
+
+    func testLaSettimanaPrimaComeTesto() {
+        let week = CalendarMath.window(before: "2026-03-03", days: 7)
+        XCTAssertEqual(week, "2026-02-24"..."2026-03-03")
+        XCTAssertFalse(CalendarMath.isSurelyOutside("2026-02-24", week))
+        XCTAssertFalse(CalendarMath.isSurelyOutside("2026-03-03", week))
+        XCTAssertTrue(CalendarMath.isSurelyOutside("2026-02-23", week))
+        XCTAssertTrue(CalendarMath.isSurelyOutside("2026-03-04", week))
+        // Un giorno scritto in un altro modo non si scarta qui: lo decidono i conti veri
+        XCTAssertFalse(CalendarMath.isSurelyOutside("2026-3-1", week))
+        // Senza un giorno valido non c'è finestra, e niente si scarta
+        XCTAssertNil(CalendarMath.window(before: "domani", days: 7))
+        XCTAssertFalse(CalendarMath.isSurelyOutside("2020-01-01", nil))
+    }
 }

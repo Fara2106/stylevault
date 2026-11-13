@@ -15,11 +15,12 @@ public struct RepeatLog: Equatable, Sendable {
 
 /// I giorni sono stringhe `yyyy-MM-dd`, come in `CalendarEntry`: cambiando fuso non si spostano.
 public enum CalendarMath {
-    private static var utc: Calendar {
+    /// Costruito una volta: i conti sui giorni si fanno per ogni capo indossato, a ogni ridisegno.
+    private static let utc: Calendar = {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(secondsFromGMT: 0) ?? .gmt
         return calendar
-    }
+    }()
 
     /// Il calendario del telefono può essere buddista o giapponese: i giorni dell'app sono sempre gregoriani.
     public static var local: Calendar {
@@ -52,6 +53,40 @@ public enum CalendarMath {
     }
 
     /// Giorni da `start` a `end`; negativo se `end` viene prima.
+    /// Da `days` giorni prima di `day` fino a `day`, come testo. I giorni scritti per esteso (`yyyy-MM-dd`) si
+    /// confrontano come testo: così si scarta subito ciò che è fuori, senza conti di calendario per ogni voce.
+    public static func window(before day: String, days: Int) -> ClosedRange<String>? {
+        guard isValid(day), let end = date(day), let start = utc.date(byAdding: .day, value: -days, to: end) else { return nil }
+        return iso(start, calendar: utc)...day
+    }
+
+    /// Fuori dalla finestra di sicuro. Vale solo per i giorni scritti per esteso: gli altri restano ai conti veri.
+    public static func isSurelyOutside(_ day: String, _ window: ClosedRange<String>?) -> Bool {
+        guard let window, day.utf8.count == 10 else { return false }
+        return !window.contains(day)
+    }
+
+    /// Quanti giorni prima di un giorno fisso cade ogni data dello storico. Lo storico ripete le stesse date
+    /// (una per ogni capo indossato): il conto di calendario si fa una volta per data, e mai fuori dalla finestra.
+    struct DaysBefore {
+        private let reference: String
+        private let recent: ClosedRange<String>?
+        private var known: [String: Int?] = [:]
+
+        init(_ reference: String, within days: Int) {
+            self.reference = reference
+            recent = CalendarMath.window(before: reference, days: days)
+        }
+
+        mutating func days(from date: String) -> Int? {
+            guard !CalendarMath.isSurelyOutside(date, recent) else { return nil }
+            if let found = known[date] { return found }
+            let days = CalendarMath.daysBetween(date, and: reference)
+            known[date] = .some(days)
+            return days
+        }
+    }
+
     public static func daysBetween(_ start: String, and end: String) -> Int? {
         guard let first = date(start), let second = date(end) else { return nil }
         return utc.dateComponents([.day], from: first, to: second).day
@@ -70,9 +105,10 @@ public enum CalendarMath {
     /// La data più vicina, nei 7 giorni prima di `entry`, in cui è stato messo uno dei suoi capi.
     public static func repeatDate(for entry: RepeatLog, in logs: [RepeatLog]) -> String? {
         let ids = Set(entry.itemIDs)
+        let week = window(before: entry.date, days: 7)
         return logs
             .filter { log in
-                guard log.id != entry.id, log.date != entry.date,
+                guard log.id != entry.id, log.date != entry.date, !isSurelyOutside(log.date, week),
                       let days = daysBetween(log.date, and: entry.date), (1...7).contains(days) else { return false }
                 return log.itemIDs.contains(where: ids.contains)
             }

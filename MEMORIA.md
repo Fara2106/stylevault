@@ -20,6 +20,175 @@ Richiesta di Lorenzo: finire tutte le schermate nella notte e mandarla a Mary. F
 - Resta da fare prima dell'App Store: WeatherKit, iPhone Duo, schema CloudKit in Production (senza, in TestFlight i dati non passano fra dispositivi:
   da verificare), testi legali da riscrivere (la pagina privacy descrive ancora il sito).
 
+## Novità 2026-11-12 — Altri test al simulatore, testo molto grande, audit di sicurezza
+
+Richieste di Lorenzo: «fai comunque altri test al simulatore e correggi tutto quello che trovi», poi `/security-audit` con
+«fai un controllo completo». Tutto sul ramo `feat/app-nativa`, solo locale, niente push e niente build. **Queste correzioni
+non sono nella build 12**: entrano dalla prossima build.
+
+**Test nuovi rispetto ai giri di ieri**
+- Testo molto grande (`content_size accessibility-extra-large`, AX3), «Aumenta contrasto» in scuro, e l'utente distratto nella
+  versione realistica: annulla e riprova subito, chiude a metà, manda l'app in secondo piano, doppio tocco, «Salva o condividi»,
+  esporta e poi cancella la foto del corpo. Script in `.superpowers/sdd/rc/` (fuori dal repo): `round-15.sh` rifà tutto da zero,
+  `giro-distratto.sh` + `TempDistractedTests.swift`, il giro normale ora fa 34 schermate.
+
+**Difetti trovati e corretti**
+- *Versione realistica, «Annulla»:* la schermata tornava all'inizio solo quando il modello si accorgeva dell'annullamento (durante
+  il caricamento non se ne accorge). Ora «Annulla» si vede subito; la generazione vecchia finisce da sola e il suo risultato si
+  butta; una nuova aspetta che la vecchia abbia lasciato il modello, così non sta mai in memoria due volte (`RealisticTryOnView.swift`,
+  contatore `run`; 4 test con `GatedGenerator`).
+- *«Salva immagine» dal foglio di condivisione:* mancava `NSPhotoLibraryAddUsageDescription`, quindi iOS non offriva la voce. Aggiunta
+  in `project.yml` e `InfoPlist.xcstrings` (it/en): «Per salvare tra le tue foto le immagini che scegli di tenere.» È un permesso di
+  sola aggiunta, chiesto da iOS al primo salvataggio. Visto sul simulatore: la voce c'è, compare l'avviso di sistema con il testo.
+- *Testo molto grande:* righe che si stringevano o si tagliavano. Nuovi `AdaptiveRow` (in riga se ci sta, sennò in colonna) e
+  `AccessibleRow` (in colonna solo con le misure dell'accessibilità) in `App/AdaptiveRow.swift`. Toccati: Modifica/Elimina nel
+  dettaglio, Salva/Indossa e punteggio nella scheda outfit, Apri ChatGPT/Gemini, foto del retro nel form, città + «La mia
+  posizione», riga del meteo, giorni del calendario (il numero non va più a capo), etichette delle foto del corpo, statistiche,
+  negozi e palette dell'armocromia. L'avviso fisso «Sincronizzazione non attiva» si ferma alla misura AX1: oltre toglieva un
+  quinto dello schermo a ogni schermata. A misura normale l'aspetto non cambia.
+
+**Audit di sicurezza (skill `security-audit`, profilo standard, solo lettura del codice)**
+- Rapporto in `~/security-audit-skill/stylevault/run-1/` (`REPORT.md` in italiano, `FINDINGS-DETAIL.md`, `NEEDS-VALIDATION.md`,
+  `HARDENING-NOTES.md`). 41 unità, 58 agenti, nessun codice eseguito. **7 difetti confermati (1 medio, 6 bassi), tutti corretti
+  qui; 11 punti che il codice da solo non può decidere.** Nessuno critico o alto.
+- Confermati e corretti:
+  1. (medio) `scripts/esporta-da-supabase.mjs` scaricava con la chiave service_role i percorsi scritti dall'utente senza controllare
+     che fossero nella sua cartella. Ora `ownedObjectURL`: primo segmento = id della persona, segmenti semplici, codificati; l'id
+     passato deve essere un UUID.
+  2. Lo stesso script scaricava qualunque `photo_url`: ora solo https pubblico, niente reindirizzamenti, solo `image/*`, 25 MB, 60 s.
+  3. Importa accettava foto del corpo con un `kind` qualunque (righe nascoste e non cancellabili): ora solo front/side/back, una
+     per tipo, e l'esportazione salta le righe sconosciute.
+  4. Importa riempiva le foto mancanti dei capi già presenti anche se l'avviso dice «ciò che hai resta com'è»: resta (serve a chi
+     importa due volte), ma solo se il capo non ha foto, mai lo scontorno, e il riepilogo dice «Foto recuperate: N».
+  5. Un verdetto di armocromia importato con `confidence` fuori scala mandava in crash la schermata: valore limitato a 0…1.
+  6. `ZipWriter` troncava a 16 bit nome e numero di voci: ora rifiuta (`ZipError.tooLarge`).
+  7. Scontorni del corpo e immagini generate restavano in Caches sugli altri dispositivi dopo la cancellazione della foto: ora si
+     riallineano ai dati (`CutoutCache.keepBodyCutouts`, `RealisticCache.keep`, `RootTabView.task(id: bodyKeys)`).
+- Mitigati anche se «da verificare»: foto importate controllate (solo JPEG/PNG/HEIC, max 64 MP dichiarati e 32 MB, ricodificate
+  se oltre 2048 px o 8 MB: `GarmentImage.imported`), tetto di 4 GB di foto e 50.000 record per importazione, copie temporanee
+  (`tmp/prova`, zip esportato) cancellate insieme alla foto del corpo e riga «Salva o invia il file» che sparisce.
+- Igiene: `.gitignore` copre `.env*`, `supabase/.temp/` e gli zip in radice; `keepalive.yml` con `permissions: {}`.
+- **Da verificare, tocca a Lorenzo (richiedono la dashboard Supabase o un telefono; io non ho toccato Supabase):**
+  - `fetch-link-metadata`: l'app nativa non la usa più. Il diario dice che quella pubblicata è la versione vecchia, senza controllo
+    dell'utente. La cosa più semplice è eliminarla dalla dashboard; altrimenti ripubblicarla dal repo.
+  - «Confirm email» in Authentication: se è spento, chi si registra con l'email di un altro potrebbe trovarsi collegato al suo
+    accesso Apple/Google successivo. Va guardato com'è impostato.
+  - Bucket e tabelle senza limiti di dimensione e tipo; `send-feedback` limita per istanza, non il totale delle email Resend.
+  - Confermare che `delete-account` sia pubblicata (una volta rispondeva 404).
+  - Cambio di Apple ID sullo stesso telefono: i dati locali restano e potrebbero salire sul nuovo iCloud. Serve una prova con due
+    Apple ID su un dispositivo vero prima di decidere cosa fare.
+  - Link `svnativa://reset-password`: l'app mostra «scegli una nuova password» prima che il codice sia verificato (senza codice
+    valido il cambio comunque fallisce). **Non corretto apposta:** non posso riprovare il recupero password senza credenziali vere.
+
+**Seconda tornata (sera del 12/11), richiesta «ok poi fai altri test»**
+- Prove nuove, in `.superpowers/sdd/rc/` (fuori dal repo): `giro-extra.sh` + `TempExtraTests.swift` (audit di accessibilità di
+  sistema `performAccessibilityAudit` su 14 schermate in chiaro e scuro; testi lunghi e strani; interruzioni a metà modulo con
+  l'archivio vero; regione diversa dalla lingua), giro in inglese con testo molto grande, `round-16-ipad.sh` (suite iPad e giro
+  iPad in verticale e orizzontale, `TEST_RUNNER_GIRO_ORIENT`), `contrasto.py` (misura il contrasto WCAG da uno screenshot).
+- Passate senza difetti: bozza che resta dopo il secondo piano, app chiusa a metà modulo (nessun capo a metà), salva e chiudi
+  subito (il capo c'è), doppio tocco su «Salva» (un capo solo), modifica lasciata a metà; nome di 110 caratteri con emoji, prezzo
+  99.999,99, ricerca con simboli, nome di soli spazi rifiutato; prezzo con punto o virgola in en_US, de_CH, it_IT.
+- Difetti trovati e corretti:
+  - *Campi senza nome per VoiceOver:* nome, brand e taglia erano `TextField("")` con il titolo in un testo a parte; il prezzo si
+    chiamava «Facoltativo». Ora hanno `accessibilityLabel` (test `testICampiHannoUnNomePerVoiceOver`).
+  - *Titoli che non crescevano con il testo grande:* `Font.display` era a misura fissa, a AX3 i titoli erano più piccoli del
+    testo sotto. Ora `displayFont(_:)` in `Palette.swift` (`@ScaledMetric` relativo a `.largeTitle`: a AX3 una volta e mezza).
+    L'iniziale al posto della foto resta fissa ed è nascosta a VoiceOver (decorativa).
+  - *Link « Weather» alto 14 punti:* area di tocco portata a 44 senza cambiare l'aspetto (`WeatherCredit`).
+  - *Gradi «Automatica»:* guardava solo il sistema di misura; ora segue l'unità di temperatura del telefono
+    (`UnitTemperature(forLocale:)`).
+  - *Nomi dei capi tagliati nella griglia con il testo molto grande:* due righe riservate (`ItemCard`).
+  - *Campione «nero» quasi invisibile nella palette in scuro:* bordo `Palette.muted` come i pallini del guardaroba.
+- Segnalazioni dell'audit scartate dopo misura: tutti i «Contrast failed» (misurati tra 4,7 e 21:1; erano testi sotto la barra
+  delle tab o tagliati dal bordo), il segnaposto della ricerca «tagliato» (finisce con i puntini), l'avviso di sincronizzazione
+  «parzialmente» scalabile (fermato apposta a AX1).
+- Non cambiato, da sapere: i prezzi sono sempre in euro e il calendario parte sempre dal lunedì, anche con regione USA.
+- iPad (simulatore iPad Pro 11", codice con tutte le correzioni): suite 59 test, 58 al primo colpo;
+  `testBloccoConAutenticatoreFinto` rosso nella suite e verde da solo (è il test già noto per cadere a Mac carico). Giro da
+  installazione pulita in orizzontale 34 schermate al primo colpo; in verticale fermo a metà la prima volta (tocchi a vuoto del
+  test dopo l'armocromia, schermata giusta), 34 su 34 rifatto. Tutte le schermate viste: niente di rotto. Su iPad il contenuto
+  scorre sotto la barra delle tab in alto: è il comportamento di sistema.
+- Rimasto com'è: con il testo molto grande il menu «La tua stagione» del Profilo tronca il valore («Inverno…rofondo»); è un
+  controllo di sistema e il nome intero si legge nella schermata dei colori. L'audit di sistema in chiaro sul modulo «Aggiungi»
+  non è mai arrivato in fondo (tempo scaduto, poi riavvio del programma di test; nessun crash dell'app), in scuro sì.
+
+**Terza tornata (notte del 12/11): secondo audit di sicurezza completo (`/security-audit`, «fai controllo completo»)**
+- Dove: `~/security-audit-skill/stylevault/run-2/` (`REPORT.md`, `NEEDS-VALIDATION.md`, `HARDENING-NOTES.md`, `findings.json`,
+  `coverage-ledger.json`). Profilo `standard`, sola lettura del working tree (commit `4555907` più le modifiche non committate),
+  44 agenti su 48. Copertura: 43 unità, critico dopo la seconda ondata e critico finale puliti; 9 unità a sorgente invariato
+  (funzioni e tabelle Supabase, FashnKit) coperte solo dal primo audit; 3 fuori perimetro (impostazioni della dashboard, vecchio sito).
+- Esito: niente di critico, alto o medio. Le correzioni del primo audit reggono (6 confermati su 7 chiusi, compreso lo script di
+  esportazione). **1 confermato basso** (foto dell'importazione nei capi già presenti rimasti senza foto, contro il testo della
+  conferma) e **13 «da verificare»**: 10 già note dal primo audit, 3 nuove.
+- Corretto subito dopo la chiusura dell'audit (tutto nell'app, niente su Supabase):
+  1. *Conferma dell'importazione:* ora elenca capi, desideri, outfit, giorni di calendario e foto del corpo, e dice che un capo
+     rimasto senza foto la prende dal file (prima: «Ciò che hai già non cambia», e un file di soli desideri diceva «0 capi»).
+  2. *Stessa foto citata da tanti record:* si salva una volta sola (`usedPhotos` in `DataImporter`); finito il tetto di 4 GB non si
+     legge né decodifica più nulla.
+  3. *Liste dentro i record:* un outfit o un giorno importato tiene al massimo 24 capi senza ripetizioni (`DataImporter.pieces`),
+     un giorno al massimo 20 voci, testi tagliati a 500 caratteri (link a 2048), colori a 24. Lo stesso id ripetuto nel file non
+     crea due record. `CalendarMath.utc` è costruito una volta sola.
+  4. *Versione realistica:* se la foto del corpo cambia o sparisce (anche da un altro dispositivo) mentre si genera o si guarda
+     un'immagine, la generazione si annulla e l'immagine non si mostra né si salva (`RealisticTryOnModel.forget`). Il nome del
+     file in `Caches/realistic` comincia con il segno della foto del corpo: `RealisticCache.keep` toglie i file fatti con
+     un'altra foto guardando i nomi, senza più il segno in UserDefaults (le immagini generate prima di questa modifica si rifanno).
+  5. *Copie temporanee:* `tmp/prova` e lo zip esportato si tolgono anche quando la foto del corpo cambia da un altro dispositivo
+     (`RootTabView.seenBodyKeys`); la schermata «Prova con ChatGPT o Gemini», se aperta, rifà le copie con le foto di adesso.
+  6. *«Elimina account»:* l'avviso dice che si cancella l'account con cui si è entrati e che un altro account resta. **Non toccati**
+     i testi legali (`LegalContent.swift`, `docs/pubblicazione/`), che dicono ancora «tutto ciò che è rimasto sul vecchio sito».
+  7. *Conti sullo storico (dopo le misure della quarta tornata):* il «già indossato» di Outfit e Calendario scarta subito i
+     giorni fuori dalla settimana confrontandoli come testo (`CalendarMath.window`, `isSurelyOutside`) e fa il conto di calendario
+     una volta per data (`CalendarMath.DaysBefore`); `OutfitStore.recentWear(since:)` non prepara lo storico vecchio né i capi
+     ripetuti; `present(in:)` mostra una volta il capo scritto due volte; la riga degli outfit salvati cerca solo i 5 capi che mostra.
+- Restano «da verificare», tocca a Lorenzo: tutte quelle su Supabase dell'elenco sopra, più: chi ha due account (Mary: email e
+  Apple) dopo «Elimina account» resta con i dati del vecchio sito nell'altro; cambio di Apple ID; link di recupero password.
+- Note di rinforzo non applicate (in `HARDENING-NOTES.md`): metadati EXIF nelle foto importate tenute byte per byte, scontorni
+  dei capi cancellati che restano in Caches, foto del corpo «nascoste» importate dalle build fino alla 12, classe di protezione
+  dei file, appunti senza scadenza, `Package.resolved`, impronta del modello, rifiniture allo script di esportazione.
+
+**Quarta tornata (13/11), richiesta «Fai altre prove»**
+- Prove nuove, tutte in `.superpowers/sdd/rc/` (fuori dal repo):
+  - *Misure* (`TempMisureTests.swift`, pacchetto Core su Mac in debug): uso vero (300 capi, 2 anni di storico) e grande (2.000
+    capi, 10 anni) sotto i 200 ms per Outfit, Calendario e Statistiche. Con il file ostile più grande che l'importazione lascia
+    passare (50.000 voci da 24 capi) il Calendario costava 35 s: da qui il punto 7 qui sopra; dopo, circa 4 s nel pacchetto e
+    molto meno nell'app, che scarta lo storico prima. Le Statistiche con quel file restano a qualche secondo. Numeri rumorosi
+    (Mac a carico 100): contano gli ordini di grandezza.
+  - *Importazione in grande* (`TempImportMisureTests.swift`): 5.000 capi che citano la stessa foto → una foto salvata, 1,1 s.
+  - *Schermo piccolo e sistema vecchio:* due simulatori nuovi miei, «iPhone SE StyleVault» (iOS 27.2,
+    `862545CD-891C-4918-A0B3-675556EABA4E`) e «iPhone SE StyleVault iOS18» (iOS 18.2, `FB767529-ADD9-4909-A28C-01D6BF5B9FDF`).
+    iOS 17, la versione minima dell'app, su questo Mac non c'è. `round-NNb.sh`, `giro-piccolo.sh` + `TempPiccoloTests.swift`.
+  - *Testo al massimo* (AX5, `accessibility-extra-extra-extra-large`) su iPhone 18 Pro; iPad rifatto sul codice definitivo.
+- Difetti trovati e corretti:
+  - *Parole spezzate a metà con il testo al massimo* («Fot-o», «Wishli-st», «Noti-no»): i tasti Foto/Link, Guardaroba/Wishlist
+    e i link ai negozi dell'armocromia ora usano `AdaptiveRow` (in colonna quando in riga non stanno).
+  - *Codice d'errore di Apple con il separatore delle migliaia* («1,004» con regione USA): ora è testo (`String(code)`,
+    chiave `native.auth.appleFailed %@`). L'ha scoperto il simulatore nuovo, che ha la regione americana.
+  - *Campo prezzo per 13 punti sotto la tastiera* su iPhone SE con iOS 18.2 (su iOS 27 no): quando il prezzo prende il fuoco
+    il modulo lo porta al centro (`ItemFormView`, `onChange(of: bottomField)`).
+- Non sono difetti (controllato con `giro-piccolo.sh`, screenshot e note): su iPhone SE il tasto «Aggiungi» della scheda Outfit
+  vuota, «Invia» della segnalazione con la tastiera aperta e i controlli del Profilo si raggiungono scorrendo. La suite cadeva
+  lì perché i test non scorrevano: ora sì (`reach` in `UITestHelpers.swift`, usato in Profilo, Outfit e segnalazione).
+- **iOS 18.2: l'app viene chiusa durante i test dell'interfaccia** (3 rapporti del 13/11, `SIGSEGV`). Lo stack è tutto dentro
+  `XCTAutomationSupport` (la libreria di test di Xcode iniettata nell'app): `runtime_issue_os_log_fault_callback` → `strcmp`
+  su un puntatore nullo, dopo che il sistema ha messo il processo in quarantena per troppi messaggi di log. Nessuna riga
+  dell'app nello stack; a riposo l'app non scrive più del normale. Lo considero un difetto dello strumento su questo runtime,
+  **non provato oltre**: su iOS 18 l'app si vede e funziona in tutte le schermate del giro (23 su 34 prima della chiusura),
+  ma un giro intero pulito su iOS 18 non c'è.
+- Rimasto com'è, da sapere: l'audit di sistema segnala «elemento senza descrizione» per lo sfondo del foglio Aggiungi
+  (`add-sheet`, serve ai test); con VoiceOver vero non l'ho provato. Su iOS 18 le icone delle tab non scelte sono grigie (stile
+  di sistema). Con iPhone SE e testo molto grande il titolo «Segnala un problema o un'idea» nella barra è troncato.
+
+**Verificato / non verificato (13/11, al momento del commit e della PR, chiesti da Lorenzo con «Create PR»)**
+- Verificato sul codice definitivo: pacchetto Core (226 test) e FashnKit (19), test dello script; test mirati dell'app su
+  importatore, storico degli outfit, versione realistica, recupero dell'errore di Apple e sui test dell'interfaccia sistemati per
+  lo schermo piccolo (14 su 14). Prima delle ultime correzioni (parole spezzate, codice di Apple, prezzo su iOS 18): giro 20
+  intero su iPhone 18 Pro (chiaro, scuro, inglese, realistica, distratto, testo molto grande e al massimo, contrasto, prove in
+  più), iPad (suite 59 su 59, verticale e orizzontale), Duo e iPhone SE con iOS 27 (34 schermate).
+- **Non ancora verificato:** il giro 21 completo da zero sul codice di questo commit era in corso quando è stata aperta la PR
+  (`round-21.sh` e `round-21b.sh`); un giro intero pulito su iOS 18.2 non c'è (vedi la chiusura dentro `XCTAutomationSupport`);
+  niente provato su un dispositivo vero; lo script di esportazione mai eseguito su Supabase; le 13 piste «da verificare» del
+  secondo audit restano aperte.
+
 ## Novità 2026-11-11 (sera) — Build 1.0 (12) caricata, con la versione realistica
 
 Su richiesta di Lorenzo («mettila dentro l'app e poi inviamola a Mary»). Dal commit `a1312b3`, archiviata alle 19:48 e caricata

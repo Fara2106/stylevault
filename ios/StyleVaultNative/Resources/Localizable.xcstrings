@@ -5005,13 +5005,13 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "L'account viene cancellato per sempre, con tutto ciò che è rimasto sul vecchio sito: se non l'hai ancora portato nell'app, fallo prima. Ciò che è già nell'app resta nel tuo iCloud."
+            "value": "L'account con cui sei entrato viene cancellato per sempre, con tutto ciò che ha lasciato sul vecchio sito: se non l'hai ancora portato nell'app, fallo prima. Se hai un altro account, aperto con un'altra email o un altro accesso, quello resta. Ciò che è già nell'app resta nel tuo iCloud."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your account will be deleted permanently, along with anything left on the old website: if you haven't moved it into the app yet, do that first. What's already in the app stays in your iCloud."
+            "value": "The account you're signed in with will be deleted permanently, along with anything it left on the old website: if you haven't moved it into the app yet, do that first. If you have another account, opened with a different email or sign-in, that one stays. What's already in the app stays in your iCloud."
           }
         }
       }
@@ -5067,19 +5067,19 @@
         }
       }
     },
-    "native.auth.appleFailed %lld": {
+    "native.auth.appleFailed %@": {
       "extractionState": "manual",
       "localizations": {
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Apple non ha completato l'accesso (codice %lld). Riprova oppure continua senza account."
+            "value": "Apple non ha completato l'accesso (codice %@). Riprova oppure continua senza account."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Apple didn't complete the sign-in (code %lld). Try again or continue without an account."
+            "value": "Apple didn't complete the sign-in (code %@). Try again or continue without an account."
           }
         }
       }
@@ -5890,19 +5890,19 @@
         }
       }
     },
-    "native.data.confirmMessage %lld %lld %lld": {
+    "native.data.confirmMessage %lld %lld %lld %lld %lld": {
       "extractionState": "manual",
       "localizations": {
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Contiene %1$lld capi, %2$lld outfit e %3$lld giorni di calendario. Ciò che hai già non cambia."
+            "value": "Contiene %1$lld capi, %2$lld desideri, %3$lld outfit, %4$lld giorni di calendario e %5$lld foto del corpo. Ciò che hai già resta com'è: solo un capo rimasto senza foto la prende dal file."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "It has %1$lld items, %2$lld outfits and %3$lld calendar days. What you already have stays the same."
+            "value": "It has %1$lld items, %2$lld wishlist items, %3$lld outfits, %4$lld calendar days and %5$lld body photos. What you already have stays as it is: only an item left without a photo gets one from the file."
           }
         }
       }
@@ -6073,6 +6073,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "This file isn't a Style Vault export."
+          }
+        }
+      }
+    },
+    "native.data.recoveredPhotos %lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foto recuperate: %lld."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photos recovered: %lld."
           }
         }
       }

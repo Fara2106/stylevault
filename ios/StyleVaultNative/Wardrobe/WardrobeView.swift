@@ -81,7 +81,7 @@ struct WardrobeView: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(LocalizedStringKey(section == .wardrobe ? "wardrobe.title" : "wishlist.title"))
-                .font(.display(30))
+                .displayFont(30)
                 .foregroundStyle(Palette.ink)
             Group {
                 if section == .wardrobe {
@@ -92,7 +92,7 @@ struct WardrobeView: View {
             }
             .font(.footnote)
             .foregroundStyle(Palette.muted)
-            HStack(spacing: 8) {
+            AdaptiveRow(spacing: 8, alignment: .leading) {
                 Chip(text: Text("wardrobe.tabWardrobe"), isSelected: section == .wardrobe) { section = .wardrobe }
                     .accessibilityIdentifier("wardrobe-section-wardrobe")
                 Chip(text: wishlistTitle, isSelected: section == .wishlist) { section = .wishlist }

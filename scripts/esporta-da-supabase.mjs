@@ -143,6 +143,39 @@ export function toBundle({ items, wishlist, outfits, calendar, profile }, photos
   };
 }
 
+const UUID = /^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/;
+const SEGMENT = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
+const BODY_KINDS = new Set(['front', 'side', 'back']);
+const MAX_PHOTO_BYTES = 25 * 1024 * 1024;
+
+/**
+ * L'indirizzo di una foto in Storage, solo se sta nella cartella della persona esportata. I percorsi li ha
+ * scritti la persona nel suo database e qui si scaricano con la chiave che vede tutto: un percorso verso la
+ * cartella di un altro, o con `..`, `?`, `%`, non si scarica.
+ */
+export function ownedObjectURL(base, bucket, userID, path) {
+  if (typeof path !== 'string') return null;
+  const parts = path.split('/');
+  if (parts.length < 2 || parts[0] !== userID) return null;
+  if (!parts.every((part) => SEGMENT.test(part))) return null;
+  return `${base}/storage/v1/object/${bucket}/${parts.map(encodeURIComponent).join('/')}`;
+}
+
+/** Una foto fuori da Storage si scarica solo da https e da un nome pubblico: mai da questo Mac o dalla rete di casa. */
+export function isPublicHttpsUrl(raw) {
+  let target;
+  try {
+    target = new URL(raw);
+  } catch {
+    return false;
+  }
+  if (target.protocol !== 'https:' || target.username || target.password) return false;
+  // Il punto finale («localhost.») non deve aggirare i controlli sul nome.
+  const host = target.hostname.toLowerCase().replace(/\.+$/, '');
+  if (host.startsWith('[') || /^\d+(\.\d+){3}$/.test(host) || !host.includes('.')) return false;
+  return !/\.(local|localhost|internal|lan|home|corp|arpa)$/.test(host);
+}
+
 async function run(userID, output) {
   const url = process.env.SUPABASE_URL?.replace(/\/$/, '');
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -150,9 +183,15 @@ async function run(userID, output) {
     console.error('Uso: SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... node scripts/esporta-da-supabase.mjs <id utente> [file.zip]');
     process.exit(1);
   }
+  userID = String(userID).toLowerCase();
+  if (!UUID.test(userID)) {
+    console.error("L'id utente deve essere quello di Supabase → Authentication → Users (un UUID).");
+    process.exit(1);
+  }
   const headers = { apikey: key, Authorization: `Bearer ${key}` };
+  // La chiave non segue mai un reindirizzamento.
   const table = async (name, filter) => {
-    const response = await fetch(`${url}/rest/v1/${name}?${filter}&select=*&order=created_at.asc`, { headers });
+    const response = await fetch(`${url}/rest/v1/${name}?${filter}&select=*&order=created_at.asc`, { headers, redirect: 'error' });
     if (!response.ok) throw new Error(`${name}: ${response.status}`);
     return response.json();
   };
@@ -166,9 +205,13 @@ async function run(userID, output) {
   const missing = [];
   const fetchTo = async (name, address, withKey) => {
     try {
-      const response = await fetch(address, withKey ? { headers } : {});
+      if (!withKey && !isPublicHttpsUrl(address)) throw new Error('indirizzo non ammesso');
+      const response = await fetch(address, { ...(withKey ? { headers } : {}), redirect: 'error', signal: AbortSignal.timeout(60_000) });
       if (!response.ok) throw new Error(String(response.status));
-      files.set(name, Buffer.from(await response.arrayBuffer()));
+      if (!withKey && !(response.headers.get('content-type') ?? '').startsWith('image/')) throw new Error('non è un\'immagine');
+      const body = Buffer.from(await response.arrayBuffer());
+      if (body.length > MAX_PHOTO_BYTES) throw new Error('troppo grande');
+      files.set(name, body);
     } catch (error) {
       missing.push(`${name}: ${error.message}`);
     }
@@ -177,7 +220,16 @@ async function run(userID, output) {
   const plan = (id, side, path, external, bucket) => {
     if (!path && !external) return null;
     const name = `photos/${id}-${side}.jpg`;
-    planned.push(path ? [name, `${url}/storage/v1/object/${bucket}/${path}`, true] : [name, external, false]);
+    if (path) {
+      const address = ownedObjectURL(url, bucket, userID, path);
+      if (!address) {
+        missing.push(`${name}: percorso fuori dalla cartella della persona`);
+        return null;
+      }
+      planned.push([name, address, true]);
+    } else {
+      planned.push([name, external, false]);
+    }
     return name;
   };
   const photos = {
@@ -186,6 +238,8 @@ async function run(userID, output) {
     body: (profile) => {
       const paths = { front: profile?.reference_photo_path, ...(profile?.body_photos ?? {}) };
       return Object.entries(paths).flatMap(([kind, path]) => {
+        // Il tipo finisce nel nome del file dentro lo zip: solo quelli che l'app conosce.
+        if (!BODY_KINDS.has(kind)) return [];
         const file = plan('body', kind, path, null, 'profile-photos');
         return file ? [{ kind, file }] : [];
       });
