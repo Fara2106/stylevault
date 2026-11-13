@@ -1,0 +1,49 @@
+# App di prova di FASHN VTON v1.5 su iPhone: una sola app, fuori dal progetto di Style Vault.
+# Il progetto Xcode si genera fuori da Documents (è su iCloud e raddoppia i file rigenerati). Nella copia servono:
+# `<base>/fashnbench/src/bench` (questa cartella), `<base>/fashnbench/src/out` come collegamento a `tools/avatar-fashn/out`,
+# `<base>/ios/FashnKit` e `<base>/ios/StyleVaultCore`. Poi `xcodegen generate` dentro `bench`.
+name: FashnBench
+options:
+  bundleIdPrefix: it.faraoni
+  deploymentTarget:
+    iOS: "18.0"
+settings:
+  base:
+    DEVELOPMENT_TEAM: 599MS2BZ63
+    CODE_SIGN_STYLE: Automatic
+    SWIFT_VERSION: "5.10"
+packages:
+  FashnKit:
+    path: ../../../ios/FashnKit
+targets:
+  FashnBench:
+    type: application
+    platform: iOS
+    dependencies:
+      - package: FashnKit
+        product: FashnKit
+      - package: FashnKit
+        product: FashnWorn
+    sources:
+      - path: FashnBench
+      # Modello compilato e ingressi catturati: stanno in out/, fuori da git (vedi prepara.sh)
+      - path: ../out/bench-payload
+        name: Payload
+        type: folder
+        buildPhase: resources
+    entitlements:
+      path: FashnBench/FashnBench.entitlements
+      properties:
+        com.apple.developer.kernel.increased-memory-limit: true
+    info:
+      path: FashnBench/Info.plist
+      properties:
+        CFBundleDisplayName: Fashn Bench
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: it.faraoni.stylevault.bench
+        TARGETED_DEVICE_FAMILY: "1,2"
+        COREML_CODEGEN_LANGUAGE: None
+        GENERATE_INFOPLIST_FILE: NO

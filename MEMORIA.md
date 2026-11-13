@@ -3,6 +3,1144 @@
 > File di ripartenza: se apri una nuova chat, leggi questo file per riprendere il lavoro
 > esattamente da dove eravamo. Va aggiornato a ogni avanzamento significativo.
 
+## Novità 2026-11-06 (notte) — Bozza completa per Mary
+
+Richiesta di Lorenzo: finire tutte le schermate nella notte e mandarla a Mary. Fatto sul ramo `feat/app-nativa`, nessun push.
+- Nuove: Armocromia (`Armocromia/`, logica in `StyleVaultCore/Armocromia`, stagione anche a mano dal Profilo), primi passi (`Onboarding/`, solo
+  a chi parte da zero), segnalazioni (`Feedback/`, serve un account), cambio password, esporta e importa (`Data/DataTransfer.swift`, zip nel Core),
+  Prompt AI con consenso (`Avatar/TryOnPromptView.swift`), "Vedilo addosso" anche da Calendario e dettaglio, °C/°F, privacy e supporto nel Profilo.
+- Calendario: niente doppioni nello stesso giorno, niente "indossato" su giorni futuri, conferma prima di togliere. Desideri: conferma. Sono due
+  scelte fatte qui, che cambiano ciò che il sito faceva: i test sono stati aggiornati di conseguenza.
+- Dati del sito: `scripts/esporta-da-supabase.mjs` li scrive nel formato di Profilo → Importa. Lo lancia Lorenzo, la chiave service_role resta nel
+  suo terminale. Mai provato contro Supabase vero. Istruzioni in `docs/pubblicazione/portare-i-dati-di-mary.md`.
+- Vision con foto vere: letto solo `persona.jpg`, foto al crepuscolo. L'affidabilità della stagione su foto di giorno è da verificare con Mary, e il
+  confronto con MediaPipe chiesto dal design non è stato fatto. Si correggono i colori a mano o si sceglie la stagione.
+- Guasto del simulatore: dopo ore l'app non parte più con "Library not loaded: /usr/lib/libSystem.B.dylib" e i test restano appesi senza errore.
+  Si risolve riavviando quel simulatore. Causa non trovata. Lo script `suite-vigilata.sh` interrompe il lancio se il log resta fermo 15 minuti.
+- Resta da fare prima dell'App Store: WeatherKit, iPhone Duo, schema CloudKit in Production (senza, in TestFlight i dati non passano fra dispositivi:
+  da verificare), testi legali da riscrivere (la pagina privacy descrive ancora il sito).
+
+## Novità 2026-11-12 — Altri test al simulatore, testo molto grande, audit di sicurezza
+
+Richieste di Lorenzo: «fai comunque altri test al simulatore e correggi tutto quello che trovi», poi `/security-audit` con
+«fai un controllo completo». Tutto sul ramo `feat/app-nativa`, solo locale, niente push e niente build. **Queste correzioni
+non sono nella build 12**: entrano dalla prossima build.
+
+**Test nuovi rispetto ai giri di ieri**
+- Testo molto grande (`content_size accessibility-extra-large`, AX3), «Aumenta contrasto» in scuro, e l'utente distratto nella
+  versione realistica: annulla e riprova subito, chiude a metà, manda l'app in secondo piano, doppio tocco, «Salva o condividi»,
+  esporta e poi cancella la foto del corpo. Script in `.superpowers/sdd/rc/` (fuori dal repo): `round-15.sh` rifà tutto da zero,
+  `giro-distratto.sh` + `TempDistractedTests.swift`, il giro normale ora fa 34 schermate.
+
+**Difetti trovati e corretti**
+- *Versione realistica, «Annulla»:* la schermata tornava all'inizio solo quando il modello si accorgeva dell'annullamento (durante
+  il caricamento non se ne accorge). Ora «Annulla» si vede subito; la generazione vecchia finisce da sola e il suo risultato si
+  butta; una nuova aspetta che la vecchia abbia lasciato il modello, così non sta mai in memoria due volte (`RealisticTryOnView.swift`,
+  contatore `run`; 4 test con `GatedGenerator`).
+- *«Salva immagine» dal foglio di condivisione:* mancava `NSPhotoLibraryAddUsageDescription`, quindi iOS non offriva la voce. Aggiunta
+  in `project.yml` e `InfoPlist.xcstrings` (it/en): «Per salvare tra le tue foto le immagini che scegli di tenere.» È un permesso di
+  sola aggiunta, chiesto da iOS al primo salvataggio. Visto sul simulatore: la voce c'è, compare l'avviso di sistema con il testo.
+- *Testo molto grande:* righe che si stringevano o si tagliavano. Nuovi `AdaptiveRow` (in riga se ci sta, sennò in colonna) e
+  `AccessibleRow` (in colonna solo con le misure dell'accessibilità) in `App/AdaptiveRow.swift`. Toccati: Modifica/Elimina nel
+  dettaglio, Salva/Indossa e punteggio nella scheda outfit, Apri ChatGPT/Gemini, foto del retro nel form, città + «La mia
+  posizione», riga del meteo, giorni del calendario (il numero non va più a capo), etichette delle foto del corpo, statistiche,
+  negozi e palette dell'armocromia. L'avviso fisso «Sincronizzazione non attiva» si ferma alla misura AX1: oltre toglieva un
+  quinto dello schermo a ogni schermata. A misura normale l'aspetto non cambia.
+
+**Audit di sicurezza (skill `security-audit`, profilo standard, solo lettura del codice)**
+- Rapporto in `~/security-audit-skill/stylevault/run-1/` (`REPORT.md` in italiano, `FINDINGS-DETAIL.md`, `NEEDS-VALIDATION.md`,
+  `HARDENING-NOTES.md`). 41 unità, 58 agenti, nessun codice eseguito. **7 difetti confermati (1 medio, 6 bassi), tutti corretti
+  qui; 11 punti che il codice da solo non può decidere.** Nessuno critico o alto.
+- Confermati e corretti:
+  1. (medio) `scripts/esporta-da-supabase.mjs` scaricava con la chiave service_role i percorsi scritti dall'utente senza controllare
+     che fossero nella sua cartella. Ora `ownedObjectURL`: primo segmento = id della persona, segmenti semplici, codificati; l'id
+     passato deve essere un UUID.
+  2. Lo stesso script scaricava qualunque `photo_url`: ora solo https pubblico, niente reindirizzamenti, solo `image/*`, 25 MB, 60 s.
+  3. Importa accettava foto del corpo con un `kind` qualunque (righe nascoste e non cancellabili): ora solo front/side/back, una
+     per tipo, e l'esportazione salta le righe sconosciute.
+  4. Importa riempiva le foto mancanti dei capi già presenti anche se l'avviso dice «ciò che hai resta com'è»: resta (serve a chi
+     importa due volte), ma solo se il capo non ha foto, mai lo scontorno, e il riepilogo dice «Foto recuperate: N».
+  5. Un verdetto di armocromia importato con `confidence` fuori scala mandava in crash la schermata: valore limitato a 0…1.
+  6. `ZipWriter` troncava a 16 bit nome e numero di voci: ora rifiuta (`ZipError.tooLarge`).
+  7. Scontorni del corpo e immagini generate restavano in Caches sugli altri dispositivi dopo la cancellazione della foto: ora si
+     riallineano ai dati (`CutoutCache.keepBodyCutouts`, `RealisticCache.keep`, `RootTabView.task(id: bodyKeys)`).
+- Mitigati anche se «da verificare»: foto importate controllate (solo JPEG/PNG/HEIC, max 64 MP dichiarati e 32 MB, ricodificate
+  se oltre 2048 px o 8 MB: `GarmentImage.imported`), tetto di 4 GB di foto e 50.000 record per importazione, copie temporanee
+  (`tmp/prova`, zip esportato) cancellate insieme alla foto del corpo e riga «Salva o invia il file» che sparisce.
+- Igiene: `.gitignore` copre `.env*`, `supabase/.temp/` e gli zip in radice; `keepalive.yml` con `permissions: {}`.
+- **Da verificare, tocca a Lorenzo (richiedono la dashboard Supabase o un telefono; io non ho toccato Supabase):**
+  - `fetch-link-metadata`: l'app nativa non la usa più. Il diario dice che quella pubblicata è la versione vecchia, senza controllo
+    dell'utente. La cosa più semplice è eliminarla dalla dashboard; altrimenti ripubblicarla dal repo.
+  - «Confirm email» in Authentication: se è spento, chi si registra con l'email di un altro potrebbe trovarsi collegato al suo
+    accesso Apple/Google successivo. Va guardato com'è impostato.
+  - Bucket e tabelle senza limiti di dimensione e tipo; `send-feedback` limita per istanza, non il totale delle email Resend.
+  - Confermare che `delete-account` sia pubblicata (una volta rispondeva 404).
+  - Cambio di Apple ID sullo stesso telefono: i dati locali restano e potrebbero salire sul nuovo iCloud. Serve una prova con due
+    Apple ID su un dispositivo vero prima di decidere cosa fare.
+  - Link `svnativa://reset-password`: l'app mostra «scegli una nuova password» prima che il codice sia verificato (senza codice
+    valido il cambio comunque fallisce). **Non corretto apposta:** non posso riprovare il recupero password senza credenziali vere.
+
+**Seconda tornata (sera del 12/11), richiesta «ok poi fai altri test»**
+- Prove nuove, in `.superpowers/sdd/rc/` (fuori dal repo): `giro-extra.sh` + `TempExtraTests.swift` (audit di accessibilità di
+  sistema `performAccessibilityAudit` su 14 schermate in chiaro e scuro; testi lunghi e strani; interruzioni a metà modulo con
+  l'archivio vero; regione diversa dalla lingua), giro in inglese con testo molto grande, `round-16-ipad.sh` (suite iPad e giro
+  iPad in verticale e orizzontale, `TEST_RUNNER_GIRO_ORIENT`), `contrasto.py` (misura il contrasto WCAG da uno screenshot).
+- Passate senza difetti: bozza che resta dopo il secondo piano, app chiusa a metà modulo (nessun capo a metà), salva e chiudi
+  subito (il capo c'è), doppio tocco su «Salva» (un capo solo), modifica lasciata a metà; nome di 110 caratteri con emoji, prezzo
+  99.999,99, ricerca con simboli, nome di soli spazi rifiutato; prezzo con punto o virgola in en_US, de_CH, it_IT.
+- Difetti trovati e corretti:
+  - *Campi senza nome per VoiceOver:* nome, brand e taglia erano `TextField("")` con il titolo in un testo a parte; il prezzo si
+    chiamava «Facoltativo». Ora hanno `accessibilityLabel` (test `testICampiHannoUnNomePerVoiceOver`).
+  - *Titoli che non crescevano con il testo grande:* `Font.display` era a misura fissa, a AX3 i titoli erano più piccoli del
+    testo sotto. Ora `displayFont(_:)` in `Palette.swift` (`@ScaledMetric` relativo a `.largeTitle`: a AX3 una volta e mezza).
+    L'iniziale al posto della foto resta fissa ed è nascosta a VoiceOver (decorativa).
+  - *Link « Weather» alto 14 punti:* area di tocco portata a 44 senza cambiare l'aspetto (`WeatherCredit`).
+  - *Gradi «Automatica»:* guardava solo il sistema di misura; ora segue l'unità di temperatura del telefono
+    (`UnitTemperature(forLocale:)`).
+  - *Nomi dei capi tagliati nella griglia con il testo molto grande:* due righe riservate (`ItemCard`).
+  - *Campione «nero» quasi invisibile nella palette in scuro:* bordo `Palette.muted` come i pallini del guardaroba.
+- Segnalazioni dell'audit scartate dopo misura: tutti i «Contrast failed» (misurati tra 4,7 e 21:1; erano testi sotto la barra
+  delle tab o tagliati dal bordo), il segnaposto della ricerca «tagliato» (finisce con i puntini), l'avviso di sincronizzazione
+  «parzialmente» scalabile (fermato apposta a AX1).
+- Non cambiato, da sapere: i prezzi sono sempre in euro e il calendario parte sempre dal lunedì, anche con regione USA.
+- iPad (simulatore iPad Pro 11", codice con tutte le correzioni): suite 59 test, 58 al primo colpo;
+  `testBloccoConAutenticatoreFinto` rosso nella suite e verde da solo (è il test già noto per cadere a Mac carico). Giro da
+  installazione pulita in orizzontale 34 schermate al primo colpo; in verticale fermo a metà la prima volta (tocchi a vuoto del
+  test dopo l'armocromia, schermata giusta), 34 su 34 rifatto. Tutte le schermate viste: niente di rotto. Su iPad il contenuto
+  scorre sotto la barra delle tab in alto: è il comportamento di sistema.
+- Rimasto com'è: con il testo molto grande il menu «La tua stagione» del Profilo tronca il valore («Inverno…rofondo»); è un
+  controllo di sistema e il nome intero si legge nella schermata dei colori. L'audit di sistema in chiaro sul modulo «Aggiungi»
+  non è mai arrivato in fondo (tempo scaduto, poi riavvio del programma di test; nessun crash dell'app), in scuro sì.
+
+**Terza tornata (notte del 12/11): secondo audit di sicurezza completo (`/security-audit`, «fai controllo completo»)**
+- Dove: `~/security-audit-skill/stylevault/run-2/` (`REPORT.md`, `NEEDS-VALIDATION.md`, `HARDENING-NOTES.md`, `findings.json`,
+  `coverage-ledger.json`). Profilo `standard`, sola lettura del working tree (commit `4555907` più le modifiche non committate),
+  44 agenti su 48. Copertura: 43 unità, critico dopo la seconda ondata e critico finale puliti; 9 unità a sorgente invariato
+  (funzioni e tabelle Supabase, FashnKit) coperte solo dal primo audit; 3 fuori perimetro (impostazioni della dashboard, vecchio sito).
+- Esito: niente di critico, alto o medio. Le correzioni del primo audit reggono (6 confermati su 7 chiusi, compreso lo script di
+  esportazione). **1 confermato basso** (foto dell'importazione nei capi già presenti rimasti senza foto, contro il testo della
+  conferma) e **13 «da verificare»**: 10 già note dal primo audit, 3 nuove.
+- Corretto subito dopo la chiusura dell'audit (tutto nell'app, niente su Supabase):
+  1. *Conferma dell'importazione:* ora elenca capi, desideri, outfit, giorni di calendario e foto del corpo, e dice che un capo
+     rimasto senza foto la prende dal file (prima: «Ciò che hai già non cambia», e un file di soli desideri diceva «0 capi»).
+  2. *Stessa foto citata da tanti record:* si salva una volta sola (`usedPhotos` in `DataImporter`); finito il tetto di 4 GB non si
+     legge né decodifica più nulla.
+  3. *Liste dentro i record:* un outfit o un giorno importato tiene al massimo 24 capi senza ripetizioni (`DataImporter.pieces`),
+     un giorno al massimo 20 voci, testi tagliati a 500 caratteri (link a 2048), colori a 24. Lo stesso id ripetuto nel file non
+     crea due record. `CalendarMath.utc` è costruito una volta sola.
+  4. *Versione realistica:* se la foto del corpo cambia o sparisce (anche da un altro dispositivo) mentre si genera o si guarda
+     un'immagine, la generazione si annulla e l'immagine non si mostra né si salva (`RealisticTryOnModel.forget`). Il nome del
+     file in `Caches/realistic` comincia con il segno della foto del corpo: `RealisticCache.keep` toglie i file fatti con
+     un'altra foto guardando i nomi, senza più il segno in UserDefaults (le immagini generate prima di questa modifica si rifanno).
+  5. *Copie temporanee:* `tmp/prova` e lo zip esportato si tolgono anche quando la foto del corpo cambia da un altro dispositivo
+     (`RootTabView.seenBodyKeys`); la schermata «Prova con ChatGPT o Gemini», se aperta, rifà le copie con le foto di adesso.
+  6. *«Elimina account»:* l'avviso dice che si cancella l'account con cui si è entrati e che un altro account resta. **Non toccati**
+     i testi legali (`LegalContent.swift`, `docs/pubblicazione/`), che dicono ancora «tutto ciò che è rimasto sul vecchio sito».
+  7. *Conti sullo storico (dopo le misure della quarta tornata):* il «già indossato» di Outfit e Calendario scarta subito i
+     giorni fuori dalla settimana confrontandoli come testo (`CalendarMath.window`, `isSurelyOutside`) e fa il conto di calendario
+     una volta per data (`CalendarMath.DaysBefore`); `OutfitStore.recentWear(since:)` non prepara lo storico vecchio né i capi
+     ripetuti; `present(in:)` mostra una volta il capo scritto due volte; la riga degli outfit salvati cerca solo i 5 capi che mostra.
+- Restano «da verificare», tocca a Lorenzo: tutte quelle su Supabase dell'elenco sopra, più: chi ha due account (Mary: email e
+  Apple) dopo «Elimina account» resta con i dati del vecchio sito nell'altro; cambio di Apple ID; link di recupero password.
+- Note di rinforzo non applicate (in `HARDENING-NOTES.md`): metadati EXIF nelle foto importate tenute byte per byte, scontorni
+  dei capi cancellati che restano in Caches, foto del corpo «nascoste» importate dalle build fino alla 12, classe di protezione
+  dei file, appunti senza scadenza, `Package.resolved`, impronta del modello, rifiniture allo script di esportazione.
+
+**Quarta tornata (13/11), richiesta «Fai altre prove»**
+- Prove nuove, tutte in `.superpowers/sdd/rc/` (fuori dal repo):
+  - *Misure* (`TempMisureTests.swift`, pacchetto Core su Mac in debug): uso vero (300 capi, 2 anni di storico) e grande (2.000
+    capi, 10 anni) sotto i 200 ms per Outfit, Calendario e Statistiche. Con il file ostile più grande che l'importazione lascia
+    passare (50.000 voci da 24 capi) il Calendario costava 35 s: da qui il punto 7 qui sopra; dopo, circa 4 s nel pacchetto e
+    molto meno nell'app, che scarta lo storico prima. Le Statistiche con quel file restano a qualche secondo. Numeri rumorosi
+    (Mac a carico 100): contano gli ordini di grandezza.
+  - *Importazione in grande* (`TempImportMisureTests.swift`): 5.000 capi che citano la stessa foto → una foto salvata, 1,1 s.
+  - *Schermo piccolo e sistema vecchio:* due simulatori nuovi miei, «iPhone SE StyleVault» (iOS 27.2,
+    `862545CD-891C-4918-A0B3-675556EABA4E`) e «iPhone SE StyleVault iOS18» (iOS 18.2, `FB767529-ADD9-4909-A28C-01D6BF5B9FDF`).
+    iOS 17, la versione minima dell'app, su questo Mac non c'è. `round-NNb.sh`, `giro-piccolo.sh` + `TempPiccoloTests.swift`.
+  - *Testo al massimo* (AX5, `accessibility-extra-extra-extra-large`) su iPhone 18 Pro; iPad rifatto sul codice definitivo.
+- Difetti trovati e corretti:
+  - *Parole spezzate a metà con il testo al massimo* («Fot-o», «Wishli-st», «Noti-no»): i tasti Foto/Link, Guardaroba/Wishlist
+    e i link ai negozi dell'armocromia ora usano `AdaptiveRow` (in colonna quando in riga non stanno).
+  - *Codice d'errore di Apple con il separatore delle migliaia* («1,004» con regione USA): ora è testo (`String(code)`,
+    chiave `native.auth.appleFailed %@`). L'ha scoperto il simulatore nuovo, che ha la regione americana.
+  - *Campo prezzo per 13 punti sotto la tastiera* su iPhone SE con iOS 18.2 (su iOS 27 no): quando il prezzo prende il fuoco
+    il modulo lo porta al centro (`ItemFormView`, `onChange(of: bottomField)`).
+- Non sono difetti (controllato con `giro-piccolo.sh`, screenshot e note): su iPhone SE il tasto «Aggiungi» della scheda Outfit
+  vuota, «Invia» della segnalazione con la tastiera aperta e i controlli del Profilo si raggiungono scorrendo. La suite cadeva
+  lì perché i test non scorrevano: ora sì (`reach` in `UITestHelpers.swift`, usato in Profilo, Outfit e segnalazione).
+- **iOS 18.2: l'app viene chiusa durante i test dell'interfaccia** (3 rapporti del 13/11, `SIGSEGV`). Lo stack è tutto dentro
+  `XCTAutomationSupport` (la libreria di test di Xcode iniettata nell'app): `runtime_issue_os_log_fault_callback` → `strcmp`
+  su un puntatore nullo, dopo che il sistema ha messo il processo in quarantena per troppi messaggi di log. Nessuna riga
+  dell'app nello stack; a riposo l'app non scrive più del normale. Lo considero un difetto dello strumento su questo runtime,
+  **non provato oltre**: su iOS 18 l'app si vede e funziona in tutte le schermate del giro (23 su 34 prima della chiusura),
+  ma un giro intero pulito su iOS 18 non c'è.
+- Rimasto com'è, da sapere: l'audit di sistema segnala «elemento senza descrizione» per lo sfondo del foglio Aggiungi
+  (`add-sheet`, serve ai test); con VoiceOver vero non l'ho provato. Su iOS 18 le icone delle tab non scelte sono grigie (stile
+  di sistema). Con iPhone SE e testo molto grande il titolo «Segnala un problema o un'idea» nella barra è troncato.
+
+**Verificato / non verificato (13/11, al momento del commit e della PR, chiesti da Lorenzo con «Create PR»)**
+- Verificato sul codice definitivo: pacchetto Core (226 test) e FashnKit (19), test dello script; test mirati dell'app su
+  importatore, storico degli outfit, versione realistica, recupero dell'errore di Apple e sui test dell'interfaccia sistemati per
+  lo schermo piccolo (14 su 14). Prima delle ultime correzioni (parole spezzate, codice di Apple, prezzo su iOS 18): giro 20
+  intero su iPhone 18 Pro (chiaro, scuro, inglese, realistica, distratto, testo molto grande e al massimo, contrasto, prove in
+  più), iPad (suite 59 su 59, verticale e orizzontale), Duo e iPhone SE con iOS 27 (34 schermate).
+- **Non ancora verificato:** il giro 21 completo da zero sul codice di questo commit era in corso quando è stata aperta la PR
+  (`round-21.sh` e `round-21b.sh`); un giro intero pulito su iOS 18.2 non c'è (vedi la chiusura dentro `XCTAutomationSupport`);
+  niente provato su un dispositivo vero; lo script di esportazione mai eseguito su Supabase; le 13 piste «da verificare» del
+  secondo audit restano aperte.
+
+## Novità 2026-11-11 (sera) — Build 1.0 (12) caricata, con la versione realistica
+
+Su richiesta di Lorenzo («mettila dentro l'app e poi inviamola a Mary»). Dal commit `a1312b3`, archiviata alle 19:48 e caricata
+alle 20:04 («Upload succeeded», `build12.sh`, `upload12.sh`, `controlla12.sh` in `.superpowers/sdd/rc/`).
+- IPA controllata: 1.0 (12), "Style Vault", 679 MB (la 11 era 5 MB: il resto è il modello), Apple Distribution, WeatherKit,
+  CloudKit e push in Production, `get-task-allow` falso, PrivacyInfo, firma valida, `FashnTryOn.mlmodelc` presente e identico
+  al sorgente, nessuna copia " 2", nessun argomento `-SV`, nessun generatore finto, niente Open-Meteo, nessuna eccezione ATS,
+  i 20 testi nuovi in it e en.
+- **TestFlight riletto l'11/11 in serata** (App Store Connect in Chrome, login fatto da Lorenzo): la build 12 è «Pronta per
+  l'invio», assegnata al gruppo «Lorenzo e Marianna», 2 inviti. Lorenzo ha installato la 1.0 (12) sull'iPhone 18 Pro Max
+  (iOS 27.2.1). **Mary è ancora sulla 1.0 (11)**, iPhone 15 Pro, iOS 27.2: la 12 le è disponibile ma non l'ha aggiornata.
+- **Prima prova vera sul telefono, da fare da TestFlight:** aprire un outfit o un capo con foto → «Vedilo addosso» → «Versione
+  realistica» → «Genera l'immagine». Deve comparire la barra con la percentuale e alla fine l'immagine (circa 70 s a capo sul
+  18 Pro Max). Serve la foto del corpo di fronte nel Profilo e almeno un sopra o un sotto con foto. Sul 15 Pro di Mary tempi
+  e memoria non sono mai stati misurati: se il pulsante non compare o la generazione si chiude, è un dato da riportare.
+- Scaricare l'aggiornamento chiede circa 700 MB: meglio in Wi-Fi.
+
+## Novità 2026-11-11 (sera) — «Versione realistica» dentro Style Vault
+
+Dopo le prove sul telefono Lorenzo: «mettila dentro l'app e poi inviamola a Mary». FASHN entra in «Vedilo addosso» come pulsante
+in più, sotto l'avatar: l'avatar a ritagli resta la prima cosa che si vede, il prompt per ChatGPT/Gemini resta.
+
+- **Dove sta il codice:** il pacchetto è passato da `tools/avatar-fashn/FashnKit` a `ios/FashnKit` (dipende da `StyleVaultCore`
+  per lo scontorno). Nuovo `FashnWorn/OutfitTryOn.swift`: più capi uno dopo l'altro, il risultato di uno è la persona del
+  successivo, un solo avanzamento da 0 a 100. Nell'app: `Avatar/RealisticPlan.swift` (quali capi e in che ordine),
+  `RealisticServices.swift` (generatore vero e finto, pause), `RealisticCache.swift`, `RealisticTryOnView.swift`.
+- **Regole scelte qui:** vestito intero → solo il vestito; altrimenti sopra e poi sotto. Capospalla, scarpe, accessori e capi
+  senza foto restano fuori e la schermata lo dice («Non compaiono nell'immagine: …»). Con intimo o costumi il pulsante non c'è
+  (stessa regola del prompt, `TryOnPrompt.hasSwimwear`). 20 passi fissi. La foto del corpo si ritaglia a 2:3 intorno alla persona.
+- **Chi lo vede:** solo iOS 18 o più, almeno 6,5 GB di memoria (dal 15 Pro in su), modello presente nel pacchetto, foto del
+  corpo di fronte e almeno un capo con foto. Altrimenti il pulsante non compare e «Vedilo addosso» resta com'era: niente è bloccato.
+- **Durante la generazione:** barra con percentuale accanto, «Capo 1 di 2», schermo che non si spegne, pausa se iOS segnala
+  «caldo» o se l'app esce dal primo piano (con il testo che lo spiega), «Annulla»; chiudendo a metà chiede «Ferma e chiudi» /
+  «Continua». Alla fine: etichetta «Immagine generata con IA sul tuo dispositivo. È una simulazione…», «Salva o condividi»,
+  «Segnala questa immagine». L'ultima
+  immagine resta in cache (cartella Caches, si svuota quando cambia la foto del corpo) e si rivede senza rigenerare.
+- **Il modello (704 MB) non è nel repo:** `project.yml` lo copia da `tools/avatar-fashn/out/bench-payload/FashnTryOn.mlmodelc`
+  solo nelle build Release per iPhone vero. Sul simulatore e in Debug non c'è: i test usano `-SVFakeTryOn` (finto, solo DEBUG).
+  Un Mac senza quella cartella produce una build senza versione realistica, con un avviso in compilazione.
+- **Testi legali:** privacy (it/en) con la sezione sulla versione realistica (tutto sul dispositivo, nessuna foto esce), crediti
+  con FASHN VTON v1.5 (Apache 2.0) e il disegno della posa. Data 11 novembre 2026. Rigenerati `LegalContent.swift` e le pagine.
+- **Verificato:** test di `FashnKit` 19/19 (compreso l'outfit di due capi), sul Mac un outfit vero di due capi con il modello
+  (215 s a 12 passi); test dell'app nuovi 23/23, test dell'interfaccia 5/5 (barra e percentuale, etichetta IA, riapertura dalla
+  cache, annulla, chiusura a metà, pulsante assente senza modello e senza foto dei capi), schermate chiaro/scuro/inglese.
+- **Le immagini che l'app dà al modello, provate sul Mac** (`fashn-confronto --outfit … --come-app`, 20 passi): persona
+  ritagliata con `PersonFraming` (ora in `FashnWorn`, lo usano app e strumento), maglione isolato da una foto indossata, jeans
+  scontornati → outfit giusto. Sul simulatore la catena vera non gira: Vision lì non calcola la posa del corpo.
+- **Giri da zero dopo l'integrazione (round-14, 17:30-19:48):** Core 216/216, FashnKit 19/19, suite iPhone 58 test con 1
+  fallito per il simulatore («Failed to terminate», `testPianificaUnGiornoFuturoESegnaIndossato`) e passato rifatto da solo;
+  giri da installazione nuova chiaro, scuro, inglese e iPhone Duo 33 schermate ciascuno; schermate della versione realistica
+  in chiaro, scuro e inglese (`giro-realistica.sh`, generatore finto). Nessun crash nei rapporti di oggi.
+- **NON verificato:** il modello vero dentro Style Vault. `SystemRealisticGenerator` non ha mai girato su un telefono: la prima
+  volta sarà la build TestFlight sul telefono di Lorenzo. Mai provato il 15 Pro di Mary (8 GB: memoria e tempi da vedere),
+  l'iPad, una foto vera del corpo (finora solo la persona di prova in studio).
+- **Da chiudere prima dell'App Store (non per TestFlight):** la pagina privacy pubblica sta in «Web (Apps)» ed è indietro
+  rispetto al testo nell'app (non si tocca senza chiedere); testo intero della licenza Apache non incluso (c'è il link nei
+  crediti); 704 MB nel pacchetto invece che scaricati a richiesta; origine dei dati di addestramento da chiedere a FASHN.
+- I 25 secondi «fuori dal primo piano» del quarto giro restano senza spiegazione: Lorenzo dice di non essere mai uscito
+  dall'app (c'era una chiamata in corso). La generazione era ripresa da sola.
+
+## Novità 2026-11-11 (pomeriggio) — FASHN: catena intera in Swift, prova sul telefono
+
+Lorenzo ha cambiato idea rispetto al 10/11: «Proviamo a metterci quell'IA on device e vediamo come va, prima di pubblicarla.
+Facciamo questo test», e durante la generazione vuole «una barra che indichi il caricamento, con la percentuale accanto».
+È una prova: nessuna decisione di pubblicarla. Style Vault non è toccata, la 1.0 (11) resta com'è.
+
+- **Perché nell'app di prova e non dentro Style Vault:** una build di debug di Style Vault sul telefono userebbe l'iCloud di
+  sviluppo (guardaroba vuoto) e sostituirebbe quella di TestFlight; una build TestFlight porterebbe 704 MB anche a Mary. La
+  qualità si giudica uguale scegliendo le foto vere dalla libreria. Se convince, il passo dopo è «Vedilo addosso».
+- **`tools/avatar-fashn/FashnKit`** (pacchetto Swift, iOS 18 e macOS 14): `Frame` (riquadro 576×864 e bordi come l'originale),
+  `PoseSketch` (disegno della posa in grigio, come `draw_pose`), `VisionPose` (corpo, mani e viso con Apple Vision al posto di
+  DWPose), `FashnPrepare` (foto → tensori, uscita → immagine senza bordi), `FashnSampler` (Eulero, guida 1,5, avanzamento a
+  passaggi), `fashn-confronto` (strumento del Mac). Test 15/15.
+- **Confronto sul Mac** (`docs/verifiche/2026-11-11-fashn-catena-swift/`): foto preparate a 0,2-0,4 su 255 dall'originale; posa
+  di Vision 18 punti su 18, quasi sovrapposta a DWPose; immagine finale a 30 passi con lo stesso rumore equivalente a occhio
+  a quella della pipeline originale. Il dubbio «posa sul telefono» del 10/11 sul Mac è chiuso; sull'iPhone va ancora visto.
+- **App di prova** (`tools/avatar-fashn/bench`): scelta di persona e capo dalle foto, tipo di capo, capo indossato sì/no, 12/20/30
+  passi, barra con percentuale, risultato da salvare, posa vista dal telefono. `--misura` riapre il banco dei tempi.
+- **Prima prova di Lorenzo sul telefono (11/11, 15:10-15:18)**, quattro generazioni a 30 passi con le foto di prova: maglione e
+  jeans da soli buoni (116 e 119 s, picco 716 MB), outfit intero buono (136 s), maglietta indossata sbagliata (pelle chiara
+  della modella su braccia e pancia). Posa di Vision 18 su 18. **«Questa generazione ha fatto scaldare non poco il telefono»**;
+  batteria 76% → 71% in quattro generazioni. È il costo da pesare insieme al tempo: funzione occasionale sì, anteprima di ogni
+  outfit no.
+- **Correzioni dopo la prova:** il capo indossato si isola con lo scontorno di Style Vault (`FashnWorn` usa `WornGarment` del
+  Core, senza modificarlo) prima di darlo al modello: sul Mac la pelle torna quella della persona. L'app di prova ha «Da solo /
+  Indossato / Indossato, intera», «Aggiungi un altro capo a questo risultato», pausa quando iOS segnala «caldo», temperatura e
+  batteria a fine generazione. Con «Intero» su un outfit di due capi l'isolamento prende mezzo outfit: si fanno sopra e sotto.
+- **Secondo giro di Lorenzo (15:32-15:35, 20 passi):** maglietta ancora sbagliata perché la scelta «Indossato» a mano non era
+  attiva (difetto della schermata, non suo): ora il riconoscimento è automatico, come in Style Vault. **A telefono caldo e in
+  carica 20 passi durano 160 s (8 s a passo, il doppio che a freddo)** con iOS che segna ancora «normale»/«tiepido»: i tempi
+  del 10/11 valgono solo a freddo. Va rimisurato a freddo e a caldo con i secondi a passo che l'app ora scrive.
+- **Terzo giro (15:52):** con il riconoscimento automatico maglietta isolata e jeans aggiunti sul risultato vengono giusti, pelle
+  della persona compresa: primo outfit di due capi tutto sul telefono. Tempo anomalo: 274 s a 20 passi, 3,5 s a passo all'inizio
+  e 32,5 s di media alla fine, con il telefono in chiamata; causa non accertata (rallentamento o app fuori dal primo piano).
+  L'app ora misura passo più veloce, di mezzo e più lento, conta i secondi fuori dal primo piano e lì va in pausa.
+  Lorenzo: l'app era sempre aperta davanti, quindi non era il secondo piano. Ipotesi rimaste: la pausa per il caldo scattata a
+  metà (la riga non la riportava) o iOS che frena la GPU in chiamata. La riga ora dà temperatura massima e secondi di pausa.
+- **Quarto giro (16:16-16:23), tempi spiegati:** i 274 s erano la pausa per il caldo, non iOS. Il calcolo resta a 3,1-3,9 s a
+  passo anche a telefono caldo: **12 passi 44 s, 20 passi circa 72 s, 30 passi circa 104 s** al netto. Il caldo («caldo» di iOS)
+  arriva alla seconda o terza generazione di fila e lì l'app aspetta (39 s, poi 163 s); una generazione sola da tiepido non lo
+  tocca. Uscire dall'app non rompe la generazione (25 s fuori, pausa e ripresa). Picco 790 MB. La batteria letta dall'app va a
+  scatti del 5%, inutile per una generazione. Manca ancora una foto vera di Lorenzo: finora solo la persona di prova in studio.
+- **Permesso dell'11/11:** finché dura questa prova «Fashn Bench» si può reinstallare sull'iPhone di Lorenzo senza chiedere ogni
+  volta («Sì, aggiorna pure»). Solo quell'app e solo quel telefono: per Style Vault resta «mai una build di debug senza chiedere».
+- Restano del 10/11: origine dei dati di addestramento (mail a FASHN), 15 Pro di Mary, 704 MB da ospitare, etichetta «generato
+  con IA», esclusione di intimo e costumi. Il modello non lavora con l'app in secondo piano.
+
+## Novità 2026-11-11 — Build 1.0 (11) caricata
+
+Con l'ok di Lorenzo («Sì, build 11»). Caricata alle 09:37 (`build11.sh`, `upload11.sh` in `.superpowers/sdd/rc/`). Dentro ci sono
+le correzioni del 10/11 (sezione qui sotto): pantaloni della foto tolti sotto un capo nuovo, consiglio «già messo», statistiche,
+guardaroba vuoto, calore di partenza dal tipo di capo.
+- IPA controllata: 1.0 (11), "Style Vault", Apple Distribution, WeatherKit, CloudKit e push in Production, PrivacyInfo, nessuna copia
+  " 2", nessun argomento `-SV`, niente Open-Meteo, nessuna eccezione ATS; `BodyBase`, `defaultWarmth` e `EmptyWardrobeHint` nei
+  simboli, i due testi nuovi in it e en. Nel binario c'è `http://localhost:9999`, identico nella 10 e non del codice dell'app.
+- TestFlight, letto alle 09:50 dell'11/11: build 11 «Pronta per l'invio», gruppo «Lorenzo e Marianna», 2 inviti, 0 installazioni.
+- Non provato: sul telefono vero, la prova la fa Lorenzo da TestFlight. Da provare: avatar con un paio di pantaloni (quelli della
+  foto del corpo non devono spuntare); un cappotto nuovo deve partire «Pesante»; il consiglio «già messo» il giorno dopo un outfit
+  indossato deve dire quali capi. I cappotti già salvati a «Leggero» si correggono a mano dalla scheda del capo.
+
+## Novità 2026-11-10 — FASHN misurato sull'iPhone, usabilità, pantaloni della foto
+
+Richieste di Lorenzo nella stessa sessione: «Analizza l'app e migliorala», poi «il problema è lo scontorno dei capi e dell'avatar»,
+poi, visto il confronto, «non è precisissimo, non so se si possa risolvere» e infine «mettiamo questo FASHN VTON v1.5» → «Sì, misuralo».
+Sul ramo locale, **non in una build**: la 1.0 (10) su TestFlight non ha niente di questo.
+
+**FASHN VTON v1.5 sull'iPhone 18 Pro Max** (`docs/verifiche/2026-11-10-fashn-iphone/prova-iphone.md`, app di prova in
+`tools/avatar-fashn/bench/`, installata sul telefono con l'ok di Lorenzo, bundle `it.faraoni.stylevault.bench`):
+- Generazione intera a 6 bit (704 MB) sulla GPU: **30 passi 121,7 s, 20 passi 81,1 s, 12 passi 49,5 s**, circa 3,9 s a passo.
+  Picco di memoria misurato 669-854 MB (`phys_footprint`: la GPU potrebbe non esserci tutta). Immagine uguale a quella del Mac.
+- A 20 passi le trecce del maglione restano; a 12 la forma è giusta ma la trama sparisce.
+- Non misurato: 15 Pro di Mary, iPad, senza permesso di memoria aumentata, Neural Engine, capi indossati, pantaloni, vestiti,
+  più generazioni di fila. **DWPose non è convertito**: le pose vengono ancora dal Mac, la catena intera sul telefono non esiste.
+- Licenze, ricontrollate il 10/11 sul repository: codice e pesi Apache 2.0, DWPose e YOLOX Apache 2.0, origine dei dati di
+  addestramento non dichiarata (18 milioni di coppie più 4 milioni di terne sintetiche). Il parser (solo ricerca) non serve.
+- **Deciso da Lorenzo il 10/11 dopo la misura:** prima «non mi fido ancora di questi FASHN», poi «lasciala ai prossimi passi».
+  FASHN non entra nella 1.0. Dopo l'uscita, nell'ordine: Lorenzo scrive a FASHN per l'origine dei dati; posa sul telefono
+  nell'app di prova; misura sul 15 Pro di Mary. Solo con tre risposte buone entra in un aggiornamento, come download facoltativo.
+  Non riproporlo prima e non integrarlo senza che lo dica lui.
+- Da chiudere prima di integrarlo: rischio sui dati di addestramento (consigliato scrivere a FASHN), 704 MB da
+  scaricare e dove ospitarli, 80-120 s di attesa a immagine. Poi: posa sul telefono (DWPose o Apple Vision), etichetta
+  «generato con IA», segnalazione, esclusione di intimo e costumi, crediti, note per il revisore. La decisione 6 del design
+  (prima versione senza avatar realistico) vale finché Lorenzo non la cambia.
+- Gli script del Mac (`convert_coreml.py`, `coreml_pipeline.py`, `guard.sh`, README) stanno nel commit `68c2f5a`; i modelli
+  convertiti in `tools/avatar-fashn/out/` (fuori da git).
+
+**Avatar a collage** (`docs/verifiche/2026-11-10-pantaloni-della-foto/`, banco del Mac con Vision vero su 4 foto del corpo):
+- `BodyBase` (Core, `Avatar/`): quando si mette un capo sotto, i pantaloni della foto del corpo si tolgono dalla vita in giù
+  (stessa riga di `GarmentLayout.waistY`), pelle esclusa. Prima spuntavano tra le gambe e ai lati dei pantaloni nuovi.
+- Il sopra non si tocca. Colorare «color pelle» maglia e braccia della foto è stato provato e scartato: macchie marroni, e in
+  un caso anche la gonna dello stesso colore della giacca (`persona-18-color-pelle-scartato.jpg`).
+- `WornGarment.mask` (estratta da `extract`, zone colore in `ColorZones`): bordo arrotondato (`Morphology.smoothed`) e ciocche di
+  capelli dentro il profilo del capo tenute, se la testa è nella foto. Sul banco i ritagli cambiano poco. Cache `capo2`.
+- Limite che resta: è un collage, il capo non prende la forma del corpo e sopra restano i vestiti della foto.
+
+**Usabilità** (dalle 33 schermate dell'ultimo giro e dal codice):
+- Consiglio «già indossato»: solo i sette giorni prima, mai il giorno stesso (compariva sull'outfit appena registrato e anche per
+  capi messi mesi fa) e con i nomi dei capi: «Di recente hai già messo Jeans chiari (9 nov 2026)».
+- Statistiche: «Dimenticati nell'armadio» non ripete «I più indossati».
+- Guardaroba vuoto: una riga che dice come aggiungere un capo e a cosa serve, anche nella scheda Outfit.
+
+**Verifiche del 10/11** (Mac a carico 300-900 per le altre sessioni, quindi in più passate):
+- Core 212/212 (`swift test`). Test dell'app 226 passati.
+- Suite UI iPhone: 53 test, tutti passati ma non in una sola esecuzione. In `round-12b` 50 su 53; i tre caduti su attese
+  scadute (`testIlProfiloHaLeTreFoto…`, `testLaSegnalazioneBloccaIDatiSensibili…` con «main thread busy for 30s»,
+  `testPosizioneNegataRestaSullaCitta`) rifatti da soli in `round-12c`: 3 su 3.
+- Giri da utente da installazione pulita, 33 schermate: Duo, italiano chiaro, inglese, italiano scuro. Guardati i fogli:
+  suggerimento nel guardaroba vuoto (it, en, scuro), niente «già messo» sull'outfit appena indossato, «Dimenticati» senza ripetizioni.
+- Il giro scuro è caduto due volte al salvataggio del quarto capo (il foglio «aggiungi» resta aperto dopo «Salva», app che
+  risponde) ed è passato alla terza. Causa non vista: lo script ora scatta `salva-non-chiude-N` se ricapita. Ipotesi: tocco sulla
+  categoria andato a vuoto mentre il modulo scorre, quindi errore «categoria mancante». Se ricapita, guardare quella schermata.
+- Nessun crash nei DiagnosticReports. Non provato: telefono vero, iPad, nessuna build nuova.
+- `tools/avatar-fashn/bench/` (app «Fashn Bench» della misura) è nel repo per i prossimi passi; i modelli restano in `out/`,
+  fuori da git. L'app di prova è ancora installata sull'iPhone di Lorenzo.
+
+**Calore di partenza (corretto la sera del 10/11):** un capo nuovo partiva sempre con calore 2, anche un cappotto: chi non
+toccava i pallini riceveva «Troppo leggero per 12°: aggiungi uno strato» con il cappotto addosso, e proposte peggiori col freddo.
+- Ora `Catalog.defaultWarmth(category:subcategory:)` (Core) dà il punto di partenza sulla scala di `warmthTarget`: cappotto e
+  piumino 5, maglione, felpa, giacca e stivali 4, jeans e sneakers 3, canotta, shorts e sandali 1; senza tipo vale la categoria
+  (capispalla 4, pantaloni e scarpe 3, il resto 2).
+- `ItemFormModel.warmthLevel` segue il tipo finché non si sceglie a mano; in modifica resta il valore salvato. I capi già nel
+  guardaroba non cambiano: chi ha cappotti a 2 li corregge dalla scheda del capo.
+- `round-13`, dopo la correzione: Core 216/216; suite iPhone 229 + 53 passati in una sola esecuzione; giri chiaro, scuro,
+  inglese passati al primo colpo; Duo caduto su un'attesa (`profile-temperature`, carico 560-650) e passato rifatto. Sui fogli
+  `foglio-r13-4`: stesso guardaroba, a 12° niente più «Troppo leggero», punteggio da 60 a 73. Nessun crash. Non sul telefono vero.
+
+**TestFlight, letto il 10/11:** build 10 «Pronta per l'invio», gruppo «Lorenzo e Marianna», 1 installazione; anche la 9 ha il gruppo.
+
+## Novità 2026-11-09 (sera) — Build 1.0 (10) caricata
+
+Con l'ok di Lorenzo («Sì, caricala»). Caricata alle 19:48 (`build10.sh`, `upload10.sh` in `.superpowers/sdd/rc/`), numero di build in
+`0ed77e1`. Dentro c'è l'avatar con solo il capo indossato (`575e10e`, sezione qui sotto).
+- IPA controllata: 1.0 (10), "Style Vault", Apple Distribution, WeatherKit, CloudKit e push in Production, PrivacyInfo, nessuna copia " 2",
+  nessun argomento `-SV`, niente Open-Meteo, nessuna eccezione ATS; `WornGarment` presente nei simboli dell'archivio.
+- Non provato: sul telefono vero, la prova la fa Lorenzo da TestFlight. Da provare: un capo fotografato addosso a qualcuno (foto da negozio
+  o per strada) deve comparire sull'avatar senza viso, braccia e sfondo, steso su spalle e fianchi.
+
+## Novità 2026-11-09 — Sull'avatar solo il capo indossato, allineato al corpo
+
+Screenshot di Lorenzo dalla build 9: maglia da negozio (modella tagliata sotto il mento) e foto a figura intera (gilet e pantaloni) finivano
+sull'avatar come rettangoli con la persona intera, testa e braccia comprese. Sue parole: le foto «hanno un campo bianco dietro, lui lo ha
+tolto ma non deve rimanere piatta la foto». Commit `575e10e`.
+- `WornGarment` (Core, `Avatar/`): se nella foto del capo c'è una persona (`VNDetectHumanRectanglesRequest`), tiene solo il capo del posto:
+  zone colore (k-means in Lab) prese sul petto per maglia e vestito, sulle maniche per la giacca (aperta mostra la pancia), sulle cosce per i
+  pantaloni, sotto le caviglie per le scarpe; tolti pelle (colore del naso) e capelli (colore in testa), tranne se sono il colore principale
+  del capo; righe limitate dal colletto all'orlo; solo le parti collegate, buchi chiusi, bordo sfumato.
+- Allineamento (`GarmentLayout.wornTransform`): spalle e fianchi della foto su spalle e fianchi dell'avatar (pantaloni: fianchi e caviglie,
+  o ginocchia), larghezza tenuta entro un terzo dell'altezza. Di lato, o senza posa (foto da negozio senza testa), vale il riquadro di prima
+  con il solo capo. Senza persona nella foto non cambia nulla.
+- Cache: `CutoutCache.piece`, file `<capo>-<posto>-capo1.png` + `.posa`, o `.nessuno` se il capo va intero. Il ritaglio lavora a 1600 px
+  (circa 25 byte per pixel).
+- Prove: pacchetto 201 su 201 (13 test nuovi senza Vision, 4 con Vision e due foto Unsplash). Banco del Mac su 16 foto di capi indossati e
+  10 capi da soli: i capi da soli restano interi (giacca appesa, bomber tenuto in mano, gruccia, stivali); gli avatar prima e dopo sono in
+  `docs/verifiche/2026-11-09-capo-indossato/`.
+- Limiti: braccia incrociate davanti alla maglia lasciano un buco; capelli lunghi sul petto dello stesso colore della gonna restano; scarpe
+  prese da una foto indossata portano l'orlo dei pantaloni se è dello stesso colore; maglia e pantaloni dello stesso colore non si separano
+  bene; i vestiti della foto del corpo restano visibili dove il capo nuovo non copre. Il capo esatto addosso lo dà solo "Prova con ChatGPT o
+  Gemini". Vale anche per i capi già nel guardaroba: il ritaglio si fa alla prima apertura dell'avatar.
+- Simulatore, dopo il riavvio del Mac (`.superpowers/sdd/rc/round-10.sh` e `round-10b.sh`): suite iPhone 53/53 e giri da installazione nuova in chiaro (`r10b`), scuro (`r10d`), inglese (`r10be`) e su iPhone Duo (`duo10`) passati, 33 schermate ciascuno, nessun crash. Al primo passaggio tre parti erano cadute per tempo con il Mac a carico 215-440 e quattro simulatori di altre sessioni accesi (segnalazione, primo tocco nel campo nome, foglio che non si chiudeva in 30 s): rifatte uguali, passate. La schermata «Vedilo addosso» è identica pixel per pixel a quella della build 9 (nel simulatore c'è il corpo finto).
+- Non provato: sul telefono vero, l'unico posto dove gira Vision. Serve la build 1.0 (10).
+
+## Novità 2026-11-08 (sera) — Build 1.0 (9) caricata
+
+Con l'ok di Lorenzo («Sì»). Caricata alle 21:49, va in TestFlight dopo l'elaborazione di Apple. Dentro c'è lo scontorno dei capi senza gli
+oggetti tagliati dal bordo (`f8a9bef`, sezione qui sotto); numero di build in `7e99dc3`.
+- IPA controllata: 1.0 (9), "Style Vault", Apple Distribution, WeatherKit, CloudKit e push in Production, PrivacyInfo, nessuna copia " 2",
+  nessun argomento `-SV`, niente Open-Meteo, nessuna eccezione ATS; `garmentInstances` presente nei simboli dell'archivio.
+- Suite iPad 279 su 279 sul codice della 9 (09/11), nessun crash. Non provato: la correzione sul telefono vero, la prova la fa Lorenzo da TestFlight.
+
+## Novità 2026-11-08 (sera) — Secondo giro di scontorno: selfie allo specchio, foto da iPhone, accessori
+
+Richiesta di Lorenzo: «Fai altre simulazioni e dimmi che trovi e correggilo». 15 capi e 10 persone nuovi da Unsplash, con lo stesso banco
+del Mac del primo giro, più le foto come le salva l'iPhone (pixel coricati con orientamento EXIF 6, JPEG e HEIC). Programmi, esiti e
+immagini: `docs/verifiche/2026-11-08-scontorno-sfondi-2/`.
+- Trovato e corretto: per i capi l'app teneva tutti i soggetti di Vision, quindi occhiali sul tavolo uscivano con la tazzina e la tazza
+  tagliate dal bordo. Ora `PersonCutout.garmentInstances`: se un soggetto sta tutto dentro la foto, si scartano quelli che toccano almeno
+  due lati. Usata da `GarmentImage.cutout` e dall'avatar. Su 27 capi cambia solo quella foto; collana a tre fili e paio di stivali restano
+  interi. Test: `testQualiSoggettiTieneUnCapo` con i lati misurati e `testCapoSenzaGliOggettiTagliatiDalBordo` (fixture
+  `capo-occhiali-tazza.jpg`). Pacchetto 184 su 184. I capi già scontornati restano come sono: vale per le foto nuove.
+- Provato e già giusto: foto da iPhone dritte sia JPEG sia HEIC, e la foto del corpo passa il controllo; selfie allo specchio intero
+  accettato e avatar buono; gli altri selfie allo specchio e le foto con i piedi tagliati rifiutati come "non a figura intera" (giusto: i
+  piedi non si vedono); seduta rifiutata. Capi singoli puliti anche bianchi e neri: occhiali su bianco, jeans, stivale, top nero
+  nell'armadio, vestito su muro con ghirlande.
+- Limiti rimasti, da dire a Mary: capo indossato da una persona (esce la persona intera, viso compreso), collana indossata (nessun
+  soggetto, resta la foto), più camicie sullo stesso appendiabiti (blocco unico), gruccia attaccata al vestito, jeans piegati (l'avatar li
+  incolla piegati).
+- Dopo la correzione: suite iPhone passata; giri da installazione pulita in chiaro, scuro, inglese e su iPhone Duo passati, 33 schermate
+  ciascuno, tutte viste, nessun crash. Non provati: suite iPad, la correzione su un telefono vero (serve una build 1.0 (9)).
+
+## Novità 2026-11-08 — Build 1.0 (8) caricata
+
+Con l'ok di Lorenzo («Sì, prepara la 8»). Caricata alle 17:39, va in TestFlight dopo l'elaborazione di Apple. Dentro c'è la correzione del passante sullo sfondo (`7120012`); numero di build in `678a7c9`.
+- IPA controllata: 1.0 (8), "Style Vault", Apple Distribution, WeatherKit, CloudKit e push in Production, PrivacyInfo, nessuna copia " 2",
+  nessun argomento `-SV`, niente Open-Meteo, nessuna eccezione ATS.
+- Prove: quelle della correzione qui sotto (suite iPhone, quattro giri da zero). Suite iPad non rifatta.
+- Non provato: la foto del corpo con un passante sul telefono vero. Prossimo passo per Lorenzo e Mary: aggiornare da TestFlight e riprovare
+  scontorno e foto del corpo.
+
+## Novità 2026-11-08 — Scontorno provato con sfondi complessi
+
+Richiesta di Lorenzo mentre Mary non risponde. 12 foto di capi e 10 di persone da Unsplash (letti, strade, tavolini, appendiabiti),
+passate alle stesse funzioni dell'app (`GarmentImage.prepared` + `cutout`, `BodyPhotoAnalyzer.analyze`, `AvatarRenderer.render`) con Vision
+vero sul Mac, tramite un piccolo programma che usa `StyleVaultCore`. Fogli, esiti e programma: `docs/verifiche/2026-11-08-scontorno-sfondi/`.
+- Capi: un capo da solo si scontorna bene anche su sfondo pieno (giacca su porta, borsa al bar con strada dietro, scarpe sul parquet, bomber
+  tenuto in mano: la mano sparisce). Restano gruccia, gancio o sedia quando toccano il capo. Più capi vicini (flat lay, appendiabiti, stender)
+  escono come un blocco unico. Letto disordinato con tanti oggetti: nessun soggetto, l'app mostra la foto originale.
+- Persone: scontorno pulito in tutte, anche in controluce e su muro dipinto. Foto di spalle riconosciuta. Bastava un passante piccolo sullo
+  sfondo per "più persone" (`people > 1` in `BodyPhotosModel.validate`): corretto con l'ok di Lorenzo («Sì, correggi qui»), vedi sotto.
+- Correzione del passante: `PersonCutout.peopleCount` conta solo chi è alto almeno metà della persona principale (`backgroundPersonRatio` 0,5).
+  Altezze misurate: passante 0,30 accanto a 0,93; coppia 0,53 accanto a 0,61, che resta "più persone". Test: `countedPeople` con i numeri
+  misurati e due foto vere ridotte a 1024 (`Fixtures/persona-passante.jpg`, `persona-coppia.jpg`, Unsplash). Pacchetto 182 su 182.
+  - Sul banco del Mac la foto col passante ora non dà più "più persone" ma "non a figura intera": la posa non trova le caviglie (gambe tagliate
+    dal fotogramma). È la regola della posa già esistente, lasciata com'è.
+  - Suite iPhone passata. Giri da installazione pulita: scuro, inglese e iPhone Duo passati, 33 schermate ciascuno, tutte viste. Il chiaro si è
+    fermato al primo capo, foglio ancora aperto dopo Salva, con il Mac a carico 100: è la seconda volta (anche nella build 7). `save()` chiude
+    solo con nome e categoria validi, quindi è perso il tocco su Salva o quello sulla categoria; l'app si comporta bene. Rifatto da zero, passato, 33 schermate viste.
+  - Entra nella build 1.0 (8); la 7 conta ancora i passanti. Suite iPad non rifatta (la correzione è nel pacchetto, non nelle viste).
+- Avatar: buono con un capo fotografato bene (bomber); con un capo scontornato male (camicia con gruccia e camicie vicine) l'avatar incolla il
+  blocco intero.
+- Non provato: lo stesso sull'iPhone (Vision del Mac, non del telefono) e la build 7 nelle mani di Mary.
+
+## Novità 2026-11-08 — Build 1.0 (7) caricata
+
+Con l'ok di Lorenzo («Fai tutto insieme»). Caricata su App Store Connect alle 13:41: va in TestFlight al gruppo interno dopo l'elaborazione di Apple.
+- Dentro: nome "Style Vault", icona nuova (gruccia e "SV", varianti scura e tinta, generatore in `tools/icona/icon.swift`), scontorno nelle
+  schede e negli outfit, meteo e ricerca delle città solo da Apple. Commit `073a127`.
+- IPA controllata: 1.0 (7), Apple Distribution, WeatherKit, CloudKit in Production, PrivacyInfo, nessuna copia " 2", nessun `-SV`, niente Open-Meteo.
+- Prove sul codice della build:
+  - Suite iPhone 279 su 279. Suite iPad 278 su 279: `testIlBloccoCopreIlFoglioAggiungi` falliva anche a Mac scarico.
+  - Il video del test mostra il tocco sintetico dentro l'interruttore, che non si muove: tocco perso dal simulatore iPad, è la causa di
+    `testBloccoConAutenticatoreFinto` annotata il 05/11. Il test ora ritocca dopo 10 secondi: i due test del blocco 10 su 10, con un tocco perso
+    e ripreso. Commit `ad3c0e8`.
+  - Giri da utente da installazione pulita, 33 schermate ciascuno, tutte viste: chiaro, scuro, inglese, iPhone Duo. Il chiaro era scaduto al
+    terzo capo (foglio non chiuso dopo Salva) con il Mac a carico 300; rifatto da zero, passato.
+- Non provato: lo scontorno vero con Vision su questa versione (serve il telefono), l'icona tinta sulla Home.
+- Prossimi passi per Lorenzo: provarla e farla provare a Mary, scontorno compreso; controllare il nome della scheda in App Store Connect.
+
+## Novità 2026-11-08 — Scontorno visibile nelle schede
+
+Mary: «ancora non scontorna». Causa probabile, letta dal codice e non vista sul suo telefono: l'app scontornava, ma griglia, outfit,
+calendario e statistiche mostravano sempre la foto originale. Lo scontorno compariva solo come terza pagina del dettaglio, come nel
+sito, dove serviva solo all'avatar. In più i capi senza scontorno, perché l'app era stata chiusa prima della fine o perché importati,
+non venivano mai ripresi. Vision sul telefono funziona: il 03/11 l'avatar aveva scontornato i capi sull'iPhone di Lorenzo.
+- Correzione:
+  - `Item.shownPhoto` (scontorno, se no foto) nelle schede e negli outfit; il dettaglio apre ancora sulla foto originale.
+  - `CutoutWorker.enqueueMissing()` all'avvio e dopo un'importazione; un capo in cui Vision non trova nulla non si riprova nella stessa sessione.
+  - Fondo `Palette.studio`, chiaro anche in modalità scura, dietro le immagini con trasparenza.
+  - Seme di prova `-SVSeedCutout`, solo DEBUG.
+- Verifica:
+  - Suite iPhone 279 su 279, compresi i 4 test nuovi del worker. iPad non rifatto.
+  - Griglia in modalità scura vista sul simulatore: `docs/verifiche/2026-11-08-scontorno/griglia-scuro.png`.
+  - Non visto con Vision vero sul telefono: i test del pacchetto non girano su un iPhone vero senza un'app che li ospiti.
+- Entrato nella build 1.0 (7).
+
+## Novità 2026-11-08 — Nome "Style Vault"
+
+Richiesta di Lorenzo. Sul ramo locale, **non ancora in una build**: sulla Home e in tutti i testi dell'app ora c'è "Style Vault" (era "SV Nativa" sulla Home e "StyleVault" nei testi): `project.yml`, `Info.plist`, `InfoPlist.xcstrings`, 16 testi di `Localizable.xcstrings`, login, oggetto della mail, testi legali rigenerati da `testi-legali.md`. Identificativi, container iCloud e nomi dei file di esportazione restano "StyleVault".
+Prove: suite iPhone 275 su 275, test del guardaroba su iPad 19 su 19, nome visto sulla Home del simulatore. Il primo lancio dopo il riavvio del Mac era 273 su 275: un'app che non partiva, con il Mac carico, e un tocco a vuoto del test. Lo scorrimento di `WardrobeFlowTests` continuava per inerzia e il chip della categoria finiva sotto l'intestazione del foglio; ora scorre lento, aspetta che si fermi e controlla l'intestazione. È probabilmente anche la causa di `testNuovaCategoria` del 07/11, che non è stata verificata.
+Entrato nella build 1.0 (7).
+
+## Novità 2026-11-07 (sera) — Open-Meteo tolto
+
+Richiesta di Lorenzo dopo la conferma del meteo di Apple sul telefono. Sul ramo locale, **non ancora in una build**: la 1.0 (6) su TestFlight usa ancora Open-Meteo come ripiego.
+- Meteo: Apple, poi ultima previsione salvata da Apple, poi errore e impostazione a mano. L'outfit non si blocca. Una previsione salvata da un altro servizio non si mostra più.
+- Città: `Profile/AppleCitySearch.swift`, con `MKLocalSearchCompleter` e risoluzione dei primi 6 suggerimenti: il solo `MKLocalSearch` dava un risultato e rendeva irraggiungibili gli omonimi. Apple limita le richieste: oltre 50 in pochi secondi dà liste vuote per un po'.
+- Testi: privacy, supporto, schermate legali e crediti non nominano più Open-Meteo. Nei documenti storici il nome resta.
+- Prove sul codice definitivo: Core 179 verdi, iPad 275 su 275. iPhone 265 su 275 al primo lancio, 275 su 275 al secondo: nel primo, Arrivo, l'app di un'altra sessione, è entrata sullo stesso simulatore e compare in 8 dei 10 test rossi. `testSalvaIndossaEVedeTuttoNelCalendarioENelleStatistiche` e `testNuovaCategoria` non la mostrano nel log e non sono spiegati: sono passati al secondo lancio.
+- Non fatto: giri da utente da rifare da zero, schermata di ricerca usata a mano, telefono, iOS 17, testi legali da far rileggere a Lorenzo, voce `CoarseLocation` del manifest da rivedere.
+
+## Novità 2026-11-07 — RC 1.0 (6) caricata
+
+Caricata il 07/11 alle 16:07 dal commit `99048c5`; alle 16:20 App Store Connect la dà pronta nel gruppo "Lorenzo e Marianna", nessuna installazione. Prove: iPhone e iPad 272 su 272, giri in chiaro, scuro, inglese e iPhone Duo passati, 33 schermate
+ciascuno, tutte viste. Un difetto corretto: contrasto di titoli, note e segnaposto nei moduli di sistema. Verbale: `docs/verifiche/2026-11-07-bozza-completa/giro.md`.
+Il gruppo interno ha la distribuzione automatica: la build 6 è "Test in corso", già disponibile a Mary, che al controllo aveva ancora la 1.0 (5). Lorenzo risulta "Invitato", invito non ancora accettato.
+Prova di Lorenzo sul telefono: il credito dice ancora Open-Meteo. Sul portale Apple WeatherKit era attivo in Capabilities ma spento in App Services dell'App ID `it.faraoni.stylevault.nativa`: acceso il 07/11 alle 16:29, con l'ok di Lorenzo. Provato alle 18:24 sulla build 6 da TestFlight: risponde Apple, confermato anche da Lorenzo. Non è servita una nuova build, ma l'app va riaperta: restava in memoria la previsione delle 16:26, e tornando dallo sfondo sulla stessa scheda il meteo probabilmente non si ricarica (letto dal codice, non provato). L'app nasconde l'errore di WeatherKit (`try?` in `WeatherLoader`). Sul telefono di Mary non è verificato. I profili di firma dell'App ID vanno rigenerati: li rifà Xcode alla prossima build.
+Da rivedere: nome sulla Home solo "Style Vault" (oggi "SV Nativa") e icona.
+IPA controllata: 1.0 (6), Apple Distribution, WeatherKit, PrivacyInfo, nessuna copia numerata, argomenti `-SV` solo in `#if DEBUG`.
+Da chiedere a Lorenzo: Mail di ripiego e storico dei capi cancellati, testi legali da leggere. `Web (Apps)` dentro `Apps Mobile 📱` è voluto: confermato il 07/11.
+Copie numerate: `~/Documents` è su iCloud Drive, e con i file rigenerati nascono doppioni (`Info 3.plist`, `TempGiroTests 2.swift`, 21 copie di `StyleVault.xcodeproj`).
+Il primo `xcodebuild archive` è uscito senza errori nel log, dopo 2 righe; il secondo è passato. Causa non trovata.
+
+## Novità 2026-11-07 — RC 1.0 (6), prove da finire (superata dalla sezione sopra)
+
+Il progetto ora sta in `/Users/lorenzofaraoni/Documents/Apps Mobile 📱/StyleVault`. Ramo `feat/app-nativa`, solo commit locali.
+Fatto sul ramo: correzioni della revisione, `stamp` e `DuplicateStore`, storico dei capi cancellati con `snapshot`, import più robusto, date gregoriane,
+Mail per chi segnala senza account, privacy e supporto dentro l'app (`scripts/testi-legali.py` genera schermate e `docs/pubblicazione/pagine/` da `testi-legali.md`),
+Meteo di Apple con ripiego su Open-Meteo (tolto la sera del 07/11, vedi sopra), build 6 in `project.yml`. Report pre-invio: `docs/pubblicazione/2026-11-07-report-rc.md`.
+**Non fatto:** build 6 non caricata; suite complete e giri fermati prima di dare un esito sul codice finale. Su Mary c'è ancora la 1.0 (5).
+Strumenti: `.superpowers/sdd/rc/` (ignorata da git): `round-rc.sh` fa suite iPhone e iPad e giri chiaro, scuro, inglese e iPhone Duo; `build6.sh` archivia ed esporta.
+`TempGiroTests.swift` viene copiato e tolto da `giro6.sh`, mai nel commit.
+
+## Novità 2026-11-07 — Revisione esterna del ramo
+
+Sul ramo locale, non ancora in una build: correzioni dalla revisione (crash doppioni, crash viso a bordo foto, meteo vecchio, cache
+scontorni, esporta e importa a blocchi, testo "Elimina account", manifest privacy). Esito in `docs/verifiche/2026-11-07-bozza-completa/giro.md`.
+Decisioni e minori rimandati sono solo in `.superpowers/sdd/2026-11-05-app-nativa-fase-2/progress.md`, cartella ignorata da git: non cancellarla prima di averli riportati.
+Prima di portare lo schema CloudKit in Production: campo per scegliere la stessa copia sui doppioni, poi pulizia per id; fissare `VersionedSchema`; revoca token Apple.
+Da decidere con Lorenzo: Mail come ripiego per chi segnala senza account, comportamento dello storico dei capi cancellati.
+
+## Novità 2026-11-07 — Build 1.0 (5) caricata per Mary
+
+Caricata il 07/11 alle 02:04 dal commit `e5003bb`; App Store Connect la dà pronta nel gruppo "Lorenzo e Marianna", 2 inviti, nessuna installazione alle 02:10. Verbale, screenshot e cosa non è provato: `docs/verifiche/2026-11-07-bozza-completa/giro.md`.
+Giro pulito in italiano chiaro, italiano scuro e inglese; un difetto trovato e corretto (spazio prima dei due punti in Armocromia).
+Per Mary: i capi del sito non ci sono finché Lorenzo non lancia lo script e lei importa lo zip (`docs/pubblicazione/portare-i-dati-di-mary.md`).
+Il giro temporaneo sta nello scratchpad della sessione: se serve di nuovo, va riscritto (`TempGiroTests` + `giro5.sh`), senza metterlo nel commit.
+
+## Novità 2026-11-06 — Ibrida e sito fuori dal repository
+
+Sul ramo `claude/togli-ibrida-e-sito-5d8100`, non fuso: nel repository restano `StyleVaultNative`, `StyleVaultCore`,
+`supabase/` e `keepalive.yml`. Il resto è nel tag locale `archivio-ibrida-e-sito`; cosa recuperare per le fasi 5, 6 e 7 è
+elencato nel design (decisione 9). Testi legali in `docs/pubblicazione/testi-legali.md`. `Localizable.xcstrings` ora si
+modifica direttamente. Il sito resta online finché Lorenzo non pubblica; prima dell'App Store privacy e supporto hanno
+bisogno di una nuova sede.
+
+## Novità 2026-11-05 (notte) — Login nella nativa, percorso minimo
+
+Decisione di Lorenzo: la nativa ha Accedi con Apple, Google, email e password, password dimenticata. I dati
+restano su iCloud e l'account non li sposta. Rovescia la decisione 7 del design (vedi decisione 8).
+- Codice in `ios/StyleVaultNative/Auth/`; `AuthService` è condiviso con l'ibrida. Schema `svnativa://`.
+- "Continua senza account" sotto il login: Apple 5.1.1(v) vieta il login obbligatorio se le funzioni non
+  dipendono dall'account. Da confermare con Lorenzo.
+- Supabase: `svnativa://**` nei Redirect URLs e `it.faraoni.stylevault.nativa` nei Client IDs di Apple, verificati.
+- Il tasto Google compare solo col provider attivo: manca che Lorenzo incolli ID e segreto in Supabase, poi utenti
+  di prova o pubblicazione della schermata OAuth.
+- Non provato: accessi veri (Apple, Google, email), reset vero, cancellazione account, Release su dispositivo.
+- Test: iPhone 151, iPad 151 e ibrida 143 verdi. Su iPad 9 test del guardaroba fallivano sempre, anche a carico 40: sul
+  simulatore lento il test toccava mentre la tastiera spostava il foglio. Corretto il test con `waitForKeyboard`
+  (15 su 15), l'app non cambia: a mano il capo si salva. Il carico intanto era sceso, quindi il merito può essere
+  in parte suo. Swap pieno (23 GB) e 4 simulatori accesi rallentano tutto.
+- Build 1.0 (2) caricata il 2026-11-06 alle 08:33 con l'ok di Lorenzo ("Upload succeeded", commit `5d79ad5`). La
+  distribuzione automatica del gruppo "Lorenzo e Marianna" la manda anche a Marianna. Verificato su App Store
+  Connect: elaborata entro le 08:35, stato "Pronta per l'invio", gruppo con 2 tester e 2 build. Alle 08:35 Lorenzo
+  e Marianna risultavano ancora "Invitato", senza sessioni né dispositivi: invito non ancora accettato o dato non
+  aggiornato. IPA controllata: diritti di produzione, Apple attivo, nessun avanzo di prova.
+- Build 1.0 (3) caricata il 2026-11-06 alle 12:41 con l'ok di Lorenzo ("Upload succeeded", commit `2a965f5`), con le
+  correzioni del giro da utente sul simulatore: griglia, categoria doppia, pallini, riquadro dei campi (`FieldBox`), tema
+  nel login, invio nel login, colori (`Palette.link`), errore Apple col codice, "Registrati" in evidenza, "Esci e vai
+  all'accesso" nel Profilo per chi è senza account ("Esci" per chi ha l'account c'era già). Verificato su App Store
+  Connect alle 12:46: elaborata, "Pronta per l'invio", nel gruppo con 2 inviti, ancora nessuna installazione.
+- Test prima dell'upload: iPhone verdi (29 UI), ibrida 144. iPad: 28 su 29 UI nella suite completa; il test del
+  login cercava la tastiera a schermo e falliva sempre: corretto con `waitForFocus`, poi 5 su 5, ma la suite iPad
+  intera non è stata rifatta dopo. A mano su iPad il tocco sul bordo apre la tastiera. `testGiroCompleto` è fallito una
+  volta a load 136 (app occupata 21 secondi dopo il tocco, poi niente fuoco) e poi 6 su 6: causa non determinata.
+- Marianna (06/11): dice che Accedi con Apple non va e che non vede Registrati. Non visto a schermo. Su App Store Connect
+  la build 2 non risulta installata da nessuno (dato forse in ritardo). La build 1.0 (1) non ha login. Ipotesi aperte:
+  build vecchia, password dell'Account Apple rifiutata da iOS o dal download, "Continua senza account" già toccato
+  (dopo il login non ricompare). Servono il numero di versione in TestFlight e una foto della schermata.
+- Marianna, esito (06/11, ore 14:47, da App Store Connect e log di Supabase): ha installato la 1.0 (3) su iPhone 15 Pro
+  con iOS 27.2 ed è entrata con Apple dall'app nativa, creando un account nuovo con email nascosta da Apple
+  (`user_signedup`, id `6fffc5aa`). Resta separato dal suo account precedente "Marianna" (`3c113b1f`). Non si è visto cosa ha
+  fatto dopo. Giro sul simulatore da installazione pulita: Registrati, campi vuoti, tastiera aperta, senza account ed
+  "Esci e vai all'accesso" funzionano; registrazione vera e tasto Apple non provati lì. Su Supabase "Confirm email" è
+  spento: chi si registra entra subito, quindi non serve un messaggio "controlla la posta".
+- Sito: consiglio della foto in costume nella prova virtuale (commit `0da8b7f`), non pubblicato né visto a schermo.
+- Outfit e Calendario nativi (06/11, fasi 3 e 4 del design): tolto "In arrivo" dalle due schede, statistiche nel Profilo,
+  logica portata in `StyleVaultCore` con i casi del sito e il confronto `harmony-parity.json`. Build 1.0 (4) per Marianna caricata
+  il 06/11 alle 17:26 dal commit `07425e7`, dopo un giro da utente pulito da installazione nuova (tre passate, le prime due con
+  correzioni). Suite iPhone verde; suite iPad 37 su 39 al primo lancio con il Mac a carico 300, i due test rossi
+  (`testBloccoConAutenticatoreFinto`, `testGiroCompleto`) poi verdi 3 su 3 da soli. Lasciati come il sito: stesso outfit assegnabile
+  due volte allo stesso giorno, giorno futuro segnabile come indossato. Niente "Prova": arriva con la fase 6. Meteo da Open-Meteo con coordinate a 2 decimali; la
+  posizione si chiede solo dal tasto, dopo la spiegazione; senza si usa la città del Profilo.
+- Foto del corpo e "Vedilo addosso" (06/11 sera): Mary segnalava "non crea l'outfit" perché nella nativa mancava la foto di sé. Ora
+  "Le tue foto" è in cima al Profilo (3 viste, sostituibili e cancellabili, foglio `BodyPhotoEditorView`), e ogni scheda outfit
+  ha "Vedilo addosso" (`AvatarView`). Logica in `StyleVaultCore/Avatar`, portata dal tag senza il realistico: i test girano sul Mac con
+  Vision vera, nel simulatore analisi e composizione sono finte con `-SVFakeBody`. Abito con posto proprio (`dress`). Fuori per ora:
+  Prompt AI, prova da Calendario e dal dettaglio. Il collage non è un'immagine generata: niente etichetta IA, resta la dichiarazione
+  sulle foto. Motore: outfit anche con soli capispalla o categorie create a mano; meteo si arrende dopo 10 secondi.
+- Ramo `claude/togli-ibrida-e-sito-5d8100` fuso in `feat/app-nativa` il 06/11 su richiesta di Lorenzo (`98d5989`), nessun push.
+- Decisione di Lorenzo (06/11): il meteo passerà a quello di iPhone (WeatherKit). Non in questa build: per Marianna resta
+  Open-Meteo. Il passaggio tocca `Outfit/ForecastLoader.swift` dietro `ForecastLoading`, e poi tolgono Open-Meteo da citazione,
+  Privacy Labels, privacy policy e `PrivacyInfo.xcprivacy` (la `Coarse Location` va rivista).
+- Da fare nei prossimi passi, prima dell'App Store (Lorenzo, 06/11): provare l'app su iPhone Duo, il pieghevole. Oggi non è mai
+  stata aperta lì. Simulatore già presente: `iPhone Duo` `854E881E-D9B4-46B7-94AE-B670F95DBE1C`, runtime iOS 27.2 `24B91016s`.
+  Da guardare: schermo esterno e interno, passaggio da chiuso ad aperto con i dati ancora a posto, Split View. Su iPhone l'app è
+  bloccata in verticale, ma Apple dice che lo schermo interno non rispetta gli orientamenti dichiarati, quindi lì può ruotare.
+  A favore: il codice usa le size class e non `UIScreen.main` né `userInterfaceIdiom`; Xcode 27.2 copre già l'SDK 27.1 richiesto.
+- Decisione di Lorenzo (06/11): si segue sempre la skill `mobile-app-publishing`, giro da utente compreso, e si tolgono dal
+  repository ibrida e sito. Lo fa una sessione a parte sul suo ramo, con tag `archivio-ibrida-e-sito`; la fusione la decide
+  Lorenzo e il sito resta online finché non pubblica lui. Supabase e `keepalive.yml` per ora restano: account della nativa e dati
+  di Lorenzo e Marianna. Se pulire anche Supabase lo si decide più avanti con Lorenzo. Per Android si esportano i dati
+  direttamente, senza complicazioni, con un pulsante nel Profilo non ancora costruito.
+- `Info 2.plist` e `StyleVaultNative 2.entitlements` sono vecchie copie non tracciate: escluse in `project.yml`, non
+  cancellate.
+- Prima dell'App Store: `/privacy` e `/supporto` rispondono 404 (si vedono solo grazie a 404.html), mittente delle
+  email di reset, revoca del token Apple, account demo, Privacy Labels.
+
+## Novità 2026-11-05 (sera) — Nativa, fase 2 Guardaroba (ramo `feat/app-nativa`, solo locale)
+
+Piano: `docs/superpowers/plans/2026-11-05-app-nativa-fase-2.md`, eseguito in sessione, senza subagent.
+- Fatti Task 1-9: filtri, prezzo, testi dei link, foto e scontorno in `StyleVaultCore`; `WardrobeStore`,
+  `CustomCategoryStore`, `CutoutWorker`; modulo con foto e link; lista, dettaglio, wishlist, categorie
+  personalizzate. Viste in `ios/StyleVaultNative/Wardrobe/`.
+- **Manca il Task 10, la prova con Lorenzo su iPhone e iPad.** Lo scontorno gira solo su dispositivo
+  (Vision non va nel simulatore), e fotocamera, link veri e foto su iCloud non sono mai stati provati.
+- Spostati: doppioni di `BodyPhoto` e tasto "Prova outfit" alla fase 6, `setArmocromia` alla fase 5,
+  scheda di uso del capo alla fase 4. Il piano spiega perché.
+- Attenzione: `LocalizedStringKey("testo.\(x)")` cerca la chiave con `%lld`, non quella col valore.
+  La chiave va costruita prima in una `String` (vedi `Text.warmth`).
+- Giro da utente sul simulatore fatto (skill `mobile-app-publishing`): 4 giri, ultimo pulito su iPhone e
+  iPad, 8 difetti corretti, commit `0793051`. Verbale e schermate in
+  `docs/verifiche/2026-11-05-nativa-fase-2/`. Test: Core 27, iPhone 140, iPad 140. Release controllata con
+  `strings`: nessun avanzo di prova, nessun segreto. App reinstallata su iPhone e iPad di Lorenzo.
+- Prima di pubblicare (fase 8) manca `PrivacyInfo.xcprivacy` nel nativo: `UserDefaults` richiede la
+  motivazione. Il nome sulla schermata è ancora "SV Nativa".
+- `testBloccoConAutenticatoreFinto` è fallito 3 volte su iPad col Mac saturo, poi 20 su 20: causa non
+  provata. Guardare se l'interruttore del blocco perde un tocco.
+- TestFlight per Mary: app `StyleVault` in App Store Connect (id 6831314204, SKU `stylevault-nativa`, Bundle ID
+  `it.faraoni.stylevault.nativa`, non più modificabile). Build 1.0 (1) caricata, scade fra 90 giorni. Gruppo
+  interno "Lorenzo e Marianna" con distribuzione automatica; dentro c'è solo Lorenzo. Marianna è invitata
+  come utente, ruolo Marketing, solo StyleVault: si aggiunge al gruppo dopo che accetta. Schema iCloud distribuito
+  in produzione il 05/11 con il sì di Lorenzo: 7 tipi di record, da ora solo aggiunte. I dati di sviluppo non compaiono nelle build TestFlight. Lo schema si crea con
+  `-SVInitCloudSchema` su dispositivo; con `devicectl` gli argomenti vanno dopo `--`. Ogni nuova build vuole
+  `CFBundleVersion` più alto in `ios/StyleVaultNative/Info.plist`.
+- Login dell'ibrida (05/11, richiesta di Lorenzo): Accedi con Apple scritto e attivo, nativo, Supabase con
+  Client ID `it.faraoni.stylevault` e nessun segreto; installato sull'iPhone, mai provato col login vero.
+  Google: codice pronto, progetto Google Cloud `stylevault-513821`, schermata di accesso in modalità test e
+  client web creato. Manca il provider su Supabase con ID e segreto, che inserisce Lorenzo. In pausa: il
+  05/11 Lorenzo ha dato la precedenza alla nativa.
+- Login della nativa: Lorenzo l'ha chiesto il 05/11, rovescia la decisione 7 del design; da progettare,
+  niente codice finché non approva il design.
+- Nota per i test UI: `isHittable` è vero anche oltre il bordo dello schermo o sotto la tastiera; con la
+  tastiera aperta il fine corsa dello scorrimento non la conta, e al primo ridisegno il contenuto torna
+  indietro (lo spazio in `ItemFormView` è legato al `FocusState`).
+
+## Novità 2026-11-05 — Apple Developer Program ATTIVO
+
+Lorenzo è stato accettato: programma Individuale, Team ID `599MS2BZ63` (lo stesso
+di prima, già in `ios/project.yml`), dati in `~/.claude/CLAUDE.md`. Sullo store il
+venditore è il suo nome e cognome. Dispositivi registrati: 2, iPhone e iPad di
+Lorenzo; il telefono di Mary non c'è.
+- Verificato sul Mac: la sessione Vocali ha già ottenuto un profilo App Store che
+  scade il 05/11/2027.
+- **Il profilo attuale di StyleVault è ancora quello gratuito: scade l'11/11/2026.**
+  Dopo quella data l'app non si apre, finché non la si reinstalla da Xcode.
+- Sbloccati: fase 1 della nativa (CloudKit), TestFlight, WeatherKit.
+- Da fare: app in App Store Connect, dichiarazione DSA.
+- Il design ora contiene le correzioni dell'audit: l'import passa da Esporta e
+  importa, l'app deve funzionare senza iCloud.
+- Piano della fase 1 scritto: `docs/superpowers/plans/2026-11-05-app-nativa-fase-1.md`
+  (9 task, ramo `feat/app-nativa`, solo locale). Esecuzione con subagent in corso:
+  Task 1-8 chiusi: catalogo e ricerca città nel pacchetto `ios/StyleVaultCore`, target
+  `StyleVaultNative`, modelli SwiftData, apertura dello store, Profilo unico, stato
+  iCloud, tab, testi it/en, schermata Profilo. Suite verde su simulatore iPhone e iPad,
+  mai provata su dispositivo vero. Il Task 9 si fa con Lorenzo: il primo build su
+  dispositivo crea il container iCloud, che non si cancella.
+- **Login valutato e scartato (2026-11-05):** Lorenzo ha chiesto Apple, Google e password nella
+  nativa, poi ha deciso di no: i dati restano su iCloud, personali, e su App Store ognuno ha
+  già i suoi. Al loro posto un blocco facoltativo con Face ID nel Profilo: Task 10 del piano
+  fatto, provato solo su simulatore con un autenticatore finto (design, decisione 7).
+- **Fase 1 chiusa il 2026-11-05.** Revisione finale fatta, due difetti corretti: un Profilo nuovo
+  azzerava città e tema, l'avviso di iCloud pieno lampeggiava. Prova su iPhone e iPad veri passata:
+  sincronizzazione, blocco con Face ID, rete, reinstallazione, avviso con iCloud spento. Esito, decisioni e rimandi: `docs/verifiche/2026-11-05-nativa-fase-1/prova-iphone-ipad.md`.
+  Container `iCloud.it.faraoni.stylevault` creato. Ramo `feat/app-nativa` solo locale. Prossima: fase 2.
+- App ibrida reinstallata sull'iPhone il 05/11 col team a pagamento: build Debug, profilo fino al
+  05/11/2027. Debug carica il sito dal Mac (`vite --host` :5181, IP in `Secrets.xcconfig`). Xcode
+  riusava il vecchio profilo gratuito finché non è stato tolto da `Provisioning Profiles`: il profilo
+  della bench `it.faraoni.stylevault.bench` scade ancora l'11/11, ma non è usata.
+
+## Novità 2026-11-05 (notte) — Prova tecnica FASHN VTON (branch `feat/app-ios`)
+
+Lorenzo ha chiesto un modello locale open source al posto di Mobile-VTON, i cui
+dati di addestramento sono solo ricerca. Candidato: **FASHN VTON v1.5**, Apache
+2.0, 972 milioni di parametri, origine dei dati di addestramento NON dichiarata.
+Parser escluso (licenza solo ricerca), non serve senza maschere.
+- **Sul Mac M1 Pro funziona**: Core ML GPU, 30 passi (59 passaggi), fp16 1,8 GB
+  in 3 min 40 s; 6 bit 704 MB in 4 min 26 s con Mac occupato, 38,3 dB dal fp16.
+  Capo giusto; trecce irregolari, logo perso, trama leggera nel fondo a 6 bit.
+- **NON provato su iPhone e iPad**: tempi e memoria ignoti. DWPose non convertito:
+  le pose della prova vengono dal Mac. Manca il PSNR contro PyTorch (`guard.sh` lo
+  ha fermato per lo swap).
+- Tutto in `tools/avatar-fashn/` (README con numeri e confronto). Pesi e modelli
+  fuori da git, nello scratchpad e in `out/`: un riavvio cancella lo scratchpad.
+- **Sempre con `guard.sh`**: una generazione senza limiti ha fatto riavviare il Mac.
+- **Deciso da Lorenzo (05/11): la prima versione nativa esce SENZA avatar
+  realistico.** Scritto nel design (decisione 6): codice fuori dalla build, non
+  nascosto; via download da 1,3 GB, entitlement di memoria ed E174.1. Può tornare
+  in un aggiornamento col permesso di AImageLab o con FASHN. L'app ibrida non cambia.
+
+## Novità 2026-11-03 (sera tardi) — FEEDBACK per email (branch `feat/app-ios`)
+
+Richiesta di Lorenzo: sezione dove gli utenti segnalano difetti o idee, che
+arrivano per email a lui; avviso chiaro di NON mettere contenuti sensibili.
+Pensata già per un'eventuale pubblicazione («se un domani deciderò di
+pubblicarla»). Scelte (Lorenzo: «fai tu»):
+- **Dove**: pagina `/feedback` del SITO (`src/pages/FeedbackPage/`), dal
+  Profilo → sezione "Aiutaci a migliorare" → "Segnala un problema o
+  un'idea". Vale nel browser e nell'app (WebView). Testi IT + EN.
+- **Invio**: Edge Function `supabase/functions/send-feedback/` → Resend
+  (`onboarding@resend.dev`, piano gratuito = scrive solo all'email
+  dell'account Resend). Solo utenti con sessione (la funzione verifica il
+  token con `/auth/v1/user`; deploy `--no-verify-jwt` perché la chiave
+  `sb_publishable_` non è un JWT). Max 5 invii/10 min per utente (per
+  istanza). Secret: `RESEND_API_KEY`, `FEEDBACK_TO` (l'indirizzo NON è nel
+  repo), facoltativo `FEEDBACK_FROM`.
+- **Dati sensibili**: il sito blocca l'invio se trova email, numeri di 9+
+  cifre (telefono/carta/documento) o IBAN e dice cosa togliere; la funzione
+  li sostituisce comunque con `[rimosso]`. Email in solo testo.
+- **Info allegate** (visibili all'utente in "Cosa alleghiamo in
+  automatico"): origine (app iOS / sito web), lingua; nell'app versione
+  app, iOS e modello (`DeviceInfo.swift` → `window.svDeviceInfo`), nel
+  browser lo user agent. Né nome né email dell'utente.
+- Test: Deno 5/5 (`deno test --no-lock supabase/functions/send-feedback/`),
+  vitest 224/224, iOS 50/50. Pagina provata nel browser in modalità locale
+  (avviso, blocco email, errore "solo con il cloud").
+- 2026-11-03: secret `FEEDBACK_TO` SALVATO e funzione `send-feedback`
+  PUBBLICATA dalla dashboard (editor, 2 file: index.ts + feedback.ts),
+  dal browser dell'app dove Lorenzo era già entrato. CLI Supabase 3.0.0
+  installata (brew) ma non loggata. "Verify JWT with legacy secret" è
+  rimasto ACCESO (il classificatore di Claude Code blocca lo spegnimento):
+  se l'invio dà "Invalid JWT", Lorenzo lo spegne in Functions →
+  send-feedback → Settings.
+- Lorenzo ha creato l'account Resend e salvato `RESEND_API_KEY`. INVIO DI
+  PROVA RIUSCITO (2026-11-03) dal sito cloud :5181 nel browser dell'app,
+  con Lorenzo loggato: la funzione ha risposto ok ("Grazie!"), anche con
+  "Verify JWT" acceso (il token utente passa). Email ARRIVATA nella
+  casella di Lorenzo (Importanti, 19:14) con tipo, testo e info tecniche:
+  verificato da lui. Nota: l'ora "Inviata" è in UTC. Committato su feat/app-ios.
+- Seconda prova (stessa sera, "Prova della sezione Feedback…"): "Delivered"
+  su resend.com/emails e arrivata a Lorenzo. **FEEDBACK CHIUSO.** Restano
+  solo, col suo ok: push di `feat/app-ios` (commit `e2a9211`) e una nuova
+  build sull'iPhone per allegare versione app, iOS e modello (DeviceInfo).
+  Attenzione: più sessioni lavorano qui in parallelo; prima di commit,
+  deploy o prove controllare `git log`, `git status` e questo file.
+
+## Novità 2026-11-03 (sera) — APP iOS su branch `feat/app-ios` (non ancora su main)
+
+Richiesta di Lorenzo: app vera con Swift, «il telefono scontorna la persona
+e i capi, vanno sull'avatar… e si può girare», primo accesso con 3 foto
+(davanti/lato/spalle) che restano per account, Accedi con Apple/Google,
+selettore Chiaro·Scuro·Sistema (resta nell'app: Profilo, e le schermate
+native lo seguono). Account Apple a pagamento RIMANDATO («proviamolo in
+locale»). Spec `docs/superpowers/specs/2026-11-03-app-ios-design.md`,
+piano `docs/superpowers/plans/2026-11-03-app-ios.md`, registro decisioni
+(rulings, correzioni della revisione, minori rimandati) in
+`docs/superpowers/plans/2026-11-03-app-ios-registro.md`.
+
+- **Sito**: tema chiaro/scuro/sistema, campo "Foto del retro" nei capi,
+  ponte `nativeBridge.js` (nel browser non cambia nulla), migrazione 003.
+- **App** in `ios/` (XcodeGen: `cd ios && xcodegen generate`): WebView del
+  sito (DEBUG → dev server :5181, Release → sito pubblicato) + login nativo
+  (supabase-swift, Google solo se attivo, Apple dietro flag) + primo accesso
+  3 foto (Vision) + avatar in 3 viste (Vision + CoreGraphics, cache su
+  disco) + tema. Guida: `docs/ios-installazione.md`.
+- **Vision NON gira nel simulatore iOS 27** (mancano i pesi dei modelli): i
+  test Vision e il render dell'avatar girano nel target macOS
+  `StyleVaultVisionTests`. Render vero su Mac:
+  `docs/verifiche/2026-11-03-app-ios/avatar-davanti-mac.png`.
+- **Simulatore condiviso** con altre sessioni (Fitness Hub, "Vocali"): non
+  toccare le loro app.
+- **Migrazione 003 APPLICATA** il 2026-11-03 (SQL Editor dal Chrome di
+  Lorenzo; verificato: theme/body_photos/photo_back_* → 200 via API). Il
+  branch ora si può pubblicare senza rompere la sync di lingua e città.
+- Xcode: Lorenzo è entrato col suo Apple ID; team "Lorenzo Faraoni
+  (Personal Team)" = `599MS2BZ63`, ora fisso in `ios/project.yml` (firma
+  automatica). iPhone di Lorenzo = iPhone 18 Pro Max
+  (`00008160-000661061A200036`). Per la prova la build DEBUG carica il dev
+  server del Mac in rete (`SITE_URL` in Secrets.xcconfig = IP del Mac,
+  vite con `--host`), perché il sito pubblicato non ha ancora il ponte.
+  Modalità sviluppatore ATTIVA (verificata 2026-11-03 con `devicectl device
+  info details`). Se `devicectl` dice "connected (no DDI)" / errore 12040,
+  l'iPhone è bloccato: sbloccarlo e rilanciare `devicectl device info
+  ddiServices`. Build DEBUG per iPhone RIUSCITA e app INSTALLATA
+  (`it.faraoni.stylevault`); il primo avvio è stato negato finché Lorenzo
+  non autorizza lo sviluppatore (Impostazioni → Generali → VPN e gestione
+  dispositivi → Apple Development lorefara97@gmail.com → Autorizza).
+  Autorizzato: l'app ora parte sull'iPhone.
+- **Password dimenticata? nel login nativo** (richiesta di Lorenzo, la sua
+  email aveva già un account): link sotto la password → email di Supabase
+  con `redirect_to=stylevault://reset-password` → l'app si riapre
+  (`onOpenURL`, codice PKCE scambiato con `session(from:)`) → schermata
+  "Scegli una nuova password" (`NewPasswordView`) → si entra. Se si prova a
+  registrarsi con un'email già usata, il login passa da solo ad "Accedi".
+  Richiede `stylevault://**` tra le Redirect URLs di Supabase: AGGIUNTO il
+  2026-11-03 dal Chrome di Lorenzo (ora 3: localhost:5173/**,
+  fara2106.github.io/stylevault/**, stylevault://**). Vale anche per Google. 35 test iOS verdi.
+  PROVATO sull'iPhone il 2026-11-03: Lorenzo ha rifatto la password dal link
+  dell'email ed è entrato (checklist §8 punto 1 ok). Commit `f4f712f`.
+- **Foto del corpo di prova** (Lorenzo non sapeva come farsele): 3 foto
+  Unsplash guardate una per una (davanti 1763750581767, lato 1559734257-47e…,
+  spalle 1559907252 — lato e spalle stessa persona) in
+  `ios/build/foto-corpo-test/` (ignorata da git), passate all'iPhone via
+  AirDrop. Pre-verifica sul Mac compilando con `swiftc` gli stessi sorgenti
+  Vision + `BodyPhotosModel.validate`: tutte "ok". Il simulatore NON serve
+  per questo passo (Vision assente, niente login). Lorenzo le ha caricate
+  sull'iPhone ed è entrato nel sito: checklist §8 punto 2 OK (2026-11-03).
+- **Avatar sull'iPhone, primo giro** (screenshot di Lorenzo): una sola
+  scarpa enorme su tutti e due i piedi, maglione più stretto della maglia
+  sotto, jeans assenti. Cause e correzioni (non ancora committate):
+  - le foto prodotto hanno UNA scarpa di lato → `GarmentLayout.shoeFrames`
+    la mette su ogni piede (lunga 15% dell'altezza, punta verso fuori o
+    dove guarda la persona, `Silhouette.toeOnLeft` + specchiatura); un
+    paio (2 soggetti) resta un'immagine sola. `CutoutCache` ora salva il
+    numero di soggetti (`<chiave>.count`), prima lo perdeva (sempre 1);
+  - larghezze dal riquadro della persona (braccia, passo) → `Silhouette`
+    misura la sagoma alla riga del petto (top) e, di lato, dei fianchi;
+  - vita dei pantaloni a `hipY - 0.1·torso` (striscia di maglia scoperta)
+    e larghi almeno quanto le caviglie divaricate + 8% dell'altezza;
+  - jeans assenti al primo giro: l'outfit aperto non li conteneva (cache
+    dell'iPhone con 2 soli capi; al secondo giro, con log temporaneo del
+    ponte, arrivano Maglione/tops, Jeans/bottoms, Scarpe/shoes e si vedono).
+  - secondo giro: viste scambiate (foto di spalle salvata come "lato",
+    profilo come "spalle") → `BodyPhotosModel.seenView` rifiuta la foto
+    della vista sbagliata (`PhotoCheck.wrongView`): di lato spalle < 35%
+    del busto; davanti Vision mette la spalla sinistra a destra
+    nell'immagine, di spalle a sinistra. Verificato sulle 3 foto vere in
+    tutte le 9 combinazioni (3 ok, 6 rifiutate) + alternative + fixture.
+  - pantaloni mai più larghi del 35% dell'altezza (col profilo in falcata
+    salvato come "spalle" erano giganti). I capi caricati dal sito sono
+    data URL piccole (~415×600): ingranditi si vedono sgranati.
+  Render di verifica `docs/verifiche/2026-11-03-app-ios/avatar-3-viste-mac.jpg`;
+  script Mac che rifà i passi di AvatarView: scratchpad `arender`. Test iOS
+  46/46, Vision Mac 8/8. Limite noto: di lato col passo e col cappotto in
+  mano restano visibili gamba dietro e cappotto (foto di prova "in cammino").
+- **Lorenzo vuole i capi "esattamente lungo le linee del corpo"** (deformati).
+  Brainstorming in corso. Opzioni: collage preciso on-device (warp riga per
+  riga come `src/utils/modelWarp.js` del sito), servizio esterno (FASHN
+  ~0,075 $/img, un capo per volta, 10–20 s, foto fuori dal telefono),
+  modello on-device. Prova usa-e-getta di **Mobile-VTON** (CVPR 2026, 415M
+  param., licenza CC BY-NC-SA = solo non commerciale, solo parte di sopra,
+  addestrato su foto frontali testa→metà coscia, pesi 3,5 GiB) sul Mac M1
+  Pro: maglione sulla foto davanti ritagliata → risultato quasi
+  fotografico (maniche ai polsi, pieghe; trecce del maglione meno nitide),
+  102 s con 28 passi fp16 (2,64 s/passo). Codice esterno: il classificatore
+  di Claude Code blocca l'esecuzione, la lancia Lorenzo dal Terminale. Tutto
+  in scratchpad (`spike-mvton*`), nulla nel repo. Nessuna versione iPhone:
+  andrebbe convertita in Core ML. Seconde prove: figura intera OK (maglione giusto,
+  pantaloncini invariati: tocca solo la parte di sopra); di spalle
+  sorprendentemente OK (sostituisce il cappotto, trama un po' confusa);
+  10 passi ≈ qualità di 28 (denoise 9 s, 32 s con codifica testo/avvio).
+- **Design "avatar realistico"** scritto:
+  `docs/superpowers/specs/2026-11-03-avatar-realistico-design.md` (bozza, da
+  approvare). Decisioni di Lorenzo: parte da sola la vista davanti con barra
+  e percentuale, poi pulsanti "Genera di profilo"/"Genera di spalle";
+  download ~1 GB al primo uso con barra; modelli su Release GitHub; deve
+  girare sul suo 18 Pro Max e sul 15 Pro di Mary (8 GB RAM). Primo passo:
+  prova tecnica Core ML sull'iPhone (soglie ≤60 s / ≤90 s). Licenza NC:
+  niente uso commerciale, motore dietro `RealisticTryOn` per poterlo
+  cambiare. Design APPROVATO da Lorenzo (2026-11-03). Piano della sola
+  prova tecnica: `docs/superpowers/plans/2026-11-03-avatar-realistico-prova-tecnica.md`
+  (6 task: riferimento PyTorch, conversione Core ML fp16 + verifica, pipeline
+  Core ML sul Mac, 6 bit, app di misura `RealisticBench` su 18 Pro Max e
+  15 Pro, cancello). Il piano d'integrazione si scrive dopo il cancello.
+  Test iOS: serve `CODE_SIGNING_ALLOWED=NO` (comando nel registro).
+- **Prova tecnica, avanzamento** (registro in
+  `.superpowers/sdd/2026-11-03-avatar-realistico-prova-tecnica/progress.md`,
+  script in `tools/avatar-realistico/`, uscite in `out/` ignorata da git):
+  Task 1 fatto: riferimento PyTorch in **fp16** (in fp32 il Mac da 16 GB va in
+  swap). Task 2 fatto: tutti e 7 i modelli convertiti in fp16 (~3,1 GB;
+  TextEncoder2 da solo 1,3 GB → candidato a restare fuori dall'iPhone) e
+  verificati contro il riferimento, coseno ≥ 0,99998. Correzioni:
+  ImageEncoder (bicubica di DINOv2 non supportata → posizioni precalcolate),
+  DenoiserGarment (feature 8–11 = stessi tensori delle 12–15: ne esce 24,
+  l'app ricopia le 12–15 nelle 8–11). Task 3 fatto: generazione intera
+  coi soli modelli Core ML (`coreml_pipeline.py`, non importa Mobile-VTON:
+  la lancia Claude) → PSNR 33 dB contro PyTorch, uguale a occhio. Sul Mac
+  usare `--units CPU_AND_GPU`: col Neural Engine il Mac da 16 GB va in swap.
+  Task 5 in corso: app `RealisticBench` (target XcodeGen, iOS 18, modelli
+  fp16 in `ios/RealisticBench/Models/`, ignorata) installata sul 18 Pro Max.
+  Limite Apple ID gratuito: max 3 app firmate sul telefono → Lorenzo ha
+  tolto un'app per far posto. Modelli copiati una volta in Documents/Models
+  (`devicectl device copy to … --domain-type appDataContainer`), app 336 KB;
+  entitlement `increased-memory-limit` (va anche con Apple ID gratuito) →
+  6,1 GB liberi. Avvio da Mac: `devicectl … launch it.faraoni.stylevault.bench
+  --units gpu|ane [--phases 2]`. **Risultati fp16 sul 18 Pro Max**:
+  Neural Engine = il Denoiser non si prepara (>50 min, interrotto); GPU =
+  10 passi VERI 109 s (UNet capo 2,3 s/passo, UNet prova 7,4 s/passo,
+  preparazione feature Swift 1,2 s/passo), picco 2,8 GB, primo avvio +70 s
+  di preparazione GPU → vista davanti ≈ 112 s: NON PASSA (soglia 60 s).
+  Attenzione: i tempi "a regime" con ingressi identici sono falsati
+  (Core ML ricicla): ora la stima usa 10 passi VERI.
+  Poi (stessa sera): ingressi riusati invece che ricreati → GPU fp16 30 s;
+  **modalità mista** (tutto su Neural Engine, Denoiser su GPU, `--units mix`)
+  → fp16 23 s, **6 bit 25 s, picco 2,4 GB: PASSA** (soglia 60 s). Primo
+  avvio dopo l'installazione: ~4 min di preparazione Neural Engine, una volta.
+  Task 4 fatto: 6 bit (palette k-means, gruppi di 16 canali) = 1,2 GB, tutti i
+  pezzi coseno ≥ 0,9976, immagine 31,8 dB. Notte 3→4/11 (Lorenzo dorme, "fai
+  tutto su Mac, domani iPhone e iPad"): generazione vera in RealisticBench
+  (`BenchGenerator`, `BenchMath` + 7 test; `--generate`, ingressi da
+  `export_bench_inputs.py`); verificata sul Mac col test macOS
+  `RealisticBenchMacTests` → immagine IDENTICA a quella Python (fp16 e 6 bit);
+  copia veloce delle uscite (vImage) → feature da 21 s a 0,75 s. Simulatori
+  inadatti su questo Mac (6 bit scompattato sulla CPU; swap finito → jetsam;
+  sul sim 18 Pro girano i test UI di Fitness Hub di un'altra sessione).
+  Seconda parte della notte ("prova tutto sul simulatore, hai tutta la
+  notte"): generazione con UNA rete grande alla volta (feature del capo dei
+  10 passi calcolate prima, fp16 su file mappati) → memoria dopo i passi da
+  2,5 a 1,17 GB, UNet capo sul Mac 0,25 s/passo invece di 3,8; immagine
+  identica. Simulatori: servono fp16 + `--units cpu` (il modo GPU del
+  simulatore manda in swap il Mac) → **generazione completa riuscita sul
+  simulatore iPhone 18 Pro Max (553 s) e su un iPad Pro 13" M5 creato
+  apposta e cancellato (603 s)**, immagini identiche tra loro, 33,0 dB da
+  PyTorch. Il sim iPad acceso è usato dalla sessione Vocali (test UI), il
+  sim 18 Pro da Fitness Hub: non usarli quando girano. Preparata la UNet di
+  prova a batch 1 (`Denoiser1`, `--split`): la conversione la lancia Lorenzo.
+  Resoconto: `docs/verifiche/2026-11-03-avatar-realistico/prova-tecnica.md`;
+  comandi per iPhone/iPad in `tools/avatar-realistico/README.md`. Domani:
+  18 Pro Max con `--generate`, iPad di Lorenzo, 15 Pro di Mary.
+  Commit c9e5430 + 14438dd (ok di Lorenzo, non pushati). 04/11 dispositivi
+  veri, 6 bit mista, `--generate`: **18 Pro Max 21,4 s** a modelli pronti,
+  **iPad Pro 13" M4 36,3 s** (primo avvio 86,6 s); immagini a 52,7 dB da
+  quella del Mac e 61 dB tra loro (`iphone-vero-6bit.png`, `ipad-vero-6bit.png`).
+  Resta il 15 Pro di Mary. **Cancello Task 6 (04/11, Lorenzo): si va avanti
+  con Mobile-VTON e l'app si pubblica GRATIS** (CC BY-NC-SA: niente
+  pubblicità, acquisti in-app o abbonamenti; crediti nell'app). Piano:
+  `docs/superpowers/plans/2026-11-04-avatar-realistico-integrazione.md`
+  (9 task: Release GitHub con i modelli, tokenizzatore/DINOv2/scheduler in
+  Swift, download con ripresa, motore, maschera, UI, descriptor dal sito,
+  prova su 18 Pro Max e 15 Pro). Per l'App Store serve l'Apple Developer
+  Program (oggi Personal Team gratuito).
+  Idea di Lorenzo: per ora Mobile-VTON coi crediti per farsi conoscere; in
+  futuro un'IA nostra al suo posto (il motore sta dietro `RealisticTryOn`).
+  04/11 piano eseguito coi subagent, Task 1–8 fatti e revisionati, commit
+  locali e58a5ff..f187ad2 (NON pushati): pacchetto modelli (out/release, 8
+  .aar 1,27 GB), tokenizzatore CLIP, ingressi, store con download/ripresa/
+  SHA-256/consenso su rete cellulare, motore MobileVTONTryOn (45,9 dB dal
+  riferimento Mac), composizione col collage + maschera, schermata con barre,
+  crediti, elimina modelli, protezione da crash per memoria; il sito manda
+  `descriptor`. Test: app 123/123, Mac motore 3/3. Manca Task 9 (telefoni):
+  i telefoni. Licenze (281ecaa): la VAE deriva da Stable Diffusion 3.5 Large
+  → licenza Stability AI Community + NOTICE.txt + "Powered by Stability AI"
+  nei Crediti; anche CLIP/OpenCLIP (MIT) e DINOv2 (Apache 2.0). **Release
+  `avatar-models-v1` PUBBLICATA (04/11)** su Fara2106/stylevault: 8 .aar +
+  manifest + licenze; controllati dimensioni di tutti, SHA di VAEDecoder e
+  Tokenizer scaricati dall'URL pubblico, ripresa con Range (206) attraverso
+  il redirect. Ogni cambio di modelli = nuovo tag (il manifest non è fissato).
+- **Outfit anche con guardaroba incompleto** (04/11, richiesta di Lorenzo:
+  «generi lo stesso, basta un avviso»): `generateOutfits` riempie ogni pezzo
+  coi capi adatti a stagione/occasione, se non ce ne sono con quelli della
+  categoria (fuori stagione), e lascia vuoto solo il pezzo che non c'è;
+  `missingPieces()` → riquadro "Outfit incompleto, manca: …" nella card.
+  Serve almeno un capo da indossare (soli accessori = niente). Test 231/231.
+- **Meteo della posizione (04/11)**, design `docs/superpowers/specs/2026-11-04-meteo-posizione-design.md`,
+  piano `docs/superpowers/plans/2026-11-04-meteo-posizione.md`: pagina Outfit
+  con "La mia posizione" (app: CoreLocation via `requestLocation` →
+  `svNative.setLocation`; browser: solo dopo il tocco) o città scelta a mano
+  (ricordata in localStorage `sv_outfit_place`, mai coordinate); Open-Meteo
+  orario → fasce mattina 8–12 / pomeriggio 12–17 / sera 17–20, temperatura
+  media 8–20 (oggi da adesso), consigli "a strati" (≥ 8°) e "pioggia dalle
+  HH"; striscia `DayStrip`. **Meteo di Apple PRONTO MA SPENTO**
+  (`ios/StyleVault/Weather/AppleWeather.swift`, `isEnabled = false`): l'app
+  converte WeatherKit nel formato Open-Meteo e lo manda con
+  `svNative.setForecast`. **Per accenderlo, quando Apple approva l'account
+  Developer**: (1) developer.apple.com → Identifiers → App ID
+  `it.faraoni.stylevault` → spunta WeatherKit (e in "Services" WeatherKit);
+  (2) in `ios/project.yml` entitlements aggiungi
+  `com.apple.developer.weatherkit: true`, poi `cd ios && xcodegen generate`;
+  (3) `AppleWeather.isEnabled = true`; (4) prova sul telefono: scheda meteo
+  con marchio "Meteo di Apple" e link "Fonti dei dati" (obbligatori per Apple).
+  Revisione finale (opus): 0 critici, 3 importanti CORRETTI (15525c3,
+  3298fb3): cache della posizione in chiave fissa `sv_weather_<fonte>_position`
+  (niente coordinate né storico); posizione nuova entro ~5 km ignorata
+  (`keepSamePlace`) così gli outfit non si rifanno; WeatherKit chiede le ore
+  da mezzanotte per 7 giorni (`hourlyRange`). 9 minori rimandati (elenco nel
+  messaggio finale a Lorenzo). Test: sito 268/268, iOS 130/130 (il target
+  test ora ha `GENERATE_INFOPLIST_FILE`). Build Debug installata sull'iPhone
+  il 04/11: **da provare da Lorenzo** (permesso posizione, posto vero,
+  striscia, consigli). Push e deploy del sito: solo col suo ok.
+- **Barra di download dei modelli di analisi (04/11)**: `src/utils/modelDownload.js`
+  scarica i file MediaPipe (motore WASM 11,2 MB decompresso, segmentatore
+  16,4 MB, viso 3,8 MB, posa 5,8 MB) leggendo i byte → `downloadFraction()`;
+  MediaPipe li riceve già pronti (`modelAssetBuffer`, WASM da blob URL).
+  Restano sul dispositivo in Cache Storage `sv-models-v1` (sito e app; serve
+  https o localhost: nella build Debug via http dal Mac resta solo la cache
+  HTTP). Barra nell'Armocromia durante la "prima volta". Verificato nel
+  browser: 3 file salvati, al ricaricamento zero richieste di rete.
+- **"Le tue foto" nel Profilo (04/11)**: Lorenzo non vedeva le foto del corpo
+  nel sito e il pulsante "Rifai le foto del corpo" (solo app) andava e veniva.
+  Ora `src/components/BodyPhotos/` mostra sempre le 3 miniature (davanti =
+  reference_photo_path, lato/spalle = body_photos). Nell'app un tocco apre la
+  fotocamera nativa per QUELLA foto (`openBodyPhotos` con `{view}` →
+  `BridgeMessage.openBodyPhotos(BodyView?)`); alla chiusura l'app chiama
+  `svNative.bodyPhotosChanged()` e il sito rilegge il profilo. Nel browser un
+  tocco sceglie un file (1600 px) → `setBodyPhoto` in ProfileContext. Causa del
+  pulsante intermittente NON trovata: nei dati dell'app sull'iPhone la WebView
+  carica 192.168.1.148:5181 e il ponte svNative c'è (test
+  `testIlSitoVedeIlPonteSvNative`); ipotesi: a volte guardava il sito in Safari.
+  Verificato nel browser (locale); il salvataggio su Supabase dal browser e il
+  giro nell'app li deve provare Lorenzo. Test sito 281/281, iOS 133/133.
+- **Controllo dati su Supabase (04/11, dashboard, sola lettura)**: account di
+  Lorenzo a posto: 3 capi (3 foto nello storage), 1 voce di calendario, foto
+  davanti/lato/spalle salvate e presenti nello storage, it / Roma / light.
+  **MANCA la colonna `profiles.armocromia`**: la migrazione 002 NON è applicata
+  su questo progetto (frukvktbmxndyzgivwxq), anche se le note di luglio la
+  danno per fatta (forse era un progetto precedente). Effetto: salvare
+  l'Armocromia dal sito fallisce (l'upsert del profilo va in errore) e il
+  risultato si perde al ricaricamento. **APPLICATA il 04/11** con l'ok di
+  Lorenzo (SQL Editor della dashboard nel browser pane); verificato: colonna
+  `armocromia jsonb` presente e `select=armocromia` via API → 200.
+  Prova di salvataggio "come Lorenzo" con le regole d'accesso (annullata da
+  sola) riuscita; poi Lorenzo ha rifatto l'Armocromia e il 04/11 alle 15:08
+  UTC il suo profilo ha `armocromia` = deep-winter (axes, season, detected,
+  updatedAt, confidence). **Salvataggio confermato end-to-end.**
+- **DECISIONE 04/11 (Lorenzo e Mary): StyleVault diventa NATIVA con iCloud**.
+  Design: `docs/superpowers/specs/2026-11-04-app-nativa-icloud-design.md`
+  (scritto da un'altra sessione; NON committato, si committa con l'ok di Lorenzo).
+  - Prima la versione Apple (iPhone e iPad): SwiftUI + SwiftData/CloudKit,
+    niente login; sito e Supabase spenti alla fine.
+  - Android eventualmente dopo, app a sé con dati su Google Drive; le due non
+    si scambiano dati.
+  - Costruzione in parallelo su un ramo nuovo, 8 fasi; si pubblica una volta
+    sola, a lavoro completo. Fino ad allora resta l'app ibrida di oggi. Non si
+    migra una schermata alla volta (dati divisi tra Supabase e iCloud).
+  - Esporta/Importa (zip con JSON e foto) nel Profilo: per il cambio di
+    piattaforma e la portabilità GDPR.
+  - Armocromia: menu a tendina nel Profilo per scegliere la stagione a mano;
+    l'analisi Vision solo se affidabile.
+  - Lingue IT e EN da subito (String Catalog), poi FR, ES, PT, EN UK/USA;
+    °C/°F nelle Impostazioni, valore iniziale dalla regione del telefono.
+  - Fase 1 solo quando Lorenzo è accettato nell'Apple Developer Program
+    (avvisa lui). Import dei dati da Supabase: si decide all'inizio della fase 7.
+  - **Stop al lavoro su account e server** del sito. Quello già fatto resta:
+    e944db0 (Elimina account, pagine /privacy /supporto /elimina-account,
+    accountCleanup, guard di fetch-link-metadata) è committato.
+    **Supabase riportato a prima (04/11, su richiesta di Lorenzo)**:
+    `delete-account` cancellata dalla dashboard (ora risponde 404);
+    `fetch-link-metadata` ripubblicata nella versione di prima (e944db0^, senza
+    controllo dell'utente né guard.ts; con la chiave pubblica funziona).
+    ATTENZIONE: nel repo restano il codice di e944db0 (cartella delete-account,
+    guard.ts, pulsante "Elimina account" che chiama una funzione che non c'è
+    più). Non pubblicare il sito con quel codice senza decidere prima.
+    Le correzioni iOS restano utili anche nella versione nativa:
+    Privacy Manifest, Debug/Release, etichetta IA, Segnala, dichiarazione
+    foto, consenso al download.
+- **Audit Apple ripetuto 04/11 sera** → sezione 00 del report
+  `docs/pubblicazione/2026-11-04-report-app-store.md`. App ibrida: non si
+  invia (blocchi 2 e 3 riaperti). Nativa: **rischio licenze grave** — Mobile-VTON
+  è addestrato su DressCode (licenza solo ricerca/didattica, non commerciale)
+  → proposta: prima versione senza avatar realistico e richiesta di permesso
+  ad AImageLab. Import dei dati: niente login Supabase né import nascosto
+  (regola 2.5.19), usare Esporta/Importa con uno script lanciato da Lorenzo.
+  L'app deve funzionare senza iCloud. Pagine privacy/supporto ancora 404.
+- **Test completi 04/11 sera** (dopo il push di feat/app-ios, 1f1a28a):
+  StyleVault 138/138 su iPhone 18 Pro e su iPad Pro 11" (M5)
+  (B04B93AB-…, libero; l'iPad Pro 13" M5 acceso è della sessione Vocali);
+  RealisticBench 9/9 su entrambi dopo aver aggiunto GENERATE_INFOPLIST_FILE a
+  RealisticBenchTests in project.yml (senza, xcodebuild non firmava il
+  bundle); sito vitest 294/294 e build ok; funzioni Deno 7/7. Nei simulatori:
+  login nativo ok su iPhone e iPad (su iPad gira in modalità iPhone,
+  TARGETED_DEVICE_FAMILY "1"). I link Privacy/Supporto aprono
+  fara2106.github.io/stylevault/privacy|supporto che danno **404** (pagine non
+  ancora pubblicate). Giro da loggati non fatto: serve un account vero.
+- **Correzioni dell'audit (04/11, pomeriggio)**, stato nella sezione 0 del report.
+  Fatto:
+  - "Elimina account" nel Profilo → Edge Function `delete-account`, pubblicata
+    dalla dashboard come file unico con account.ts incollato (poi cancellata da
+    Supabase il 04/11, vedi sopra). Cancella i file dei
+    2 bucket e poi l'utente; le tabelle si svuotano in cascata.
+  - Pagine pubbliche `/privacy`, `/supporto`, `/elimina-account`
+    (`src/pages/LegalPage/legalContent.js`, CONTACT_EMAIL da confermare con
+    Lorenzo); il deploy le copia come pagine vere.
+  - `PrivacyInfo.xcprivacy`.
+  - Rete locale/ATS solo in Debug (script postBuild in project.yml); SITE_URL
+    vuoto in Release.
+  - `fetch-link-metadata` solo per loggati e senza SSRF (guard.ts), ripubblicata
+    (poi tolta il 04/11: su Supabase c'è di nuovo la versione di prima).
+  - "Generato con IA" + "Segnala risultato" (app → /feedback?topic=avatar);
+    "Scarica (1,3 GB)" la prima volta.
+  - Open-Meteo citato; segnaposto senza picsum.
+
+  Test: sito 294, iOS 138, Deno 12. La cancellazione con un account vero la
+  prova Lorenzo. Dashboard: l'editor non rinomina il 2° file con il pane
+  nascosto → incollare un file solo.
+- **Audit di pubblicazione App Store (04/11)**, skill mobile-app-publishing:
+  report in `docs/pubblicazione/2026-11-04-report-app-store.md`. 6 blocchi:
+  Apple Developer Program a pagamento, cancellazione account (manca),
+  privacy policy + supporto (mancano), PrivacyInfo.xcprivacy (CA92.1,
+  C617.1, E174.1), sito pubblicato indietro (61 commit), rete locale/ATS
+  "In sviluppo" nella Release. 15 avvisi (etichetta "Generato con IA" +
+  segnala, download 1,3 GB senza chiedere sul Wi-Fi, @imgly AGPL, Open-Meteo
+  senza attribuzione, fetch-link-metadata senza JWT, ecc.). Google Play
+  escluso: niente app Android.
+- **"Cambia password" nel Profilo (04/11)**: pulsante sotto Impostazioni
+  (`components/ChangePassword`), apre nuova + ripeti → `changePassword` in
+  AuthContext → `supabase.auth.updateUser({ password })` (sito e app, stessa
+  sessione). Controllo in `utils/passwordChange.js` (min 6, coincidono);
+  errori nuovi tradotti: passwords-mismatch, same-password,
+  reauthentication-needed. Provato nel browser in modalità locale (errore se
+  diverse, poi "Password cambiata"); con Supabase vero lo prova Lorenzo
+  (deve cambiare la password che aveva scritto in chat). Test 285/285.
+- **Prova sull'iPhone (04/11)**: la build Release apre il sito PUBBLICATO,
+  che non ha il ponte iOS (niente "Rifai le foto del corpo" né "Vedilo
+  addosso") → si prova con la build Debug + `vite --host` :5181
+  (`stylevault-cloud`); IP del Mac oggi 192.168.1.148 in Secrets.xcconfig.
+  Bench tolta dal telefono (limite 3 app). Release di sicuro solo dopo il
+  deploy del sito di feat/app-ios (decide Lorenzo).
+- Revisione finale (revisore separato): 2 critici + 8 importanti CORRETTI
+  (refresh token doppio, sessione al sito solo dopo 'ready', link esterni,
+  avvio offline, 'Più tardi', conteggio persone, foto 48 MP, retro dei capi);
+  10 minori rimandati, elencati nel registro.
+- Da fare con Lorenzo: Apple ID in Xcode, installazione sull'iPhone,
+  login reale, Google OAuth; inglese delle schermate native (oggi solo IT).
+
 ## Novità 2026-11-03 (pomeriggio) — "Su di te" TORNA (persona scontornata vestita)
 
 Richiesta di Lorenzo: «vesti anche l'avatar, deve essere la persona

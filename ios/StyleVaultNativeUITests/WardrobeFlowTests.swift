@@ -1,0 +1,458 @@
+import XCTest
+
+final class WardrobeFlowTests: XCTestCase {
+    override func setUp() { continueAfterFailure = false }
+
+    private func openForm(_ app: XCUIApplication) -> XCUIElement {
+        tab(app, "Aggiungi").tap()
+        let sheet = app.otherElements["add-sheet"]
+        XCTAssertTrue(sheet.waitForExistence(timeout: 5))
+        return sheet
+    }
+
+    func testFoglioVuotoSiChiudeSenzaDomande() {
+        let app = launch(language: "it")
+        let sheet = openForm(app)
+        app.buttons["item-close"].tap()
+        XCTAssertTrue(waitForDisappearance(of: sheet))
+    }
+
+    func testBozzaChiedeConferma() {
+        let app = launch(language: "it")
+        let sheet = openForm(app)
+        let name = app.textFields["item-name"]
+        name.tap()
+        name.typeText("Giacca")
+        waitForKeyboard(app, around: name)
+        app.buttons["item-close"].tap()
+        let keep = app.buttons["Continua a modificare"]
+        XCTAssertTrue(keep.waitForExistence(timeout: 3))
+        keep.tap()
+        XCTAssertTrue(sheet.exists)
+        XCTAssertEqual(name.value as? String, "Giacca")
+        app.buttons["item-close"].tap()
+        let discard = app.buttons["Scarta"]
+        XCTAssertTrue(discard.waitForExistence(timeout: 3))
+        discard.tap()
+        XCTAssertTrue(waitForDisappearance(of: sheet))
+    }
+
+    func testErroriInItaliano() {
+        let app = launch(language: "it")
+        let sheet = openForm(app)
+        let save = app.buttons["item-save"]
+        while !save.isHittable { app.swipeUp() }
+        save.tap()
+        while !app.textFields["item-name"].isHittable { app.swipeDown() }
+        XCTAssertTrue(anyText(app, "Dai un nome al capo").waitForExistence(timeout: 3))
+        XCTAssertTrue(anyText(app, "Scegli una categoria").exists)
+        XCTAssertTrue(sheet.exists)
+    }
+
+    func testDaLinkRiempieIlModulo() {
+        let app = launch(language: "it", extra: ["-SVFakeLink"])
+        _ = openForm(app)
+        app.buttons["mode-link"].tap()
+        let link = app.textFields["item-link"]
+        XCTAssertTrue(link.waitForExistence(timeout: 3))
+        link.tap()
+        link.typeText("https://zara.com/p")
+        waitForKeyboard(app, around: link)
+        app.buttons["link-analyze"].tap()
+        XCTAssertTrue(anyText(app, "Dati estratti: controlla e completa").waitForExistence(timeout: 5))
+        XCTAssertEqual(app.textFields["item-name"].value as? String, "Camicia in lino")
+    }
+
+    func testIlCaloreHaIlSuoNome() {
+        let app = launch(language: "it")
+        _ = openForm(app)
+        let label = anyText(app, "Medio-leggero")
+        scroll(app, to: app.buttons["item-save"])
+        XCTAssertTrue(label.waitForExistence(timeout: 3))
+    }
+
+    /// I titoli dei campi sono testi a parte: senza un nome VoiceOver annuncia solo «campo di testo».
+    func testICampiHannoUnNomePerVoiceOver() {
+        let app = launch(language: "it")
+        _ = openForm(app)
+        XCTAssertEqual(app.textFields["item-name"].label, "Nome del capo")
+        let price = app.textFields["item-price"]
+        scroll(app, to: price)
+        XCTAssertEqual(price.label, "Prezzo (€)")
+        XCTAssertTrue(app.textFields["Brand"].exists)
+        XCTAssertTrue(app.textFields["Taglia"].exists)
+    }
+
+    func testSalvaPortaAlPrimoErrore() {
+        let app = launch(language: "it")
+        _ = openForm(app)
+        let save = app.buttons["item-save"]
+        scroll(app, to: save)
+        save.tap()
+        let visible = XCTNSPredicateExpectation(predicate: NSPredicate(format: "isHittable == true"),
+                                                object: app.textFields["item-name"])
+        XCTAssertEqual(XCTWaiter().wait(for: [visible], timeout: 3), .completed)
+    }
+
+    func testIlPrezzoRestaSopraLaTastiera() {
+        let app = launch(language: "it")
+        _ = openForm(app)
+        let price = app.textFields["item-price"]
+        scroll(app, to: price)
+        price.tap()
+        let keyboard = app.keyboards.firstMatch
+        XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
+        // Si misura a tastiera ferma: mentre sale il suo bordo è ancora in fondo allo schermo.
+        var edge = keyboard.frame.minY
+        var settled = false
+        for _ in 0..<20 {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.25))
+            settled = keyboard.frame.minY == edge && keyboard.frame.maxY > 0
+            edge = keyboard.frame.minY
+            if settled { break }
+        }
+        XCTAssertTrue(settled)
+        price.typeText("12,50")
+        waitForKeyboard(app, around: price)
+        RunLoop.current.run(until: Date().addingTimeInterval(1))
+        XCTAssertLessThanOrEqual(price.frame.maxY, keyboard.frame.minY)
+    }
+
+    // MARK: Lista e dettaglio
+
+    /// Lo scorrimento continua per inerzia: un tocco dato prima che si fermi va a vuoto, o trova l'elemento già sotto l'intestazione.
+    private func scroll(_ app: XCUIApplication, to element: XCUIElement, down: Bool = true) {
+        var tries = 0
+        while !isReachable(app, element), tries < 12 {
+            let overshot = element.exists && element.frame.minY < top(app)
+            if down != overshot { app.swipeUp(velocity: .slow) } else { app.swipeDown(velocity: .slow) }
+            settle(element)
+            tries += 1
+        }
+    }
+
+    private func settle(_ element: XCUIElement) {
+        var last = element.frame
+        var still = 0
+        for _ in 0..<40 where still < 3 {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.15))
+            let now = element.frame
+            still = now == last ? still + 1 : 0
+            last = now
+        }
+    }
+
+    /// Nel foglio il contenuto scorre sotto l'intestazione con "Chiudi": lì un tocco prende l'intestazione.
+    private func top(_ app: XCUIApplication) -> CGFloat {
+        let close = app.buttons["item-close"]
+        return close.exists ? close.frame.maxY : app.frame.minY
+    }
+
+    /// `isHittable` dice sì anche a un elemento sotto la tastiera o oltre il bordo dello schermo.
+    /// Su iPad la tastiera sposta il foglio: un tocco dato mentre si muove va a vuoto, e il simulatore lento lo rende sistematico.
+    private func waitForKeyboard(_ app: XCUIApplication, around element: XCUIElement) {
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+        var last = element.frame
+        var still = 0
+        for _ in 0..<40 where still < 3 {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.15))
+            let now = element.frame
+            still = now == last ? still + 1 : 0
+            last = now
+        }
+    }
+
+    private func isReachable(_ app: XCUIApplication, _ element: XCUIElement) -> Bool {
+        guard element.isHittable, element.frame.minY >= top(app) else { return false }
+        let keyboard = app.keyboards.firstMatch
+        return element.frame.maxY <= (keyboard.exists ? keyboard.frame.minY : app.frame.maxY)
+    }
+
+    private func addItem(_ app: XCUIApplication, name: String, category: String, wishlist: Bool = false) {
+        let sheet = openForm(app)
+        let field = app.textFields["item-name"]
+        scroll(app, to: field)
+        field.tap()
+        field.typeText(name)
+        waitForKeyboard(app, around: field)
+        let chip = app.buttons["category-\(category)"]
+        scroll(app, to: chip)
+        chip.tap()
+        if wishlist {
+            let destination = app.buttons["destination-wishlist"]
+            scroll(app, to: destination)
+            destination.tap()
+        }
+        let save = app.buttons["item-save"]
+        scroll(app, to: save)
+        save.tap()
+        XCTAssertTrue(waitForDisappearance(of: sheet))
+    }
+
+    private func cards(_ app: XCUIApplication) -> XCUIElementQuery {
+        app.buttons.matching(identifier: "item-card")
+    }
+
+    private func waitForCount(_ query: XCUIElementQuery, _ count: Int) -> Bool {
+        let p = XCTNSPredicateExpectation(predicate: NSPredicate(format: "count == %d", count), object: query)
+        return XCTWaiter().wait(for: [p], timeout: 5) == .completed
+    }
+
+    func testGiroCompleto() {
+        let app = launch(language: "it")
+        XCTAssertTrue(anyText(app, "Il tuo guardaroba è vuoto").waitForExistence(timeout: 5))
+        app.buttons["wardrobe-empty-add"].tap()
+        XCTAssertTrue(app.otherElements["add-sheet"].waitForExistence(timeout: 3))
+        app.buttons["item-close"].tap()
+        XCTAssertTrue(waitForDisappearance(of: app.otherElements["add-sheet"]))
+
+        addItem(app, name: "Giacca blu", category: "outerwear")
+        XCTAssertTrue(waitForCount(cards(app), 1))
+        XCTAssertTrue(anyText(app, "1 capo").exists)
+
+        cards(app).firstMatch.tap()
+        XCTAssertTrue(anyText(app, "Giacca blu").waitForExistence(timeout: 3))
+        XCTAssertTrue(anyText(app, "Capispalla").exists)
+
+        let edit = app.buttons["detail-edit"]
+        scroll(app, to: edit)
+        edit.tap()
+        let field = app.textFields["item-name"]
+        XCTAssertTrue(field.waitForExistence(timeout: 3))
+        scroll(app, to: field)
+        field.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 3) + "nera")
+        waitForKeyboard(app, around: field)
+        let save = app.buttons["item-save"]
+        scroll(app, to: save)
+        save.tap()
+        scroll(app, to: anyText(app, "Giacca nera"), down: false)
+        XCTAssertTrue(anyText(app, "Giacca nera").waitForExistence(timeout: 30))
+
+        let delete = app.buttons["detail-delete"]
+        scroll(app, to: delete)
+        delete.tap()
+        let confirm = app.alerts.buttons["Elimina"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 3))
+        confirm.tap()
+        XCTAssertTrue(anyText(app, "Il tuo guardaroba è vuoto").waitForExistence(timeout: 5))
+    }
+
+    func testIlTitoloRestaAlSuoPostoTornandoDalDettaglio() {
+        let app = launch(language: "it")
+        addItem(app, name: "Maglione", category: "tops")
+        let title = anyText(app, "Il Mio Guardaroba")
+        XCTAssertTrue(title.waitForExistence(timeout: 5))
+        RunLoop.current.run(until: Date().addingTimeInterval(1))
+        let top = title.frame.minY
+        cards(app).firstMatch.tap()
+        let back = app.navigationBars.buttons.firstMatch
+        XCTAssertTrue(back.waitForExistence(timeout: 5))
+        back.tap()
+        XCTAssertTrue(title.waitForExistence(timeout: 5))
+        RunLoop.current.run(until: Date().addingTimeInterval(1))
+        XCTAssertEqual(title.frame.minY, top, accuracy: 1)
+    }
+
+    func testFiltriERicerca() {
+        let app = launch(language: "it")
+        addItem(app, name: "Giacca", category: "outerwear")
+        addItem(app, name: "Scarpe", category: "shoes")
+        XCTAssertTrue(waitForCount(cards(app), 2))
+        app.buttons["filter-shoes"].tap()
+        XCTAssertTrue(waitForCount(cards(app), 1))
+        app.buttons["filter-all"].tap()
+        XCTAssertTrue(waitForCount(cards(app), 2))
+        let search = app.textFields["wardrobe-search"]
+        search.tap()
+        search.typeText("giac")
+        XCTAssertTrue(waitForCount(cards(app), 1))
+        search.typeText("xyz")
+        XCTAssertTrue(anyText(app, "Nessun risultato").waitForExistence(timeout: 3))
+    }
+
+    func testPreferiti() {
+        let app = launch(language: "it")
+        addItem(app, name: "Giacca", category: "outerwear")
+        addItem(app, name: "Scarpe", category: "shoes")
+        XCTAssertTrue(waitForCount(cards(app), 2))
+        app.buttons.matching(identifier: "item-card-favorite").element(boundBy: 1).tap()
+        app.buttons["wardrobe-favorites"].tap()
+        XCTAssertTrue(waitForCount(cards(app), 1))
+        XCTAssertTrue(anyText(app, "Scarpe").exists)
+    }
+
+    // MARK: Wishlist e categorie
+
+    private func fillAndSave(_ app: XCUIApplication, name: String, category: String) {
+        let sheet = app.otherElements["add-sheet"]
+        let field = app.textFields["item-name"]
+        scroll(app, to: field)
+        field.tap()
+        field.typeText(name)
+        waitForKeyboard(app, around: field)
+        let chip = app.buttons["category-\(category)"]
+        scroll(app, to: chip)
+        chip.tap()
+        let save = app.buttons["item-save"]
+        scroll(app, to: save)
+        save.tap()
+        XCTAssertTrue(waitForDisappearance(of: sheet))
+    }
+
+    func testDesiderioComprato() {
+        let app = launch(language: "it")
+        XCTAssertTrue(app.buttons["wardrobe-section-wishlist"].waitForExistence(timeout: 5))
+        app.buttons["wardrobe-section-wishlist"].tap()
+        XCTAssertTrue(anyText(app, "La tua wishlist è vuota").waitForExistence(timeout: 3))
+        app.buttons["wishlist-empty-add"].tap()
+        XCTAssertTrue(app.otherElements["add-sheet"].waitForExistence(timeout: 3))
+        let destination = app.buttons["destination-wishlist"]
+        scroll(app, to: destination)
+        XCTAssertTrue(destination.isSelected)
+        fillAndSave(app, name: "Borsa", category: "accessories")
+
+        let bought = app.buttons["wish-bought"]
+        XCTAssertTrue(bought.waitForExistence(timeout: 5))
+        app.buttons["wardrobe-section-wardrobe"].tap()
+        XCTAssertTrue(anyText(app, "Il tuo guardaroba è vuoto").waitForExistence(timeout: 3))
+        app.buttons["wardrobe-section-wishlist"].tap()
+        XCTAssertTrue(bought.waitForExistence(timeout: 3))
+        bought.tap()
+        XCTAssertTrue(anyText(app, "La tua wishlist è vuota").waitForExistence(timeout: 3))
+        app.buttons["wardrobe-section-wardrobe"].tap()
+        XCTAssertTrue(waitForCount(cards(app), 1))
+    }
+
+    func testCancellaUnDesiderio() {
+        let app = launch(language: "it")
+        addItem(app, name: "Borsa", category: "accessories", wishlist: true)
+        app.buttons["wardrobe-section-wishlist"].tap()
+        let delete = app.buttons["wish-delete"]
+        XCTAssertTrue(delete.waitForExistence(timeout: 3))
+        delete.tap()
+        let confirm = app.alerts.buttons["Elimina"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 30))
+        confirm.tap()
+        XCTAssertTrue(anyText(app, "La tua wishlist è vuota").waitForExistence(timeout: 3))
+    }
+
+    private func createCategory(_ app: XCUIApplication, _ name: String) {
+        let new = app.buttons["category-new"]
+        scroll(app, to: new)
+        new.tap()
+        let field = app.alerts.textFields.firstMatch
+        XCTAssertTrue(field.waitForExistence(timeout: 3))
+        field.typeText(name)
+        // Per coordinate: a volte XCUITest prende l'avviso per un'interruzione e preme Annulla da solo.
+        // Si ripete perché un tocco durante l'animazione della tastiera va a vuoto.
+        let alert = app.alerts.firstMatch
+        var tries = 0
+        while alert.exists, tries < 4 {
+            app.alerts.buttons["Salva"].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+            _ = waitForDisappearance(of: alert)
+            tries += 1
+        }
+        XCTAssertFalse(alert.exists)
+    }
+
+    private func addItemInNewCategory(_ app: XCUIApplication, item: String, category: String) {
+        let sheet = openForm(app)
+        let field = app.textFields["item-name"]
+        scroll(app, to: field)
+        field.tap()
+        field.typeText(item)
+        waitForKeyboard(app, around: field)
+        createCategory(app, category)
+        let save = app.buttons["item-save"]
+        scroll(app, to: save)
+        save.tap()
+        XCTAssertTrue(waitForDisappearance(of: sheet))
+    }
+
+    func testNuovaCategoria() {
+        let app = launch(language: "it")
+        addItemInNewCategory(app, item: "Costume", category: "Mare")
+        XCTAssertTrue(waitForCount(cards(app), 1))
+        addItem(app, name: "Scarpe", category: "shoes")
+        XCTAssertTrue(waitForCount(cards(app), 2))
+        let chip = app.buttons["Mare"]
+        XCTAssertTrue(chip.waitForExistence(timeout: 3))
+        chip.tap()
+        XCTAssertTrue(waitForCount(cards(app), 1))
+        cards(app).firstMatch.tap()
+        XCTAssertTrue(anyText(app, "Mare").waitForExistence(timeout: 3))
+    }
+
+    func testUnNomeGiaInCatalogoNonCreaUnaCategoriaDoppia() {
+        let app = launch(language: "it")
+        _ = openForm(app)
+        createCategory(app, "Scarpe")
+        XCTAssertTrue(app.buttons["category-shoes"].isSelected)
+        XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'category-custom'")).count, 0)
+    }
+
+    func testTuttoIlRiquadroDelModuloApreLaTastiera() {
+        let app = launch(language: "it")
+        _ = openForm(app)
+        tapTopEdge(app.textFields["item-name"])
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+    }
+
+    func testTuttoIlRiquadroDellaRicercaApreLaTastiera() {
+        let app = launch(language: "it")
+        let search = app.textFields["wardrobe-search"]
+        XCTAssertTrue(search.waitForExistence(timeout: 5))
+        // Sopra il testo ma dentro il riquadro, che è più alto del campo.
+        search.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: -0.2)).tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+    }
+
+    func testICapiPartonoAllaStessaAltezza() {
+        let app = launch(language: "it")
+        let sheet = openForm(app)
+        let field = app.textFields["item-name"]
+        field.tap()
+        field.typeText("Con colore")
+        waitForKeyboard(app, around: field)
+        let chip = app.buttons["category-tops"]
+        scroll(app, to: chip)
+        chip.tap()
+        let color = app.buttons["Bianco"]
+        scroll(app, to: color)
+        color.tap()
+        let save = app.buttons["item-save"]
+        scroll(app, to: save)
+        save.tap()
+        XCTAssertTrue(waitForDisappearance(of: sheet))
+        addItem(app, name: "Senza colore", category: "tops")
+        XCTAssertTrue(waitForCount(cards(app), 2))
+        XCTAssertEqual(cards(app).element(boundBy: 0).frame.minY, cards(app).element(boundBy: 1).frame.minY, accuracy: 0.5)
+    }
+
+    func testCategoriaUsataNonSiCancella() {
+        let app = launch(language: "it")
+        addItemInNewCategory(app, item: "Costume", category: "Mare")
+        let chip = app.buttons["Mare"]
+        XCTAssertTrue(chip.waitForExistence(timeout: 5))
+        chip.press(forDuration: 1.2)
+        let delete = app.buttons["Elimina categoria"]
+        XCTAssertTrue(delete.waitForExistence(timeout: 3))
+        delete.tap()
+        XCTAssertTrue(anyText(app, "Prima sposta i capi in un'altra categoria").waitForExistence(timeout: 3))
+        app.alerts.buttons["Chiudi"].tap()
+        XCTAssertTrue(chip.waitForExistence(timeout: 3))
+
+        cards(app).firstMatch.tap()
+        let remove = app.buttons["detail-delete"]
+        XCTAssertTrue(remove.waitForExistence(timeout: 3))
+        scroll(app, to: remove)
+        remove.tap()
+        app.alerts.buttons["Elimina"].tap()
+        XCTAssertTrue(chip.waitForExistence(timeout: 5))
+        chip.press(forDuration: 1.2)
+        XCTAssertTrue(delete.waitForExistence(timeout: 3))
+        delete.tap()
+        XCTAssertTrue(waitForDisappearance(of: chip))
+    }
+}

@@ -1,0 +1,56 @@
+import StyleVaultCore
+import SwiftUI
+
+/// Una categoria da mostrare: del catalogo, con la chiave da tradurre, o creata dalla persona.
+struct CategoryChoice: Identifiable, Equatable {
+    enum Title: Equatable {
+        case catalog(String)
+        case custom(String)
+    }
+
+    let id: String
+    let title: Title
+
+    var text: Text {
+        switch title {
+        case .catalog(let key): return Text(LocalizedStringKey(key))
+        case .custom(let name): return Text(verbatim: name)
+        }
+    }
+
+    var isCustom: Bool {
+        if case .custom = title { return true }
+        return false
+    }
+
+    static func all(custom: [CustomCategory]) -> [CategoryChoice] {
+        let catalog = Catalog.categories.map { CategoryChoice(id: $0.id, title: .catalog($0.labelKey)) }
+        let mine = custom
+            .sorted { ($0.createdAt, $0.id) < ($1.createdAt, $1.id) }
+            .map { CategoryChoice(id: $0.id, title: .custom($0.name)) }
+        return catalog + mine
+    }
+
+    /// L'id della categoria del catalogo con quel nome nella lingua dell'app, se c'è.
+    static func catalogID(named name: String) -> String? {
+        let wanted = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        return Catalog.categories.first { category in
+            let label = String(localized: String.LocalizationValue(category.labelKey))
+            return label.caseInsensitiveCompare(wanted) == .orderedSame
+        }?.id
+    }
+
+    /// `nil` per una categoria che non esiste più: la vista non mostra nulla, mai la chiave grezza.
+    static func find(_ id: String, custom: [CustomCategory]) -> CategoryChoice? {
+        all(custom: custom).first { $0.id == id }
+    }
+}
+
+extension Text {
+    /// Il nome del livello di calore. La chiave passa da una `String`: scritta direttamente dentro
+    /// `LocalizedStringKey`, l'interpolazione cercherebbe `addItem.warmthLevels.%lld`.
+    static func warmth(_ level: Int) -> Text {
+        let key = "addItem.warmthLevels.\(level)"
+        return Text(LocalizedStringKey(key))
+    }
+}

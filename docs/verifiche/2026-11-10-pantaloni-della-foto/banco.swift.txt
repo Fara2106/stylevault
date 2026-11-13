@@ -1,0 +1,93 @@
+import CoreGraphics
+import Foundation
+import ImageIO
+import StyleVaultCore
+import UniformTypeIdentifiers
+
+let args = CommandLine.arguments
+let inDir = URL(fileURLWithPath: args[1]), outDir = URL(fileURLWithPath: args[2]), tag = args[3]
+try? FileManager.default.createDirectory(at: outDir, withIntermediateDirectories: true)
+func load(_ d: Data) -> CGImage? {
+    guard let s = CGImageSourceCreateWithData(d as CFData, nil) else { return nil }
+    return CGImageSourceCreateImageAtIndex(s, 0, nil)
+}
+func save(_ img: CGImage, _ name: String) {
+    let out = NSMutableData()
+    let dest = CGImageDestinationCreateWithData(out, UTType.jpeg.identifier as CFString, 1, nil)!
+    CGImageDestinationAddImage(dest, img, [kCGImageDestinationLossyCompressionQuality: 0.85] as CFDictionary)
+    CGImageDestinationFinalize(dest)
+    try? (out as Data).write(to: outDir.appendingPathComponent(name))
+}
+func panel(_ images: [CGImage], magenta: Bool = false) -> CGImage? {
+    let H = 700.0
+    let widths = images.map { Double($0.width) * H / Double($0.height) }
+    let W = widths.reduce(0, +) + Double(images.count - 1) * 10
+    guard let ctx = CGContext(data: nil, width: Int(W), height: Int(H), bitsPerComponent: 8, bytesPerRow: 0,
+                              space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
+    ctx.setFillColor(magenta ? CGColor(red: 1, green: 0.2, blue: 1, alpha: 1) : CGColor(gray: 1, alpha: 1)); ctx.fill(CGRect(x: 0, y: 0, width: W, height: H))
+    var x = 0.0
+    for (i, img) in images.enumerated() { ctx.draw(img, in: CGRect(x: x, y: 0, width: widths[i], height: H)); x += widths[i] + 10 }
+    return ctx.makeImage()
+}
+func data(_ id: String) -> Data { try! Data(contentsOf: inDir.appendingPathComponent(id + ".jpg")) }
+
+let outfits: [(String, [(String, String)])] = [
+    ("indossati", [("top", "capo-indossato-negozio"), ("bottom", "capo-indossato-strada")]),
+    ("strada-top", [("top", "capo-indossato-strada")]),
+    ("stesi", [("top", "maglione"), ("bottom", "jeans"), ("shoes", "sneakers")]),
+    ("solo-top", [("top", "maglione")]),
+    ("solo-sotto", [("bottom", "jeans")]),
+]
+// Ritagli dei capi indossati
+for (id, slots) in [("capo-indossato-negozio", ["top", "bottom"]), ("capo-indossato-strada", ["top", "bottom", "shoes"]),
+                    ("persona-passante", ["top", "bottom"]), ("persona", ["top", "bottom"])] {
+    let photo = load(GarmentImage.prepared(data(id))!)!
+    guard let cut = try? await PersonCutout.cutout(photo, allInstances: true) else { print(id, "nessun soggetto"); continue }
+    var images = [photo, cut.image]
+    for slot in slots {
+        if let piece = await WornGarment.piece(from: cut, photo: photo, slot: slot) { images.append(piece.image) } else { print(id, slot, "intero") }
+    }
+    save(panel(images, magenta: true)!, "\(tag)-ritaglio-\(id).jpg")
+}
+/// Il primo riquadro di un foglio di confronto già salvato: la foto del corpo di allora (640 px di altezza).
+func leftPanel(_ path: String) -> Data? {
+    guard let d = try? Data(contentsOf: URL(fileURLWithPath: path)), let img = load(d) else { return nil }
+    let w = img.width, h = img.height
+    var px = [UInt8](repeating: 0, count: w * 4)
+    let ctx = CGContext(data: &px, width: w, height: 1, bitsPerComponent: 8, bytesPerRow: w * 4, space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)!
+    ctx.draw(img, in: CGRect(x: 0, y: -(h / 2), width: w, height: h))
+    var run = 0, cut = 0
+    for x in 50..<w {
+        let white = px[x * 4] > 235 && px[x * 4 + 1] > 235 && px[x * 4 + 2] > 235
+        run = white ? run + 1 : 0
+        if run >= 8 { cut = x - run; break }
+    }
+    guard cut > 0, let crop = img.cropping(to: CGRect(x: 0, y: 0, width: cut, height: h)) else { return nil }
+    let out = NSMutableData()
+    let dest = CGImageDestinationCreateWithData(out, UTType.jpeg.identifier as CFString, 1, nil)!
+    CGImageDestinationAddImage(dest, crop, [kCGImageDestinationLossyCompressionQuality: 0.95] as CFDictionary)
+    CGImageDestinationFinalize(dest)
+    return out as Data
+}
+let docs = "/Users/lorenzofaraoni/Documents/Apps Mobile 📱/StyleVault/docs/verifiche/2026-11-09-capo-indossato/avatar/"
+var bodies: [(String, Data)] = [("persona", data("persona")), ("persona-passante", data("persona-passante"))]
+for (id, file) in [("persona-18", "persona-18-negozio.jpg"), ("persona-03", "persona-03-marrone.jpg"), ("persona-06", "persona-06-abito.jpg")] {
+    if let d = leftPanel(docs + file) { bodies.append((id, d)) } else { print(id, "foglio non letto") }
+}
+for (bodyId, raw) in bodies {
+    let body = GarmentImage.prepared(raw, maxSide: BodyPhotoAnalyzer.photoMaxSide)!
+    var images = [load(body)!]
+    for (name, outfit) in outfits {
+        let garments = outfit.map { slot, id in AvatarGarment(slot: slot, photo: GarmentImage.prepared(data(id))!, key: id) }
+        let folder = outDir.appendingPathComponent("cache-\(tag)-\(UUID().uuidString.prefix(6))")
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        do {
+            let t0 = Date()
+            let a = try await AvatarRenderer.render(body: body, bodyKey: bodyId, garments: garments, view: .front, cache: CutoutCache(folder: folder))
+            print(bodyId, name, String(format: "%.2fs", Date().timeIntervalSince(t0)), "mancanti", a.unavailable)
+            images.append(a.image)
+        } catch { print(bodyId, name, error) }
+        try? FileManager.default.removeItem(at: folder)
+    }
+    save(panel(images)!, "\(tag)-avatar-\(bodyId).jpg")
+}

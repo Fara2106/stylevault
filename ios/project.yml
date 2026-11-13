@@ -1,0 +1,127 @@
+# Progetto Xcode generato: `cd ios && xcodegen generate` (il .xcodeproj non è in git)
+name: StyleVault
+options:
+  bundleIdPrefix: it.faraoni
+  developmentLanguage: it
+  deploymentTarget:
+    iOS: "17.0"
+packages:
+  Supabase:
+    url: https://github.com/supabase/supabase-swift
+    from: 2.0.0
+  StyleVaultCore:
+    path: StyleVaultCore
+  # FASHN VTON v1.5 sul dispositivo: la versione realistica di "Vedilo addosso"
+  FashnKit:
+    path: FashnKit
+settings:
+  base:
+    # Apple Developer Program di Lorenzo (attivo dal 2026-11-05): firma automatica
+    DEVELOPMENT_TEAM: 599MS2BZ63
+    CODE_SIGN_STYLE: Automatic
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+targets:
+  # App nativa (SwiftUI + SwiftData + iCloud)
+  StyleVaultNative:
+    type: application
+    platform: iOS
+    sources:
+      - path: StyleVaultNative
+        excludes:
+          - "* [2-9].*"
+    dependencies:
+      - package: StyleVaultCore
+      - package: Supabase
+      - package: FashnKit
+        product: FashnKit
+      - package: FashnKit
+        product: FashnWorn
+    postCompileScripts:
+      # Il modello (704 MB, fuori da git) entra solo nelle build Release per un dispositivo vero. Simulatore e Debug non lo
+      # portano: lì il modello non gira e 704 MB a ogni installazione rallentano i test. Senza modello l'app nasconde la funzione.
+      - name: Modello della versione realistica
+        basedOnDependencyAnalysis: false
+        script: |
+          MODEL="${SRCROOT}/../tools/avatar-fashn/out/bench-payload/FashnTryOn.mlmodelc"
+          DEST="${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FashnTryOn.mlmodelc"
+          if [ "${CONFIGURATION}" = "Release" ] && [ "${PLATFORM_NAME}" = "iphoneos" ]; then
+            if [ -d "$MODEL" ]; then
+              rsync -a --delete "$MODEL/" "$DEST/"
+            else
+              echo "warning: manca $MODEL: la versione realistica resta spenta in questa build"
+            fi
+          else
+            rm -rf "$DEST"
+          fi
+    configFiles:
+      Debug: Config/Secrets.xcconfig
+      Release: Config/Secrets.xcconfig
+    entitlements:
+      path: StyleVaultNative/StyleVaultNative.entitlements
+      properties:
+        com.apple.developer.applesignin: [Default]
+        com.apple.developer.icloud-container-identifiers: [iCloud.it.faraoni.stylevault]
+        com.apple.developer.icloud-services: [CloudKit]
+        com.apple.developer.weatherkit: true
+        aps-environment: development
+    info:
+      path: StyleVaultNative/Info.plist
+      properties:
+        NSCameraUsageDescription: Per fotografare te e i tuoi capi.
+        NSFaceIDUsageDescription: Serve per sbloccare l'app, se attivi il blocco nel Profilo.
+        NSLocationWhenInUseUsageDescription: Per mostrarti il meteo di dove sei e consigliarti cosa indossare.
+        NSPhotoLibraryAddUsageDescription: Per salvare tra le tue foto le immagini che scegli di tenere.
+        NSLocationDefaultAccuracyReduced: true
+        CFBundleDisplayName: Style Vault
+        CFBundleShortVersionString: "1.0"
+        CFBundleVersion: "12"
+        SupabaseURL: $(SUPABASE_URL)
+        SupabaseKey: $(SUPABASE_KEY)
+        CFBundleURLTypes:
+          - CFBundleURLName: it.faraoni.stylevault.nativa
+            CFBundleURLSchemes: [svnativa]
+        CFBundleLocalizations: [it, en]
+        UILaunchScreen: {}
+        UIBackgroundModes: [remote-notification]
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        ITSAppUsesNonExemptEncryption: false
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: it.faraoni.stylevault.nativa
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SWIFT_EMIT_LOC_STRINGS: YES
+        # Lo script che copia il modello scrive nel pacchetto dell'app
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
+  StyleVaultNativeTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [StyleVaultNativeTests]
+    dependencies:
+      - target: StyleVaultNative
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+  StyleVaultNativeUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [StyleVaultNativeUITests]
+    dependencies:
+      - target: StyleVaultNative
+    settings:
+      base:
+        TEST_TARGET_NAME: StyleVaultNative
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  StyleVaultNative:
+    build:
+      targets:
+        StyleVaultNative: all
+    test:
+      targets: [StyleVaultNativeTests, StyleVaultNativeUITests]
